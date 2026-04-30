@@ -1,6 +1,6 @@
 /**
  * Static file server with portal rewrites so /individual/ and /corporate/ map to the real HTML entry files.
- * Usage: node server.js  (default port 3000, override with PORT)
+ * Usage: node static-server.js  (default port 3000, override with PORT)
  */
 const http = require('http');
 const fs = require('fs');
@@ -9,14 +9,14 @@ const path = require('path');
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT) || 3000;
 
-/** Must stay aligned with PORTALS in api.js (used for server-side rewrites) */
+/** Must stay aligned with PORTALS in mock-api.js (used for server-side rewrites) */
 const PORTAL_ENTRIES = [
-  ['/individual/', path.join(ROOT, 'individual', 'individual_index.html')],
-  ['/individual', path.join(ROOT, 'individual', 'individual_index.html')],
-  ['/individual/index.html', path.join(ROOT, 'individual', 'individual_index.html')],
-  ['/corporate/', path.join(ROOT, 'corporate', 'corporate_index.html')],
-  ['/corporate', path.join(ROOT, 'corporate', 'corporate_index.html')],
-  ['/corporate/index.html', path.join(ROOT, 'corporate', 'corporate_index.html')]
+  ['/individual/', path.join(ROOT, 'individual', 'portal.html')],
+  ['/individual', path.join(ROOT, 'individual', 'portal.html')],
+  ['/individual/index.html', path.join(ROOT, 'individual', 'portal.html')],
+  ['/corporate/', path.join(ROOT, 'corporate', 'portal.html')],
+  ['/corporate', path.join(ROOT, 'corporate', 'portal.html')],
+  ['/corporate/index.html', path.join(ROOT, 'corporate', 'portal.html')]
 ];
 
 const MIME = {
@@ -115,7 +115,7 @@ const server = http.createServer((req, res) => {
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     console.error(
-      `Port ${PORT} is already in use (this project may already be running). Free the port or run: $env:PORT=3001; node server.js`
+      `Port ${PORT} is already in use (this project may already be running). Free the port or run: $env:PORT=3001; node static-server.js`
     );
   } else {
     console.error(err);

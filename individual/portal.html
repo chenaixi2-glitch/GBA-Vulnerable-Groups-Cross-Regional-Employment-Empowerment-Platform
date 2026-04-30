@@ -260,6 +260,11 @@
             transform: translateY(-2px);
         }
         
+        a.btn-primary {
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+        
         .btn-secondary {
             background-color: white;
             color: var(--primary-color);
@@ -377,7 +382,7 @@
                 
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#dashboard" class="text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
-                    <a href="#ai-features" class="text-gray-600 hover:text-blue-600 transition-colors">AI Features</a>
+                    <a href="#ai-features" class="text-blue-700 font-semibold hover:text-blue-600 transition-colors">Interactive demos</a>
                     <a href="#resources" class="text-gray-600 hover:text-blue-600 transition-colors">Resources</a>
                     <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
                     <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
@@ -414,7 +419,7 @@
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
                 <a href="#dashboard" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
-                <a href="#ai-features" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">AI Features</a>
+                <a href="#ai-features" class="block py-2 text-blue-700 font-semibold hover:text-blue-600 transition-colors">Interactive demos</a>
                 <a href="#resources" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Resources</a>
                 <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
                 <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
@@ -465,9 +470,9 @@
             <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">Individual User Dashboard</h1>
             <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto">Empowering you with AI tools to find cross-border employment opportunities in the Greater Bay Area</p>
             
-            <a href="#dashboard" class="btn-primary text-lg">
+            <a href="#ai-features" class="btn-primary text-lg">
                 <i class="fas fa-chart-line"></i>
-                <span>View My Dashboard</span>
+                <span>Open interactive demos</span>
             </a>
             
             <div class="mt-12 flex flex-wrap justify-center gap-4">
@@ -552,7 +557,7 @@
                         <div class="progress-fill" style="width: 60%"></div>
                     </div>
                     <p class="text-gray-600 mt-4">Continue your learning journey</p>
-                    <button class="btn-primary mt-4 w-full">Continue Learning</button>
+                    <a href="demo-learning-path.html" class="btn-primary mt-4 w-full justify-center">Continue Learning</a>
                 </div>
             </div>
             
@@ -560,7 +565,7 @@
             <div class="bg-white rounded-xl shadow-sm p-6 mb-12">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">Recommended Jobs For You</h3>
-                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">View All</a>
+                    <a href="demo-jobs-database.html" class="text-blue-600 hover:text-blue-800 font-medium">View All</a>
                 </div>
                 
                 <div class="space-y-4">
@@ -624,209 +629,74 @@
         </div>
     </section>
     
-    <!-- AI Features Section -->
-    <section id="ai-features" class="py-20 bg-white">
+    <!-- Interactive demos hub (modules + feedback) -->
+    <section id="ai-features" class="py-20 bg-white scroll-mt-28">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">AI-Powered Features</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Advanced AI tools designed specifically for individual users to enhance your employability</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- AI Resume Optimization -->
-                <div class="ai-module">
-                    <div class="ai-module-header">
-                        <div class="ai-feature-icon individual-feature-icon">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">AI Resume Optimization</h3>
+            <h2 class="text-3xl font-bold text-center mb-4">Interactive modules</h2>
+            <p class="text-xl text-gray-600 text-center mb-4 max-w-3xl mx-auto">Seven entry points below (plus feedback). <strong>AI learning path</strong> composes curricula from your experience and target-role skill bands via <code class="bg-gray-200 px-1 rounded text-sm">mock-api.js</code>. Production would add CV/JD embeddings and tracking.</p>
+            <p class="text-sm text-gray-500 text-center mb-10 max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+                <span>Quick links:</span>
+                <a href="demo-resume-matching.html" class="text-blue-600 hover:underline">Résumé</a>
+                <a href="demo-olivia.html" class="text-blue-600 hover:underline">Olivia</a>
+                <a href="demo-policy-navigator.html" class="text-blue-600 hover:underline">Policy</a>
+                <a href="demo-interview.html" class="text-blue-600 hover:underline">Interview</a>
+                <a href="demo-jobs-database.html" class="text-blue-600 hover:underline">Job bank</a>
+                <a href="demo-learning-path.html" class="text-blue-600 hover:underline">Learning path</a>
+                <a href="#feedback" class="text-blue-600 hover:underline">Feedback</a>
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14">
+                <a href="demo-resume-matching.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-file-alt"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Skills-first AI matching engine</h3>
+                    <p class="text-gray-600 text-sm flex-1">Upload résumé, configure JD / industry / polish, preview-edit, multilingual UI toggle, export.</p>
+                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                </a>
+                <a href="demo-olivia.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-600 to-purple-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-microphone-lines"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Olivia conversational AI</h3>
+                    <p class="text-gray-600 text-sm flex-1">Large chat pane, microphone input, synthetic speech playback, guided step strip for low digital literacy paths.</p>
+                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                </a>
+                <a href="demo-policy-navigator.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-calculator"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">GBA policy dividend navigator</h3>
+                    <p class="text-gray-600 text-sm flex-1">IIT subsidy calculator, disability levy estimator form, printable social-security transfer playbook.</p>
+                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                </a>
+                <a href="demo-interview.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-user-tie"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Interview simulation AI</h3>
+                    <p class="text-gray-600 text-sm flex-1">Question carousel, typed answers, interviewer mood animation, downloadable score synopsis.</p>
+                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                </a>
+                <a href="demo-jobs-database.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-briefcase"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">GBA job &amp; knowledge bank</h3>
+                    <p class="text-gray-600 text-sm flex-1">Browse curated openings and practise short knowledge-check items tied to each role cluster.</p>
+                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                </a>
+                <a href="demo-learning-path.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-route"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">AI learning path</h3>
+                    <p class="text-gray-600 text-sm flex-1">Tailors module stacks from your stated experience plus target role competency bands.</p>
+                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                </a>
+                <div id="feedback" class="bg-white rounded-2xl shadow border border-gray-100 p-6 border-dashed border-2 border-emerald-200 scroll-mt-28">
+                    <div class="w-14 h-14 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl mb-4"><i class="fas fa-comment-dots"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 text-gray-900">User feedback</h3>
+                    <p class="text-gray-600 text-sm mb-4">Rate your experience below. Helps us prioritise roadmap items.</p>
+                    <label class="block text-xs font-medium text-gray-500 mb-2">Star rating</label>
+                    <div id="stars" class="flex gap-1 mb-4 text-2xl text-amber-400 cursor-pointer" role="radiogroup" aria-label="Rating">
+                        <span data-val="1" class="opacity-40 hover:opacity-100">&starf;</span>
+                        <span data-val="2" class="opacity-40 hover:opacity-100">&starf;</span>
+                        <span data-val="3" class="opacity-40 hover:opacity-100">&starf;</span>
+                        <span data-val="4" class="opacity-40 hover:opacity-100">&starf;</span>
+                        <span data-val="5" class="opacity-40 hover:opacity-100">&starf;</span>
                     </div>
-                    <div class="ai-module-body">
-                        <p class="text-gray-600 mb-4">Intelligent resume analysis and optimization to highlight your skills and experiences for cross-border opportunities.</p>
-                        <ul class="space-y-2 mb-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Skill extraction and highlighting</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Cross-border format conversion</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Keyword optimization</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="ai-module-footer">
-                        <button class="btn-primary w-full" onclick="openModal('resume-modal')">
-                            <i class="fas fa-magic"></i>
-                            <span>Optimize My Resume</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- AI Job Matching -->
-                <div class="ai-module">
-                    <div class="ai-module-header">
-                        <div class="ai-feature-icon individual-feature-icon">
-                            <i class="fas fa-briefcase"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">AI Job Matching</h3>
-                    </div>
-                    <div class="ai-module-body">
-                        <p class="text-gray-600 mb-4">Skills-based intelligent matching with "blind screening" to eliminate bias and ensure fair opportunities.</p>
-                        <ul class="space-y-2 mb-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Skills-first matching algorithm</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Cross-border opportunity aggregation</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Bias-free screening options</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="ai-module-footer">
-                        <button class="btn-primary w-full" onclick="openModal('job-matching-modal')">
-                            <i class="fas fa-search"></i>
-                            <span>Find Matches</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- AI Interview Coaching -->
-                <div class="ai-module">
-                    <div class="ai-module-header">
-                        <div class="ai-feature-icon individual-feature-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">AI Interview Coaching</h3>
-                    </div>
-                    <div class="ai-module-body">
-                        <p class="text-gray-600 mb-4">Mock interview simulation with real-time feedback to help you prepare for cross-border interviews.</p>
-                        <ul class="space-y-2 mb-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Industry-specific question bank</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Real-time feedback and suggestions</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Cross-cultural communication training</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="ai-module-footer">
-                        <button class="btn-primary w-full" onclick="openModal('interview-modal')">
-                            <i class="fas fa-video"></i>
-                            <span>Practice Interview</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- AI Policy Q&A -->
-                <div class="ai-module">
-                    <div class="ai-module-header">
-                        <div class="ai-feature-icon individual-feature-icon">
-                            <i class="fas fa-question-circle"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">AI Policy Q&A</h3>
-                    </div>
-                    <div class="ai-module-body">
-                        <p class="text-gray-600 mb-4">Intelligent policy consultation service to help you understand cross-border employment regulations.</p>
-                        <ul class="space-y-2 mb-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Cross-border policy interpretation</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Visa and work permit guidance</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Tax and social security explanation</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="ai-module-footer">
-                        <button class="btn-primary w-full" onclick="openModal('policy-modal')">
-                            <i class="fas fa-robot"></i>
-                            <span>Ask Policy Questions</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- AI Learning Path -->
-                <div class="ai-module">
-                    <div class="ai-module-header">
-                        <div class="ai-feature-icon individual-feature-icon">
-                            <i class="fas fa-graduation-cap"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">AI Learning Path</h3>
-                    </div>
-                    <div class="ai-module-body">
-                        <p class="text-gray-600 mb-4">Personalized skill development planning based on job market demands and your career goals.</p>
-                        <ul class="space-y-2 mb-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Customized learning roadmap</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Recommended resources</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Progress tracking and adjustment</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="ai-module-footer">
-                        <button class="btn-primary w-full" onclick="openModal('learning-modal')">
-                            <i class="fas fa-road"></i>
-                            <span>Create Learning Path</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- AI Voice Assistant -->
-                <div class="ai-module">
-                    <div class="ai-module-header">
-                        <div class="ai-feature-icon individual-feature-icon">
-                            <i class="fas fa-microphone"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">AI Voice Assistant</h3>
-                    </div>
-                    <div class="ai-module-body">
-                        <p class="text-gray-600 mb-4">Multilingual voice interaction for hands-free operation, especially helpful for users with disabilities.</p>
-                        <ul class="space-y-2 mb-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Voice-to-text and text-to-voice</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Multilingual support</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check text-green-500 mr-2"></i>
-                                <span>Hands-free operation</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="ai-module-footer">
-                        <button class="btn-primary w-full" onclick="openModal('voice-modal')">
-                            <i class="fas fa-microphone"></i>
-                            <span>Activate Voice Assistant</span>
-                        </button>
-                    </div>
+                    <textarea id="fb-text" rows="3" class="w-full border border-gray-200 rounded-lg p-3 text-sm mb-3" placeholder="Tell us what worked or felt confusing…"></textarea>
+                    <button type="button" id="fb-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg text-sm">Submit feedback</button>
+                    <p id="fb-msg" class="mt-3 text-sm text-emerald-700 hidden" role="status"><i class="fas fa-check-circle mr-1"></i> Thank you — your feedback was recorded locally for this demo.</p>
                 </div>
             </div>
         </div>
@@ -1049,7 +919,7 @@
                     <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
                     <ul class="space-y-2">
                         <li><a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Dashboard</a></li>
-                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">AI Features</a></li>
+                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">Interactive demos</a></li>
                         <li><a href="#resources" class="text-gray-400 hover:text-white transition-colors">Resources</a></li>
                         <li><a href="#success-stories" class="text-gray-400 hover:text-white transition-colors">Success Stories</a></li>
                         <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
@@ -1091,342 +961,6 @@
             </div>
         </div>
     </footer>
-    
-    <!-- Modal Boxes -->
-    <!-- Resume Optimization Modal -->
-    <div id="resume-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">AI Resume Optimization</h3>
-                <button onclick="closeModal('resume-modal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="mb-6">
-                <p class="text-gray-600 mb-4">Upload your resume and let our AI optimize it for cross-border job opportunities.</p>
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
-                    <p class="text-gray-600 mb-4">Drag & drop your resume file or click to browse</p>
-                    <p class="text-gray-500 text-sm mb-4">Supported formats: PDF, DOCX</p>
-                    <button class="btn-primary">
-                        <i class="fas fa-upload mr-2"></i>
-                        <span>Upload Resume</span>
-                    </button>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-4">
-                <button onclick="closeModal('resume-modal')" class="btn-secondary">Cancel</button>
-                <button class="btn-primary">Optimize Resume</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Job Matching Modal -->
-    <div id="job-matching-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">AI Job Matching</h3>
-                <button onclick="closeModal('job-matching-modal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="mb-6">
-                <p class="text-gray-600 mb-4">Find jobs that match your skills and preferences.</p>
-                
-                <div class="form-group">
-                    <label class="form-label">Job Category</label>
-                    <select class="form-control">
-                        <option>All Categories</option>
-                        <option>Technology</option>
-                        <option>Finance</option>
-                        <option>Marketing</option>
-                        <option>Customer Service</option>
-                        <option>Healthcare</option>
-                        <option>Education</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Location</label>
-                    <select class="form-control">
-                        <option>All GBA Regions</option>
-                        <option>Hong Kong</option>
-                        <option>Macau</option>
-                        <option>Shenzhen</option>
-                        <option>Guangzhou</option>
-                        <option>Other GBA Cities</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Work Type</label>
-                    <select class="form-control">
-                        <option>All Types</option>
-                        <option>Full-time</option>
-                        <option>Part-time</option>
-                        <option>Remote</option>
-                        <option>Contract</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Salary Range</label>
-                    <select class="form-control">
-                        <option>Any Salary</option>
-                        <option>¥10K-20K</option>
-                        <option>¥20K-30K</option>
-                        <option>¥30K-40K</option>
-                        <option>¥40K-50K</option>
-                        <option>¥50K+</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Enable Blind Screening</label>
-                    <div class="flex items-center">
-                        <input type="checkbox" id="blind-screening" class="mr-2">
-                        <label for="blind-screening">Hide my personal information (age, gender, disability status) from employers</label>
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-4">
-                <button onclick="closeModal('job-matching-modal')" class="btn-secondary">Cancel</button>
-                <button class="btn-primary">Find Matches</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Interview Coaching Modal -->
-    <div id="interview-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">AI Interview Coaching</h3>
-                <button onclick="closeModal('interview-modal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="mb-6">
-                <p class="text-gray-600 mb-4">Practice your interview skills with our AI interviewer.</p>
-                
-                <div class="form-group">
-                    <label class="form-label">Industry</label>
-                    <select class="form-control">
-                        <option>Technology</option>
-                        <option>Finance</option>
-                        <option>Marketing</option>
-                        <option>Customer Service</option>
-                        <option>Healthcare</option>
-                        <option>Education</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Job Position</label>
-                    <input type="text" class="form-control" placeholder="e.g., Software Developer, Marketing Manager">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Interview Type</label>
-                    <select class="form-control">
-                        <option>Technical Interview</option>
-                        <option>Behavioral Interview</option>
-                        <option>Case Interview</option>
-                        <option>Mixed (Technical + Behavioral)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Interview Duration</label>
-                    <select class="form-control">
-                        <option>15 minutes</option>
-                        <option>30 minutes</option>
-                        <option>45 minutes</option>
-                        <option>60 minutes</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Difficulty Level</label>
-                    <select class="form-control">
-                        <option>Entry Level</option>
-                        <option>Mid Level</option>
-                        <option>Senior Level</option>
-                        <option>Executive Level</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-4">
-                <button onclick="closeModal('interview-modal')" class="btn-secondary">Cancel</button>
-                <button class="btn-primary">Start Interview</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Policy Q&A Modal -->
-    <div id="policy-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">AI Policy Q&A</h3>
-                <button onclick="closeModal('policy-modal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="mb-6">
-                <p class="text-gray-600 mb-4">Ask questions about cross-border employment policies and regulations.</p>
-                
-                <div class="border border-gray-200 rounded-lg p-4 mb-4">
-                    <div class="flex items-start mb-4">
-                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                            <i class="fas fa-robot text-blue-600"></i>
-                        </div>
-                        <div class="bg-gray-100 rounded-lg p-3 max-w-[80%]">
-                            <p class="text-gray-800">Hello! I'm Olivia, your AI policy assistant. What questions do you have about cross-border employment in the GBA?</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start mb-4">
-                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                            <i class="fas fa-user text-green-600"></i>
-                        </div>
-                        <div class="bg-blue-50 rounded-lg p-3 max-w-[80%]">
-                            <p class="text-gray-800">What visa do I need to work in Hong Kong if I'm from mainland China?</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start">
-                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                            <i class="fas fa-robot text-blue-600"></i>
-                        </div>
-                        <div class="bg-gray-100 rounded-lg p-3 max-w-[80%]">
-                            <p class="text-gray-800">If you're from mainland China working in Hong Kong, you'll typically need an Employment Visa. The requirements include:</p>
-                            <ul class="list-disc pl-5 mt-2 space-y-1">
-                                <li>A confirmed job offer from a Hong Kong employer</li>
-                                <li>Relevant qualifications and experience</li>
-                                <li>The position should not be easily filled by local workers</li>
-                                <li>A minimum salary level (currently around HK$15,000/month)</li>
-                            </ul>
-                            <p class="mt-2">Your employer will usually sponsor your visa application. Processing time is typically 4-6 weeks.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex">
-                    <input type="text" class="form-control rounded-r-none" placeholder="Ask your policy question...">
-                    <button class="btn-primary rounded-l-none">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-4">
-                <button onclick="closeModal('policy-modal')" class="btn-secondary">Close</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Learning Path Modal -->
-    <div id="learning-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">AI Learning Path</h3>
-                <button onclick="closeModal('learning-modal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="mb-6">
-                <p class="text-gray-600 mb-4">Create a personalized learning path to enhance your skills.</p>
-                
-                <div class="form-group">
-                    <label class="form-label">Career Goal</label>
-                    <select class="form-control">
-                        <option>Software Developer</option>
-                        <option>Data Analyst</option>
-                        <option>Marketing Specialist</option>
-                        <option>Financial Analyst</option>
-                        <option>Project Manager</option>
-                        <option>Customer Service Manager</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Current Skill Level</label>
-                    <select class="form-control">
-                        <option>Beginner (Zero foundation)</option>
-                        <option>Intermediate</option>
-                        <option>Advanced</option>
-                        <option>Expert</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Time Commitment</label>
-                    <select class="form-control">
-                        <option>1-2 hours per week</option>
-                        <option>3-5 hours per week</option>
-                        <option>6-10 hours per week</option>
-                        <option>More than 10 hours per week</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Preferred Learning Format</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="flex items-center">
-                            <input type="checkbox" id="format-videos" class="mr-2">
-                            <label for="format-videos">Video Courses</label>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="format-books" class="mr-2">
-                            <label for="format-books">Books/E-books</label>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="format-practice" class="mr-2">
-                            <label for="format-practice">Practice Projects</label>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="format-cert" class="mr-2">
-                            <label for="format-cert">Certification Prep</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-4">
-                <button onclick="closeModal('learning-modal')" class="btn-secondary">Cancel</button>
-                <button class="btn-primary">Generate Learning Path</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Voice Assistant Modal -->
-    <div id="voice-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full text-center">
-            <div class="flex justify-end mb-4">
-                <button onclick="closeModal('voice-modal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="mb-6">
-                <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 pulse-animation">
-                    <i class="fas fa-microphone text-4xl text-blue-600"></i>
-                </div>
-                <h3 class="text-2xl font-bold mb-2">Voice Assistant Active</h3>
-                <p class="text-gray-600 mb-4">I'm listening. Please speak your command or question.</p>
-                <p class="text-gray-500 text-sm">Try saying: "Find marketing jobs in Hong Kong" or "What are the visa requirements for working in Macau?"</p>
-            </div>
-            <div class="flex justify-center space-x-4">
-                <button class="btn-secondary" onclick="closeModal('voice-modal')">
-                    <i class="fas fa-stop mr-2"></i>
-                    <span>Stop</span>
-                </button>
-                <button class="btn-primary">
-                    <i class="fas fa-microphone-slash mr-2"></i>
-                    <span>Mute</span>
-                </button>
-            </div>
-        </div>
-    </div>
-    
     <script>
         // Execute after page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -1441,9 +975,6 @@
             
             // FAQ accordion
             initFaqAccordion();
-            
-            // Modal boxes
-            initModals();
             
             // Smooth scrolling
             initSmoothScroll();
@@ -1593,24 +1124,6 @@
             });
         }
         
-        // Initialize modal boxes
-        function initModals() {
-            // Modal functionality is handled by the openModal and closeModal functions
-        }
-        
-        // Modal functions
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-        
         // Initialize smooth scrolling
         function initSmoothScroll() {
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -1636,6 +1149,33 @@
                 });
             });
         }
+    </script>
+    <script>
+        (function () {
+            var rating = 0;
+            var stars = document.querySelectorAll('#stars [data-val]');
+            stars.forEach(function (s) {
+                s.addEventListener('click', function () {
+                    rating = +s.getAttribute('data-val');
+                    stars.forEach(function (x, i) {
+                        x.classList.toggle('opacity-100', i < rating);
+                        x.classList.toggle('opacity-40', i >= rating);
+                    });
+                });
+            });
+            var submit = document.getElementById('fb-submit');
+            if (submit) {
+                submit.addEventListener('click', function () {
+                    try {
+                        localStorage.setItem(
+                            'gba_feedback_demo',
+                            JSON.stringify({ rating: rating, text: document.getElementById('fb-text').value, at: new Date().toISOString() })
+                        );
+                    } catch (e) {}
+                    document.getElementById('fb-msg').classList.remove('hidden');
+                });
+            }
+        })();
     </script>
 </body>
 </html>
