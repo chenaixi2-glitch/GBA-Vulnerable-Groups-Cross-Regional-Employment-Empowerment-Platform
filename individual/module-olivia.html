@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olivia Conversational Assistant — GBA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); body{font-family:'Inter',system-ui,sans-serif;} .chat-scroll{max-height:28rem;overflow-y:auto;} </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+    <header class="border-b border-slate-700 px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+        <nav class="text-sm flex gap-3"><a href="individual_index.html#ai-features" class="text-blue-400">Interactive demos</a><span class="opacity-60">/</span><span class="font-semibold">Olivia</span></nav>
+        <div class="text-xs text-slate-400">Inclusive mode · oversized tap targets · optional speech</div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 py-6 grid lg:grid-cols-[280px_1fr] gap-8">
+        <aside class="bg-slate-800/80 rounded-2xl p-5 border border-slate-700">
+            <h2 class="font-semibold mb-4 text-emerald-400"><i class="fas fa-route mr-2"></i>Guided path</h2>
+            <ol id="guided" class="space-y-4 text-sm">
+                <li class="flex gap-3 opacity-100" data-i="1"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold">1</span><span>Speak or type what you need (jobs, visa, résumé).</span></li>
+                <li class="flex gap-3 opacity-50" data-i="2"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-slate-600 flex items-center justify-center text-xs font-bold">2</span><span>Review Olivia’s suggestions & tap an action chip.</span></li>
+                <li class="flex gap-3 opacity-50" data-i="3"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-slate-600 flex items-center justify-center text-xs font-bold">3</span><span>Hop into specialised modules when prompted.</span></li>
+            </ol>
+            <button type="button" id="reset-guided" class="mt-6 w-full border border-slate-600 rounded-lg py-2 text-sm hover:bg-slate-700">Restart guidance</button>
+        </aside>
+
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 flex flex-col shadow-xl overflow-hidden">
+            <div class="px-5 py-3 border-b border-slate-700 flex justify-between items-center bg-slate-850">
+                <div><p class="font-semibold text-white flex items-center gap-2"><span class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center"><i class="fas fa-heart"></i></span> Olivia</p><p class="text-xs text-slate-400 mt-1">Voice-friendly · demos Web Speech API when supported</p></div>
+                <button type="button" id="btn-speak-last" class="hidden sm:inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm"><i class="fas fa-volume-high"></i> Replay last reply</button>
+            </div>
+            <div id="chat" class="chat-scroll px-5 py-4 space-y-3 bg-slate-850/80"></div>
+            <div class="p-4 border-t border-slate-700 bg-slate-900 space-y-3">
+                <div id="chips" class="flex flex-wrap gap-2"></div>
+                <div class="flex gap-2">
+                    <button type="button" id="btn-mic" title="Speak" class="flex-shrink-0 w-14 h-14 rounded-2xl bg-purple-600 hover:bg-purple-500 flex items-center justify-center text-2xl border-2 border-purple-400/50 shadow-lg shadow-purple-900/40" aria-label="Voice input"><i class="fas fa-microphone"></i></button>
+                    <textarea id="user-line" rows="2" class="flex-1 bg-slate-950 border border-slate-600 rounded-xl px-3 py-2 text-sm resize-none placeholder:text-slate-500" placeholder="Ask about résumés, inclusive jobs, or subsidies…"></textarea>
+                    <button type="button" id="btn-send" class="px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold"><i class="fas fa-paper-plane"></i></button>
+                </div>
+                <p id="mic-status" class="text-xs text-slate-500"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-slate-500 border-t border-slate-800">
+        <a href="../index.html" class="hover:text-blue-400">Welcome</a>
+        <span class="mx-2 text-slate-600">·</span>
+        <a href="individual_index.html#feedback" class="text-emerald-400 hover:underline font-medium">User feedback</a>
+    </footer>
+
+    <script src="../api.js"></script>
+    <script>
+        var chatEl = document.getElementById('chat');
+        function bubble(role, html) {
+            var wrap = document.createElement('div');
+            wrap.className = role === 'user' ? 'flex justify-end' : 'flex justify-start';
+            var inner = document.createElement('div');
+            inner.className = role === 'user'
+                ? 'bg-blue-600 text-white px-4 py-2 rounded-2xl rounded-br-md max-w-[85%] text-sm'
+                : 'bg-slate-700 px-4 py-2 rounded-2xl rounded-bl-md max-w-[90%] text-sm leading-relaxed';
+            inner.innerHTML = html;
+            wrap.appendChild(inner);
+            chatEl.appendChild(wrap);
+            chatEl.scrollTop = chatEl.scrollHeight;
+        }
+        function renderChips(actions) {
+            document.getElementById('chips').innerHTML = '';
+            (actions || []).forEach(function (a) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = a.text;
+                b.className = 'bg-slate-700 hover:bg-slate-600 border border-slate-600 px-3 py-1.5 rounded-full text-xs';
+                b.onclick = function () {
+                    bubble('user', '<span class="opacity-80">Chip:</span> ' + a.text);
+                    pushAssistant('Opening <strong>' + (a.modal || '').replace('-', ' ') + '</strong> happens inside the native app shell — demo links: <a class="underline text-emerald-300" href="module-resume-matching.html">matching</a> · <a class="underline text-emerald-300" href="module-jobs-database.html">jobs</a>');
+                };
+                document.getElementById('chips').appendChild(b);
+            });
+        }
+        function speak(text) {
+            if (!('speechSynthesis' in window)) return;
+            speechSynthesis.cancel();
+            var u = new SpeechSynthesisUtterance(text.replace(/<[^>]+>/g, ''));
+            u.rate = 0.95;
+            speechSynthesis.speak(u);
+        }
+
+        var lastAssistText = '';
+
+        async function route(q) {
+            bubble('user', escapeHtml(q));
+            var out = await API.voiceAssistant(q);
+            document.getElementById('guided').children[1].style.opacity = '1';
+            document.getElementById('guided').children[2].style.opacity = '0.8';
+            if (!out.success) return;
+            var data = out.data;
+            lastAssistText = data.text || '';
+            bubble('assistant', escapeHtml(lastAssistText).replace(/\n/g, '<br>'));
+            renderChips(data.actions || []);
+            document.getElementById('btn-speak-last').classList.remove('hidden');
+            speak(lastAssistText);
+        }
+
+        function escapeHtml(s) {
+            var d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        document.getElementById('btn-send').onclick = function () {
+            var v = document.getElementById('user-line').value.trim();
+            if (!v) return;
+            document.getElementById('user-line').value = '';
+            route(v);
+        };
+
+        document.getElementById('btn-speak-last').onclick = function () { speak(lastAssistText); };
+
+        var rec;
+        document.getElementById('btn-mic').onclick = function () {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                document.getElementById('mic-status').textContent = 'Voice capture not supported in this browser — type instead.';
+                return;
+            }
+            var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            rec = new SR();
+            rec.lang = 'en-GB';
+            rec.onresult = function (e) {
+                var q = e.results[0][0].transcript;
+                document.getElementById('user-line').value = q;
+                route(q);
+                document.getElementById('mic-status').textContent = '';
+            };
+            rec.onerror = function () { document.getElementById('mic-status').textContent = 'Microphone error — check permissions.'; };
+            rec.start();
+            document.getElementById('mic-status').textContent = 'Listening…';
+        };
+
+        document.getElementById('reset-guided').onclick = function () {
+            chatEl.innerHTML = '';
+            renderChips([]);
+            document.getElementById('guided').children[1].style.opacity = '0.5';
+            document.getElementById('guided').children[2].style.opacity = '0.5';
+            route('Hello Olivia, what can you do for me in simple steps?');
+        };
+
+        function pushAssistant(txt) {
+            lastAssistText = txt;
+            bubble('assistant', txt);
+            speak(txt.replace(/<[^>]+>/g, ''));
+        }
+
+        bubble('assistant', 'Hi, I’m <strong>Olivia</strong>. Try <em>“optimize my resume”</em>, <em>“social security”</em>, or tap the mic. I keep answers short and replayable.');
+        document.getElementById('btn-speak-last').classList.remove('hidden');
+    </script>
+</body>
+</html>

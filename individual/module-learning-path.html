@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning Path — GBA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <header class="bg-white border-b px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+        <nav class="text-sm">
+            <a href="../index.html" class="text-slate-500 hover:text-blue-600 mr-2">Welcome</a>
+            <a href="individual_index.html#ai-features" class="text-blue-700 font-medium">Interactive demos</a>
+            · <strong>Learning path</strong>
+        </nav>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold text-slate-900 mb-2">AI learning path</h1>
+        <p class="text-slate-600 text-sm mb-6">Builds a <strong>custom study route</strong> from your background and the competency profile of your <strong>target role</strong>. This sandbox pairs your pasted experience notes with a selectable goal role and proficiency band (demo catalogue from <code class="bg-slate-200 px-1 rounded text-xs">API.learningPath</code>). Production systems would ingest CV/JD embeddings for full tailoring.</p>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Your experience & background</label>
+                <textarea id="exp-notes" rows="5" class="w-full border border-slate-300 rounded-xl p-3 text-sm" placeholder="Summarise roles, tools, certs, gaps—anything you want the coach to weigh when stacking modules…"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Target role cluster</label>
+                <select id="target-job" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    <option value="E-commerce Customer Service">E-commerce Customer Service</option>
+                    <option value="Data Annotator">Data Annotator</option>
+                    <option value="Live Stream Assistant">Live Stream Assistant</option>
+                </select>
+                <p class="text-xs text-slate-500 mt-1">Maps to curated skill ladders for that vocation in this demo.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Where you sit today · <span id="level-label" class="text-blue-600">Intermediate band</span></label>
+                <input type="range" id="skill-level" min="1" max="5" value="3" class="w-full">
+                <p class="text-xs text-slate-500 mt-1">Bands 1–2 = foundations, 3–4 = practitioner, 5 = stretch / leadership track.</p>
+            </div>
+            <button type="button" id="btn-gen" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg text-sm">Generate customized path</button>
+            <p id="load" class="hidden text-sm text-slate-500 flex items-center gap-2"><span class="inline-block w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></span> Composing roadmap…</p>
+            <p id="err" class="hidden text-sm text-red-600"></p>
+        </div>
+
+        <div id="out" class="hidden space-y-4">
+            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-sm text-slate-800">
+                <p class="font-semibold text-indigo-900 mb-1"><i class="fas fa-route mr-2"></i>Tailoring context</p>
+                <p id="ctx-summary" class="whitespace-pre-wrap text-slate-700"></p>
+            </div>
+            <div class="bg-white rounded-2xl border p-6 shadow-sm">
+                <h2 class="font-bold text-lg text-slate-900 mb-4">Suggested modules</h2>
+                <div id="modules" class="space-y-4"></div>
+            </div>
+            <div id="tail" class="bg-white rounded-2xl border p-6 shadow-sm text-sm text-slate-700"></div>
+            <footer class="text-center text-xs text-slate-500 pt-4">
+                <a href="individual_index.html#feedback" class="text-emerald-700 hover:underline">Feedback on this flow</a>
+            </footer>
+        </div>
+    </main>
+
+    <script src="../api.js"></script>
+    <script>
+        var levelSlider = document.getElementById('skill-level');
+        function levelLabel(v) {
+            if (v <= 2) return 'Foundations band';
+            if (v <= 4) return 'Intermediate band';
+            return 'Advanced / leadership band';
+        }
+        levelSlider.oninput = function () {
+            document.getElementById('level-label').textContent = levelLabel(+this.value);
+        };
+
+        document.getElementById('btn-gen').onclick = async function () {
+            document.getElementById('err').classList.add('hidden');
+            document.getElementById('out').classList.add('hidden');
+            document.getElementById('load').classList.remove('hidden');
+            var job = document.getElementById('target-job').value;
+            var lvl = +document.getElementById('skill-level').value;
+            var notes = document.getElementById('exp-notes').value.trim();
+            var res = await API.learningPath(job, lvl, notes);
+            document.getElementById('load').classList.add('hidden');
+            if (!res.success) {
+                document.getElementById('err').textContent = res.message || 'Could not build a path.';
+                document.getElementById('err').classList.remove('hidden');
+                return;
+            }
+            var d = res.data;
+            var path = d.learningPath || {};
+            var ctx = 'Target role: ' + d.targetJob + ' · proficiency input: ' + d.skillLevel + ' (' + levelLabel(d.skillLevel) + ').\n';
+            if (d.experienceNotes)
+                ctx += '\nExperience you supplied (used for human-readable context in this demo; richer matching ships server-side):\n' + d.experienceNotes;
+            else
+                ctx += '\nNo free-text notes—add bullets above next time so stakeholders see how the path was framed.';
+            document.getElementById('ctx-summary').textContent = ctx;
+
+            var box = document.getElementById('modules');
+            box.innerHTML = '';
+            (path.modules || []).forEach(function (m, i) {
+                var div = document.createElement('div');
+                div.className = 'border border-slate-200 rounded-xl p-4';
+                var coursesHtml = (m.courses || []).map(function (c) { return '<li class="text-slate-600">' + escapeHtml(c) + '</li>'; }).join('');
+                var resHtml = (m.resources || []).map(function (r) { return '<span class="inline-block bg-slate-100 px-2 py-0.5 rounded text-xs mr-1 mb-1">' + escapeHtml(r) + '</span>'; }).join('');
+                div.innerHTML = '<p class="font-semibold text-slate-900">' + (i + 1) + '. ' + escapeHtml(m.title) + ' <span class="text-xs font-normal text-slate-500">(' + escapeHtml(m.duration || '') + ')</span></p><ul class="list-disc ml-5 mt-2 space-y-0.5 text-sm">' + coursesHtml + '</ul><div class="mt-2">' + resHtml + '</div>';
+                box.appendChild(div);
+            });
+
+            document.getElementById('tail').innerHTML =
+                '<p><strong>Milestone credential (demo)</strong>: ' + escapeHtml(path.certificate || '—') + '</p>' +
+                '<p class="mt-2"><strong>Role outcomes to aim for</strong>: ' +
+                escapeHtml((path.jobOpportunities || []).join(' · ') || '—') + '</p>';
+
+            document.getElementById('out').classList.remove('hidden');
+        };
+
+        function escapeHtml(s) {
+            var d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s);
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

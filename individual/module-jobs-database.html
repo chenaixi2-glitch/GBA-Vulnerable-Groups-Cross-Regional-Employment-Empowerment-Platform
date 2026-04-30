@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBA Job & Knowledge Bank — GBA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'); body{font-family:'Inter',sans-serif;}</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+    <header class="bg-white border-b px-4 py-3 text-sm"><a href="individual_index.html#ai-features" class="text-blue-700 font-semibold">Interactive demos</a> · Job discovery & drills</header>
+
+    <div class="max-w-6xl mx-auto px-4 py-8 grid lg:grid-cols-5 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-2xl border shadow p-4 max-h-[32rem] overflow-y-auto">
+            <h2 class="font-bold text-slate-800 mb-4">Open clusters</h2>
+            <div id="job-list" class="space-y-2 text-sm"></div>
+        </div>
+        <div class="lg:col-span-3 space-y-4">
+            <div id="detail" class="bg-white rounded-2xl border p-6 shadow text-sm text-slate-600">Select an opening from the curated list powered by <code class="bg-slate-100 px-1 rounded">API.matchJobs</code>.</div>
+            <div id="quiz" class="hidden bg-teal-900 text-teal-50 rounded-2xl p-6 border border-teal-700">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fas fa-brain"></i> Knowledge pulse (3 prompts)</h3>
+                <div id="quiz-body" class="space-y-4"></div>
+                <button type="button" id="check-quiz" class="mt-4 bg-teal-500 hover:bg-teal-400 text-teal-950 font-semibold px-5 py-2 rounded-lg">Check answers</button>
+                <p id="quiz-score" class="mt-4 text-teal-200 font-semibold hidden"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-slate-600 border-t border-slate-200">
+        <a href="../index.html" class="hover:text-blue-700">Welcome</a>
+        ·
+        <a href="individual_index.html#feedback" class="text-emerald-700 hover:underline font-medium">User feedback</a>
+    </footer>
+
+    <script src="../api.js"></script>
+    <script>
+        var jobs = [];
+        var bankById = {
+            1: [
+                { q: 'Mandatory accessible hiring disclosure appears on which artefacts first?', opts: ['Only annual report', 'Job advert + onboarding pack', 'Only HRIS notes'], ans: 1 },
+                { q: 'Fair cross-border recruiting starts with?', opts: ['Local compensation parity review', 'Random CV shredding', 'Withholding passports'], ans: 0 },
+                { q: 'Assistive tooling budget line should sit?', opts: ['Hidden in miscellaneous', 'Under explicit Inclusion OKR', 'With marketing swag'], ans: 1 }
+            ],
+            2: [
+                { q: 'Annotation consensus is measured chiefly via?', opts: ['Inter-annotator agreement', 'Likes on Slack', 'Manager mood'], ans: 0 },
+                { q: 'PII fences should be?', opts: ['Defined before labelling sprint', 'Optional', 'Delegated to interns only'], ans: 0 },
+                { q: 'Gold sets are?', opts: ['Disposable after training', 'Versioned artefacts', 'Posters'], ans: 1 }
+            ],
+            default: [
+                { q: 'GBA mobility programmes foreground?', opts: ['Equitable skills evidence', 'Wealth pedigree', 'Postal code luck'], ans: 0 },
+                { q: 'Accessibility hiring quota tracking needs?', opts: ['Quarterly attestations', 'Verbal guesses', 'No data'], ans: 0 },
+                { q: 'Cross-border taxation advice belongs to?', opts: ['Qualified advisors', 'This demo page', 'Random forums'], ans: 0 }
+            ]
+        };
+
+        API.matchJobs({}, {}).then(function (r) {
+            if (!r.success) return;
+            jobs = r.data.jobs || [];
+            var list = document.getElementById('job-list');
+            jobs.forEach(function (j, idx) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'w-full text-left px-4 py-3 rounded-xl border hover:border-teal-500 hover:bg-teal-50 transition-colors flex flex-col gap-1';
+                b.innerHTML = '<span class="font-semibold text-slate-900">' + j.title + '</span><span class="text-xs opacity-75">' + j.company + ' · ' + j.location + '</span><span class="text-xs text-teal-700 font-medium">Fit score demo: ' + j.matchScore + '</span>';
+                b.onclick = function () { renderDetail(j); buildQuiz(j.id); };
+                list.appendChild(b);
+            });
+        });
+
+        function renderDetail(j) {
+            document.getElementById('detail').innerHTML =
+                '<div class="flex justify-between gap-4 flex-wrap mb-4"><div><p class="text-xs uppercase tracking-wide text-slate-400">Role</p><h3 class="text-xl font-bold text-slate-900">' + escape(j.title) + '</h3><p class="text-sm text-teal-700 font-medium">' + escape(j.company) + '</p></div><span class="self-start px-3 py-1 bg-slate-100 rounded-full text-xs">' + escape(j.type) + '</span></div>' +
+                '<p class="mb-3">' + escape(j.description) + '</p>' +
+                '<div class="flex flex-wrap gap-2">' +
+                j.skills.map(function (s) { return '<span class="bg-slate-100 px-2 py-1 rounded-full text-xs">' + escape(s) + '</span>'; }).join('') +
+                '</div>' +
+                '<p class="mt-4 text-xs text-slate-500">Underlying vector search / employer CRM sync runs server-side.</p>';
+        }
+
+        function escape(s) {
+            var d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML;
+        }
+
+        function buildQuiz(jobId) {
+            var qs = bankById[jobId] || bankById.default;
+            var box = document.getElementById('quiz-body');
+            box.innerHTML = '';
+            document.getElementById('quiz').classList.remove('hidden');
+            document.getElementById('quiz-score').classList.add('hidden');
+            qs.forEach(function (item, idx) {
+                var wrap = document.createElement('div');
+                wrap.className = 'border border-teal-700 rounded-xl p-3';
+                var head = '<p class="font-semibold mb-2">' + (idx + 1) + '. ' + escape(item.q) + '</p>';
+                wrap.innerHTML = head + '<div class="space-y-1 qs-' + idx + '">' +
+                    item.opts.map(function (o, oi) {
+                        return '<label class="flex items-center gap-2 text-xs"><input type="radio" name="q_' + idx + '" value="' + oi + '"> ' + escape(o) + '</label>';
+                    }).join('') + '</div>';
+                box.appendChild(wrap);
+            });
+
+            window._quizRef = qs;
+            document.getElementById('check-quiz').onclick = function () {
+                var ok = 0;
+                qs.forEach(function (_, idx) {
+                    var sel = document.querySelector('input[name="q_' + idx + '"]:checked');
+                    if (sel && +sel.value === qs[idx].ans) ok++;
+                });
+                document.getElementById('quiz-score').textContent = 'Score: ' + ok + ' / ' + qs.length + ' — revise weak topics in the Workspace learning hub.';
+                document.getElementById('quiz-score').classList.remove('hidden');
+            };
+        }
+    </script>
+</body>
+</html>

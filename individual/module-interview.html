@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Simulation — GBA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        @keyframes mood-breathe { 0%,100%{ transform: translateY(0) scale(1); filter: brightness(1);} 50%{ transform: translateY(-6px) scale(1.05); filter: brightness(1.1);} }
+        @keyframes mood-stress { 0%,100%{transform: rotate(-2deg);} 50%{transform: rotate(2deg);} }
+        .avatar-mood-neutral { animation: mood-breathe 3s ease infinite; }
+        .avatar-mood-cold { animation: mood-stress 0.6s ease infinite; }
+        .avatar-mood-warm { animation: mood-breathe 4s ease-in-out infinite; background: linear-gradient(135deg,#fef3c7,#fce7f3); }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <header class="bg-white border-b px-4 py-3 text-sm"><a href="individual_index.html#ai-features" class="text-blue-700 font-medium">Interactive demos</a> · Interview lab</header>
+
+    <div class="max-w-5xl mx-auto px-4 py-8 grid lg:grid-cols-[220px_1fr] gap-8">
+        <div class="flex flex-col items-center">
+            <div id="avatar" class="w-40 h-40 rounded-full border-4 border-white shadow-xl avatar-mood-neutral flex items-center justify-center text-6xl bg-gradient-to-br from-indigo-600 to-slate-700">🧑‍💼</div>
+            <p id="avatar-label" class="mt-4 text-sm font-medium text-center text-slate-600">Interviewer · Adaptive presence</p>
+            <div class="mt-4 w-full space-y-2 text-xs text-slate-500">
+                <p class="font-semibold text-slate-700 uppercase tracking-wide">Tone</p>
+                <label class="flex gap-2"><input type="radio" name="tone" value="professional" checked> Professional</label>
+                <label class="flex gap-2"><input type="radio" name="tone" value="cold"> High pressure</label>
+                <label class="flex gap-2"><input type="radio" name="tone" value="friendly"> Supportive</label>
+            </div>
+            <button type="button" id="btn-load" class="mt-6 w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium">Load question set</button>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-2xl border p-6 shadow">
+                <h1 class="font-bold text-lg mb-3">Active prompt</h1>
+                <div id="question-box" class="text-slate-800 min-h-[6rem] bg-slate-50 border rounded-xl p-4 text-sm italic">Press “Load question set”, then step through each probe with your draft answer.</div>
+                <div class="flex justify-between mt-4 text-sm text-slate-500">
+                    <span id="qi">Question 0 / 0</span>
+                    <div class="flex gap-2">
+                        <button type="button" id="prev-q" class="border px-3 py-1 rounded-lg">Previous</button>
+                        <button type="button" id="next-q" class="border px-3 py-1 rounded-lg">Next</button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl border p-6 shadow">
+                <label class="text-sm font-semibold text-slate-700">Your answer (draft)</label>
+                <textarea id="answer-in" rows="6" class="w-full mt-2 border rounded-xl p-3 text-sm" placeholder="Use STAR where possible; we only store this in-memory for the demo."></textarea>
+                <div class="flex flex-wrap gap-3 mt-4">
+                    <button type="button" id="submit-ans" class="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-semibold">Generate session report</button>
+                    <button type="button" id="download-report" class="border border-slate-300 px-4 py-2 rounded-lg text-sm hidden">Download report (.txt)</button>
+                </div>
+            </div>
+            <div id="report-panel" class="hidden bg-indigo-950 text-indigo-50 rounded-2xl p-6 text-sm space-y-3">
+                <h2 class="text-lg font-semibold text-white flex items-center gap-2"><i class="fas fa-chart-line"></i> Session synopsis</h2>
+                <div id="report-body" class="leading-relaxed whitespace-pre-wrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="max-w-5xl mx-auto px-4 py-8 text-center text-sm text-slate-500 border-t border-slate-200">
+        <a href="../index.html" class="hover:text-blue-700">Welcome</a>
+        ·
+        <a href="individual_index.html#feedback" class="text-emerald-700 hover:underline font-medium">Rate this module</a>
+    </footer>
+
+    <script src="../api.js"></script>
+    <script>
+        var questions = [];
+        var qi = 0;
+        function setAvatarTone(t) {
+            var a = document.getElementById('avatar');
+            a.className = 'w-40 h-40 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-6xl ';
+            if (t === 'cold') { a.className += 'bg-slate-900 text-amber-300 avatar-mood-cold'; document.getElementById('avatar-label').textContent = 'Interviewer · Probing & skeptical'; }
+            else if (t === 'friendly') { a.className += 'avatar-mood-warm text-rose-600'; document.getElementById('avatar-label').textContent = 'Interviewer · Encouraging mentor'; }
+            else { a.className += 'bg-gradient-to-br from-indigo-600 to-slate-700 avatar-mood-neutral'; document.getElementById('avatar-label').textContent = 'Interviewer · Structured & fair'; }
+        }
+        function tone() { return (document.querySelector('input[name=tone]:checked') || {}).value || 'professional'; }
+        function showQ() {
+            if (!questions.length) return;
+            document.getElementById('question-box').textContent = questions[qi] || '';
+            document.getElementById('qi').textContent = 'Question ' + (qi + 1) + ' / ' + questions.length;
+        }
+        document.getElementById('btn-load').onclick = async function () {
+            setAvatarTone(tone());
+            var r = await API.interviewCoaching({}, 'Cross-border customer success lead', tone() === 'friendly' ? 'friendly' : tone() === 'cold' ? 'cold' : 'professional');
+            if (!r.success) return alert('Could not load prompts.');
+            questions = r.data.questions;
+            qi = 0;
+            showQ();
+        };
+        document.getElementById('next-q').onclick = function () { if (qi < questions.length - 1) { qi++; showQ(); } };
+        document.getElementById('prev-q').onclick = function () { if (qi > 0) { qi--; showQ(); } };
+        document.querySelectorAll('input[name=tone]').forEach(function (r) { r.onchange = function () { setAvatarTone(tone()); }; });
+
+        document.getElementById('submit-ans').onclick = async function () {
+            var prof = await API.skillAssessment({});
+            if (!prof.success) return;
+            var pack = 'INTERVIEW SESSION (DEMO)\n';
+            pack += 'Tone: ' + tone() + '\n';
+            pack += 'Recorded answer draft:\n' + document.getElementById('answer-in').value.slice(0, 2000) + '\n\n';
+            pack += 'Snapshot rubric scores (simulated):\n';
+            Object.entries(prof.data.skillScores || {}).forEach(function (x) { pack += '- ' + x[0] + ': ' + x[1] + '\n'; });
+            pack += '\nHighlights:\n' + (prof.data.strengths || []).map(function (s) { return '• ' + s; }).join('\n');
+            document.getElementById('report-body').textContent = pack;
+            document.getElementById('report-panel').classList.remove('hidden');
+            document.getElementById('download-report').classList.remove('hidden');
+            document.getElementById('download-report').onclick = function () {
+                var blob = new Blob([pack], { type: 'text/plain' });
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'interview-demo-report.txt';
+                a.click();
+            };
+        };
+    </script>
+</body>
+</html>

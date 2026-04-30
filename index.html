@@ -24,6 +24,10 @@
             --light-color: #f3f4f6;
         }
         
+        html {
+            scroll-padding-top: 5.5rem;
+        }
+        
         body {
             font-family: 'Noto Sans SC', sans-serif;
             scroll-behavior: smooth;
@@ -31,9 +35,97 @@
         
         .hero-section {
             background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            height: 100vh;
+            min-height: 100vh;
+            padding-top: 5.5rem;
+            padding-bottom: 2rem;
+            box-sizing: border-box;
             position: relative;
             overflow: hidden;
+        }
+        
+        .hero-inner {
+            padding-top: 0.5rem;
+        }
+        
+        /* Auth modal */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        
+        .auth-overlay.is-open {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .auth-modal {
+            background: #fff;
+            border-radius: 16px;
+            max-width: 420px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: translateY(12px);
+            transition: transform 0.2s ease;
+        }
+        
+        .auth-overlay.is-open .auth-modal {
+            transform: translateY(0);
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        
+        .auth-tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        
+        .auth-panel[hidden] {
+            display: none !important;
+        }
+        
+        /* Toast */
+        #page-toast {
+            position: fixed;
+            top: 5.5rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            z-index: 250;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            background: #1e293b;
+            color: #fff;
+            font-size: 0.875rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s, visibility 0.25s, transform 0.25s;
+            max-width: 90vw;
+        }
+        
+        #page-toast.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
         }
         
         .hero-wave {
@@ -135,41 +227,6 @@
             z-index: 100;
         }
         
-        .language-selector:hover .language-dropdown {
-            display: block;
-        }
-        
-        .role-selector {
-            display: flex;
-            gap: 1rem;
-            margin: 1rem 0;
-            justify-content: center;
-        }
-        
-        .role-option {
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-            backdrop-filter: blur(10px);
-            font-weight: 500;
-            min-width: 180px;
-            text-align: center;
-        }
-        
-        .role-option:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        
-        .role-option.active {
-            border-color: white;
-            background-color: rgba(255, 255, 255, 0.25);
-            color: white;
-        }
         
         /* Accessibility Styles */
         body.high-contrast {
@@ -224,8 +281,9 @@
         /* Responsive Design */
         @media (max-width: 768px) {
             .hero-section {
-                height: auto;
                 min-height: 100vh;
+                padding-top: 5rem;
+                padding-bottom: 3rem;
             }
             
             .feature-grid {
@@ -235,16 +293,6 @@
             .accessibility-panel {
                 width: 200px;
                 right: 1rem;
-            }
-            
-            .role-selector {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .role-option {
-                width: 100%;
-                max-width: 280px;
             }
         }
         
@@ -305,55 +353,79 @@
     </style>
 </head>
 <body>
+    <div id="page-toast" role="status" aria-live="polite"></div>
     <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md fixed w-full z-50">
+    <nav class="bg-white shadow-md fixed top-0 left-0 right-0 w-full z-50">
         <div class="container mx-auto px-4 py-3">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <a href="#" class="flex items-center">
+            <div class="flex justify-between items-center gap-4">
+                <div class="flex items-center min-w-0">
+                    <a href="./#top-hero" class="flex items-center shrink-0" id="nav-brand-link">
                         <i class="fas fa-handshake text-2xl text-blue-600 mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800">GBA Platform</span>
+                        <span class="text-xl font-bold text-gray-800 hidden sm:inline">GBA Platform</span>
+                        <span class="text-xl font-bold text-gray-800 sm:hidden">GBA</span>
                     </a>
                 </div>
                 
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors">Features</a>
-                    <a href="#how-it-works" class="text-gray-600 hover:text-blue-600 transition-colors">How It Works</a>
-                    <a href="#benefits" class="text-gray-600 hover:text-blue-600 transition-colors">Benefits</a>
-                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
-                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
+                <div class="hidden md:flex items-center space-x-6 lg:space-x-8 flex-1 justify-center min-w-0">
+                    <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">Features</a>
+                    <a href="#how-it-works" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">How It Works</a>
+                    <a href="#benefits" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">Benefits</a>
+                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">Success Stories</a>
+                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">FAQ</a>
                 </div>
                 
-                <div class="flex items-center space-x-4">
-                    <div class="language-selector">
-                        <button class="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
+                <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+                    <div class="language-selector hidden sm:block">
+                        <button type="button" class="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors" id="language-toggle-btn">
                             <i class="fas fa-globe"></i>
                             <span id="current-language">English</span>
                             <i class="fas fa-chevron-down text-xs"></i>
                         </button>
-                        <div class="language-dropdown">
+                        <div class="language-dropdown" id="language-dropdown">
                             <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="en">English</a>
                             <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-CN">Simplified Chinese</a>
                             <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-TW">Traditional Chinese</a>
                             <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
                         </div>
                     </div>
-                </div>
-                
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-600 hover:text-blue-600 transition-colors">
+                    
+                    <div id="nav-auth-guest" class="hidden md:flex items-center gap-2">
+                        <button type="button" id="nav-login-btn" class="text-gray-600 hover:text-blue-600 font-medium px-2 py-1 rounded transition-colors">
+                            Log in
+                        </button>
+                        <button type="button" id="nav-signup-btn" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                            Sign up
+                        </button>
+                    </div>
+                    
+                    <div id="nav-auth-user" class="hidden md:flex items-center gap-2 lg:gap-3">
+                        <span id="nav-user-greeting" class="text-gray-700 text-sm max-w-[140px] truncate lg:max-w-[200px]"></span>
+                        <a id="nav-portal-link" href="individual/index.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap">My portal</a>
+                        <button type="button" id="nav-logout-btn" class="text-gray-600 hover:text-red-600 text-sm font-medium px-2">Log out</button>
+                    </div>
+                    
+                    <button id="mobile-menu-button" type="button" class="md:hidden text-gray-600 hover:text-blue-600 transition-colors p-2" aria-expanded="false" aria-controls="mobile-menu">
                         <i class="fas fa-bars text-2xl"></i>
                     </button>
                 </div>
             </div>
             
             <!-- Mobile Menu -->
-            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
+            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2 border-t border-gray-100 mt-3">
                 <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Features</a>
                 <a href="#how-it-works" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">How It Works</a>
                 <a href="#benefits" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Benefits</a>
                 <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
                 <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
+                <div class="py-3 border-t border-gray-100 mt-2 space-y-2">
+                    <div id="nav-mobile-auth-guest">
+                        <button type="button" class="nav-mobile-login w-full text-left py-2 text-gray-600 hover:text-blue-600 font-medium">Log in</button>
+                        <button type="button" class="nav-mobile-signup w-full text-left py-2 text-blue-600 font-semibold">Sign up</button>
+                    </div>
+                    <span id="nav-mobile-user-line" class="hidden block text-gray-700 text-sm py-1"></span>
+                    <a id="nav-mobile-portal-link" href="individual/index.html" class="hidden text-blue-600 font-medium py-2 block">Go to portal</a>
+                    <button type="button" id="nav-mobile-logout-btn" class="hidden w-full text-left py-2 text-gray-600 hover:text-red-600">Log out</button>
+                </div>
             </div>
         </div>
     </nav>
@@ -395,22 +467,11 @@
     </div>
     
     <!-- Hero Section -->
-    <section class="hero-section flex items-center justify-center relative">
+    <section id="top-hero" class="hero-section flex items-center justify-center relative">
         <canvas id="hero-bg-canvas"></canvas>
-        <div class="container mx-auto px-4 z-10 text-center">
+        <div class="container mx-auto px-4 z-10 text-center hero-inner relative">
             <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">GBA Cross-Border Employment Empowerment Platform</h1>
             <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto">Empowering vulnerable groups through AI technology, breaking barriers, and connecting employment opportunities in the Guangdong-Hong Kong-Macao Greater Bay Area</p>
-            
-            <div class="role-selector mb-8">
-                <div class="role-option active" data-role="person">
-                    <i class="fas fa-user mr-2"></i>
-                    <span>Individual User</span>
-                </div>
-                <div class="role-option" data-role="company">
-                    <i class="fas fa-building mr-2"></i>
-                    <span>Corporate User</span>
-                </div>
-            </div>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4">
                 <a href="individual/index.html" class="btn-hero">
@@ -422,7 +483,7 @@
                     <span>Corporate Access</span>
                 </a>
             </div>
-            
+
             <div class="mt-12 flex flex-wrap justify-center gap-4">
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
                     <i class="fas fa-users text-2xl text-white mr-3"></i>
@@ -457,7 +518,7 @@
     <section id="features" class="py-20 bg-white">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-4">Platform Features</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Advanced AI-powered features designed to empower both job seekers and employers</p>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Advanced AI-powered features for job seekers and employers. <strong>Learn more</strong> opens the matching <strong>individual</strong> HTML sandbox—usually via <a href="individual/index.html" class="text-blue-600 hover:underline">Individual Portal</a> → Interactive Workspace; <strong>Skills development</strong> links straight to the <strong>AI learning path</strong> builder (experience + target role).</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
@@ -468,8 +529,10 @@
                     <h3 class="text-xl font-bold mb-3">AI-Powered Matching</h3>
                     <p class="text-gray-600 mb-4">Intelligent skills-based matching algorithm that connects the right talent with the right opportunities, eliminating bias through "blind screening" technology.</p>
                     <div class="flex items-center text-blue-600 font-medium">
-                        <span>Learn more</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
+                        <a href="individual/module-resume-matching.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Learn more</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
                     </div>
                 </div>
                 
@@ -481,8 +544,10 @@
                     <h3 class="text-xl font-bold mb-3">Data Security & Compliance</h3>
                     <p class="text-gray-600 mb-4">Strict adherence to cross-border data localization principles with hierarchical privacy storage and automatic sensitive information anonymization.</p>
                     <div class="flex items-center text-blue-600 font-medium">
-                        <span>Learn more</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
+                        <a href="individual/individual_index.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Learn more</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
                     </div>
                 </div>
                 
@@ -494,8 +559,10 @@
                     <h3 class="text-xl font-bold mb-3">Accessibility</h3>
                     <p class="text-gray-600 mb-4">WCAG 2.2 compliant design with screen reader compatibility, keyboard navigation, high contrast mode, and voice assistant for users with disabilities.</p>
                     <div class="flex items-center text-blue-600 font-medium">
-                        <span>Learn more</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
+                        <a href="individual/module-olivia.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Learn more</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
                     </div>
                 </div>
                 
@@ -507,8 +574,10 @@
                     <h3 class="text-xl font-bold mb-3">Multi-Language Support</h3>
                     <p class="text-gray-600 mb-4">Full support for Simplified Chinese, Traditional Chinese, English, and Portuguese to serve the diverse GBA population.</p>
                     <div class="flex items-center text-blue-600 font-medium">
-                        <span>Learn more</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
+                        <a href="individual/index.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Learn more</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
                     </div>
                 </div>
                 
@@ -520,8 +589,10 @@
                     <h3 class="text-xl font-bold mb-3">Skills Development</h3>
                     <p class="text-gray-600 mb-4">Personalized learning paths and skill assessment tools to help job seekers enhance their employability in the cross-border job market.</p>
                     <div class="flex items-center text-blue-600 font-medium">
-                        <span>Learn more</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
+                        <a href="individual/module-learning-path.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Learn more</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
                     </div>
                 </div>
                 
@@ -533,8 +604,10 @@
                     <h3 class="text-xl font-bold mb-3">Policy Intelligence</h3>
                     <p class="text-gray-600 mb-4">AI-powered policy consultation service that provides guidance on cross-border employment regulations, visa requirements, and compliance issues.</p>
                     <div class="flex items-center text-blue-600 font-medium">
-                        <span>Learn more</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
+                        <a href="individual/module-policy-navigator.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Learn more</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -704,6 +777,7 @@
                         </li>
                     </ul>
                     
+                    <p class="text-sm text-gray-600 mt-6">Live flows (résumé, jobs, interview, policy, <strong>AI learning path</strong>, Olivia): open <strong>Individual Portal</strong> → Interactive Workspace, or jump straight to the learning-path sandbox from AI Features.</p>
                     <a href="individual/index.html" class="btn-primary mt-8 w-full justify-center">
                         <i class="fas fa-user"></i>
                         <span>Individual Access</span>
@@ -758,6 +832,7 @@
                         </li>
                     </ul>
                     
+                    <p class="text-sm text-gray-600 mt-6">Policy, interview, and role demos use the <strong>same sandboxes</strong> as applicants—open them from <a href="corporate/corporate_index.html#ai-features" class="text-green-700 font-medium hover:underline">HR interactive demos</a> or the cards on this portal after Corporate Access.</p>
                     <a href="corporate/index.html" class="btn-primary mt-8 w-full justify-center" style="background-color: #10b981;">
                         <i class="fas fa-building"></i>
                         <span>Corporate Access</span>
@@ -896,14 +971,14 @@
             <p class="text-xl mb-8 max-w-3xl mx-auto">Experience the power of AI technology in breaking down barriers and connecting talent with opportunities across the Greater Bay Area.</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-                <a href="individual/index.html" class="btn-hero" style="background-color: white; color: #2563eb;">
+                <button type="button" class="btn-hero auth-cta-register cursor-pointer border-0" style="background-color: white; color: #2563eb;" data-auth-portal="individual">
                     <i class="fas fa-user"></i>
                     <span>Individual Sign Up</span>
-                </a>
-                <a href="corporate/index.html" class="btn-hero" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                </button>
+                <button type="button" class="btn-hero auth-cta-register cursor-pointer border-0" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white !important;" data-auth-portal="corporate">
                     <i class="fas fa-building"></i>
                     <span>Corporate Sign Up</span>
-                </a>
+                </button>
             </div>
             
             <div class="flex flex-wrap justify-center gap-8">
@@ -966,9 +1041,10 @@
                     <ul class="space-y-2">
                         <li><a href="individual/index.html" class="text-gray-400 hover:text-white transition-colors">Individual Portal</a></li>
                         <li><a href="corporate/index.html" class="text-gray-400 hover:text-white transition-colors">Corporate Portal</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Login</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Sign Up</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Forgot Password</a></li>
+                        <li><a href="corporate/corporate_index.html#ai-features" class="text-gray-400 hover:text-white transition-colors">HR interactive demos</a></li>
+                        <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="login">Log in</button></li>
+                        <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="register">Sign up</button></li>
+                        <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="forgot">Forgot password</button></li>
                     </ul>
                 </div>
                 
@@ -997,28 +1073,455 @@
         </div>
     </footer>
     
+    <div id="auth-overlay" class="auth-overlay" aria-hidden="true">
+        <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-heading">
+            <div class="flex justify-between items-center px-5 py-3 border-b border-gray-100 bg-slate-50">
+                <h2 id="auth-heading" class="text-lg font-bold text-gray-900">Sign in</h2>
+                <button type="button" id="auth-close-btn" class="text-gray-500 hover:text-gray-900 text-2xl leading-none w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors" aria-label="Close">&times;</button>
+            </div>
+            <div class="flex border-b border-gray-200" id="auth-tabs-row">
+                <button type="button" class="auth-tab active" data-auth-tab="login">Log in</button>
+                <button type="button" class="auth-tab" data-auth-tab="register">Sign up</button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-500 mb-4" id="auth-demo-hint">Demo: use any email and a password of 6 or more characters. Data is saved only in this browser.</p>
+                
+                <div id="auth-panel-login" class="auth-panel space-y-4">
+                    <fieldset class="space-y-2 border-0 p-0 m-0">
+                        <legend class="text-sm font-medium text-gray-800 mb-2">Account type</legend>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-login" value="individual" class="text-blue-600" checked /> Individual</label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-login" value="corporate" class="text-blue-600" /> Corporate</label>
+                    </fieldset>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-email">Email</label>
+                        <input type="email" id="auth-login-email" autocomplete="username" placeholder="you@example.com" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-password">Password</label>
+                        <input type="password" id="auth-login-password" autocomplete="current-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow" />
+                    </div>
+                    <p id="auth-login-error" class="text-red-600 text-sm hidden"></p>
+                    <button type="button" id="auth-login-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm">Log in</button>
+                    <button type="button" id="auth-forgot-link" class="w-full text-sm text-blue-600 hover:underline font-medium">Forgot password?</button>
+                </div>
+                
+                <div id="auth-panel-register" class="auth-panel space-y-4" hidden>
+                    <fieldset class="space-y-2 border-0 p-0 m-0">
+                        <legend class="text-sm font-medium text-gray-800 mb-2">Account type</legend>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-register" value="individual" class="text-blue-600" checked /> Individual</label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-register" value="corporate" class="text-blue-600" /> Corporate</label>
+                    </fieldset>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-name">Display name <span class="text-gray-400 font-normal">(optional)</span></label>
+                        <input type="text" id="auth-register-name" autocomplete="name" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Jane Lee" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-email">Email</label>
+                        <input type="email" id="auth-register-email" autocomplete="email" placeholder="you@company.com" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password">Password</label>
+                        <input type="password" id="auth-register-password" autocomplete="new-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password2">Confirm password</label>
+                        <input type="password" id="auth-register-password2" autocomplete="new-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                    </div>
+                    <p id="auth-register-error" class="text-red-600 text-sm hidden"></p>
+                    <button type="button" id="auth-register-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm">Create account</button>
+                </div>
+                
+                <div id="auth-panel-forgot" class="auth-panel space-y-4" hidden>
+                    <button type="button" id="auth-back-login" class="text-sm text-blue-600 hover:underline font-medium flex items-center gap-1">
+                        <i class="fas fa-arrow-left text-xs"></i> Back to log in
+                    </button>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-forgot-email">Email</label>
+                        <input type="email" id="auth-forgot-email" autocomplete="email" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                    </div>
+                    <p id="auth-forgot-msg" class="text-sm text-gray-600 min-h-[1.25rem]"></p>
+                    <button type="button" id="auth-forgot-submit" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 rounded-lg transition-colors">Send reset link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="api.js"></script>
     <script>
         // Execute after page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize 3D background
             initThreeJsBackground();
-            
-            // Accessibility features
             initAccessibility();
-            
-            // Mobile menu
             initMobileMenu();
-            
-            // FAQ accordion
             initFaqAccordion();
-            
-            // Role selector
-            initRoleSelector();
-            
-            // Smooth scrolling
+            bindPortalHeroLinks();
+            initLanguageMenu();
+            initAuthOverlay();
+            bindAuthCtas();
             initSmoothScroll();
+            refreshNavAuth();
         });
-        
+
+        function showToast(message) {
+            var toast = document.getElementById('page-toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add('is-visible');
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(function () {
+                toast.classList.remove('is-visible');
+            }, 3200);
+        }
+
+        function getPortalFromHero() {
+            var stored =
+                typeof API !== 'undefined' && API.loadPersistedPortal
+                    ? API.loadPersistedPortal()
+                    : null;
+            return stored === 'corporate' ? 'corporate' : 'individual';
+        }
+
+        function setPortalRadios(portal) {
+            var p = portal === 'corporate' ? 'corporate' : 'individual';
+            document.querySelectorAll('input[name="auth-portal-login"]').forEach(function (r) {
+                r.checked = r.value === p;
+            });
+            document.querySelectorAll('input[name="auth-portal-register"]').forEach(function (r) {
+                r.checked = r.value === p;
+            });
+        }
+
+        function refreshNavAuth() {
+            var session =
+                typeof API !== 'undefined' && API.getAuthSession ? API.getAuthSession() : null;
+            var logged = !!(session && session.email);
+
+            var guestDesk = document.getElementById('nav-auth-guest');
+            var userDesk = document.getElementById('nav-auth-user');
+            var mobGuest = document.getElementById('nav-mobile-auth-guest');
+            var mobLine = document.getElementById('nav-mobile-user-line');
+            var mobPortal = document.getElementById('nav-mobile-portal-link');
+            var mobLogout = document.getElementById('nav-mobile-logout-btn');
+            var greet = document.getElementById('nav-user-greeting');
+            var portalA = document.getElementById('nav-portal-link');
+
+            if (guestDesk)
+                guestDesk.className = logged ? 'hidden' : 'hidden md:flex items-center gap-2';
+            if (userDesk)
+                userDesk.className = logged ? 'hidden md:flex items-center gap-2 lg:gap-3' : 'hidden';
+
+            if (greet && session) greet.textContent = 'Hi, ' + session.displayName;
+            if (portalA && typeof API !== 'undefined' && session) {
+                portalA.href = API.portalEntryHref(session.portal);
+            }
+
+            if (mobGuest) mobGuest.classList.toggle('hidden', logged);
+            if (mobLine) {
+                mobLine.classList.toggle('hidden', !logged);
+                mobLine.textContent = logged && session ? 'Signed in as ' + session.email : '';
+            }
+            if (mobPortal && session) mobPortal.href = API.portalEntryHref(session.portal);
+            if (mobPortal) mobPortal.classList.toggle('hidden', !logged);
+            if (mobLogout) mobLogout.classList.toggle('hidden', !logged);
+        }
+
+        function initLanguageMenu() {
+            var LANG_LABELS = {
+                en: 'English',
+                'zh-CN': 'Simplified Chinese',
+                'zh-TW': 'Traditional Chinese',
+                pt: 'Português'
+            };
+            var LANG_KEY = 'gba_ui_lang';
+
+            try {
+                var saved = localStorage.getItem(LANG_KEY);
+                var cur = document.getElementById('current-language');
+                if (saved && LANG_LABELS[saved] && cur) cur.textContent = LANG_LABELS[saved];
+            } catch (e) {}
+
+            var selector = document.querySelector('.language-selector');
+            var toggleBtn = document.getElementById('language-toggle-btn');
+
+            if (toggleBtn && selector) {
+                toggleBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    selector.classList.toggle('is-open');
+                });
+                document.addEventListener('click', function () {
+                    selector.classList.remove('is-open');
+                });
+                selector.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            }
+
+            document.querySelectorAll('[data-lang]').forEach(function (node) {
+                node.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var code = node.getAttribute('data-lang');
+                    var curEl = document.getElementById('current-language');
+                    if (LANG_LABELS[code] && curEl) curEl.textContent = LANG_LABELS[code];
+                    try {
+                        localStorage.setItem(LANG_KEY, code);
+                    } catch (err) {}
+                    showToast('Language preference saved for this demo.');
+                    if (selector) selector.classList.remove('is-open');
+                });
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    var sel = document.querySelector('.language-selector');
+                    if (sel) sel.classList.remove('is-open');
+                }
+            });
+        }
+
+        function showAuthPanels(view) {
+            var loginPanel = document.getElementById('auth-panel-login');
+            var regPanel = document.getElementById('auth-panel-register');
+            var forgotPanel = document.getElementById('auth-panel-forgot');
+            var tabsRow = document.getElementById('auth-tabs-row');
+            var hint = document.getElementById('auth-demo-hint');
+            var heading = document.getElementById('auth-heading');
+
+            if (view === 'forgot') {
+                if (tabsRow) tabsRow.hidden = true;
+                if (hint) hint.hidden = true;
+                if (loginPanel) loginPanel.hidden = true;
+                if (regPanel) regPanel.hidden = true;
+                if (forgotPanel) forgotPanel.hidden = false;
+                if (heading) heading.textContent = 'Reset password';
+                return;
+            }
+
+            if (tabsRow) tabsRow.hidden = false;
+            if (hint) hint.hidden = false;
+            if (forgotPanel) forgotPanel.hidden = true;
+            if (heading)
+                heading.textContent = view === 'register' ? 'Create account' : 'Sign in';
+
+            document.querySelectorAll('.auth-tab').forEach(function (t) {
+                t.classList.toggle('active', t.getAttribute('data-auth-tab') === view);
+            });
+
+            if (loginPanel) loginPanel.hidden = view !== 'login';
+            if (regPanel) regPanel.hidden = view !== 'register';
+
+            ['auth-login-error', 'auth-register-error'].forEach(function (id) {
+                var er = document.getElementById(id);
+                if (er) {
+                    er.classList.add('hidden');
+                    er.textContent = '';
+                }
+            });
+        }
+
+        function openAuthModal(mode, presetPortal) {
+            var overlay = document.getElementById('auth-overlay');
+            if (!overlay) return;
+            presetPortal =
+                presetPortal ||
+                (typeof API !== 'undefined' && API.loadPersistedPortal
+                    ? API.loadPersistedPortal()
+                    : null) ||
+                getPortalFromHero();
+            setPortalRadios(presetPortal);
+
+            if (mode === 'forgot') {
+                showAuthPanels('forgot');
+                var fm = document.getElementById('auth-forgot-msg');
+                if (fm) fm.textContent = '';
+            } else {
+                showAuthPanels(mode === 'register' ? 'register' : 'login');
+            }
+
+            overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+
+            setTimeout(function () {
+                var focusId =
+                    mode === 'forgot'
+                        ? 'auth-forgot-email'
+                        : mode === 'register'
+                          ? 'auth-register-email'
+                          : 'auth-login-email';
+                var el = document.getElementById(focusId);
+                if (el) el.focus();
+            }, 100);
+        }
+
+        function closeAuthModal() {
+            var overlay = document.getElementById('auth-overlay');
+            if (!overlay) return;
+            overlay.classList.remove('is-open');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        function initAuthOverlay() {
+            var overlay = document.getElementById('auth-overlay');
+            if (!overlay || typeof API === 'undefined') return;
+
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeAuthModal();
+            });
+
+            document.getElementById('auth-close-btn') &&
+                document
+                    .getElementById('auth-close-btn')
+                    .addEventListener('click', closeAuthModal);
+
+            document.querySelectorAll('.auth-tab').forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    var m = tab.getAttribute('data-auth-tab');
+                    if (m === 'login' || m === 'register') showAuthPanels(m);
+                });
+            });
+
+            document.getElementById('auth-forgot-link') &&
+                document
+                    .getElementById('auth-forgot-link')
+                    .addEventListener('click', function () {
+                        showAuthPanels('forgot');
+                    });
+
+            document.getElementById('auth-back-login') &&
+                document
+                    .getElementById('auth-back-login')
+                    .addEventListener('click', function () {
+                        showAuthPanels('login');
+                    });
+
+            document.getElementById('nav-login-btn') &&
+                document
+                    .getElementById('nav-login-btn')
+                    .addEventListener('click', function () {
+                        openAuthModal('login');
+                    });
+
+            document.getElementById('nav-signup-btn') &&
+                document
+                    .getElementById('nav-signup-btn')
+                    .addEventListener('click', function () {
+                        openAuthModal('register');
+                    });
+
+            document.querySelector('.nav-mobile-login') &&
+                document
+                    .querySelector('.nav-mobile-login')
+                    .addEventListener('click', function () {
+                        document.getElementById('mobile-menu').classList.add('hidden');
+                        openAuthModal('login');
+                    });
+
+            document.querySelector('.nav-mobile-signup') &&
+                document
+                    .querySelector('.nav-mobile-signup')
+                    .addEventListener('click', function () {
+                        document.getElementById('mobile-menu').classList.add('hidden');
+                        openAuthModal('register');
+                    });
+
+            document.getElementById('nav-logout-btn') &&
+                document
+                    .getElementById('nav-logout-btn')
+                    .addEventListener('click', function () {
+                        API.logout();
+                        refreshNavAuth();
+                        showToast('Signed out.');
+                    });
+
+            document.getElementById('nav-mobile-logout-btn') &&
+                document
+                    .getElementById('nav-mobile-logout-btn')
+                    .addEventListener('click', function () {
+                        API.logout();
+                        refreshNavAuth();
+                        showToast('Signed out.');
+                    });
+
+            document.querySelectorAll('.js-auth-open').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    openAuthModal(btn.getAttribute('data-auth-mode') || 'login');
+                });
+            });
+
+            document.getElementById('auth-login-submit').addEventListener('click', async function () {
+                var emailEl = document.getElementById('auth-login-email');
+                var pwEl = document.getElementById('auth-login-password');
+                var errEl = document.getElementById('auth-login-error');
+                var portal = (
+                    document.querySelector('input[name="auth-portal-login"]:checked') || {}
+                ).value;
+                var res = await API.login(emailEl.value, pwEl.value, portal);
+                if (!res.success) {
+                    errEl.textContent = res.message || 'Login failed';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+                API.persistPortal(portal === 'corporate' ? 'company' : 'person');
+                closeAuthModal();
+                refreshNavAuth();
+                showToast('Welcome back, ' + res.data.displayName + '!');
+            });
+
+            document
+                .getElementById('auth-register-submit')
+                .addEventListener('click', async function () {
+                    var portal = (
+                        document.querySelector('input[name="auth-portal-register"]:checked') || {}
+                    ).value;
+                    var email = document.getElementById('auth-register-email').value;
+                    var pw = document.getElementById('auth-register-password').value;
+                    var pw2 = document.getElementById('auth-register-password2').value;
+                    var name = document.getElementById('auth-register-name').value;
+                    var errEl = document.getElementById('auth-register-error');
+
+                    errEl.classList.add('hidden');
+                    if (pw !== pw2) {
+                        errEl.textContent = 'Passwords do not match.';
+                        errEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    var res = await API.register(email, pw, portal, name);
+                    if (!res.success) {
+                        errEl.textContent = res.message || 'Registration failed';
+                        errEl.classList.remove('hidden');
+                        return;
+                    }
+                    API.persistPortal(portal === 'corporate' ? 'company' : 'person');
+                    closeAuthModal();
+                    refreshNavAuth();
+                    showToast('Account created. Explore your portal!');
+                });
+
+            document
+                .getElementById('auth-forgot-submit')
+                .addEventListener('click', async function () {
+                    var email = document.getElementById('auth-forgot-email').value;
+                    var msg = document.getElementById('auth-forgot-msg');
+                    var res = await API.requestPasswordReset(email);
+                    msg.textContent = res.success ? res.message : res.message || 'Request failed.';
+                });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeAuthModal();
+            });
+        }
+
+        function bindAuthCtas() {
+            document.querySelectorAll('.auth-cta-register').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var portal = btn.getAttribute('data-auth-portal') || 'individual';
+                    openAuthModal('register', portal);
+                });
+            });
+        }
+
         // Initialize 3D background
         function initThreeJsBackground() {
             const canvas = document.getElementById('hero-bg-canvas');
@@ -1113,14 +1616,14 @@
             screenReaderBtn.addEventListener('click', () => {
                 toggleSwitch(screenReaderBtn);
                 // Screen reader related functionality can be added here
-                alert('Screen reader mode activated');
+                showToast('Screen reader optimizations remain available via your OS and browser.');
             });
             
             // Keyboard navigation mode
             keyboardNavBtn.addEventListener('click', () => {
                 toggleSwitch(keyboardNavBtn);
                 // Keyboard navigation related functionality can be added here
-                alert('Keyboard navigation mode activated');
+                showToast('Keyboard tips: Tab to focus, Enter to activate, Escape to close dialogs.');
             });
             
             // Toggle switch state
@@ -1140,11 +1643,12 @@
         
         // Initialize mobile menu
         function initMobileMenu() {
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            
-            mobileMenuButton.addEventListener('click', () => {
+            var mobileMenuButton = document.getElementById('mobile-menu-button');
+            var mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', function () {
                 mobileMenu.classList.toggle('hidden');
+                var isOpen = !mobileMenu.classList.contains('hidden');
+                mobileMenuButton.setAttribute('aria-expanded', String(isOpen));
             });
         }
         
@@ -1163,42 +1667,59 @@
             });
         }
         
-        // Initialize role selector
-        function initRoleSelector() {
-            const roleOptions = document.querySelectorAll('.role-option');
-            
-            roleOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    // Remove active class from all options
-                    roleOptions.forEach(opt => opt.classList.remove('active'));
-                    
-                    // Add active class to clicked option
-                    option.classList.add('active');
+        function bindPortalHeroLinks() {
+            if (typeof API === 'undefined' || !API.portalEntryHref) return;
+            document
+                .querySelectorAll(
+                    'a.btn-hero[href*="individual"], a.btn-hero[href*="corporate"], ' +
+                        'a.btn-primary[href*="individual"], a.btn-primary[href*="corporate"]'
+                )
+                .forEach(function (a) {
+                    var hrefAttr = (a.getAttribute('href') || '').toLowerCase();
+                    var isCorp = hrefAttr.indexOf('corporate') !== -1;
+                    a.setAttribute('href', API.portalEntryHref(isCorp ? 'corporate' : 'individual'));
+                    a.addEventListener(
+                        'click',
+                        function () {
+                            API.persistPortal(isCorp ? 'company' : 'person');
+                        },
+                        false
+                    );
                 });
-            });
         }
         
-        // Initialize smooth scrolling
         function initSmoothScroll() {
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
+            document.querySelectorAll('a[href]').forEach(function (anchor) {
+                var raw = (anchor.getAttribute('href') || '').trim();
+                if (!raw || raw === '#') return;
+                var hashIdx = raw.indexOf('#');
+                if (hashIdx < 0) return;
+                var hash = raw.slice(hashIdx).split('&')[0];
+                if (!hash || hash === '#') return;
+
+                anchor.addEventListener('click', function (e) {
+                    var url;
+                    try {
+                        url = new URL(raw, window.location.href);
+                    } catch (err) {
+                        return;
+                    }
+                    if (url.origin !== window.location.origin || !url.hash) return;
+
+                    var targetEl = document.querySelector(url.hash);
+                    if (!targetEl) return;
+
                     e.preventDefault();
-                    
-                    const targetId = this.getAttribute('href');
-                    if (targetId === '#') return;
-                    
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                        
-                        // Close menu after clicking on mobile devices
-                        const mobileMenu = document.getElementById('mobile-menu');
-                        if (!mobileMenu.classList.contains('hidden')) {
-                            mobileMenu.classList.add('hidden');
-                        }
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (history.replaceState) {
+                        history.replaceState(null, '', url.pathname + window.location.search + url.hash);
+                    }
+
+                    var mobileMenu = document.getElementById('mobile-menu');
+                    var burger = document.getElementById('mobile-menu-button');
+                    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                        if (burger) burger.setAttribute('aria-expanded', 'false');
                     }
                 });
             });
