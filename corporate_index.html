@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBA Cross-Border Employment Empowerment Platform - Corporate</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --primary-color: #10b981;
+            --secondary-color: #2563eb;
+            --accent-color: #f97316;
+            --neutral-color: #6b7280;
+            --dark-color: #1f2937;
+            --light-color: #f3f4f6;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,202.7C672,203,768,181,864,181.3C960,181,1056,203,1152,202.7C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ai-feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .accessibility-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .accessibility-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .accessibility-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 2rem;
+            z-index: 1000;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            width: 250px;
+            display: none;
+        }
+        
+        .accessibility-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .language-selector {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            min-width: 120px;
+            display: none;
+            z-index: 100;
+        }
+        
+        .language-selector:hover .language-dropdown {
+            display: block;
+        }
+        
+        /* Accessibility Styles */
+        body.high-contrast {
+            --primary-color: #00cc66;
+            --secondary-color: #0066cc;
+            --accent-color: #ff6600;
+            --neutral-color: #333333;
+            --dark-color: #000000;
+            --light-color: #ffffff;
+            background-color: #000000;
+            color: #ffffff;
+        }
+        
+        body.large-text {
+            font-size: 1.2em;
+        }
+        
+        body.large-text h1 {
+            font-size: 2em;
+        }
+        
+        body.large-text h2 {
+            font-size: 1.8em;
+        }
+        
+        /* 3D Background Animation */
+        #hero-bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        /* Loading Animation */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-section {
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .accessibility-panel {
+                width: 200px;
+                right: 1rem;
+            }
+        }
+        
+        /* AI Module Styles */
+        .ai-module {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ai-module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ai-module-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+        
+        .ai-module-body {
+            padding: 1.5rem;
+            flex: 1;
+            background-color: white;
+        }
+        
+        .ai-module-footer {
+            padding: 1rem 1.5rem;
+            background-color: var(--light-color);
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        /* Button Styles */
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid var(--primary-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--light-color);
+            transform: translateY(-2px);
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        /* Label Styles */
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tag-primary {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .tag-secondary {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--secondary-color);
+        }
+        
+        .tag-accent {
+            background-color: rgba(249, 115, 22, 0.1);
+            color: var(--accent-color);
+        }
+        
+        /* Corporate User Specific Styles */
+        .corporate-feature-icon {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+        }
+        
+        .dashboard-card {
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: var(--light-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md fixed w-full z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <a href="../index.html" class="flex items-center">
+                        <i class="fas fa-handshake text-2xl text-green-600 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">GBA Platform</span>
+                    </a>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#dashboard" class="text-gray-600 hover:text-green-600 transition-colors">Dashboard</a>
+                    <a href="#ai-features" class="text-gray-600 hover:text-green-600 transition-colors">AI Features</a>
+                    <a href="#jobs" class="text-gray-600 hover:text-green-600 transition-colors">My Jobs</a>
+                    <a href="#analytics" class="text-gray-600 hover:text-green-600 transition-colors">Analytics</a>
+                    <a href="#faq" class="text-gray-600 hover:text-green-600 transition-colors">FAQ</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="language-selector">
+                        <button class="flex items-center space-x-1 text-gray-600 hover:text-green-600 transition-colors">
+                            <i class="fas fa-globe"></i>
+                            <span id="current-language">English</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div class="language-dropdown">
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="en">English</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-CN">Simplified Chinese</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-TW">Traditional Chinese</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <img src="https://ui-avatars.com/api/?name=Company&background=10b981&color=fff" alt="Company" class="w-8 h-8 rounded-full">
+                        <span class="text-gray-700 font-medium">Company Account</span>
+                    </div>
+                </div>
+                
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-green-600 transition-colors">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
+                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">Dashboard</a>
+                <a href="#ai-features" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">AI Features</a>
+                <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">My Jobs</a>
+                <a href="#analytics" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">Analytics</a>
+                <a href="#faq" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">FAQ</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Accessibility Button -->
+    <div class="accessibility-btn" id="accessibility-btn">
+        <i class="fas fa-universal-access text-xl"></i>
+    </div>
+    
+    <!-- Accessibility Panel -->
+    <div class="accessibility-panel" id="accessibility-panel">
+        <h3 class="font-bold mb-3">Accessibility Options</h3>
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <label for="high-contrast" class="text-sm">High Contrast</label>
+                <button id="high-contrast" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <label for="large-text" class="text-sm">Large Text</label>
+                <button id="large-text" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <label for="screen-reader" class="text-sm">Screen Reader</label>
+                <button id="screen-reader" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <label for="keyboard-nav" class="text-sm">Keyboard Navigation</label>
+                <button id="keyboard-nav" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hero Section -->
+    <section class="hero-section flex items-center justify-center relative">
+        <canvas id="hero-bg-canvas"></canvas>
+        <div class="container mx-auto px-4 z-10 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">Corporate User Dashboard</h1>
+            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto">Connect with diverse talent across the Greater Bay Area through our AI-powered recruitment platform</p>
+            
+            <a href="#dashboard" class="btn-primary text-lg">
+                <i class="fas fa-chart-line"></i>
+                <span>View Recruitment Dashboard</span>
+            </a>
+            
+            <div class="mt-12 flex flex-wrap justify-center gap-4">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
+                    <i class="fas fa-users text-2xl text-white mr-3"></i>
+                    <div class="text-left">
+                        <div class="text-white font-bold">250+</div>
+                        <div class="text-white text-sm">Candidate Matches</div>
+                    </div>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
+                    <i class="fas fa-file-alt text-2xl text-white mr-3"></i>
+                    <div class="text-left">
+                        <div class="text-white font-bold">15</div>
+                        <div class="text-white text-sm">Active Job Postings</div>
+                    </div>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
+                    <i class="fas fa-handshake text-2xl text-white mr-3"></i>
+                    <div class="text-left">
+                        <div class="text-white font-bold">45</div>
+                        <div class="text-white text-sm">Interviews Scheduled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hero-wave"></div>
+    </section>
+    
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Recruitment Dashboard</h2>
+            
+            <!-- Stats Overview -->
+            <div class="stats-grid mb-12">
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-green-600 mb-2">15</div>
+                    <div class="text-gray-600">Active Jobs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">254</div>
+                    <div class="text-gray-600">Applications</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-purple-600 mb-2">45</div>
+                    <div class="text-gray-600">Interviews</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-orange-600 mb-2">12</div>
+                    <div class="text-gray-600">Hires This Month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-green-600 mb-2">85%</div>
+                    <div class="text-gray-600">Diversity Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">18</div>
+                    <div class="text-gray-600">Days to Hire</div>
+                </div>
+            </div>
+            
+            <!-- Analytics Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-12">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Recruitment Analytics</h3>
+                    <div class="flex space-x-2">
+                        <button class="px-4 py-2 bg-green-100 text-green-800 rounded-lg">Monthly</button>
+                        <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Quarterly</button>
+                        <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Yearly</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="recruitmentChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Recent Activities -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-12">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Recent Activities</h3>
+                    <a href="#" class="text-green-600 hover:text-green-800 font-medium">View All</a>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Activity 1 -->
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-user-check text-green-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <h4 class="font-semibold text-gray-800">Candidate Applied</h4>
+                                    <span class="text-gray-500 text-sm">2 hours ago</span>
+                                </div>
+                                <p class="text-gray-600">Zhang Wei applied for Senior Software Developer position</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="tag tag-primary">92% Match</span>
+                                    <button class="ml-auto text-green-600 hover:text-green-800">View Profile</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity 2 -->
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-calendar-check text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <h4 class="font-semibold text-gray-800">Interview Scheduled</h4>
+                                    <span class="text-gray-500 text-sm">5 hours ago</span>
+                                </div>
+                                <p class="text-gray-600">Interview with Maria Chen for Marketing Manager position</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="tag tag-secondary">Tomorrow, 10:00 AM</span>
+                                    <button class="ml-auto text-green-600 hover:text-green-800">View Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity 3 -->
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-handshake text-purple-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <h4 class="font-semibold text-gray-800">Job Offer Accepted</h4>
+                                    <span class="text-gray-500 text-sm">1 day ago</span>
+                                </div>
+                                <p class="text-gray-600">David Lau accepted the offer for Financial Analyst position</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="tag tag-accent">Start Date: June 15</span>
+                                    <button class="ml-auto text-green-600 hover:text-green-800">View Offer</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- AI Features Section -->
+    <section id="ai-features" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">AI-Powered Recruitment Tools</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Advanced AI tools designed specifically for corporate users to streamline your recruitment process</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Talent Matching -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon corporate-feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Talent Matching</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">AI-powered talent pool search with skills-based precise matching to find the best candidates for your needs.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Skills-based precise matching</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Diversity and inclusion metrics</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>"Blind recruitment" mode</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('talent-modal')">
+                            <i class="fas fa-search"></i>
+                            <span>Find Talent</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Policy Calculator -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon corporate-feature-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Policy Calculator</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Cross-border employment cost calculation and compliance risk assessment for hiring in different GBA regions.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Employment cost calculation</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Tax and social security estimation</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Compliance risk assessment</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('policy-calculator-modal')">
+                            <i class="fas fa-calculator"></i>
+                            <span>Calculate Costs</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- HR Interview Tools -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon corporate-feature-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">HR Interview Tools</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">AI interview question generation and candidate evaluation to standardize your interview process.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>AI interview question generation</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Interview process management</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Candidate evaluation and comparison</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('interview-tools-modal')">
+                            <i class="fas fa-tools"></i>
+                            <span>Access Tools</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Job Posting Optimization -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon corporate-feature-icon">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Job Posting Optimization</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">AI-powered job description optimization to attract more qualified candidates and improve diversity.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Bias-free language checking</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>SEO optimization for job boards</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Salary benchmarking</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('job-optimization-modal')">
+                            <i class="fas fa-magic"></i>
+                            <span>Optimize Posting</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Candidate Screening -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon corporate-feature-icon">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Candidate Screening</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Automated resume screening and candidate shortlisting based on skills and qualifications.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Automated resume screening</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Skills verification</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Shortlist generation</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('screening-modal')">
+                            <i class="fas fa-filter"></i>
+                            <span>Screen Candidates</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Diversity Analytics -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon corporate-feature-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Diversity Analytics</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Comprehensive diversity metrics and analytics to track and improve your inclusion efforts.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Diversity metrics tracking</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Benchmarking against industry standards</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Improvement recommendations</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('diversity-modal')">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>View Analytics</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Jobs Section -->
+    <section id="jobs" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">My Job Postings</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Manage your job postings and track applications</p>
+            
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center space-x-4">
+                    <button class="btn-primary">
+                        <i class="fas fa-plus mr-2"></i>
+                        <span>Post New Job</span>
+                    </button>
+                    <div class="relative">
+                        <input type="text" placeholder="Search jobs..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="px-4 py-2 bg-green-100 text-green-800 rounded-lg">All Jobs</button>
+                    <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Active</button>
+                    <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Closed</button>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <table class="w-full min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Post Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applications</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Job 1 -->
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">Senior Software Developer</div>
+                                <div class="text-sm text-gray-500">Technology Department</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">Hong Kong</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">May 15, 2026</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">45</div>
+                                <div class="text-xs text-green-600">8 matches</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                <a href="#" class="text-red-600 hover:text-red-900">Close</a>
+                            </td>
+                        </tr>
+                        
+                        <!-- Job 2 -->
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">Marketing Manager</div>
+                                <div class="text-sm text-gray-500">Marketing Department</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">Shenzhen</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">May 10, 2026</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">32</div>
+                                <div class="text-xs text-green-600">5 matches</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                <a href="#" class="text-red-600 hover:text-red-900">Close</a>
+                            </td>
+                        </tr>
+                        
+                        <!-- Job 3 -->
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">Financial Analyst</div>
+                                <div class="text-sm text-gray-500">Finance Department</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">Macau</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">May 5, 2026</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">28</div>
+                                <div class="text-xs text-green-600">3 matches</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                <a href="#" class="text-red-600 hover:text-red-900">Close</a>
+                            </td>
+                        </tr>
+                        
+                        <!-- Job 4 -->
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">Customer Service Representative</div>
+                                <div class="text-sm text-gray-500">Customer Service Department</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">Guangzhou</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">April 28, 2026</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">56</div>
+                                <div class="text-xs text-green-600">12 matches</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Interviewing
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                <a href="#" class="text-red-600 hover:text-red-900">Close</a>
+                            </td>
+                        </tr>
+                        
+                        <!-- Job 5 -->
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">Human Resources Manager</div>
+                                <div class="text-sm text-gray-500">HR Department</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">Hong Kong</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">April 20, 2026</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">38</div>
+                                <div class="text-xs text-green-600">6 matches</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    Closed
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Clone</a>
+                                <a href="#" class="text-red-600 hover:text-red-900">Delete</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="flex justify-between items-center mt-6">
+                <div class="text-sm text-gray-600">
+                    Showing 1-5 of 15 jobs
+                </div>
+                <div class="flex space-x-2">
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50" disabled>
+                        Previous
+                    </button>
+                    <button class="px-4 py-2 bg-green-600 text-white rounded-lg">1</button>
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">2</button>
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">3</button>
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Analytics Section -->
+    <section id="analytics" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">Recruitment Analytics</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Gain insights into your recruitment performance</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                <!-- Diversity Metrics -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">Diversity Metrics</h3>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="diversityChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Application Funnel -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">Application Funnel</h3>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="funnelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Time to Hire -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">Time to Hire (Days)</h3>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="timeToHireChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Source of Hire -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">Source of Hire</h3>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="sourceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- FAQ Section -->
+    <section id="faq" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+            
+            <div class="max-w-3xl mx-auto">
+                <!-- Question 1 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">How does the "blind recruitment" mode work?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Our "blind recruitment" mode automatically anonymizes candidates' personal information that could potentially lead to bias, such as age, gender, disability status, and photos. Recruiters see only skills, experience, and qualifications, helping to ensure fair and objective evaluation based purely on merit.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 2 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">How accurate is the policy calculator for cross-border employment?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Our policy calculator is regularly updated with the latest cross-border employment regulations, tax rates, and social security requirements across GBA regions. While it provides highly accurate estimates, we recommend consulting with legal and tax professionals for definitive advice on specific cases, especially for complex employment situations.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 3 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">Can we customize the AI interview questions?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Yes, absolutely. The AI interview tool allows you to customize questions based on your company's specific needs, industry requirements, and the particular role. You can also use our extensive question library and add your own questions to create a comprehensive interview experience tailored to your organization.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 4 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">How does the platform ensure data security for candidate information?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">We implement strict data security measures including end-to-end encryption, role-based access controls, regular security audits, and compliance with international data protection standards. All candidate data is stored in secure, compliant data centers, and we automatically anonymize sensitive information. The platform also provides detailed access logs and data retention policies to ensure full transparency and compliance.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 5 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">Is there a limit to the number of job postings we can create?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Our enterprise plans offer flexible job posting limits based on your company's needs. Basic plans typically include up to 10 active job postings, while premium enterprise plans offer unlimited postings. We also provide volume discounts for larger organizations with high recruitment needs. Contact our sales team to discuss a customized solution for your company.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">GBA Platform</h3>
+                    <p class="text-gray-400 mb-4">Empowering businesses to find diverse talent across the Greater Bay Area through AI technology.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Dashboard</a></li>
+                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">AI Features</a></li>
+                        <li><a href="#jobs" class="text-gray-400 hover:text-white transition-colors">My Jobs</a></li>
+                        <li><a href="#analytics" class="text-gray-400 hover:text-white transition-colors">Analytics</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Support</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Accessibility Statement</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt mt-1 mr-3"></i>
+                            <span>GBA Innovation Center, 123 Bay Area Blvd, Shenzhen, China</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone mr-3"></i>
+                            <span>+86 400-123-4567</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope mr-3"></i>
+                            <span>corporate@gba-platform.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2026 GBA Cross-Border Employment Empowerment Platform. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Modal Boxes -->
+    <!-- Talent Matching Modal -->
+    <div id="talent-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">Talent Matching</h3>
+                <button onclick="closeModal('talent-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Find qualified candidates that match your job requirements.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="form-group">
+                        <label class="form-label">Job Category</label>
+                        <select class="form-control">
+                            <option>All Categories</option>
+                            <option>Technology</option>
+                            <option>Finance</option>
+                            <option>Marketing</option>
+                            <option>Customer Service</option>
+                            <option>Healthcare</option>
+                            <option>Education</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <select class="form-control">
+                            <option>All GBA Regions</option>
+                            <option>Hong Kong</option>
+                            <option>Macau</option>
+                            <option>Shenzhen</option>
+                            <option>Guangzhou</option>
+                            <option>Other GBA Cities</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Experience Level</label>
+                        <select class="form-control">
+                            <option>Any Experience</option>
+                            <option>Entry Level (0-2 years)</option>
+                            <option>Mid Level (2-5 years)</option>
+                            <option>Senior Level (5-10 years)</option>
+                            <option>Executive Level (10+ years)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Education Level</label>
+                        <select class="form-control">
+                            <option>Any Education</option>
+                            <option>High School</option>
+                            <option>Associate's Degree</option>
+                            <option>Bachelor's Degree</option>
+                            <option>Master's Degree</option>
+                            <option>PhD</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-6">
+                    <label class="form-label">Key Skills (separated by commas)</label>
+                    <input type="text" class="form-control" placeholder="e.g., JavaScript, Python, Project Management, Customer Service">
+                </div>
+                
+                <div class="form-group mb-6">
+                    <label class="form-label">Enable Blind Recruitment</label>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="blind-recruitment" class="mr-2" checked>
+                        <label for="blind-recruitment">Hide personal information (age, gender, disability status) to reduce bias</label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end mb-6">
+                    <button class="btn-primary">
+                        <i class="fas fa-search mr-2"></i>
+                        <span>Find Candidates</span>
+                    </button>
+                </div>
+                
+                <!-- Results Preview -->
+                <div class="border-t pt-6">
+                    <h4 class="text-xl font-semibold mb-4">Matching Candidates (24)</h4>
+                    
+                    <div class="space-y-4">
+                        <!-- Candidate 1 -->
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas fa-user text-gray-500 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-semibold text-gray-800">Candidate A</h5>
+                                        <p class="text-gray-600">Software Developer with 5 years experience</p>
+                                        <div class="flex items-center mt-2">
+                                            <span class="tag tag-primary">95% Match</span>
+                                            <span class="tag tag-secondary">Shenzhen</span>
+                                            <span class="tag tag-accent">5 years exp</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="flex flex-col space-y-2">
+                                        <button class="btn-primary text-sm py-1">View Profile</button>
+                                        <button class="btn-secondary text-sm py-1">Send Message</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Candidate 2 -->
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas fa-user text-gray-500 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-semibold text-gray-800">Candidate B</h5>
+                                        <p class="text-gray-600">Frontend Developer with 3 years experience</p>
+                                        <div class="flex items-center mt-2">
+                                            <span class="tag tag-primary">92% Match</span>
+                                            <span class="tag tag-secondary">Hong Kong</span>
+                                            <span class="tag tag-accent">3 years exp</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="flex flex-col space-y-2">
+                                        <button class="btn-primary text-sm py-1">View Profile</button>
+                                        <button class="btn-secondary text-sm py-1">Send Message</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Policy Calculator Modal -->
+    <div id="policy-calculator-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">Policy Calculator</h3>
+                <button onclick="closeModal('policy-calculator-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Calculate cross-border employment costs and compliance requirements.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="form-group">
+                        <label class="form-label">Employee Location</label>
+                        <select class="form-control">
+                            <option>Mainland China</option>
+                            <option>Hong Kong</option>
+                            <option>Macau</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Work Location</label>
+                        <select class="form-control">
+                            <option>Hong Kong</option>
+                            <option>Macau</option>
+                            <option>Shenzhen</option>
+                            <option>Guangzhou</option>
+                            <option>Other GBA City</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Employment Type</label>
+                        <select class="form-control">
+                            <option>Full-time</option>
+                            <option>Part-time</option>
+                            <option>Contract</option>
+                            <option>Remote</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Monthly Salary (CNY)</label>
+                        <input type="number" class="form-control" placeholder="30000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Employee Category</label>
+                        <select class="form-control">
+                            <option>Professional/Technical</option>
+                            <option>Management</option>
+                            <option>Administrative</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Work Duration</label>
+                        <select class="form-control">
+                            <option>Permanent</option>
+                            <option>6 months</option>
+                            <option>1 year</option>
+                            <option>2 years</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end mb-6">
+                    <button class="btn-primary">
+                        <i class="fas fa-calculator mr-2"></i>
+                        <span>Calculate</span>
+                    </button>
+                </div>
+                
+                <!-- Results -->
+                <div class="border-t pt-6">
+                    <h4 class="text-xl font-semibold mb-4">Calculation Results</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Cost Breakdown -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-semibold mb-3">Cost Breakdown (Monthly)</h5>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Gross Salary</span>
+                                    <span class="font-medium">¥30,000</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Income Tax</span>
+                                    <span class="font-medium">¥4,200</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Social Security (Employer)</span>
+                                    <span class="font-medium">¥5,400</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Social Security (Employee)</span>
+                                    <span class="font-medium">¥2,700</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Visa/Work Permit Fees (amortized)</span>
+                                    <span class="font-medium">¥800</span>
+                                </div>
+                                <div class="border-t pt-2 flex justify-between font-bold">
+                                    <span>Total Employer Cost</span>
+                                    <span>¥40,400</span>
+                                </div>
+                                <div class="flex justify-between font-medium text-green-600">
+                                    <span>Net Employee Salary</span>
+                                    <span>¥22,300</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Compliance Requirements -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-semibold mb-3">Compliance Requirements</h5>
+                            <div class="space-y-3">
+                                <div class="flex items-start">
+                                    <i class="fas fa-file-alt text-green-600 mt-1 mr-2"></i>
+                                    <div>
+                                        <p class="font-medium">Employment Visa</p>
+                                        <p class="text-sm text-gray-600">Required for mainland Chinese working in Hong Kong</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-shield-alt text-green-600 mt-1 mr-2"></i>
+                                    <div>
+                                        <p class="font-medium">Work Permit</p>
+                                        <p class="text-sm text-gray-600">Must be obtained before starting work</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-hand-holding-usd text-green-600 mt-1 mr-2"></i>
+                                    <div>
+                                        <p class="font-medium">Social Security Registration</p>
+                                        <p class="text-sm text-gray-600">Both Hong Kong and mainland contributions required</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-file-contract text-green-600 mt-1 mr-2"></i>
+                                    <div>
+                                        <p class="font-medium">Employment Contract</p>
+                                        <p class="text-sm text-gray-600">Must comply with both jurisdictions' labor laws</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 mt-1 mr-3"></i>
+                            <div>
+                                <h5 class="font-semibold text-yellow-800">Important Notes</h5>
+                                <ul class="list-disc pl-5 mt-2 text-yellow-700 space-y-1">
+                                    <li>This is an estimate based on current regulations</li>
+                                    <li>Individual circumstances may vary</li>
+                                    <li>Recommend consulting with tax and legal professionals</li>
+                                    <li>Regulations may change - last updated May 2026</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Interview Tools Modal -->
+    <div id="interview-tools-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">HR Interview Tools</h3>
+                <button onclick="closeModal('interview-tools-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Generate interview questions and manage the interview process.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="form-group">
+                        <label class="form-label">Job Position</label>
+                        <select class="form-control">
+                            <option>Software Developer</option>
+                            <option>Marketing Manager</option>
+                            <option>Financial Analyst</option>
+                            <option>HR Manager</option>
+                            <option>Customer Service Representative</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Experience Level</label>
+                        <select class="form-control">
+                            <option>Entry Level</option>
+                            <option>Mid Level</option>
+                            <option>Senior Level</option>
+                            <option>Executive Level</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Interview Type</label>
+                        <select class="form-control">
+                            <option>Technical</option>
+                            <option>Behavioral</option>
+                            <option>Case Study</option>
+                            <option>Mixed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Interview Duration</label>
+                        <select class="form-control">
+                            <option>30 minutes</option>
+                            <option>45 minutes</option>
+                            <option>60 minutes</option>
+                            <option>90 minutes</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-6">
+                    <label class="form-label">Key Skills to Assess</label>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tag tag-primary flex items-center">
+                            Technical Skills
+                            <button class="ml-2 text-xs hover:text-red-600">×</button>
+                        </span>
+                        <span class="tag tag-primary flex items-center">
+                            Communication
+                            <button class="ml-2 text-xs hover:text-red-600">×</button>
+                        </span>
+                        <span class="tag tag-primary flex items-center">
+                            Problem Solving
+                            <button class="ml-2 text-xs hover:text-red-600">×</button>
+                        </span>
+                        <input type="text" class="border border-gray-300 rounded-full px-3 py-1 text-sm" placeholder="Add skill..." style="width: 120px;">
+                    </div>
+                </div>
+                
+                <div class="form-group mb-6">
+                    <label class="form-label">Custom Questions</label>
+                    <textarea class="form-control" rows="3" placeholder="Add any custom questions you want to include..."></textarea>
+                </div>
+                
+                <div class="flex justify-end mb-6">
+                    <button class="btn-primary">
+                        <i class="fas fa-magic mr-2"></i>
+                        <span>Generate Questions</span>
+                    </button>
+                </div>
+                
+                <!-- Generated Questions -->
+                <div class="border-t pt-6">
+                    <h4 class="text-xl font-semibold mb-4">Generated Interview Questions</h4>
+                    
+                    <div class="space-y-6">
+                        <!-- Technical Questions -->
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-3">Technical Questions</h5>
+                            <ol class="list-decimal pl-5 space-y-2 text-gray-600">
+                                <li>Can you explain the difference between REST and GraphQL APIs?</li>
+                                <li>How would you optimize a database query that's performing poorly?</li>
+                                <li>Describe your experience with microservices architecture.</li>
+                                <li>How do you ensure code security in your development process?</li>
+                                <li>Explain a complex technical problem you solved and your approach.</li>
+                            </ol>
+                        </div>
+                        
+                        <!-- Behavioral Questions -->
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-3">Behavioral Questions</h5>
+                            <ol class="list-decimal pl-5 space-y-2 text-gray-600">
+                                <li>Tell me about a time when you had to work with a difficult team member.</li>
+                                <li>Describe a situation where you had to meet a tight deadline.</li>
+                                <li>How do you handle feedback and criticism?</li>
+                                <li>Give an example of a project where you took initiative.</li>
+                                <li>How do you prioritize tasks when faced with multiple deadlines?</li>
+                            </ol>
+                        </div>
+                        
+                        <!-- Case Study -->
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-3">Case Study</h5>
+                            <p class="text-gray-600 mb-3">Our company needs to improve the performance of our customer portal, which currently has slow page load times and poor mobile responsiveness. How would you approach this problem?</p>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-600">
+                                <li>What information would you gather first?</li>
+                                <li>How would you identify the root causes?</li>
+                                <li>What solutions would you propose?</li>
+                                <li>How would you prioritize implementation?</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-6">
+                        <button class="btn-secondary">
+                            <i class="fas fa-download mr-2"></i>
+                            <span>Export Questions</span>
+                        </button>
+                        <button class="btn-primary">
+                            <i class="fas fa-calendar-plus mr-2"></i>
+                            <span>Schedule Interview</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Other modals would be similar - shortened for brevity -->
+    <div id="job-optimization-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">Job Posting Optimization</h3>
+                <button onclick="closeModal('job-optimization-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Optimize your job posting to attract more qualified candidates.</p>
+                <!-- Form content would go here -->
+            </div>
+        </div>
+    </div>
+    
+    <div id="screening-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">Candidate Screening</h3>
+                <button onclick="closeModal('screening-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Screen candidates based on skills and qualifications.</p>
+                <!-- Form content would go here -->
+            </div>
+        </div>
+    </div>
+    
+    <div id="diversity-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">Diversity Analytics</h3>
+                <button onclick="closeModal('diversity-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">View diversity metrics and analytics.</p>
+                <!-- Chart content would go here -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Execute after page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize 3D background
+            initThreeJsBackground();
+            
+            // Accessibility features
+            initAccessibility();
+            
+            // Mobile menu
+            initMobileMenu();
+            
+            // FAQ accordion
+            initFaqAccordion();
+            
+            // Modal boxes
+            initModals();
+            
+            // Smooth scrolling
+            initSmoothScroll();
+            
+            // Initialize charts
+            initCharts();
+        });
+        
+        // Initialize 3D background
+        function initThreeJsBackground() {
+            const canvas = document.getElementById('hero-bg-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                alpha: true,
+                antialias: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            // Create particles
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 1500;
+            
+            const posArray = new Float32Array(particlesCount * 3);
+            
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 10;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.005,
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            
+            camera.position.z = 5;
+            
+            // Animation
+            const animate = () => {
+                requestAnimationFrame(animate);
+                
+                particlesMesh.rotation.y += 0.001;
+                
+                renderer.render(scene, camera);
+            };
+            
+            animate();
+            
+            // Responsive adjustment
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        // Initialize accessibility features
+        function initAccessibility() {
+            const accessibilityBtn = document.getElementById('accessibility-btn');
+            const accessibilityPanel = document.getElementById('accessibility-panel');
+            const highContrastBtn = document.getElementById('high-contrast');
+            const largeTextBtn = document.getElementById('large-text');
+            const screenReaderBtn = document.getElementById('screen-reader');
+            const keyboardNavBtn = document.getElementById('keyboard-nav');
+            
+            // Show/hide accessibility panel
+            accessibilityBtn.addEventListener('click', () => {
+                accessibilityPanel.classList.toggle('active');
+            });
+            
+            // Close when clicking outside the panel
+            document.addEventListener('click', (e) => {
+                if (!accessibilityPanel.contains(e.target) && e.target !== accessibilityBtn) {
+                    accessibilityPanel.classList.remove('active');
+                }
+            });
+            
+            // High contrast mode
+            highContrastBtn.addEventListener('click', () => {
+                document.body.classList.toggle('high-contrast');
+                toggleSwitch(highContrastBtn);
+            });
+            
+            // Large font mode
+            largeTextBtn.addEventListener('click', () => {
+                document.body.classList.toggle('large-text');
+                toggleSwitch(largeTextBtn);
+            });
+            
+            // Screen reader mode
+            screenReaderBtn.addEventListener('click', () => {
+                toggleSwitch(screenReaderBtn);
+                // Screen reader related functionality can be added here
+                alert('Screen reader mode activated');
+            });
+            
+            // Keyboard navigation mode
+            keyboardNavBtn.addEventListener('click', () => {
+                toggleSwitch(keyboardNavBtn);
+                // Keyboard navigation related functionality can be added here
+                alert('Keyboard navigation mode activated');
+            });
+            
+            // Toggle switch state
+            function toggleSwitch(button) {
+                const isActive = button.getAttribute('aria-checked') === 'true';
+                button.setAttribute('aria-checked', !isActive);
+                
+                if (!isActive) {
+                    button.classList.add('bg-green-600');
+                    button.querySelector('span').style.transform = 'translateX(16px)';
+                } else {
+                    button.classList.remove('bg-green-600');
+                    button.querySelector('span').style.transform = 'translateX(0)';
+                }
+            }
+        }
+        
+        // Initialize mobile menu
+        function initMobileMenu() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+        
+        // Initialize FAQ accordion
+        function initFaqAccordion() {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    const icon = question.querySelector('i');
+                    
+                    answer.classList.toggle('hidden');
+                    icon.classList.toggle('rotate-180');
+                });
+            });
+        }
+        
+        // Initialize modal boxes
+        function initModals() {
+            // Modal functionality is handled by the openModal and closeModal functions
+        }
+        
+        // Modal functions
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Initialize smooth scrolling
+        function initSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        // Close menu after clicking on mobile devices
+                        const mobileMenu = document.getElementById('mobile-menu');
+                        if (!mobileMenu.classList.contains('hidden')) {
+                            mobileMenu.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Initialize charts
+        function initCharts() {
+            // Recruitment Analytics Chart
+            const recruitmentCtx = document.getElementById('recruitmentChart').getContext('2d');
+            new Chart(recruitmentCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Applications',
+                        data: [120, 150, 180, 210, 254, 280],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Interviews',
+                        data: [30, 45, 55, 65, 45, 50],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Hires',
+                        data: [8, 12, 15, 18, 12, 14],
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Diversity Chart
+            const diversityCtx = document.getElementById('diversityChart').getContext('2d');
+            new Chart(diversityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Persons with Disabilities', 'Elderly (45+)', 'Women Returning to Work', 'Ethnic Minorities', 'Youth from Low-income Families', 'Other'],
+                    datasets: [{
+                        data: [25, 20, 18, 15, 12, 10],
+                        backgroundColor: [
+                            '#10b981',
+                            '#2563eb',
+                            '#f97316',
+                            '#8b5cf6',
+                            '#ef4444',
+                            '#6b7280'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+            
+            // Funnel Chart
+            const funnelCtx = document.getElementById('funnelChart').getContext('2d');
+            new Chart(funnelCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Applications', 'Screening', 'Interviews', 'Offers', 'Hires'],
+                    datasets: [{
+                        label: 'Candidate Count',
+                        data: [254, 120, 45, 20, 12],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(16, 185, 129, 0.6)',
+                            'rgba(16, 185, 129, 0.5)',
+                            'rgba(16, 185, 129, 0.4)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Time to Hire Chart
+            const timeToHireCtx = document.getElementById('timeToHireChart').getContext('2d');
+            new Chart(timeToHireCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Tech', 'Marketing', 'Finance', 'HR', 'Customer Service'],
+                    datasets: [{
+                        label: 'Average Days to Hire',
+                        data: [25, 18, 22, 15, 12],
+                        backgroundColor: 'rgba(37, 99, 235, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Source Chart
+            const sourceCtx = document.getElementById('sourceChart').getContext('2d');
+            new Chart(sourceCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['GBA Platform', 'Referrals', 'Job Boards', 'Social Media', 'Recruiters', 'Other'],
+                    datasets: [{
+                        data: [45, 20, 15, 10, 5, 5],
+                        backgroundColor: [
+                            '#10b981',
+                            '#2563eb',
+                            '#f97316',
+                            '#8b5cf6',
+                            '#ef4444',
+                            '#6b7280'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

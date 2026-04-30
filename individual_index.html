@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBA Cross-Border Employment Empowerment Platform - Individual</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #10b981;
+            --accent-color: #f97316;
+            --neutral-color: #6b7280;
+            --dark-color: #1f2937;
+            --light-color: #f3f4f6;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,202.7C672,203,768,181,864,181.3C960,181,1056,203,1152,202.7C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ai-feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .accessibility-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .accessibility-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .accessibility-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 2rem;
+            z-index: 1000;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            width: 250px;
+            display: none;
+        }
+        
+        .accessibility-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .language-selector {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            min-width: 120px;
+            display: none;
+            z-index: 100;
+        }
+        
+        .language-selector:hover .language-dropdown {
+            display: block;
+        }
+        
+        /* Accessibility Styles */
+        body.high-contrast {
+            --primary-color: #0066cc;
+            --secondary-color: #00cc66;
+            --accent-color: #ff6600;
+            --neutral-color: #333333;
+            --dark-color: #000000;
+            --light-color: #ffffff;
+            background-color: #000000;
+            color: #ffffff;
+        }
+        
+        body.large-text {
+            font-size: 1.2em;
+        }
+        
+        body.large-text h1 {
+            font-size: 2em;
+        }
+        
+        body.large-text h2 {
+            font-size: 1.8em;
+        }
+        
+        /* 3D Background Animation */
+        #hero-bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        /* Loading Animation */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-section {
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .accessibility-panel {
+                width: 200px;
+                right: 1rem;
+            }
+        }
+        
+        /* AI Module Styles */
+        .ai-module {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ai-module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ai-module-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+        
+        .ai-module-body {
+            padding: 1.5rem;
+            flex: 1;
+            background-color: white;
+        }
+        
+        .ai-module-footer {
+            padding: 1rem 1.5rem;
+            background-color: var(--light-color);
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        /* Button Styles */
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid var(--primary-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--light-color);
+            transform: translateY(-2px);
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* Label Styles */
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tag-primary {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .tag-secondary {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--secondary-color);
+        }
+        
+        .tag-accent {
+            background-color: rgba(249, 115, 22, 0.1);
+            color: var(--accent-color);
+        }
+        
+        /* Individual User Specific Styles */
+        .individual-feature-icon {
+            background: linear-gradient(135deg, #2563eb, #8b5cf6);
+        }
+        
+        .dashboard-card {
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: var(--light-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md fixed w-full z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <a href="../index.html" class="flex items-center">
+                        <i class="fas fa-handshake text-2xl text-blue-600 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">GBA Platform</span>
+                    </a>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#dashboard" class="text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
+                    <a href="#ai-features" class="text-gray-600 hover:text-blue-600 transition-colors">AI Features</a>
+                    <a href="#resources" class="text-gray-600 hover:text-blue-600 transition-colors">Resources</a>
+                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
+                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="language-selector">
+                        <button class="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-globe"></i>
+                            <span id="current-language">English</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div class="language-dropdown">
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="en">English</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-CN">Simplified Chinese</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-TW">Traditional Chinese</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <img src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" alt="User" class="w-8 h-8 rounded-full">
+                        <span class="text-gray-700 font-medium">My Account</span>
+                    </div>
+                </div>
+                
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
+                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
+                <a href="#ai-features" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">AI Features</a>
+                <a href="#resources" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Resources</a>
+                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
+                <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Accessibility Button -->
+    <div class="accessibility-btn" id="accessibility-btn">
+        <i class="fas fa-universal-access text-xl"></i>
+    </div>
+    
+    <!-- Accessibility Panel -->
+    <div class="accessibility-panel" id="accessibility-panel">
+        <h3 class="font-bold mb-3">Accessibility Options</h3>
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <label for="high-contrast" class="text-sm">High Contrast</label>
+                <button id="high-contrast" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <label for="large-text" class="text-sm">Large Text</label>
+                <button id="large-text" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <label for="screen-reader" class="text-sm">Screen Reader</label>
+                <button id="screen-reader" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <label for="keyboard-nav" class="text-sm">Keyboard Navigation</label>
+                <button id="keyboard-nav" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hero Section -->
+    <section class="hero-section flex items-center justify-center relative">
+        <canvas id="hero-bg-canvas"></canvas>
+        <div class="container mx-auto px-4 z-10 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">Individual User Dashboard</h1>
+            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto">Empowering you with AI tools to find cross-border employment opportunities in the Greater Bay Area</p>
+            
+            <a href="#dashboard" class="btn-primary text-lg">
+                <i class="fas fa-chart-line"></i>
+                <span>View My Dashboard</span>
+            </a>
+            
+            <div class="mt-12 flex flex-wrap justify-center gap-4">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
+                    <i class="fas fa-briefcase text-2xl text-white mr-3"></i>
+                    <div class="text-left">
+                        <div class="text-white font-bold">15+</div>
+                        <div class="text-white text-sm">Job Matches</div>
+                    </div>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
+                    <i class="fas fa-graduation-cap text-2xl text-white mr-3"></i>
+                    <div class="text-left">
+                        <div class="text-white font-bold">85%</div>
+                        <div class="text-white text-sm">Skills Match</div>
+                    </div>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
+                    <i class="fas fa-clock text-2xl text-white mr-3"></i>
+                    <div class="text-left">
+                        <div class="text-white font-bold">3</div>
+                        <div class="text-white text-sm">Interviews Scheduled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hero-wave"></div>
+    </section>
+    
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Your Personal Dashboard</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <!-- Profile Completeness -->
+                <div class="dashboard-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Profile Completeness</h3>
+                        <span class="text-blue-600 font-bold">75%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 75%"></div>
+                    </div>
+                    <p class="text-gray-600 mt-4">Complete your profile to get better job matches</p>
+                    <button class="btn-primary mt-4 w-full">Complete Profile</button>
+                </div>
+                
+                <!-- Job Applications -->
+                <div class="dashboard-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Applications</h3>
+                        <span class="text-blue-600 font-bold">24</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Pending Review</span>
+                            <span class="tag tag-primary">15</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Interview Stage</span>
+                            <span class="tag tag-secondary">6</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Completed</span>
+                            <span class="tag tag-accent">3</span>
+                        </div>
+                    </div>
+                    <button class="btn-primary mt-4 w-full">View Applications</button>
+                </div>
+                
+                <!-- Skill Development -->
+                <div class="dashboard-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Skill Development</h3>
+                        <span class="text-blue-600 font-bold">60%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 60%"></div>
+                    </div>
+                    <p class="text-gray-600 mt-4">Continue your learning journey</p>
+                    <button class="btn-primary mt-4 w-full">Continue Learning</button>
+                </div>
+            </div>
+            
+            <!-- Recommended Jobs -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-12">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Recommended Jobs For You</h3>
+                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">View All</a>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Job Card 1 -->
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-800">Digital Marketing Specialist</h4>
+                                <p class="text-gray-600">Tech Solutions Ltd. - Hong Kong</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="tag tag-primary">Full-time</span>
+                                    <span class="tag tag-secondary">Remote</span>
+                                    <span class="tag tag-accent">¥25K-35K</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-green-600 font-semibold mb-2">92% Match</div>
+                                <button class="btn-primary">Apply Now</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Card 2 -->
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-800">Financial Analyst</h4>
+                                <p class="text-gray-600">Global Finance Group - Shenzhen</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="tag tag-primary">Full-time</span>
+                                    <span class="tag tag-accent">¥30K-40K</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-green-600 font-semibold mb-2">88% Match</div>
+                                <button class="btn-primary">Apply Now</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Card 3 -->
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-800">Customer Service Representative</h4>
+                                <p class="text-gray-600">Service Excellence Co. - Macau</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="tag tag-primary">Full-time</span>
+                                    <span class="tag tag-secondary">Remote</span>
+                                    <span class="tag tag-accent">¥18K-25K</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-green-600 font-semibold mb-2">95% Match</div>
+                                <button class="btn-primary">Apply Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- AI Features Section -->
+    <section id="ai-features" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">AI-Powered Features</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Advanced AI tools designed specifically for individual users to enhance your employability</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- AI Resume Optimization -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon individual-feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">AI Resume Optimization</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Intelligent resume analysis and optimization to highlight your skills and experiences for cross-border opportunities.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Skill extraction and highlighting</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Cross-border format conversion</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Keyword optimization</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('resume-modal')">
+                            <i class="fas fa-magic"></i>
+                            <span>Optimize My Resume</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI Job Matching -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon individual-feature-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">AI Job Matching</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Skills-based intelligent matching with "blind screening" to eliminate bias and ensure fair opportunities.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Skills-first matching algorithm</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Cross-border opportunity aggregation</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Bias-free screening options</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('job-matching-modal')">
+                            <i class="fas fa-search"></i>
+                            <span>Find Matches</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI Interview Coaching -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon individual-feature-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">AI Interview Coaching</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Mock interview simulation with real-time feedback to help you prepare for cross-border interviews.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Industry-specific question bank</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Real-time feedback and suggestions</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Cross-cultural communication training</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('interview-modal')">
+                            <i class="fas fa-video"></i>
+                            <span>Practice Interview</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI Policy Q&A -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon individual-feature-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">AI Policy Q&A</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Intelligent policy consultation service to help you understand cross-border employment regulations.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Cross-border policy interpretation</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Visa and work permit guidance</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Tax and social security explanation</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('policy-modal')">
+                            <i class="fas fa-robot"></i>
+                            <span>Ask Policy Questions</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI Learning Path -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon individual-feature-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">AI Learning Path</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Personalized skill development planning based on job market demands and your career goals.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Customized learning roadmap</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Recommended resources</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Progress tracking and adjustment</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('learning-modal')">
+                            <i class="fas fa-road"></i>
+                            <span>Create Learning Path</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI Voice Assistant -->
+                <div class="ai-module">
+                    <div class="ai-module-header">
+                        <div class="ai-feature-icon individual-feature-icon">
+                            <i class="fas fa-microphone"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">AI Voice Assistant</h3>
+                    </div>
+                    <div class="ai-module-body">
+                        <p class="text-gray-600 mb-4">Multilingual voice interaction for hands-free operation, especially helpful for users with disabilities.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Voice-to-text and text-to-voice</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Multilingual support</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Hands-free operation</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ai-module-footer">
+                        <button class="btn-primary w-full" onclick="openModal('voice-modal')">
+                            <i class="fas fa-microphone"></i>
+                            <span>Activate Voice Assistant</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Resources Section -->
+    <section id="resources" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">Resources for Your Success</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Comprehensive resources to help you navigate cross-border employment</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Resource 1 -->
+                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-book text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Guidebooks</h3>
+                    <p class="text-gray-600 mb-4">Comprehensive guides on cross-border employment procedures and requirements.</p>
+                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                        <span>View Guidebooks</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+                
+                <!-- Resource 2 -->
+                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-video text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Video Tutorials</h3>
+                    <p class="text-gray-600 mb-4">Step-by-step video guides for platform features and job application processes.</p>
+                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                        <span>Watch Tutorials</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+                
+                <!-- Resource 3 -->
+                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-calendar-alt text-purple-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Events</h3>
+                    <p class="text-gray-600 mb-4">Upcoming webinars and workshops on cross-border employment topics.</p>
+                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                        <span>View Events</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+                
+                <!-- Resource 4 -->
+                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-users text-orange-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Community</h3>
+                    <p class="text-gray-600 mb-4">Connect with other job seekers and share experiences and advice.</p>
+                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                        <span>Join Community</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Success Stories Section -->
+    <section id="success-stories" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">Success Stories</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Real stories from individuals who found cross-border employment through our platform</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Story 1 -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="Zhang Wei" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Zhang Wei</h4>
+                                <p class="text-gray-600 text-sm">Software Developer</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The AI resume optimization helped me highlight my skills effectively. I successfully got a job at a tech company in Hong Kong after struggling for months."</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            <span>Shenzhen → Hong Kong</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Story 2 -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=10b981&color=fff" alt="Maria Chen" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Maria Chen</h4>
+                                <p class="text-gray-600 text-sm">Marketing Specialist</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"As someone with a disability, I appreciated the blind screening feature. It gave me a fair chance, and I'm now working at a multinational company in Macau."</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            <span>Guangzhou → Macau</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Story 3 -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=David+Lau&background=f97316&color=fff" alt="David Lau" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">David Lau</h4>
+                                <p class="text-gray-600 text-sm">Financial Analyst</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The interview coaching was invaluable. It prepared me for cross-cultural interview questions and helped me secure my dream job in Shenzhen."</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            <span>Hong Kong → Shenzhen</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- FAQ Section -->
+    <section id="faq" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+            
+            <div class="max-w-3xl mx-auto">
+                <!-- Question 1 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">How does the platform protect my personal information?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">We strictly adhere to the principle of cross-border data localization and implement hierarchical privacy storage. The platform provides a blind screening mode to automatically hide users' sensitive information such as age, disability status, and gender. All data transmission uses encryption technology, and privacy impact assessments are conducted regularly to ensure user data security.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 2 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">How does the AI job matching work?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Our AI matching algorithm analyzes your skills, experience, and preferences, and matches them with job requirements. It uses a "skills-first" approach that focuses on your qualifications rather than personal characteristics. The system can also operate in "blind screening" mode to remove potentially bias-inducing information from your profile.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 3 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">Is the platform accessible for users with disabilities?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Yes, the platform is designed to be fully accessible. It complies with WCAG 2.2 standards and includes features such as screen reader compatibility, keyboard navigation, high contrast mode, text size adjustment, and a voice assistant for hands-free operation.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 4 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">How can I prepare for cross-border interviews?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Our AI Interview Coaching feature provides mock interview simulations with industry-specific questions. It offers real-time feedback on your answers, body language, and communication style. We also provide cross-cultural communication training to help you navigate cultural differences in interviews.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 5 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">Are there any fees for using the platform?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Basic platform features are free for individual users. We offer premium services such as advanced resume optimization, unlimited interview coaching sessions, and priority matching for a subscription fee. Financial assistance is available for users with limited income.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">GBA Platform</h3>
+                    <p class="text-gray-400 mb-4">Empowering vulnerable groups through AI technology for cross-border employment in the Greater Bay Area.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Dashboard</a></li>
+                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">AI Features</a></li>
+                        <li><a href="#resources" class="text-gray-400 hover:text-white transition-colors">Resources</a></li>
+                        <li><a href="#success-stories" class="text-gray-400 hover:text-white transition-colors">Success Stories</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Support</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Accessibility Statement</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt mt-1 mr-3"></i>
+                            <span>GBA Innovation Center, 123 Bay Area Blvd, Shenzhen, China</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone mr-3"></i>
+                            <span>+86 400-123-4567</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope mr-3"></i>
+                            <span>info@gba-platform.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2026 GBA Cross-Border Employment Empowerment Platform. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Modal Boxes -->
+    <!-- Resume Optimization Modal -->
+    <div id="resume-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">AI Resume Optimization</h3>
+                <button onclick="closeModal('resume-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Upload your resume and let our AI optimize it for cross-border job opportunities.</p>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600 mb-4">Drag & drop your resume file or click to browse</p>
+                    <p class="text-gray-500 text-sm mb-4">Supported formats: PDF, DOCX</p>
+                    <button class="btn-primary">
+                        <i class="fas fa-upload mr-2"></i>
+                        <span>Upload Resume</span>
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeModal('resume-modal')" class="btn-secondary">Cancel</button>
+                <button class="btn-primary">Optimize Resume</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Job Matching Modal -->
+    <div id="job-matching-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">AI Job Matching</h3>
+                <button onclick="closeModal('job-matching-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Find jobs that match your skills and preferences.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Job Category</label>
+                    <select class="form-control">
+                        <option>All Categories</option>
+                        <option>Technology</option>
+                        <option>Finance</option>
+                        <option>Marketing</option>
+                        <option>Customer Service</option>
+                        <option>Healthcare</option>
+                        <option>Education</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <select class="form-control">
+                        <option>All GBA Regions</option>
+                        <option>Hong Kong</option>
+                        <option>Macau</option>
+                        <option>Shenzhen</option>
+                        <option>Guangzhou</option>
+                        <option>Other GBA Cities</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Work Type</label>
+                    <select class="form-control">
+                        <option>All Types</option>
+                        <option>Full-time</option>
+                        <option>Part-time</option>
+                        <option>Remote</option>
+                        <option>Contract</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Salary Range</label>
+                    <select class="form-control">
+                        <option>Any Salary</option>
+                        <option>¥10K-20K</option>
+                        <option>¥20K-30K</option>
+                        <option>¥30K-40K</option>
+                        <option>¥40K-50K</option>
+                        <option>¥50K+</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Enable Blind Screening</label>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="blind-screening" class="mr-2">
+                        <label for="blind-screening">Hide my personal information (age, gender, disability status) from employers</label>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeModal('job-matching-modal')" class="btn-secondary">Cancel</button>
+                <button class="btn-primary">Find Matches</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Interview Coaching Modal -->
+    <div id="interview-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">AI Interview Coaching</h3>
+                <button onclick="closeModal('interview-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Practice your interview skills with our AI interviewer.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Industry</label>
+                    <select class="form-control">
+                        <option>Technology</option>
+                        <option>Finance</option>
+                        <option>Marketing</option>
+                        <option>Customer Service</option>
+                        <option>Healthcare</option>
+                        <option>Education</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Job Position</label>
+                    <input type="text" class="form-control" placeholder="e.g., Software Developer, Marketing Manager">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Interview Type</label>
+                    <select class="form-control">
+                        <option>Technical Interview</option>
+                        <option>Behavioral Interview</option>
+                        <option>Case Interview</option>
+                        <option>Mixed (Technical + Behavioral)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Interview Duration</label>
+                    <select class="form-control">
+                        <option>15 minutes</option>
+                        <option>30 minutes</option>
+                        <option>45 minutes</option>
+                        <option>60 minutes</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Difficulty Level</label>
+                    <select class="form-control">
+                        <option>Entry Level</option>
+                        <option>Mid Level</option>
+                        <option>Senior Level</option>
+                        <option>Executive Level</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeModal('interview-modal')" class="btn-secondary">Cancel</button>
+                <button class="btn-primary">Start Interview</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Policy Q&A Modal -->
+    <div id="policy-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">AI Policy Q&A</h3>
+                <button onclick="closeModal('policy-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Ask questions about cross-border employment policies and regulations.</p>
+                
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-start mb-4">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-robot text-blue-600"></i>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg p-3 max-w-[80%]">
+                            <p class="text-gray-800">Hello! I'm Olivia, your AI policy assistant. What questions do you have about cross-border employment in the GBA?</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start mb-4">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-user text-green-600"></i>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg p-3 max-w-[80%]">
+                            <p class="text-gray-800">What visa do I need to work in Hong Kong if I'm from mainland China?</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-robot text-blue-600"></i>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg p-3 max-w-[80%]">
+                            <p class="text-gray-800">If you're from mainland China working in Hong Kong, you'll typically need an Employment Visa. The requirements include:</p>
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li>A confirmed job offer from a Hong Kong employer</li>
+                                <li>Relevant qualifications and experience</li>
+                                <li>The position should not be easily filled by local workers</li>
+                                <li>A minimum salary level (currently around HK$15,000/month)</li>
+                            </ul>
+                            <p class="mt-2">Your employer will usually sponsor your visa application. Processing time is typically 4-6 weeks.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <input type="text" class="form-control rounded-r-none" placeholder="Ask your policy question...">
+                    <button class="btn-primary rounded-l-none">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeModal('policy-modal')" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Learning Path Modal -->
+    <div id="learning-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">AI Learning Path</h3>
+                <button onclick="closeModal('learning-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Create a personalized learning path to enhance your skills.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Career Goal</label>
+                    <select class="form-control">
+                        <option>Software Developer</option>
+                        <option>Data Analyst</option>
+                        <option>Marketing Specialist</option>
+                        <option>Financial Analyst</option>
+                        <option>Project Manager</option>
+                        <option>Customer Service Manager</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Skill Level</label>
+                    <select class="form-control">
+                        <option>Beginner (Zero foundation)</option>
+                        <option>Intermediate</option>
+                        <option>Advanced</option>
+                        <option>Expert</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Time Commitment</label>
+                    <select class="form-control">
+                        <option>1-2 hours per week</option>
+                        <option>3-5 hours per week</option>
+                        <option>6-10 hours per week</option>
+                        <option>More than 10 hours per week</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Preferred Learning Format</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="format-videos" class="mr-2">
+                            <label for="format-videos">Video Courses</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="format-books" class="mr-2">
+                            <label for="format-books">Books/E-books</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="format-practice" class="mr-2">
+                            <label for="format-practice">Practice Projects</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="format-cert" class="mr-2">
+                            <label for="format-cert">Certification Prep</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeModal('learning-modal')" class="btn-secondary">Cancel</button>
+                <button class="btn-primary">Generate Learning Path</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Voice Assistant Modal -->
+    <div id="voice-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full text-center">
+            <div class="flex justify-end mb-4">
+                <button onclick="closeModal('voice-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 pulse-animation">
+                    <i class="fas fa-microphone text-4xl text-blue-600"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Voice Assistant Active</h3>
+                <p class="text-gray-600 mb-4">I'm listening. Please speak your command or question.</p>
+                <p class="text-gray-500 text-sm">Try saying: "Find marketing jobs in Hong Kong" or "What are the visa requirements for working in Macau?"</p>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button class="btn-secondary" onclick="closeModal('voice-modal')">
+                    <i class="fas fa-stop mr-2"></i>
+                    <span>Stop</span>
+                </button>
+                <button class="btn-primary">
+                    <i class="fas fa-microphone-slash mr-2"></i>
+                    <span>Mute</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Execute after page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize 3D background
+            initThreeJsBackground();
+            
+            // Accessibility features
+            initAccessibility();
+            
+            // Mobile menu
+            initMobileMenu();
+            
+            // FAQ accordion
+            initFaqAccordion();
+            
+            // Modal boxes
+            initModals();
+            
+            // Smooth scrolling
+            initSmoothScroll();
+        });
+        
+        // Initialize 3D background
+        function initThreeJsBackground() {
+            const canvas = document.getElementById('hero-bg-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                alpha: true,
+                antialias: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            // Create particles
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 1500;
+            
+            const posArray = new Float32Array(particlesCount * 3);
+            
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 10;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.005,
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            
+            camera.position.z = 5;
+            
+            // Animation
+            const animate = () => {
+                requestAnimationFrame(animate);
+                
+                particlesMesh.rotation.y += 0.001;
+                
+                renderer.render(scene, camera);
+            };
+            
+            animate();
+            
+            // Responsive adjustment
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        // Initialize accessibility features
+        function initAccessibility() {
+            const accessibilityBtn = document.getElementById('accessibility-btn');
+            const accessibilityPanel = document.getElementById('accessibility-panel');
+            const highContrastBtn = document.getElementById('high-contrast');
+            const largeTextBtn = document.getElementById('large-text');
+            const screenReaderBtn = document.getElementById('screen-reader');
+            const keyboardNavBtn = document.getElementById('keyboard-nav');
+            
+            // Show/hide accessibility panel
+            accessibilityBtn.addEventListener('click', () => {
+                accessibilityPanel.classList.toggle('active');
+            });
+            
+            // Close when clicking outside the panel
+            document.addEventListener('click', (e) => {
+                if (!accessibilityPanel.contains(e.target) && e.target !== accessibilityBtn) {
+                    accessibilityPanel.classList.remove('active');
+                }
+            });
+            
+            // High contrast mode
+            highContrastBtn.addEventListener('click', () => {
+                document.body.classList.toggle('high-contrast');
+                toggleSwitch(highContrastBtn);
+            });
+            
+            // Large font mode
+            largeTextBtn.addEventListener('click', () => {
+                document.body.classList.toggle('large-text');
+                toggleSwitch(largeTextBtn);
+            });
+            
+            // Screen reader mode
+            screenReaderBtn.addEventListener('click', () => {
+                toggleSwitch(screenReaderBtn);
+                // Screen reader related functionality can be added here
+                alert('Screen reader mode activated');
+            });
+            
+            // Keyboard navigation mode
+            keyboardNavBtn.addEventListener('click', () => {
+                toggleSwitch(keyboardNavBtn);
+                // Keyboard navigation related functionality can be added here
+                alert('Keyboard navigation mode activated');
+            });
+            
+            // Toggle switch state
+            function toggleSwitch(button) {
+                const isActive = button.getAttribute('aria-checked') === 'true';
+                button.setAttribute('aria-checked', !isActive);
+                
+                if (!isActive) {
+                    button.classList.add('bg-blue-600');
+                    button.querySelector('span').style.transform = 'translateX(16px)';
+                } else {
+                    button.classList.remove('bg-blue-600');
+                    button.querySelector('span').style.transform = 'translateX(0)';
+                }
+            }
+        }
+        
+        // Initialize mobile menu
+        function initMobileMenu() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+        
+        // Initialize FAQ accordion
+        function initFaqAccordion() {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    const icon = question.querySelector('i');
+                    
+                    answer.classList.toggle('hidden');
+                    icon.classList.toggle('rotate-180');
+                });
+            });
+        }
+        
+        // Initialize modal boxes
+        function initModals() {
+            // Modal functionality is handled by the openModal and closeModal functions
+        }
+        
+        // Modal functions
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Initialize smooth scrolling
+        function initSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        // Close menu after clicking on mobile devices
+                        const mobileMenu = document.getElementById('mobile-menu');
+                        if (!mobileMenu.classList.contains('hidden')) {
+                            mobileMenu.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
