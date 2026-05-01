@@ -10,7 +10,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
     <header class="border-b border-slate-700 px-4 py-3 flex flex-wrap justify-between items-center gap-3">
-        <nav class="text-sm flex gap-3"><a href="portal.html#ai-features" class="text-blue-400">Interactive demos</a><span class="opacity-60">/</span><span class="font-semibold">Olivia</span></nav>
+        <nav class="text-sm flex gap-3"><a href="portal.html#ai-features" class="text-blue-400">Interactive tools</a><span class="opacity-60">/</span><span class="font-semibold">Olivia</span></nav>
         <div class="text-xs text-slate-400">Inclusive mode · oversized tap targets · optional speech</div>
     </header>
 
@@ -27,14 +27,14 @@
 
         <div class="bg-slate-800 rounded-2xl border border-slate-700 flex flex-col shadow-xl overflow-hidden">
             <div class="px-5 py-3 border-b border-slate-700 flex justify-between items-center bg-slate-850">
-                <div><p class="font-semibold text-white flex items-center gap-2"><span class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center"><i class="fas fa-heart"></i></span> Olivia</p><p class="text-xs text-slate-400 mt-1">Voice-friendly · demos Web Speech API when supported</p></div>
+                <div><p class="font-semibold text-white flex items-center gap-2"><span class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center"><i class="fas fa-heart"></i></span> Olivia</p><p class="text-xs text-slate-400 mt-1">Voice-friendly · Web Speech API supported where available</p></div>
                 <button type="button" id="btn-speak-last" class="hidden sm:inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm"><i class="fas fa-volume-high"></i> Replay last reply</button>
             </div>
             <div id="chat" class="chat-scroll px-5 py-4 space-y-3 bg-slate-850/80"></div>
             <div class="p-4 border-t border-slate-700 bg-slate-900 space-y-3">
                 <div id="chips" class="flex flex-wrap gap-2"></div>
                 <div class="flex gap-2">
-                    <button type="button" id="btn-mic" title="Speak" class="flex-shrink-0 w-14 h-14 rounded-2xl bg-purple-600 hover:bg-purple-500 flex items-center justify-center text-2xl border-2 border-purple-400/50 shadow-lg shadow-purple-900/40" aria-label="Voice input"><i class="fas fa-microphone"></i></button>
+                    <button type="button" id="btn-mic" title="Speak" class="flex-shrink-0 w-14 h-14 rounded-2xl bg-orange-600 hover:bg-orange-500 flex items-center justify-center text-2xl border-2 border-orange-400/50 shadow-lg shadow-orange-900/40" aria-label="Voice input"><i class="fas fa-microphone"></i></button>
                     <textarea id="user-line" rows="2" class="flex-1 bg-slate-950 border border-slate-600 rounded-xl px-3 py-2 text-sm resize-none placeholder:text-slate-500" placeholder="Ask about résumés, inclusive jobs, or subsidies…"></textarea>
                     <button type="button" id="btn-send" class="px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold"><i class="fas fa-paper-plane"></i></button>
                 </div>
@@ -73,7 +73,7 @@
                 b.className = 'bg-slate-700 hover:bg-slate-600 border border-slate-600 px-3 py-1.5 rounded-full text-xs';
                 b.onclick = function () {
                     bubble('user', '<span class="opacity-80">Chip:</span> ' + a.text);
-                    pushAssistant('Opening <strong>' + (a.modal || '').replace('-', ' ') + '</strong> happens inside the native app shell — demo links: <a class="underline text-emerald-300" href="demo-resume-matching.html">matching</a> · <a class="underline text-emerald-300" href="demo-jobs-database.html">jobs</a>');
+                    pushAssistant('Opening <strong>' + (a.modal || '').replace('-', ' ') + '</strong> happens inside the native app shell. You can continue with <a class="underline text-emerald-300" href="demo-resume-matching.html">matching</a> or <a class="underline text-emerald-300" href="demo-jobs-database.html">jobs</a>.');
                 };
                 document.getElementById('chips').appendChild(b);
             });
@@ -154,5 +154,6 @@
         bubble('assistant', 'Hi, I’m <strong>Olivia</strong>. Try <em>“optimize my resume”</em>, <em>“social security”</em>, or tap the mic. I keep answers short and replayable.');
         document.getElementById('btn-speak-last').classList.remove('hidden');
     </script>
+    <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

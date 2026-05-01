@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for a GBA Role</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; }
+        .step-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+        .step-card:hover { transform: translateY(-3px); box-shadow: 0 16px 30px rgba(234, 88, 12, .14); border-color: #fdba74; }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 text-slate-900">
+    <header class="bg-white/90 backdrop-blur border-b border-orange-100 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+            <a href="portal.html#dashboard" class="inline-flex items-center gap-2 text-orange-700 font-semibold">
+                <i class="fas fa-arrow-left"></i>
+                Back to personal portal
+            </a>
+            <a href="demo-resume-matching.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700">
+                Optimize resume first
+                <i class="fas fa-wand-magic-sparkles"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-10">
+        <section class="grid lg:grid-cols-[1.1fr_.9fr] gap-8 items-start">
+            <div class="bg-white rounded-3xl shadow-xl border border-orange-100 p-8">
+                <span class="inline-flex items-center px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm font-semibold mb-4">
+                    Application workflow
+                </span>
+                <h1 id="role-title" class="text-3xl md:text-4xl font-bold mb-4">Apply for this role</h1>
+                <p id="role-summary" class="text-slate-600 text-lg mb-8">Complete a short skills-first application. Sensitive information can stay hidden until you choose to share it.</p>
+
+                <div class="grid md:grid-cols-3 gap-4 mb-8">
+                    <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold mb-3">1</div>
+                        <h3 class="font-semibold mb-1">Confirm fit</h3>
+                        <p class="text-sm text-slate-600">Review match reasons and role requirements.</p>
+                    </div>
+                    <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
+                        <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold mb-3">2</div>
+                        <h3 class="font-semibold mb-1">Attach profile</h3>
+                        <p class="text-sm text-slate-600">Use a blind-screening resume or paste key skills.</p>
+                    </div>
+                    <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold mb-3">3</div>
+                        <h3 class="font-semibold mb-1">Submit</h3>
+                        <p class="text-sm text-slate-600">Save the application locally and continue preparation.</p>
+                    </div>
+                </div>
+
+                <form id="application-form" class="space-y-5">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <label class="block">
+                            <span class="text-sm font-medium text-slate-700">Display name</span>
+                            <input required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Your preferred name">
+                        </label>
+                        <label class="block">
+                            <span class="text-sm font-medium text-slate-700">Email</span>
+                            <input type="email" required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="you@example.com">
+                        </label>
+                    </div>
+                    <label class="block">
+                        <span class="text-sm font-medium text-slate-700">Top skills</span>
+                        <input class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Customer service, Excel, Cantonese, live-commerce support">
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-medium text-slate-700">Short motivation</span>
+                        <textarea rows="5" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Share why this role fits your work preferences, skills and schedule."></textarea>
+                    </label>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="inline-flex items-center gap-2 rounded-full bg-orange-50 text-orange-700 px-4 py-2 text-sm">
+                            <input type="checkbox" checked>
+                            Use blind-screening profile
+                        </label>
+                        <label class="inline-flex items-center gap-2 rounded-full bg-amber-50 text-amber-700 px-4 py-2 text-sm">
+                            <input type="checkbox">
+                            Request accessibility support
+                        </label>
+                        <label class="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 px-4 py-2 text-sm">
+                            <input type="checkbox">
+                            Prefer remote interview
+                        </label>
+                    </div>
+                    <button type="submit" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 hover:-translate-y-0.5 transition-all">
+                        Submit application
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <p id="application-msg" class="hidden text-emerald-700 font-medium"></p>
+                </form>
+            </div>
+
+            <aside class="space-y-5">
+                <div class="bg-white rounded-3xl shadow border border-orange-100 p-6">
+                    <h2 class="text-xl font-bold mb-4">Role snapshot</h2>
+                    <div id="role-tags" class="flex flex-wrap gap-2 mb-5"></div>
+                    <ul id="role-checks" class="space-y-3 text-sm text-slate-600"></ul>
+                </div>
+                <div class="bg-slate-900 text-white rounded-3xl shadow p-6">
+                    <h2 class="text-xl font-bold mb-3">What happens next?</h2>
+                    <ol class="space-y-3 text-sm text-slate-300">
+                        <li><span class="font-semibold text-white">1.</span> Your application is stored in this browser for presentation use.</li>
+                        <li><span class="font-semibold text-white">2.</span> You can refine your resume or practice interview questions immediately.</li>
+                        <li><span class="font-semibold text-white">3.</span> In a full launch, employers would receive an anonymized skills profile first.</li>
+                    </ol>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <script>
+        const roles = {
+            'digital-marketing-specialist': {
+                title: 'Digital Marketing Specialist',
+                summary: 'A remote-friendly cross-border marketing role focused on campaign operations, content coordination and bilingual customer insights.',
+                tags: ['92% Match', 'Hong Kong', 'Remote', '¥25K-35K'],
+                checks: ['Campaign coordination and reporting', 'Chinese-English content awareness', 'Accessible remote work options', 'Good path for return-to-work candidates']
+            },
+            'financial-analyst': {
+                title: 'Financial Analyst',
+                summary: 'A Shenzhen-based role for candidates with data discipline, spreadsheet confidence and interest in GBA finance operations.',
+                tags: ['88% Match', 'Shenzhen', 'Full-time', '¥30K-40K'],
+                checks: ['Spreadsheet and data quality skills', 'Structured onboarding available', 'Policy support for cross-border work', 'Interview preparation recommended']
+            },
+            'customer-service-representative': {
+                title: 'Customer Service Representative',
+                summary: 'A Macau-facing customer service role suitable for patient communicators and flexible remote support schedules.',
+                tags: ['95% Match', 'Macau', 'Remote', '¥18K-25K'],
+                checks: ['Customer empathy and complaint handling', 'Cantonese / Mandarin / English helpful', 'Accessible work mode supported', 'Clear training pathway']
+            }
+        };
+
+        const params = new URLSearchParams(location.search);
+        const role = roles[params.get('role')] || roles['customer-service-representative'];
+        document.getElementById('role-title').textContent = 'Apply: ' + role.title;
+        document.getElementById('role-summary').textContent = role.summary;
+        document.getElementById('role-tags').innerHTML = role.tags.map(tag => '<span class="px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-sm font-medium">' + tag + '</span>').join('');
+        document.getElementById('role-checks').innerHTML = role.checks.map(item => '<li class="flex gap-2"><i class="fas fa-check text-emerald-500 mt-0.5"></i><span>' + item + '</span></li>').join('');
+
+        document.getElementById('application-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            localStorage.setItem('gba_latest_application', JSON.stringify({ role: role.title, at: new Date().toISOString() }));
+            const msg = document.getElementById('application-msg');
+            msg.textContent = 'Application submitted. You can continue with resume optimization or interview preparation.';
+            msg.classList.remove('hidden');
+        });
+    </script>
+    <script src="../assets/site-enhancements.js"></script>
+</body>
+</html>

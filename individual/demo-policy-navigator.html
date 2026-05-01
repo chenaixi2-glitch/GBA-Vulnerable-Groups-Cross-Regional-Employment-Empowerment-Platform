@@ -10,7 +10,7 @@
 </head>
 <body class="bg-amber-50/40 min-h-screen">
     <header class="bg-white border-b px-4 py-3 flex justify-between flex-wrap gap-2">
-        <nav class="text-sm"><a href="portal.html#ai-features" class="text-blue-700 font-medium">Interactive demos</a> · <strong>Policy navigator</strong></nav>
+        <nav class="text-sm"><a href="portal.html#ai-features" class="text-blue-700 font-medium">Interactive tools</a> · <strong>Policy navigator</strong></nav>
         <span class="text-xs text-slate-500">Illustrative only — confirm with accountants & bureaus</span>
     </header>
 
@@ -23,7 +23,7 @@
 
         <section id="tab-iit" class="tabsheet bg-white rounded-2xl border p-6 shadow">
             <h1 class="text-xl font-bold mb-2"><i class="fas fa-percent text-amber-500 mr-2"></i>IIT subsidy quick model</h1>
-            <p class="text-slate-600 text-sm mb-6">Demonstrates HK/Macau elite-talent style logic: subsidy ≈ IIT paid − 15 % × taxable income (cannot go negative).</p>
+            <p class="text-slate-600 text-sm mb-6">Models HK/Macau talent subsidy logic: subsidy ≈ IIT paid − 15 % × taxable income (cannot go negative).</p>
             <div class="grid sm:grid-cols-2 gap-4">
                 <label class="block text-sm"><span class="font-medium text-slate-700">Annual taxable income (CNY thousands)</span>
                     <input type="number" id="inc" value="1000" step="50" class="mt-1 w-full border rounded-lg p-2 text-sm"></label>
@@ -57,7 +57,7 @@
                 <li><span class="font-semibold text-emerald-700">Incoming city application</span> filed at the bureau that will administer you next.</li>
                 <li><span class="font-semibold text-emerald-700">Consolidated transfer memo</span> once both desks reconcile.</li>
             </ol>
-            <button type="button" id="btn-policy-qa" class="mt-6 border border-emerald-600 text-emerald-700 px-5 py-2 rounded-lg hover:bg-emerald-50">Fetch AI policy snippet (demo)</button>
+            <button type="button" id="btn-policy-qa" class="mt-6 border border-emerald-600 text-emerald-700 px-5 py-2 rounded-lg hover:bg-emerald-50">Fetch AI policy snippet</button>
             <pre id="sso-ai" class="mt-4 text-xs bg-slate-900 text-green-400 p-4 rounded-xl whitespace-pre-wrap hidden overflow-auto max-h-64"></pre>
         </section>
     </div>
@@ -99,5 +99,6 @@
             el.classList.remove('hidden');
         };
     </script>
+    <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

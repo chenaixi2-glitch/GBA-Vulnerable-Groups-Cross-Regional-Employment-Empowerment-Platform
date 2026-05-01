@@ -18,8 +18,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
         
         :root {
-            --primary-color: #2563eb;
-            --secondary-color: #10b981;
+            --primary-color: #f97316;
+            --secondary-color: #fb923c;
             --accent-color: #f97316;
             --neutral-color: #6b7280;
             --dark-color: #1f2937;
@@ -32,7 +32,7 @@
         }
         
         .hero-section {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             height: 100vh;
             position: relative;
             overflow: hidden;
@@ -256,7 +256,7 @@
         }
         
         .btn-primary:hover {
-            background-color: #1d4ed8;
+            background-color: #ea580c;
             transform: translateY(-2px);
         }
         
@@ -305,7 +305,7 @@
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
         }
         
         /* Label Styles */
@@ -320,7 +320,7 @@
         }
         
         .tag-primary {
-            background-color: rgba(37, 99, 235, 0.1);
+            background-color: rgba(249, 115, 22, 0.1);
             color: var(--primary-color);
         }
         
@@ -336,7 +336,7 @@
         
         /* Individual User Specific Styles */
         .individual-feature-icon {
-            background: linear-gradient(135deg, #2563eb, #8b5cf6);
+            background: linear-gradient(135deg, #f97316, #fb923c);
         }
         
         .dashboard-card {
@@ -345,6 +345,9 @@
             background: white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
         }
         
         .dashboard-card:hover {
@@ -366,9 +369,17 @@
             border-radius: 4px;
             transition: width 0.3s ease;
         }
+
+        .dashboard-action {
+            margin-top: auto;
+        }
+
+        .module-card {
+            min-height: 260px;
+        }
     </style>
 </head>
-<body>
+<body data-page="individual">
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-md fixed w-full z-50">
         <div class="container mx-auto px-4 py-3">
@@ -381,11 +392,11 @@
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="#dashboard" class="text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
-                    <a href="#ai-features" class="text-blue-700 font-semibold hover:text-blue-600 transition-colors">Interactive demos</a>
-                    <a href="#resources" class="text-gray-600 hover:text-blue-600 transition-colors">Resources</a>
-                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
-                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
+                    <a href="#dashboard" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
+                    <a href="#ai-features" class="text-orange-700 font-semibold hover:text-orange-600 transition-colors" data-i18n="nav-demos">Interactive tools</a>
+                    <a href="#resources" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-resources">Resources</a>
+                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
+                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
                 </div>
                 
                 <div class="flex items-center space-x-4">
@@ -418,11 +429,11 @@
             
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
-                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
-                <a href="#ai-features" class="block py-2 text-blue-700 font-semibold hover:text-blue-600 transition-colors">Interactive demos</a>
-                <a href="#resources" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Resources</a>
-                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
-                <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
+                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
+                <a href="#ai-features" class="block py-2 text-orange-700 font-semibold hover:text-orange-600 transition-colors" data-i18n="nav-demos">Interactive tools</a>
+                <a href="#resources" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-resources">Resources</a>
+                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
+                <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
             </div>
         </div>
     </nav>
@@ -467,12 +478,12 @@
     <section class="hero-section flex items-center justify-center relative">
         <canvas id="hero-bg-canvas"></canvas>
         <div class="container mx-auto px-4 z-10 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">Individual User Dashboard</h1>
-            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto">Empowering you with AI tools to find cross-border employment opportunities in the Greater Bay Area</p>
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6" data-i18n="hero-title">Individual User Dashboard</h1>
+            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="hero-subtitle">Empowering you with AI tools to find cross-border employment opportunities in the Greater Bay Area</p>
             
             <a href="#ai-features" class="btn-primary text-lg">
                 <i class="fas fa-chart-line"></i>
-                <span>Open interactive demos</span>
+                <span data-i18n="hero-open-demos">Open interactive tools</span>
             </a>
             
             <div class="mt-12 flex flex-wrap justify-center gap-4">
@@ -508,7 +519,7 @@
     <!-- Dashboard Section -->
     <section id="dashboard" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">Your Personal Dashboard</h2>
+            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="nav-dashboard">Your Personal Dashboard</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                 <!-- Profile Completeness -->
@@ -521,7 +532,7 @@
                         <div class="progress-fill" style="width: 75%"></div>
                     </div>
                     <p class="text-gray-600 mt-4">Complete your profile to get better job matches</p>
-                    <button class="btn-primary mt-4 w-full">Complete Profile</button>
+                    <button class="btn-primary dashboard-action w-full justify-center">Complete Profile</button>
                 </div>
                 
                 <!-- Job Applications -->
@@ -544,7 +555,7 @@
                             <span class="tag tag-accent">3</span>
                         </div>
                     </div>
-                    <button class="btn-primary mt-4 w-full">View Applications</button>
+                    <button class="btn-primary dashboard-action w-full justify-center">View Applications</button>
                 </div>
                 
                 <!-- Skill Development -->
@@ -557,7 +568,7 @@
                         <div class="progress-fill" style="width: 60%"></div>
                     </div>
                     <p class="text-gray-600 mt-4">Continue your learning journey</p>
-                    <a href="demo-learning-path.html" class="btn-primary mt-4 w-full justify-center">Continue Learning</a>
+                    <a href="demo-learning-path.html" class="btn-primary dashboard-action w-full justify-center">Continue Learning</a>
                 </div>
             </div>
             
@@ -583,7 +594,7 @@
                             </div>
                             <div class="text-right">
                                 <div class="text-green-600 font-semibold mb-2">92% Match</div>
-                                <button class="btn-primary">Apply Now</button>
+                                <a href="apply.html?role=digital-marketing-specialist" class="btn-primary justify-center">Apply Now</a>
                             </div>
                         </div>
                     </div>
@@ -601,7 +612,7 @@
                             </div>
                             <div class="text-right">
                                 <div class="text-green-600 font-semibold mb-2">88% Match</div>
-                                <button class="btn-primary">Apply Now</button>
+                                <a href="apply.html?role=financial-analyst" class="btn-primary justify-center">Apply Now</a>
                             </div>
                         </div>
                     </div>
@@ -620,7 +631,7 @@
                             </div>
                             <div class="text-right">
                                 <div class="text-green-600 font-semibold mb-2">95% Match</div>
-                                <button class="btn-primary">Apply Now</button>
+                                <a href="apply.html?role=customer-service-representative" class="btn-primary justify-center">Apply Now</a>
                             </div>
                         </div>
                     </div>
@@ -629,11 +640,44 @@
         </div>
     </section>
     
-    <!-- Interactive demos hub (modules + feedback) -->
+    <!-- Employment Closed Loop Section -->
+    <section id="service-loop" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center mb-12">
+                <span class="inline-block px-4 py-2 rounded-full bg-orange-50 text-orange-700 text-sm font-semibold mb-4">Employment Service Loop</span>
+                <h2 class="text-3xl font-bold mb-4">From registration to post-employment follow-up</h2>
+                <p class="text-gray-600 text-lg">Each step links to a practical workflow so users can move from assessment to matching, training, onboarding and long-term support.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <a href="#dashboard" class="rounded-2xl border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold mb-4">1</div>
+                    <h3 class="font-bold text-lg mb-2">Register & assess skills</h3>
+                    <p class="text-gray-600 text-sm">Capture ability, work preferences, accessibility needs and preferred GBA cities before matching.</p>
+                </a>
+                <a href="demo-resume-matching.html" class="rounded-2xl border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold mb-4">2</div>
+                    <h3 class="font-bold text-lg mb-2">Optimize resume & match</h3>
+                    <p class="text-gray-600 text-sm">Convert life and service experience into role-relevant skills, then match with blind-screening friendly roles.</p>
+                </a>
+                <a href="demo-learning-path.html" class="rounded-2xl border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold mb-4">3</div>
+                    <h3 class="font-bold text-lg mb-2">Train & earn credentials</h3>
+                    <p class="text-gray-600 text-sm">Generate zero-based e-commerce learning paths and micro-credential style outcomes.</p>
+                </a>
+                <a href="demo-policy-navigator.html" class="rounded-2xl border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold mb-4">4</div>
+                    <h3 class="font-bold text-lg mb-2">Onboard & follow up</h3>
+                    <p class="text-gray-600 text-sm">Use policy checklists, social-security guidance and feedback to support long-term employment stability.</p>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Interactive tools hub (modules + feedback) -->
     <section id="ai-features" class="py-20 bg-white scroll-mt-28">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">Interactive modules</h2>
-            <p class="text-xl text-gray-600 text-center mb-4 max-w-3xl mx-auto">Seven entry points below (plus feedback). <strong>AI learning path</strong> composes curricula from your experience and target-role skill bands via <code class="bg-gray-200 px-1 rounded text-sm">mock-api.js</code>. Production would add CV/JD embeddings and tracking.</p>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="nav-demos">Interactive modules</h2>
+            <p class="text-xl text-gray-600 text-center mb-4 max-w-3xl mx-auto">Nine connected tools support matching, policy, learning, accessibility, credentialing and feedback across the employment journey.</p>
             <p class="text-sm text-gray-500 text-center mb-10 max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
                 <span>Quick links:</span>
                 <a href="demo-resume-matching.html" class="text-blue-600 hover:underline">Résumé</a>
@@ -646,46 +690,58 @@
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14">
-                <a href="demo-resume-matching.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-file-alt"></i></div>
+                <a href="demo-resume-matching.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-600 to-amber-400 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-file-alt"></i></div>
                     <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Skills-first AI matching engine</h3>
                     <p class="text-gray-600 text-sm flex-1">Upload résumé, configure JD / industry / polish, preview-edit, multilingual UI toggle, export.</p>
-                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
-                <a href="demo-olivia.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-600 to-purple-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-microphone-lines"></i></div>
+                <a href="demo-olivia.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-microphone-lines"></i></div>
                     <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Olivia conversational AI</h3>
                     <p class="text-gray-600 text-sm flex-1">Large chat pane, microphone input, synthetic speech playback, guided step strip for low digital literacy paths.</p>
-                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
-                <a href="demo-policy-navigator.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                <a href="demo-policy-navigator.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-calculator"></i></div>
                     <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">GBA policy dividend navigator</h3>
                     <p class="text-gray-600 text-sm flex-1">IIT subsidy calculator, disability levy estimator form, printable social-security transfer playbook.</p>
-                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
-                <a href="demo-interview.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                <a href="demo-interview.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-user-tie"></i></div>
                     <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Interview simulation AI</h3>
                     <p class="text-gray-600 text-sm flex-1">Question carousel, typed answers, interviewer mood animation, downloadable score synopsis.</p>
-                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
-                <a href="demo-jobs-database.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-briefcase"></i></div>
+                <a href="demo-jobs-database.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-briefcase"></i></div>
                     <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">GBA job &amp; knowledge bank</h3>
                     <p class="text-gray-600 text-sm flex-1">Browse curated openings and practise short knowledge-check items tied to each role cluster.</p>
-                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
-                <a href="demo-learning-path.html" class="group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg transition-all h-full flex flex-col">
+                <a href="demo-learning-path.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-route"></i></div>
                     <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">AI learning path</h3>
                     <p class="text-gray-600 text-sm flex-1">Tailors module stacks from your stated experience plus target role competency bands.</p>
-                    <span class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium">Open module <i class="fas fa-chevron-right ml-1"></i></span>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
-                <div id="feedback" class="bg-white rounded-2xl shadow border border-gray-100 p-6 border-dashed border-2 border-emerald-200 scroll-mt-28">
+                <a href="#service-loop" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-wheelchair-move"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Accessibility workstation planner</h3>
+                    <p class="text-gray-600 text-sm flex-1">Plan screen-reader support, large-text mode, voice input and ergonomic equipment needs before onboarding.</p>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">View planner <i class="fas fa-chevron-right ml-1"></i></span>
+                </a>
+                <a href="#resources" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-lime-500 to-emerald-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-certificate"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Micro-credential wallet</h3>
+                    <p class="text-gray-600 text-sm flex-1">Track skill badges for e-commerce service, data labeling and live-commerce support across GBA employers.</p>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">View credentials <i class="fas fa-chevron-right ml-1"></i></span>
+                </a>
+                <div id="feedback" class="module-card bg-white rounded-2xl shadow border border-gray-100 p-6 border-dashed border-2 border-emerald-200 scroll-mt-28">
                     <div class="w-14 h-14 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl mb-4"><i class="fas fa-comment-dots"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">User feedback</h3>
-                    <p class="text-gray-600 text-sm mb-4">Rate your experience below. Helps us prioritise roadmap items.</p>
+                    <p class="text-gray-600 text-sm mb-4">Rate your experience below. Helps us prioritize the next product improvements.</p>
                     <label class="block text-xs font-medium text-gray-500 mb-2">Star rating</label>
                     <div id="stars" class="flex gap-1 mb-4 text-2xl text-amber-400 cursor-pointer" role="radiogroup" aria-label="Rating">
                         <span data-val="1" class="opacity-40 hover:opacity-100">&starf;</span>
@@ -696,7 +752,7 @@
                     </div>
                     <textarea id="fb-text" rows="3" class="w-full border border-gray-200 rounded-lg p-3 text-sm mb-3" placeholder="Tell us what worked or felt confusing…"></textarea>
                     <button type="button" id="fb-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg text-sm">Submit feedback</button>
-                    <p id="fb-msg" class="mt-3 text-sm text-emerald-700 hidden" role="status"><i class="fas fa-check-circle mr-1"></i> Thank you — your feedback was recorded locally for this demo.</p>
+                    <p id="fb-msg" class="mt-3 text-sm text-emerald-700 hidden" role="status"><i class="fas fa-check-circle mr-1"></i> Thank you. Your feedback was saved in this browser.</p>
                 </div>
             </div>
         </div>
@@ -705,7 +761,7 @@
     <!-- Resources Section -->
     <section id="resources" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">Resources for Your Success</h2>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="nav-resources">Resources for Your Success</h2>
             <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Comprehensive resources to help you navigate cross-border employment</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -716,7 +772,7 @@
                     </div>
                     <h3 class="text-xl font-semibold mb-2">Guidebooks</h3>
                     <p class="text-gray-600 mb-4">Comprehensive guides on cross-border employment procedures and requirements.</p>
-                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                    <a href="demo-policy-navigator.html" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
                         <span>View Guidebooks</span>
                         <i class="fas fa-arrow-right ml-2"></i>
                     </a>
@@ -729,7 +785,7 @@
                     </div>
                     <h3 class="text-xl font-semibold mb-2">Video Tutorials</h3>
                     <p class="text-gray-600 mb-4">Step-by-step video guides for platform features and job application processes.</p>
-                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                    <a href="demo-learning-path.html" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
                         <span>Watch Tutorials</span>
                         <i class="fas fa-arrow-right ml-2"></i>
                     </a>
@@ -737,12 +793,12 @@
                 
                 <!-- Resource 3 -->
                 <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-calendar-alt text-purple-600 text-xl"></i>
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-calendar-alt text-orange-600 text-xl"></i>
                     </div>
                     <h3 class="text-xl font-semibold mb-2">Events</h3>
                     <p class="text-gray-600 mb-4">Upcoming webinars and workshops on cross-border employment topics.</p>
-                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                    <a href="#resources" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
                         <span>View Events</span>
                         <i class="fas fa-arrow-right ml-2"></i>
                     </a>
@@ -755,7 +811,7 @@
                     </div>
                     <h3 class="text-xl font-semibold mb-2">Community</h3>
                     <p class="text-gray-600 mb-4">Connect with other job seekers and share experiences and advice.</p>
-                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                    <a href="#feedback" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
                         <span>Join Community</span>
                         <i class="fas fa-arrow-right ml-2"></i>
                     </a>
@@ -767,7 +823,7 @@
     <!-- Success Stories Section -->
     <section id="success-stories" class="py-20 bg-white">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">Success Stories</h2>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-stories-title">Success Stories</h2>
             <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Real stories from individuals who found cross-border employment through our platform</p>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -831,7 +887,7 @@
     <!-- FAQ Section -->
     <section id="faq" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-faq-title">Frequently Asked Questions</h2>
             
             <div class="max-w-3xl mx-auto">
                 <!-- Question 1 -->
@@ -874,7 +930,7 @@
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Our AI Interview Coaching feature provides mock interview simulations with industry-specific questions. It offers real-time feedback on your answers, body language, and communication style. We also provide cross-cultural communication training to help you navigate cultural differences in interviews.</p>
+                        <p class="text-gray-600">Our AI Interview Coaching feature provides interview simulations with industry-specific questions. It offers real-time feedback on your answers, body language, and communication style. We also provide cross-cultural communication training to help you navigate cultural differences in interviews.</p>
                     </div>
                 </div>
                 
@@ -900,16 +956,16 @@
                     <h3 class="text-xl font-bold mb-4">GBA Platform</h3>
                     <p class="text-gray-400 mb-4">Empowering vulnerable groups through AI technology for cross-border employment in the Greater Bay Area.</p>
                     <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.facebook.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://x.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-twitter"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.linkedin.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.instagram.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-instagram"></i>
                         </a>
                     </div>
@@ -919,7 +975,7 @@
                     <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
                     <ul class="space-y-2">
                         <li><a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Dashboard</a></li>
-                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">Interactive demos</a></li>
+                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">Interactive tools</a></li>
                         <li><a href="#resources" class="text-gray-400 hover:text-white transition-colors">Resources</a></li>
                         <li><a href="#success-stories" class="text-gray-400 hover:text-white transition-colors">Success Stories</a></li>
                         <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
@@ -929,11 +985,11 @@
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Support</h3>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Accessibility Statement</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Accessibility Statement</a></li>
                     </ul>
                 </div>
                 
@@ -1177,5 +1233,6 @@
             }
         })();
     </script>
+    <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

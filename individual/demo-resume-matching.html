@@ -19,7 +19,7 @@
     <header class="bg-white border-b px-4 py-3 flex flex-wrap gap-3 items-center justify-between">
         <nav class="flex flex-wrap gap-3 text-sm items-center">
             <a href="../index.html" class="text-slate-500">Welcome</a>
-            <a href="portal.html#ai-features" class="text-blue-700 font-medium">Interactive demos</a>
+            <a href="portal.html#ai-features" class="text-blue-700 font-medium">Interactive tools</a>
             <span class="text-slate-900 font-semibold">Résumé matching engine</span>
         </nav>
         <div class="flex items-center gap-2">
@@ -50,7 +50,7 @@
 
         <section id="panel-upload" class="bg-white rounded-2xl shadow border p-6 mb-6">
             <h1 class="text-xl font-bold mb-2">Step 1 — Upload blind-screening profile</h1>
-            <p class="text-slate-600 text-sm mb-4"><strong>Note:</strong> true PDF/DOC ingestion runs on the backend (OCR, PII stripping). Drop a sample or paste plaintext for this sandbox.</p>
+            <p class="text-slate-600 text-sm mb-4"><strong>Note:</strong> true PDF/DOC ingestion runs on the backend (OCR, PII stripping). Drop a sample or paste plaintext for this workflow.</p>
             <label class="block border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition-colors">
                 <input type="file" id="file-in" accept=".txt,.pdf,.doc,.docx" class="hidden">
                 <i class="fas fa-cloud-upload-alt text-3xl text-blue-500 mb-2"></i>
@@ -85,7 +85,7 @@
                 <button type="button" id="btn-back-2" class="border border-slate-300 px-4 py-2 rounded-lg text-sm">Back</button>
                 <button type="button" id="btn-run-ai" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700">Generate skills-first rewrite</button>
             </div>
-            <div id="loader" class="hidden mt-4 flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span> Calling demo optimiser…</div>
+            <div id="loader" class="hidden mt-4 flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span> Optimising profile…</div>
         </section>
 
         <section id="panel-preview" class="hidden bg-white rounded-2xl shadow border p-6">
@@ -138,14 +138,14 @@
                 experience: [
                     {
                         title: 'Senior associate',
-                        company: 'Demo merchant',
+                        company: 'GBA merchant',
                         description: document.getElementById('paste-resume').value.slice(0, 400) || 'Handled VIP escalations across HK & mainland cohorts.'
                     }
                 ]
             };
             var res = await API.optimizeResume(base, { jd: document.getElementById('jd-box').value, polish: +document.getElementById('polish').value });
             document.getElementById('loader').classList.add('hidden');
-            if (!res.success) return alert('Optimiser failed (demo).');
+            if (!res.success) return alert('Optimiser failed.');
             var opt = res.data.optimizedResume;
             var txt = 'SKILLS\n' + opt.skills.join(', ') + '\n\nEXPERIENCE\n' + opt.experience.map(function (e) { return e.title + ' — ' + e.company + '\n' + e.description; }).join('\n\n');
             document.getElementById('preview-body').value = txt;
@@ -169,5 +169,6 @@
             localStorage.setItem('gba_module_lang_pref', this.value);
         };
     </script>
+    <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

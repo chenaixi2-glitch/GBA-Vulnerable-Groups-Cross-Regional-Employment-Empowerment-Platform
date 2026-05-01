@@ -350,9 +350,67 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
         }
+
+        .loop-step,
+        .benefit-item {
+            border-radius: 1rem;
+            padding: 1rem;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+        }
+
+        .loop-step:hover,
+        .benefit-item:hover {
+            transform: translateY(-4px) scale(1.02);
+            background-color: #ffffff;
+            box-shadow: 0 18px 35px rgba(37, 99, 235, 0.12);
+        }
+
+        .loop-step:hover .loop-num {
+            transform: scale(1.12) rotate(-5deg);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+        }
+
+        .loop-num {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .stories-marquee {
+            overflow: hidden;
+            padding: 1rem 0 1.5rem;
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+        }
+
+        .stories-track {
+            display: flex;
+            gap: 1.5rem;
+            width: max-content;
+            animation: storyScroll 38s linear infinite;
+        }
+
+        .stories-marquee:hover .stories-track {
+            animation-play-state: paused;
+        }
+
+        .story-card {
+            width: 360px;
+            flex: 0 0 360px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .story-card:hover {
+            transform: scale(1.06);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+            z-index: 5;
+        }
+
+        @keyframes storyScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(-50% - 0.75rem)); }
+        }
     </style>
 </head>
-<body>
+<body data-page="home">
     <div id="page-toast" role="status" aria-live="polite"></div>
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-md fixed top-0 left-0 right-0 w-full z-50">
@@ -367,11 +425,11 @@
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-6 lg:space-x-8 flex-1 justify-center min-w-0">
-                    <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">Features</a>
+                    <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="nav-features">Features</a>
                     <a href="#how-it-works" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">How It Works</a>
-                    <a href="#benefits" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">Benefits</a>
-                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">Success Stories</a>
-                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">FAQ</a>
+                    <a href="#benefits" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="section-benefits-title">Benefits</a>
+                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="nav-stories">Success Stories</a>
+                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="nav-faq">FAQ</a>
                 </div>
                 
                 <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
@@ -412,11 +470,11 @@
             
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2 border-t border-gray-100 mt-3">
-                <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Features</a>
+                <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-features">Features</a>
                 <a href="#how-it-works" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">How It Works</a>
                 <a href="#benefits" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Benefits</a>
-                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Success Stories</a>
-                <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
+                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
+                <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
                 <div class="py-3 border-t border-gray-100 mt-2 space-y-2">
                     <div id="nav-mobile-auth-guest">
                         <button type="button" class="nav-mobile-login w-full text-left py-2 text-gray-600 hover:text-blue-600 font-medium">Log in</button>
@@ -470,17 +528,17 @@
     <section id="top-hero" class="hero-section flex items-center justify-center relative">
         <canvas id="hero-bg-canvas"></canvas>
         <div class="container mx-auto px-4 z-10 text-center hero-inner relative">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">GBA Cross-Border Employment Empowerment Platform</h1>
-            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto">Empowering vulnerable groups through AI technology, breaking barriers, and connecting employment opportunities in the Guangdong-Hong Kong-Macao Greater Bay Area</p>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight md:leading-[1.08] tracking-tight max-w-6xl mx-auto md:whitespace-nowrap" data-i18n="hero-title">GBA Cross-Regional Employment Empowerment</h1>
+            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="hero-subtitle">Empowering vulnerable groups through AI technology, breaking barriers, and connecting employment opportunities in the Guangdong-Hong Kong-Macao Greater Bay Area</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4">
                 <a href="individual/index.html" class="btn-hero">
                     <i class="fas fa-user"></i>
-                    <span>Individual Access</span>
+                    <span data-i18n="hero-individual">Individual Access</span>
                 </a>
                 <a href="corporate/index.html" class="btn-hero" style="background-color: rgba(255,255,255,0.9);">
                     <i class="fas fa-building"></i>
-                    <span>Corporate Access</span>
+                    <span data-i18n="hero-corporate">Corporate Access</span>
                 </a>
             </div>
 
@@ -517,11 +575,10 @@
     <!-- Features Section -->
     <section id="features" class="py-20 bg-white">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">Platform Features</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Advanced AI-powered features for job seekers and employers. <strong>Learn more</strong> opens the matching <strong>individual</strong> HTML sandbox—usually via <a href="individual/index.html" class="text-blue-600 hover:underline">Individual Portal</a> → Interactive Workspace; <strong>Skills development</strong> links straight to the <strong>AI learning path</strong> builder (experience + target role).</p>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-features-title">Platform Features</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto" data-i18n="section-features-lead">Advanced AI-powered features for job seekers and employers. <strong>Learn more</strong> opens the matching <strong>individual</strong> workflow via <a href="individual/index.html" class="text-blue-600 hover:underline">Individual Portal</a> → Interactive Workspace; <strong>Skills development</strong> links straight to the <strong>AI learning path</strong> builder (experience + target role).</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
                 <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
                     <div class="ai-feature-icon">
                         <i class="fas fa-robot"></i>
@@ -536,52 +593,6 @@
                     </div>
                 </div>
                 
-                <!-- Feature 2 -->
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
-                    <div class="ai-feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Data Security & Compliance</h3>
-                    <p class="text-gray-600 mb-4">Strict adherence to cross-border data localization principles with hierarchical privacy storage and automatic sensitive information anonymization.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
-                        <a href="individual/portal.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Learn more</span>
-                            <i class="fas fa-arrow-right ml-2"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Feature 3 -->
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
-                    <div class="ai-feature-icon">
-                        <i class="fas fa-universal-access"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Accessibility</h3>
-                    <p class="text-gray-600 mb-4">WCAG 2.2 compliant design with screen reader compatibility, keyboard navigation, high contrast mode, and voice assistant for users with disabilities.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
-                        <a href="individual/demo-olivia.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Learn more</span>
-                            <i class="fas fa-arrow-right ml-2"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Feature 4 -->
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
-                    <div class="ai-feature-icon">
-                        <i class="fas fa-language"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Multi-Language Support</h3>
-                    <p class="text-gray-600 mb-4">Full support for Simplified Chinese, Traditional Chinese, English, and Portuguese to serve the diverse GBA population.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
-                        <a href="individual/index.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Learn more</span>
-                            <i class="fas fa-arrow-right ml-2"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Feature 5 -->
                 <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
                     <div class="ai-feature-icon">
                         <i class="fas fa-graduation-cap"></i>
@@ -596,7 +607,6 @@
                     </div>
                 </div>
                 
-                <!-- Feature 6 -->
                 <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
                     <div class="ai-feature-icon">
                         <i class="fas fa-question-circle"></i>
@@ -610,6 +620,33 @@
                         </a>
                     </div>
                 </div>
+                
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
+                    <div class="ai-feature-icon">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Multi-Language Support</h3>
+                    <p class="text-gray-600 mb-4">Full support for Simplified Chinese, Traditional Chinese, English, and Portuguese to serve the diverse GBA population.</p>
+                    <p class="text-sm font-medium text-gray-500">Available across the site</p>
+                </div>
+                
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
+                    <div class="ai-feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Data Security & Compliance</h3>
+                    <p class="text-gray-600 mb-4">Strict adherence to cross-border data localization principles with hierarchical privacy storage and automatic sensitive information anonymization.</p>
+                    <p class="text-sm font-medium text-gray-500">Privacy-first by design</p>
+                </div>
+                
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
+                    <div class="ai-feature-icon">
+                        <i class="fas fa-universal-access"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Accessibility</h3>
+                    <p class="text-gray-600 mb-4">WCAG 2.2 compliant design with screen reader compatibility, keyboard navigation, high contrast mode, and voice assistant for users with disabilities.</p>
+                    <p class="text-sm font-medium text-gray-500">Inclusive access built in</p>
+                </div>
             </div>
         </div>
     </section>
@@ -617,15 +654,15 @@
     <!-- How It Works Section -->
     <section id="how-it-works" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">How It Works</h2>
+            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-workflow-title">How It Works</h2>
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div>
                     <div class="space-y-8">
                         <!-- Step 1 -->
-                        <div class="flex">
+                        <div class="loop-step flex">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">1</div>
+                                <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">1</div>
                             </div>
                             <div class="ml-6">
                                 <h3 class="text-xl font-bold mb-2">Create Your Profile</h3>
@@ -634,9 +671,9 @@
                         </div>
                         
                         <!-- Step 2 -->
-                        <div class="flex">
+                        <div class="loop-step flex">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">2</div>
+                                <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">2</div>
                             </div>
                             <div class="ml-6">
                                 <h3 class="text-xl font-bold mb-2">AI Matching Process</h3>
@@ -645,9 +682,9 @@
                         </div>
                         
                         <!-- Step 3 -->
-                        <div class="flex">
+                        <div class="loop-step flex">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">3</div>
+                                <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">3</div>
                             </div>
                             <div class="ml-6">
                                 <h3 class="text-xl font-bold mb-2">Review & Connect</h3>
@@ -656,9 +693,9 @@
                         </div>
                         
                         <!-- Step 4 -->
-                        <div class="flex">
+                        <div class="loop-step flex">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">4</div>
+                                <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">4</div>
                             </div>
                             <div class="ml-6">
                                 <h3 class="text-xl font-bold mb-2">Support Throughout</h3>
@@ -673,7 +710,7 @@
                         <h3 class="text-2xl font-bold mb-6 text-center">Platform Benefits</h3>
                         
                         <div class="space-y-4">
-                            <div class="flex items-center">
+                            <div class="benefit-item flex items-center">
                                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
@@ -683,7 +720,7 @@
                                 </div>
                             </div>
                             
-                            <div class="flex items-center">
+                            <div class="benefit-item flex items-center">
                                 <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
                                     <i class="fas fa-building text-blue-600"></i>
                                 </div>
@@ -693,7 +730,7 @@
                                 </div>
                             </div>
                             
-                            <div class="flex items-center">
+                            <div class="benefit-item flex items-center">
                                 <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4">
                                     <i class="fas fa-shield-alt text-purple-600"></i>
                                 </div>
@@ -703,7 +740,7 @@
                                 </div>
                             </div>
                             
-                            <div class="flex items-center">
+                            <div class="benefit-item flex items-center">
                                 <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-4">
                                     <i class="fas fa-heart text-orange-600"></i>
                                 </div>
@@ -726,7 +763,7 @@
     <!-- Benefits Section -->
     <section id="benefits" class="py-20 bg-white">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">Key Benefits</h2>
+            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-benefits-title">Key Benefits</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <!-- Individual Benefits -->
@@ -777,7 +814,7 @@
                         </li>
                     </ul>
                     
-                    <p class="text-sm text-gray-600 mt-6">Live flows (résumé, jobs, interview, policy, <strong>AI learning path</strong>, Olivia): open <strong>Individual Portal</strong> → Interactive Workspace, or jump straight to the learning-path sandbox from AI Features.</p>
+                    <p class="text-sm text-gray-600 mt-6">Live flows (résumé, jobs, interview, policy, <strong>AI learning path</strong>, Olivia): open <strong>Individual Portal</strong> → Interactive Workspace, or jump straight to the learning-path tool from AI Features.</p>
                     <a href="individual/index.html" class="btn-primary mt-8 w-full justify-center">
                         <i class="fas fa-user"></i>
                         <span>Individual Access</span>
@@ -832,7 +869,7 @@
                         </li>
                     </ul>
                     
-                    <p class="text-sm text-gray-600 mt-6">Policy, interview, and role demos use the <strong>same sandboxes</strong> as applicants—open them from <a href="corporate/portal.html#ai-features" class="text-green-700 font-medium hover:underline">HR interactive demos</a> or the cards on this portal after Corporate Access.</p>
+                    <p class="text-sm text-gray-600 mt-6">Policy, interview, and role tools use the <strong>same workflows</strong> as applicants. Open them from <a href="corporate/portal.html#ai-features" class="text-green-700 font-medium hover:underline">HR interactive tools</a> or the cards on this portal after Corporate Access.</p>
                     <a href="corporate/index.html" class="btn-primary mt-8 w-full justify-center" style="background-color: #10b981;">
                         <i class="fas fa-building"></i>
                         <span>Corporate Access</span>
@@ -845,12 +882,13 @@
     <!-- Success Stories Section -->
     <section id="success-stories" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">Success Stories</h2>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-stories-title">Success Stories</h2>
             <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Real stories from our users who have found success through the platform</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="stories-marquee">
+            <div class="stories-track">
                 <!-- Story 1 -->
-                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div class="story-card bg-white rounded-lg shadow-sm p-6">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="Zhang Wei" class="w-12 h-12 rounded-full mr-4">
                         <div>
@@ -866,7 +904,7 @@
                 </div>
                 
                 <!-- Story 2 -->
-                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div class="story-card bg-white rounded-lg shadow-sm p-6">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Tech+Solutions+Ltd&background=10b981&color=fff" alt="Tech Solutions Ltd" class="w-12 h-12 rounded-full mr-4">
                         <div>
@@ -882,7 +920,7 @@
                 </div>
                 
                 <!-- Story 3 -->
-                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div class="story-card bg-white rounded-lg shadow-sm p-6">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=f97316&color=fff" alt="Maria Chen" class="w-12 h-12 rounded-full mr-4">
                         <div>
@@ -896,6 +934,103 @@
                         <span>Guangzhou → Macau</span>
                     </div>
                 </div>
+                
+                <!-- Story 4 -->
+                <div class="story-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Mr+Lau&background=8b5cf6&color=fff" alt="Mr Lau" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Mr. Lau</h4>
+                            <p class="text-gray-600 text-sm">Silver-haired Product Advisor</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"The light-digital learning path helped me turn retail experience into e-commerce product selection skills. I now support a remote marketplace team three mornings a week."</p>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="fas fa-map-marker-alt mr-2"></i>
+                        <span>Hong Kong → Remote GBA role</span>
+                    </div>
+                </div>
+                
+                <!-- Story 5 -->
+                <div class="story-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Hengqin+Commerce&background=0ea5e9&color=fff" alt="Hengqin Commerce" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Hengqin Commerce</h4>
+                            <p class="text-gray-600 text-sm">Inclusive Partner Employer</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"The policy navigator clarified social security handoffs and incentive filings before we launched a remote customer-care team across Zhuhai and Macau."</p>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="fas fa-briefcase mr-2"></i>
+                        <span>Created 18 flexible service roles</span>
+                    </div>
+                </div>
+                
+                <!-- Story 6 -->
+                <div class="story-card bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Lin+Qiao&background=14b8a6&color=fff" alt="Lin Qiao" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Lin Qiao</h4>
+                            <p class="text-gray-600 text-sm">Data Annotation Trainee</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"I did not have a degree, but the skills assessment showed my attention to detail. The learning path helped me earn a micro-credential and join an AI data team."</p>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="fas fa-certificate mr-2"></i>
+                        <span>Micro-credential → Data labeling role</span>
+                    </div>
+                </div>
+                <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                        <div><h4 class="font-semibold text-gray-800">Zhang Wei</h4><p class="text-gray-600 text-sm">Software Developer</p></div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"The blind screening feature gave me a fair chance, and I'm now working at a tech company in Hong Kong."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Shenzhen → Hong Kong</span></div>
+                </div>
+                <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Tech+Solutions+Ltd&background=10b981&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                        <div><h4 class="font-semibold text-gray-800">Tech Solutions Ltd</h4><p class="text-gray-600 text-sm">Hong Kong Company</p></div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"The platform helped us find qualified candidates from mainland China and Macau."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-users mr-2"></i><span>Hired 5 cross-border employees</span></div>
+                </div>
+                <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=f97316&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                        <div><h4 class="font-semibold text-gray-800">Maria Chen</h4><p class="text-gray-600 text-sm">Marketing Specialist</p></div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"AI resume optimization and interview coaching gave me confidence to re-enter the workforce."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Guangzhou → Macau</span></div>
+                </div>
+                <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Mr+Lau&background=8b5cf6&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                        <div><h4 class="font-semibold text-gray-800">Mr. Lau</h4><p class="text-gray-600 text-sm">Silver-haired Product Advisor</p></div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"The learning path helped me turn retail experience into e-commerce product selection skills."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Hong Kong → Remote GBA role</span></div>
+                </div>
+                <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Hengqin+Commerce&background=0ea5e9&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                        <div><h4 class="font-semibold text-gray-800">Hengqin Commerce</h4><p class="text-gray-600 text-sm">Inclusive Partner Employer</p></div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"The policy navigator clarified social security handoffs and incentive filings."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-briefcase mr-2"></i><span>Created 18 flexible service roles</span></div>
+                </div>
+                <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Lin+Qiao&background=14b8a6&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                        <div><h4 class="font-semibold text-gray-800">Lin Qiao</h4><p class="text-gray-600 text-sm">Data Annotation Trainee</p></div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"The skills assessment showed my attention to detail and opened a data labeling pathway."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span>Micro-credential → Data labeling role</span></div>
+                </div>
+            </div>
             </div>
         </div>
     </section>
@@ -903,7 +1038,7 @@
     <!-- FAQ Section -->
     <section id="faq" class="py-20 bg-white">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-faq-title">Frequently Asked Questions</h2>
             
             <div class="max-w-3xl mx-auto">
                 <!-- Question 1 -->
@@ -960,6 +1095,39 @@
                         <p class="text-gray-600">Simply choose whether you're an individual user or a corporate user, create your account, and complete your profile. For individuals, this includes your skills, experience, and career goals. For companies, this includes your company information and hiring needs. Once your profile is complete, you can start using our AI-powered features to find opportunities or candidates.</p>
                     </div>
                 </div>
+                
+                <!-- Question 6 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">Which groups are prioritized on the platform?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">The platform uses respectful naming and focuses on accessible workers, silver-haired professionals, skill-growing workers, health-compatible workers, and other GBA job seekers who face information, policy, or skill-expression barriers.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 7 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">Can this front-end site run on GitHub Pages?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Yes. The site uses static HTML, CSS, CDN assets, and browser-side data only. Authentication, feedback, and language preference are stored locally, so no backend server is required for GitHub Pages deployment.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 8 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">What does the Remote & Inclusive Flex-Hub cover?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">It showcases flexible e-commerce roles such as remote customer service, data annotation, live-commerce support, content moderation, and assistive-tool guidance. The design emphasizes equal pay, clear assessment criteria, accessible interfaces, and post-employment follow-up.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -967,7 +1135,7 @@
     <!-- CTA Section -->
     <section class="py-20 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div class="container mx-auto px-4 text-center">
-            <h2 class="text-3xl md:text-4xl font-bold mb-6">Join the GBA Employment Revolution</h2>
+            <h2 class="text-3xl md:text-4xl font-bold mb-6" data-i18n="section-cta-title">Join the GBA Employment Revolution</h2>
             <p class="text-xl mb-8 max-w-3xl mx-auto">Experience the power of AI technology in breaking down barriers and connecting talent with opportunities across the Greater Bay Area.</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
@@ -1010,16 +1178,16 @@
                     <h3 class="text-xl font-bold mb-4">GBA Platform</h3>
                     <p class="text-gray-400 mb-4">Empowering vulnerable groups through AI technology for cross-border employment in the Greater Bay Area.</p>
                     <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.facebook.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://x.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-twitter"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.linkedin.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.instagram.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-instagram"></i>
                         </a>
                     </div>
@@ -1041,7 +1209,7 @@
                     <ul class="space-y-2">
                         <li><a href="individual/index.html" class="text-gray-400 hover:text-white transition-colors">Individual Portal</a></li>
                         <li><a href="corporate/index.html" class="text-gray-400 hover:text-white transition-colors">Corporate Portal</a></li>
-                        <li><a href="corporate/portal.html#ai-features" class="text-gray-400 hover:text-white transition-colors">HR interactive demos</a></li>
+                        <li><a href="corporate/portal.html#ai-features" class="text-gray-400 hover:text-white transition-colors">HR interactive tools</a></li>
                         <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="login">Log in</button></li>
                         <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="register">Sign up</button></li>
                         <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="forgot">Forgot password</button></li>
@@ -1084,7 +1252,7 @@
                 <button type="button" class="auth-tab" data-auth-tab="register">Sign up</button>
             </div>
             <div class="p-6">
-                <p class="text-sm text-gray-500 mb-4" id="auth-demo-hint">Demo: use any email and a password of 6 or more characters. Data is saved only in this browser.</p>
+                <p class="text-sm text-gray-500 mb-4" id="auth-demo-hint">Use any email and a password of 6 or more characters. Data is saved only in this browser.</p>
                 
                 <div id="auth-panel-login" class="auth-panel space-y-4">
                     <fieldset class="space-y-2 border-0 p-0 m-0">
@@ -1265,7 +1433,7 @@
                     try {
                         localStorage.setItem(LANG_KEY, code);
                     } catch (err) {}
-                    showToast('Language preference saved for this demo.');
+                    showToast('Language preference saved.');
                     if (selector) selector.classList.remove('is-open');
                 });
             });
@@ -1725,5 +1893,6 @@
             });
         }
     </script>
+    <script src="assets/site-enhancements.js"></script>
 </body>
 </html>

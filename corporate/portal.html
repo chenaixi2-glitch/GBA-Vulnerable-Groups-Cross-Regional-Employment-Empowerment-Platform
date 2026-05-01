@@ -387,9 +387,19 @@
             height: 300px;
             margin: 2rem 0;
         }
+
+        .hr-tool-card {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hr-tool-actions {
+            margin-top: auto;
+        }
     </style>
 </head>
-<body>
+<body data-page="corporate">
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-md fixed w-full z-50">
         <div class="container mx-auto px-4 py-3">
@@ -402,12 +412,12 @@
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="#dashboard" class="text-gray-600 hover:text-green-600 transition-colors">Dashboard</a>
-                    <a href="#ai-features" class="text-green-700 font-semibold hover:text-green-600 transition-colors">Interactive demos</a>
+                    <a href="#dashboard" class="text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
+                    <a href="#ai-features" class="text-green-700 font-semibold hover:text-green-600 transition-colors" data-i18n="nav-demos">Interactive tools</a>
                     <a href="../individual/portal.html#ai-features" class="text-gray-600 hover:text-green-600 transition-colors text-sm">Candidate view</a>
-                    <a href="#jobs" class="text-gray-600 hover:text-green-600 transition-colors">My Jobs</a>
-                    <a href="#analytics" class="text-gray-600 hover:text-green-600 transition-colors">Analytics</a>
-                    <a href="#faq" class="text-gray-600 hover:text-green-600 transition-colors">FAQ</a>
+                    <a href="#jobs" class="text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-jobs">My Jobs</a>
+                    <a href="#analytics" class="text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-analytics">Analytics</a>
+                    <a href="#faq" class="text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-faq">FAQ</a>
                 </div>
                 
                 <div class="flex items-center space-x-4">
@@ -440,12 +450,12 @@
             
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
-                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">Dashboard</a>
-                <a href="#ai-features" class="block py-2 text-green-700 font-semibold hover:text-green-600 transition-colors">Interactive demos</a>
+                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
+                <a href="#ai-features" class="block py-2 text-green-700 font-semibold hover:text-green-600 transition-colors" data-i18n="nav-demos">Interactive tools</a>
                 <a href="../individual/portal.html#ai-features" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">Candidate view</a>
-                <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">My Jobs</a>
-                <a href="#analytics" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">Analytics</a>
-                <a href="#faq" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">FAQ</a>
+                <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-jobs">My Jobs</a>
+                <a href="#analytics" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-analytics">Analytics</a>
+                <a href="#faq" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-faq">FAQ</a>
             </div>
         </div>
     </nav>
@@ -490,8 +500,8 @@
     <section class="hero-section flex items-center justify-center relative">
         <canvas id="hero-bg-canvas"></canvas>
         <div class="container mx-auto px-4 z-10 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">Corporate User Dashboard</h1>
-            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto">Connect with diverse talent across the Greater Bay Area through our AI-powered recruitment platform</p>
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6" data-i18n="hero-title">Corporate User Dashboard</h1>
+            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="hero-subtitle">Connect with diverse talent across the Greater Bay Area through our AI-powered recruitment platform</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4 items-center">
                 <a href="#dashboard" class="btn-primary text-lg">
@@ -500,13 +510,13 @@
                 </a>
                 <a href="#ai-features" class="inline-flex items-center justify-center gap-2 text-lg font-medium px-8 py-3 rounded-lg border-2 border-white/90 text-white hover:bg-white/10 transition-colors">
                     <i class="fas fa-layer-group"></i>
-                    <span>Open interactive demos</span>
+                    <span data-i18n="hero-open-demos">Open interactive tools</span>
                 </a>
             </div>
             <p class="text-white/90 text-sm mt-6 max-w-2xl mx-auto">
                 Policy calculators, interview lab, job bank &amp; screening preview live in
-                <a href="#ai-features" class="underline underline-offset-2 decoration-white/50 font-semibold hover:text-white">interactive demos</a>
-                — same sandboxes as
+                <a href="#ai-features" class="underline underline-offset-2 decoration-white/50 font-semibold hover:text-white">interactive tools</a>
+                — same workflows as
                 <a href="../individual/portal.html#ai-features" class="underline decoration-white/40 hover:text-white">the candidate portal</a>, framed for employers.
             </p>
             
@@ -543,7 +553,7 @@
     <!-- Dashboard Section -->
     <section id="dashboard" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">Recruitment Dashboard</h2>
+            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="nav-dashboard">Recruitment Dashboard</h2>
             
             <!-- Stats Overview -->
             <div class="stats-grid mb-12">
@@ -578,9 +588,9 @@
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">Recruitment Analytics</h3>
                     <div class="flex space-x-2">
-                        <button class="px-4 py-2 bg-green-100 text-green-800 rounded-lg">Monthly</button>
-                        <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Quarterly</button>
-                        <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Yearly</button>
+                        <button type="button" data-chart-period="monthly" class="px-4 py-2 bg-green-100 text-green-800 rounded-lg shadow-sm">Monthly</button>
+                        <button type="button" data-chart-period="quarterly" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Quarterly</button>
+                        <button type="button" data-chart-period="yearly" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Yearly</button>
                     </div>
                 </div>
                 <div class="chart-container">
@@ -592,7 +602,7 @@
             <div class="bg-white rounded-xl shadow-sm p-6 mb-12">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">Recent Activities</h3>
-                    <a href="#" class="text-green-600 hover:text-green-800 font-medium">View All</a>
+                    <a href="#jobs" class="text-green-600 hover:text-green-800 font-medium">View All</a>
                 </div>
                 
                 <div class="space-y-4">
@@ -660,72 +670,117 @@
         </div>
     </section>
     
-    <!-- Interactive demos hub (modules + mock HR forms + employer feedback) -->
+    <!-- Inclusive Employer Operating Model -->
+    <section id="inclusive-employer" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center mb-12">
+                <span class="inline-block px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-semibold mb-4">Inclusive Partner Model</span>
+                <h2 class="text-3xl font-bold mb-4">Turn inclusive hiring into an operational workflow</h2>
+                <p class="text-gray-600 text-lg">The corporate portal turns inclusive hiring into a practical B2B workflow: compliance-as-a-service, remote-work accords, DEI analytics, and role redesign for e-commerce teams.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <a href="#ai-features" class="rounded-2xl border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl mb-4"><i class="fas fa-user-shield"></i></div>
+                    <h3 class="font-bold text-lg mb-2">Blind screening</h3>
+                    <p class="text-gray-600 text-sm">Review skills, certifications and experience before identity-sensitive information appears.</p>
+                </a>
+                <a href="../individual/demo-policy-navigator.html" class="rounded-2xl border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xl mb-4"><i class="fas fa-file-contract"></i></div>
+                    <h3 class="font-bold text-lg mb-2">Compliance calculators</h3>
+                    <p class="text-gray-600 text-sm">Estimate IIT subsidy, disability employment fund offsets and document requirements.</p>
+                </a>
+                <a href="#analytics" class="rounded-2xl border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl mb-4"><i class="fas fa-chart-pie"></i></div>
+                    <h3 class="font-bold text-lg mb-2">DEI analytics</h3>
+                    <p class="text-gray-600 text-sm">Track funnel health, diverse talent reach, time-to-hire and inclusive partner outcomes.</p>
+                </a>
+                <a href="#jobs" class="rounded-2xl border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center text-xl mb-4"><i class="fas fa-house-user"></i></div>
+                    <h3 class="font-bold text-lg mb-2">Remote work accords</h3>
+                    <p class="text-gray-600 text-sm">Design remote and flexible roles with equal pay, clear assessment and accessible tools.</p>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Interactive tools hub (modules + HR forms + employer feedback) -->
     <section id="ai-features" class="py-20 bg-white scroll-mt-28">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">HR &amp; compliance interactive demos</h2>
-            <p class="text-xl text-gray-600 text-center mb-4 max-w-3xl mx-auto">The same candidate-facing sandboxes <strong>plus the AI learning-path builder</strong> (experience + target role). Each tile opens the live HTML module; optional mock buttons open the in-page HR forms from earlier demos.</p>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="nav-demos">HR &amp; compliance interactive tools</h2>
+            <p class="text-xl text-gray-600 text-center mb-4 max-w-3xl mx-auto">Nine aligned tools help HR teams manage inclusive job design, blind screening, policy costs, interview preparation, DEI metrics and feedback.</p>
             <p class="text-sm text-gray-500 text-center mb-10 max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-                <span>Shared <code class="bg-gray-200 px-1 rounded text-xs">mock-api.js</code></span>
+                <span>Shared intelligence layer</span>
                 <span class="text-gray-300">|</span>
                 <a href="../individual/portal.html#ai-features" class="text-green-700 font-medium hover:underline">Candidate-facing index</a>
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14">
-                <div class="bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg transition-all flex flex-col h-full">
+                <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-file-alt"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">Skills-first matching engine</h3>
                     <p class="text-gray-600 text-sm flex-1">Preview blind-screening ingestion, JD-aligned rewrite, and export—mirrors how inbound applications would be normalised.</p>
-                    <div class="mt-4 flex flex-col gap-2">
-                        <a href="../individual/demo-resume-matching.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open shared demo</a>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('job-optimization-modal')">Mock: job posting &amp; JD</button>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('screening-modal')">Mock: candidate screening</button>
+                    <div class="hr-tool-actions flex flex-col gap-2">
+                        <a href="../individual/demo-resume-matching.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
+                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('job-optimization-modal')">Job posting &amp; JD</button>
+                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('screening-modal')">Candidate screening</button>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg transition-all flex flex-col h-full">
+                <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-600 to-purple-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-microphone-lines"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">Olivia conversational AI</h3>
                     <p class="text-gray-600 text-sm flex-1">Stress-test an inclusive, voice-friendly assistant for workforce hotlines or site kiosks aimed at low digital-literacy users.</p>
-                    <a href="../individual/demo-olivia.html" class="mt-4 btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open shared demo</a>
+                    <a href="../individual/demo-olivia.html" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
                 </div>
-                <div class="bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg transition-all flex flex-col h-full">
+                <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-calculator"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">GBA policy dividend navigator</h3>
                     <p class="text-gray-600 text-sm flex-1">Model IIT-style subsidies, disability-levy scenarios, and pull an AI policy snippet for cross-border social security handoffs.</p>
-                    <div class="mt-4 flex flex-col gap-2">
-                        <a href="../individual/demo-policy-navigator.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open shared demo</a>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('policy-calculator-modal')">Mock employer form</button>
+                    <div class="hr-tool-actions flex flex-col gap-2">
+                        <a href="../individual/demo-policy-navigator.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
+                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('policy-calculator-modal')">Employer form</button>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg transition-all flex flex-col h-full">
+                <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-user-tie"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">Interview simulation AI</h3>
                     <p class="text-gray-600 text-sm flex-1">Calibrate question packs, tone presets, and scoring copy your hiring managers will see in live panels.</p>
-                    <div class="mt-4 flex flex-col gap-2">
-                        <a href="../individual/demo-interview.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open shared demo</a>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('interview-tools-modal')">Mock employer form</button>
+                    <div class="hr-tool-actions flex flex-col gap-2">
+                        <a href="../individual/demo-interview.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
+                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('interview-tools-modal')">Employer form</button>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg transition-all flex flex-col h-full">
+                <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-briefcase"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">GBA job &amp; knowledge bank</h3>
                     <p class="text-gray-600 text-sm flex-1">Review how openings and micro-assessments pair—useful when briefing talent partners on inclusive GBA postings.</p>
-                    <div class="mt-4 flex flex-col gap-2">
-                        <a href="../individual/demo-jobs-database.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open shared demo</a>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('talent-modal')">Mock: talent matching</button>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('diversity-modal')">Mock: diversity analytics</button>
+                    <div class="hr-tool-actions flex flex-col gap-2">
+                        <a href="../individual/demo-jobs-database.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
+                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('talent-modal')">Talent matching</button>
+                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('diversity-modal')">Diversity analytics</button>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg transition-all flex flex-col h-full">
+                <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-route"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">AI learning path</h3>
                     <p class="text-gray-600 text-sm flex-1">Preview how seekers get role-specific curricula from declared experience—not a separate gateway page.</p>
-                    <a href="../individual/demo-learning-path.html" class="mt-4 btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open shared demo</a>
+                    <a href="../individual/demo-learning-path.html" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
                 </div>
-                <div id="feedback" class="bg-white rounded-2xl shadow border-2 border-dashed border-emerald-200 p-6 scroll-mt-28">
+                <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-14 h-14 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-2xl mb-4"><i class="fas fa-universal-access"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 text-gray-900">Accessible workplace audit</h3>
+                    <p class="text-gray-600 text-sm flex-1">Check remote tool readiness, screen-reader support, flexible schedules and equipment needs before onboarding.</p>
+                    <a href="#inclusive-employer" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-clipboard-check mr-2"></i>Review audit</a>
+                </div>
+                <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="w-14 h-14 rounded-xl bg-lime-100 text-lime-700 flex items-center justify-center text-2xl mb-4"><i class="fas fa-award"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 text-gray-900">Inclusive employer certification</h3>
+                    <p class="text-gray-600 text-sm flex-1">Prepare evidence for equal-pay commitments, remote-work accords, DEI metrics and hiring process transparency.</p>
+                    <a href="#analytics" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-chart-line mr-2"></i>View evidence</a>
+                </div>
+                <div id="feedback" class="hr-tool-card bg-white rounded-2xl shadow border-2 border-dashed border-emerald-200 p-6 scroll-mt-28">
                     <div class="w-14 h-14 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl mb-4"><i class="fas fa-comment-dots"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">Employer feedback</h3>
-                    <p class="text-gray-600 text-sm mb-4">Rate the corporate demo experience. Helps us tune HR workflows and compliance copy.</p>
+                    <p class="text-gray-600 text-sm mb-4">Rate the corporate experience. Helps us tune HR workflows and compliance copy.</p>
                     <label class="block text-xs font-medium text-gray-500 mb-2">Star rating</label>
                     <div id="corp-stars" class="flex gap-1 mb-4 text-2xl text-amber-400 cursor-pointer" role="radiogroup" aria-label="Rating">
                         <span data-val="1" class="opacity-40 hover:opacity-100">&starf;</span>
@@ -736,7 +791,7 @@
                     </div>
                     <textarea id="corp-fb-text" rows="3" class="w-full border border-gray-200 rounded-lg p-3 text-sm mb-3" placeholder="What should we improve for HR teams?"></textarea>
                     <button type="button" id="corp-fb-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg text-sm">Submit feedback</button>
-                    <p id="corp-fb-msg" class="mt-3 text-sm text-emerald-700 hidden" role="status"><i class="fas fa-check-circle mr-1"></i> Thanks — stored locally for this demo (corporate session).</p>
+                    <p id="corp-fb-msg" class="mt-3 text-sm text-emerald-700 hidden" role="status"><i class="fas fa-check-circle mr-1"></i> Thanks. Your feedback was saved in this browser.</p>
                 </div>
             </div>
         </div>
@@ -745,7 +800,7 @@
     <!-- Jobs Section -->
     <section id="jobs" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">My Job Postings</h2>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="nav-jobs">My Job Postings</h2>
             <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Manage your job postings and track applications</p>
             
             <div class="flex justify-between items-center mb-8">
@@ -801,9 +856,9 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
-                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                                <a href="#" class="text-red-600 hover:text-red-900">Close</a>
+                                <a href="#ai-features" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#ai-features" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                <a href="#jobs" class="text-red-600 hover:text-red-900">Close</a>
                             </td>
                         </tr>
                         
@@ -829,9 +884,9 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
-                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                                <a href="#" class="text-red-600 hover:text-red-900">Close</a>
+                                <a href="#ai-features" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#ai-features" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                <a href="#jobs" class="text-red-600 hover:text-red-900">Close</a>
                             </td>
                         </tr>
                         
@@ -857,9 +912,9 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
-                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                                <a href="#" class="text-red-600 hover:text-red-900">Close</a>
+                                <a href="#ai-features" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#ai-features" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                <a href="#jobs" class="text-red-600 hover:text-red-900">Close</a>
                             </td>
                         </tr>
                         
@@ -885,9 +940,9 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
-                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                                <a href="#" class="text-red-600 hover:text-red-900">Close</a>
+                                <a href="#ai-features" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#ai-features" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                <a href="#jobs" class="text-red-600 hover:text-red-900">Close</a>
                             </td>
                         </tr>
                         
@@ -913,9 +968,9 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">View</a>
-                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Clone</a>
-                                <a href="#" class="text-red-600 hover:text-red-900">Delete</a>
+                                <a href="#ai-features" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="#jobs" class="text-blue-600 hover:text-blue-900 mr-3">Clone</a>
+                                <a href="#jobs" class="text-red-600 hover:text-red-900">Delete</a>
                             </td>
                         </tr>
                     </tbody>
@@ -944,7 +999,7 @@
     <!-- Analytics Section -->
     <section id="analytics" class="py-20 bg-white">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4">Recruitment Analytics</h2>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="nav-analytics">Recruitment Analytics</h2>
             <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Gain insights into your recruitment performance</p>
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
@@ -988,7 +1043,7 @@
     <!-- FAQ Section -->
     <section id="faq" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-faq-title">Frequently Asked Questions</h2>
             
             <div class="max-w-3xl mx-auto">
                 <!-- Question 1 -->
@@ -1057,16 +1112,16 @@
                     <h3 class="text-xl font-bold mb-4">GBA Platform</h3>
                     <p class="text-gray-400 mb-4">Empowering businesses to find diverse talent across the Greater Bay Area through AI technology.</p>
                     <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.facebook.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://x.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-twitter"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.linkedin.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <a href="https://www.instagram.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-instagram"></i>
                         </a>
                     </div>
@@ -1076,7 +1131,7 @@
                     <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
                     <ul class="space-y-2">
                         <li><a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Dashboard</a></li>
-                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">Interactive demos</a></li>
+                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">Interactive tools</a></li>
                         <li><a href="../individual/portal.html#ai-features" class="text-gray-400 hover:text-white transition-colors">Candidate portal</a></li>
                         <li><a href="#jobs" class="text-gray-400 hover:text-white transition-colors">My Jobs</a></li>
                         <li><a href="#analytics" class="text-gray-400 hover:text-white transition-colors">Analytics</a></li>
@@ -1087,11 +1142,11 @@
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Support</h3>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Accessibility Statement</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Accessibility Statement</a></li>
                     </ul>
                 </div>
                 
@@ -1845,7 +1900,7 @@
         function initCharts() {
             // Recruitment Analytics Chart
             const recruitmentCtx = document.getElementById('recruitmentChart').getContext('2d');
-            new Chart(recruitmentCtx, {
+            const recruitmentChart = new Chart(recruitmentCtx, {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -1883,6 +1938,43 @@
                         }
                     }
                 }
+            });
+
+            const recruitmentPeriods = {
+                monthly: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    values: [
+                        [120, 150, 180, 210, 254, 280],
+                        [30, 45, 55, 65, 45, 50],
+                        [8, 12, 15, 18, 12, 14]
+                    ]
+                },
+                quarterly: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    values: [
+                        [450, 744, 810, 920],
+                        [130, 160, 188, 220],
+                        [35, 44, 56, 68]
+                    ]
+                },
+                yearly: {
+                    labels: ['2023', '2024', '2025', '2026'],
+                    values: [
+                        [920, 1450, 2380, 3180],
+                        [210, 360, 610, 780],
+                        [54, 98, 164, 236]
+                    ]
+                }
+            };
+
+            window.addEventListener('gba:chart-period', function (event) {
+                const period = (event.detail && event.detail.period) || 'monthly';
+                const next = recruitmentPeriods[period] || recruitmentPeriods.monthly;
+                recruitmentChart.data.labels = next.labels;
+                recruitmentChart.data.datasets.forEach(function (dataset, index) {
+                    dataset.data = next.values[index];
+                });
+                recruitmentChart.update();
             });
             
             // Diversity Chart
@@ -2023,5 +2115,6 @@
             }
         })();
     </script>
+    <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>
