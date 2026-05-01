@@ -389,13 +389,130 @@
         }
 
         .hr-tool-card {
-            min-height: 300px;
+            min-height: 320px;
             display: flex;
             flex-direction: column;
         }
 
         .hr-tool-actions {
             margin-top: auto;
+        }
+
+        .hr-tool-card .btn-primary,
+        .hr-tool-card .employer-form-btn {
+            min-height: 42px;
+        }
+
+        .employer-form-btn {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            font-size: 0.875rem;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .employer-form-btn:hover {
+            background: #f9fafb;
+            border-color: #a7f3d0;
+            color: #047857;
+        }
+
+        .corp-tool-visual {
+            position: relative;
+            min-height: 120px;
+            margin-top: 1.25rem;
+            overflow: hidden;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #ecfeff, #f0fdf4);
+        }
+
+        .audit-bubble,
+        .cert-badge {
+            position: absolute;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.13);
+            animation: corpFloat 4.8s ease-in-out infinite;
+        }
+
+        .audit-bubble {
+            width: 56px;
+            height: 56px;
+            border-radius: 999px;
+            color: white;
+        }
+
+        .cert-badge {
+            width: 78px;
+            height: 44px;
+            border-radius: 0.9rem;
+            background: white;
+            color: #166534;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .audit-bubble:nth-child(2),
+        .cert-badge:nth-child(2) {
+            animation-delay: -1.4s;
+        }
+
+        .audit-bubble:nth-child(3),
+        .cert-badge:nth-child(3) {
+            animation-delay: -2.6s;
+        }
+
+        .analytics-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .analytics-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        }
+
+        @keyframes corpFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.04); }
+        }
+
+        .stories-marquee {
+            overflow: hidden;
+            padding: 1rem 0 1.5rem;
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+        }
+
+        .stories-track {
+            display: flex;
+            gap: 1.5rem;
+            width: max-content;
+            animation: storyScroll 38s linear infinite;
+        }
+
+        .stories-marquee:hover .stories-track {
+            animation-play-state: paused;
+        }
+
+        .story-card {
+            width: 360px;
+            flex: 0 0 360px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .story-card:hover {
+            transform: scale(1.06);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+            z-index: 5;
+        }
+
+        @keyframes storyScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(-50% - 0.75rem)); }
         }
     </style>
 </head>
@@ -417,6 +534,7 @@
                     <a href="../individual/portal.html#ai-features" class="text-gray-600 hover:text-green-600 transition-colors text-sm">Candidate view</a>
                     <a href="#jobs" class="text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-jobs">My Jobs</a>
                     <a href="#analytics" class="text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-analytics">Analytics</a>
+                    <a href="#success-stories" class="text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
                     <a href="#faq" class="text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-faq">FAQ</a>
                 </div>
                 
@@ -455,6 +573,7 @@
                 <a href="../individual/portal.html#ai-features" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">Candidate view</a>
                 <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-jobs">My Jobs</a>
                 <a href="#analytics" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-analytics">Analytics</a>
+                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
                 <a href="#faq" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="nav-faq">FAQ</a>
             </div>
         </div>
@@ -721,15 +840,17 @@
                     <p class="text-gray-600 text-sm flex-1">Preview blind-screening ingestion, JD-aligned rewrite, and export—mirrors how inbound applications would be normalised.</p>
                     <div class="hr-tool-actions flex flex-col gap-2">
                         <a href="../individual/demo-resume-matching.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('job-optimization-modal')">Job posting &amp; JD</button>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('screening-modal')">Candidate screening</button>
+                        <button type="button" class="employer-form-btn" onclick="openModal('job-optimization-modal')">Employer form</button>
                     </div>
                 </div>
                 <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-600 to-purple-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-microphone-lines"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">Olivia conversational AI</h3>
                     <p class="text-gray-600 text-sm flex-1">Stress-test an inclusive, voice-friendly assistant for workforce hotlines or site kiosks aimed at low digital-literacy users.</p>
-                    <a href="../individual/demo-olivia.html" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
+                    <div class="hr-tool-actions flex flex-col gap-2">
+                        <a href="../individual/demo-olivia.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
+                        <button type="button" class="employer-form-btn" onclick="openModal('screening-modal')">Employer form</button>
+                    </div>
                 </div>
                 <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-calculator"></i></div>
@@ -737,7 +858,7 @@
                     <p class="text-gray-600 text-sm flex-1">Model IIT-style subsidies, disability-levy scenarios, and pull an AI policy snippet for cross-border social security handoffs.</p>
                     <div class="hr-tool-actions flex flex-col gap-2">
                         <a href="../individual/demo-policy-navigator.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('policy-calculator-modal')">Employer form</button>
+                        <button type="button" class="employer-form-btn" onclick="openModal('policy-calculator-modal')">Employer form</button>
                     </div>
                 </div>
                 <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
@@ -746,7 +867,7 @@
                     <p class="text-gray-600 text-sm flex-1">Calibrate question packs, tone presets, and scoring copy your hiring managers will see in live panels.</p>
                     <div class="hr-tool-actions flex flex-col gap-2">
                         <a href="../individual/demo-interview.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('interview-tools-modal')">Employer form</button>
+                        <button type="button" class="employer-form-btn" onclick="openModal('interview-tools-modal')">Employer form</button>
                     </div>
                 </div>
                 <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
@@ -755,27 +876,39 @@
                     <p class="text-gray-600 text-sm flex-1">Review how openings and micro-assessments pair—useful when briefing talent partners on inclusive GBA postings.</p>
                     <div class="hr-tool-actions flex flex-col gap-2">
                         <a href="../individual/demo-jobs-database.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('talent-modal')">Talent matching</button>
-                        <button type="button" class="w-full py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" onclick="openModal('diversity-modal')">Diversity analytics</button>
+                        <button type="button" class="employer-form-btn" onclick="openModal('talent-modal')">Employer form</button>
                     </div>
                 </div>
                 <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-route"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">AI learning path</h3>
                     <p class="text-gray-600 text-sm flex-1">Preview how seekers get role-specific curricula from declared experience—not a separate gateway page.</p>
-                    <a href="../individual/demo-learning-path.html" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
+                    <div class="hr-tool-actions flex flex-col gap-2">
+                        <a href="../individual/demo-learning-path.html" class="btn-primary w-full justify-center text-sm"><i class="fas fa-external-link-alt mr-2"></i>Open tool</a>
+                        <button type="button" class="employer-form-btn" onclick="openModal('diversity-modal')">Employer form</button>
+                    </div>
                 </div>
                 <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-2xl mb-4"><i class="fas fa-universal-access"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">Accessible workplace audit</h3>
                     <p class="text-gray-600 text-sm flex-1">Check remote tool readiness, screen-reader support, flexible schedules and equipment needs before onboarding.</p>
-                    <a href="#inclusive-employer" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-clipboard-check mr-2"></i>Review audit</a>
+                    <div class="corp-tool-visual" aria-hidden="true">
+                        <span class="audit-bubble bg-sky-500 left-6 top-8"><i class="fas fa-desktop"></i></span>
+                        <span class="audit-bubble bg-emerald-500 left-24 top-14"><i class="fas fa-universal-access"></i></span>
+                        <span class="audit-bubble bg-indigo-500 right-7 top-8"><i class="fas fa-headset"></i></span>
+                    </div>
+                    <a href="audit.html" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-clipboard-check mr-2"></i>Review audit</a>
                 </div>
                 <div class="hr-tool-card bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-lime-100 text-lime-700 flex items-center justify-center text-2xl mb-4"><i class="fas fa-award"></i></div>
                     <h3 class="text-lg font-semibold mb-2 text-gray-900">Inclusive employer certification</h3>
                     <p class="text-gray-600 text-sm flex-1">Prepare evidence for equal-pay commitments, remote-work accords, DEI metrics and hiring process transparency.</p>
-                    <a href="#analytics" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-chart-line mr-2"></i>View evidence</a>
+                    <div class="corp-tool-visual" aria-hidden="true">
+                        <span class="cert-badge left-6 top-8"><i class="fas fa-scale-balanced mr-1"></i>PAY</span>
+                        <span class="cert-badge left-28 top-14"><i class="fas fa-house-laptop mr-1"></i>REMOTE</span>
+                        <span class="cert-badge right-6 top-8"><i class="fas fa-chart-pie mr-1"></i>DEI</span>
+                    </div>
+                    <a href="certification.html" class="hr-tool-actions btn-primary w-full justify-center text-sm"><i class="fas fa-chart-line mr-2"></i>View evidence</a>
                 </div>
                 <div id="feedback" class="hr-tool-card bg-white rounded-2xl shadow border-2 border-dashed border-emerald-200 p-6 scroll-mt-28">
                     <div class="w-14 h-14 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl mb-4"><i class="fas fa-comment-dots"></i></div>
@@ -1004,7 +1137,7 @@
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
                 <!-- Diversity Metrics -->
-                <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="analytics-card bg-white rounded-xl shadow-sm p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-6">Diversity Metrics</h3>
                     <div class="chart-container" style="height: 250px;">
                         <canvas id="diversityChart"></canvas>
@@ -1012,7 +1145,7 @@
                 </div>
                 
                 <!-- Application Funnel -->
-                <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="analytics-card bg-white rounded-xl shadow-sm p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-6">Application Funnel</h3>
                     <div class="chart-container" style="height: 250px;">
                         <canvas id="funnelChart"></canvas>
@@ -1022,7 +1155,7 @@
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Time to Hire -->
-                <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="analytics-card bg-white rounded-xl shadow-sm p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-6">Time to Hire (Days)</h3>
                     <div class="chart-container" style="height: 250px;">
                         <canvas id="timeToHireChart"></canvas>
@@ -1030,10 +1163,87 @@
                 </div>
                 
                 <!-- Source of Hire -->
-                <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="analytics-card bg-white rounded-xl shadow-sm p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-6">Source of Hire</h3>
                     <div class="chart-container" style="height: 250px;">
                         <canvas id="sourceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Stories Section -->
+    <section id="success-stories" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-stories-title">Success Stories</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Real stories from inclusive employers and cross-border candidates using the platform</p>
+
+            <div class="stories-marquee">
+                <div class="stories-track">
+                    <div class="story-card bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Tech+Solutions+Ltd&background=10b981&color=fff" alt="Tech Solutions Ltd" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Tech Solutions Ltd</h4><p class="text-gray-600 text-sm">Hong Kong Company</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"Blind screening helped us focus on verified skills first. We filled five cross-border roles faster while improving candidate trust."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-users mr-2"></i><span>Hired 5 cross-border employees</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Hengqin+Commerce&background=0ea5e9&color=fff" alt="Hengqin Commerce" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Hengqin Commerce</h4><p class="text-gray-600 text-sm">Inclusive Partner Employer</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The policy navigator clarified onboarding before we launched a flexible customer-care team across Zhuhai and Macau."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-briefcase mr-2"></i><span>Created 18 flexible service roles</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Bay+Retail+Hub&background=f59e0b&color=fff" alt="Bay Retail Hub" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Bay Retail Hub</h4><p class="text-gray-600 text-sm">E-commerce Employer</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"Micro-credential badges made it easier to recognize practical e-commerce skills from older workers and caregivers."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span>12 badge-based interviews</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Universal+UX+Lab&background=8b5cf6&color=fff" alt="Universal UX Lab" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Universal UX Lab</h4><p class="text-gray-600 text-sm">Accessibility Team</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The platform connected us with testers who understand assistive technology from lived experience."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-universal-access mr-2"></i><span>Built an inclusive QA pool</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Tech+Solutions+Ltd&background=10b981&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Tech Solutions Ltd</h4><p class="text-gray-600 text-sm">Hong Kong Company</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"Blind screening helped us focus on verified skills first."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-users mr-2"></i><span>Hired 5 cross-border employees</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Hengqin+Commerce&background=0ea5e9&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Hengqin Commerce</h4><p class="text-gray-600 text-sm">Inclusive Partner Employer</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The policy navigator clarified onboarding across Zhuhai and Macau."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-briefcase mr-2"></i><span>Created 18 flexible service roles</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Bay+Retail+Hub&background=f59e0b&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Bay Retail Hub</h4><p class="text-gray-600 text-sm">E-commerce Employer</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"Micro-credential badges made practical skills visible."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span>12 badge-based interviews</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Universal+UX+Lab&background=8b5cf6&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Universal UX Lab</h4><p class="text-gray-600 text-sm">Accessibility Team</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The platform connected us with assistive technology testers."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-universal-access mr-2"></i><span>Built an inclusive QA pool</span></div>
                     </div>
                 </div>
             </div>
@@ -1979,7 +2189,7 @@
             
             // Diversity Chart
             const diversityCtx = document.getElementById('diversityChart').getContext('2d');
-            new Chart(diversityCtx, {
+            const diversityChart = new Chart(diversityCtx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Persons with Disabilities', 'Elderly (45+)', 'Women Returning to Work', 'Ethnic Minorities', 'Youth from Low-income Families', 'Other'],
@@ -1998,6 +2208,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { animateRotate: true, duration: 1400, easing: 'easeOutQuart' },
                     plugins: {
                         legend: {
                             position: 'right',
@@ -2008,7 +2219,7 @@
             
             // Funnel Chart
             const funnelCtx = document.getElementById('funnelChart').getContext('2d');
-            new Chart(funnelCtx, {
+            const funnelChart = new Chart(funnelCtx, {
                 type: 'bar',
                 data: {
                     labels: ['Applications', 'Screening', 'Interviews', 'Offers', 'Hires'],
@@ -2027,6 +2238,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { duration: 1300, easing: 'easeOutQuart' },
                     scales: {
                         y: {
                             beginAtZero: true
@@ -2037,7 +2249,7 @@
             
             // Time to Hire Chart
             const timeToHireCtx = document.getElementById('timeToHireChart').getContext('2d');
-            new Chart(timeToHireCtx, {
+            const timeToHireChart = new Chart(timeToHireCtx, {
                 type: 'bar',
                 data: {
                     labels: ['Tech', 'Marketing', 'Finance', 'HR', 'Customer Service'],
@@ -2050,6 +2262,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { duration: 1300, easing: 'easeOutQuart' },
                     scales: {
                         y: {
                             beginAtZero: true
@@ -2060,7 +2273,7 @@
             
             // Source Chart
             const sourceCtx = document.getElementById('sourceChart').getContext('2d');
-            new Chart(sourceCtx, {
+            const sourceChart = new Chart(sourceCtx, {
                 type: 'pie',
                 data: {
                     labels: ['GBA Platform', 'Referrals', 'Job Boards', 'Social Media', 'Recruiters', 'Other'],
@@ -2079,6 +2292,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { animateRotate: true, duration: 1400, easing: 'easeOutQuart' },
                     plugins: {
                         legend: {
                             position: 'right',
@@ -2086,6 +2300,44 @@
                     }
                 }
             });
+
+            const animatedCharts = [
+                { chart: diversityChart, target: [25, 20, 18, 15, 12, 10] },
+                { chart: funnelChart, target: [254, 120, 45, 20, 12] },
+                { chart: timeToHireChart, target: [25, 18, 22, 15, 12] },
+                { chart: sourceChart, target: [45, 20, 15, 10, 5, 5] }
+            ];
+
+            function resetAnalyticsCharts() {
+                animatedCharts.forEach(function (item) {
+                    item.chart.data.datasets[0].data = item.target.map(function () { return 0; });
+                    item.chart.update('none');
+                });
+            }
+
+            function playAnalyticsCharts() {
+                animatedCharts.forEach(function (item, index) {
+                    setTimeout(function () {
+                        item.chart.data.datasets[0].data = item.target.slice();
+                        item.chart.update();
+                    }, index * 160);
+                });
+            }
+
+            resetAnalyticsCharts();
+            const analyticsSection = document.getElementById('analytics');
+            if ('IntersectionObserver' in window && analyticsSection) {
+                const analyticsObserver = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) return;
+                        resetAnalyticsCharts();
+                        playAnalyticsCharts();
+                    });
+                }, { threshold: 0.35 });
+                analyticsObserver.observe(analyticsSection);
+            } else {
+                playAnalyticsCharts();
+            }
         }
     </script>
     <script>

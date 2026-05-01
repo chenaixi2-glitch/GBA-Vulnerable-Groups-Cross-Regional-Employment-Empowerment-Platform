@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessible Workplace Audit - GBA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; background: #f8fafc; }
+        .audit-orb { animation: floatAudit 5s ease-in-out infinite; }
+        .audit-orb:nth-child(2) { animation-delay: -1.4s; }
+        .audit-orb:nth-child(3) { animation-delay: -2.8s; }
+        @keyframes floatAudit { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    </style>
+</head>
+<body data-page="corporate" class="text-gray-800">
+    <nav class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="portal.html#ai-features" class="font-bold text-gray-900 flex items-center"><i class="fas fa-handshake text-emerald-600 text-2xl mr-2"></i>GBA Platform</a>
+            <a href="portal.html#ai-features" class="text-sm text-emerald-700 hover:underline">Back to HR tools</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="bg-gradient-to-br from-cyan-50 via-white to-emerald-50 py-20">
+            <div class="container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span class="inline-flex items-center rounded-full bg-white px-4 py-2 text-emerald-700 font-semibold shadow-sm mb-5"><i class="fas fa-universal-access mr-2"></i>Accessible workplace audit</span>
+                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-5">Check whether every new role is ready before onboarding.</h1>
+                    <p class="text-lg text-gray-600 mb-8">Audit remote tool readiness, screen-reader support, flexible scheduling, equipment needs and manager response plans for inclusive cross-border employment.</p>
+                    <a href="#checklist" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl shadow">Start audit checklist <i class="fas fa-arrow-right ml-2"></i></a>
+                </div>
+                <div class="relative min-h-[320px]">
+                    <div class="audit-orb absolute left-8 top-8 w-24 h-24 bg-sky-500 rounded-full text-white flex items-center justify-center text-3xl shadow-xl"><i class="fas fa-desktop"></i></div>
+                    <div class="audit-orb absolute right-16 top-16 w-28 h-28 bg-emerald-500 rounded-full text-white flex items-center justify-center text-3xl shadow-xl"><i class="fas fa-keyboard"></i></div>
+                    <div class="audit-orb absolute left-32 bottom-8 w-32 h-32 bg-indigo-500 rounded-full text-white flex items-center justify-center text-4xl shadow-xl"><i class="fas fa-headset"></i></div>
+                    <div class="absolute right-0 bottom-0 bg-white rounded-3xl p-6 shadow-xl border border-emerald-100 w-72">
+                        <p class="font-bold mb-3">Audit score preview</p>
+                        <div class="space-y-3 text-sm">
+                            <div><div class="flex justify-between mb-1"><span>Assistive tools</span><span>86%</span></div><div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-emerald-500 rounded w-[86%]"></div></div></div>
+                            <div><div class="flex justify-between mb-1"><span>Remote workflow</span><span>78%</span></div><div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-sky-500 rounded w-[78%]"></div></div></div>
+                            <div><div class="flex justify-between mb-1"><span>Manager readiness</span><span>72%</span></div><div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-indigo-500 rounded w-[72%]"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="checklist" class="py-16">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-10">Audit checklist</h2>
+                <div class="grid md:grid-cols-4 gap-6">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"><i class="fas fa-laptop text-2xl text-sky-600 mb-4"></i><h3 class="font-bold mb-2">Tools</h3><p class="text-sm text-gray-600">Check screen readers, captions, keyboard flows and secure remote access.</p></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"><i class="fas fa-calendar-check text-2xl text-emerald-600 mb-4"></i><h3 class="font-bold mb-2">Schedule</h3><p class="text-sm text-gray-600">Map flexible hours, rest breaks and cross-border working windows.</p></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"><i class="fas fa-box-open text-2xl text-amber-600 mb-4"></i><h3 class="font-bold mb-2">Equipment</h3><p class="text-sm text-gray-600">Plan ergonomic devices, voice input, large-text display and delivery timing.</p></div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"><i class="fas fa-user-shield text-2xl text-indigo-600 mb-4"></i><h3 class="font-bold mb-2">Follow-up</h3><p class="text-sm text-gray-600">Set manager check-ins, escalation contacts and privacy-safe feedback loops.</p></div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="../assets/site-enhancements.js"></script>
+</body>
+</html>

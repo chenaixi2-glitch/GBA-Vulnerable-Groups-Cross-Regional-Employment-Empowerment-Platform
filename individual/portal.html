@@ -20,7 +20,7 @@
         :root {
             --primary-color: #f97316;
             --secondary-color: #fb923c;
-            --accent-color: #f97316;
+            --accent-color: #ea580c;
             --neutral-color: #6b7280;
             --dark-color: #1f2937;
             --light-color: #f3f4f6;
@@ -377,6 +377,163 @@
         .module-card {
             min-height: 260px;
         }
+
+        .recommended-jobs-panel {
+            background: linear-gradient(135deg, #fffaf3 0%, #ffffff 48%, #f7fbff 100%);
+        }
+
+        .recommended-jobs-scroll {
+            max-height: 330px;
+            overflow-y: auto;
+            padding-right: 0.35rem;
+            scroll-behavior: smooth;
+        }
+
+        .recommended-jobs-scroll:hover {
+            max-height: 520px;
+        }
+
+        .recommended-jobs-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .recommended-jobs-scroll::-webkit-scrollbar-thumb {
+            background: rgba(249, 115, 22, 0.36);
+            border-radius: 999px;
+        }
+
+        .account-menu {
+            position: relative;
+        }
+
+        .account-dropdown {
+            position: absolute;
+            top: calc(100% + 0.75rem);
+            right: 0;
+            width: 220px;
+            display: none;
+            background: white;
+            border: 1px solid #fed7aa;
+            border-radius: 1rem;
+            box-shadow: 0 18px 45px rgba(124, 45, 18, 0.14);
+            padding: 0.5rem;
+            z-index: 60;
+        }
+
+        .account-menu:hover .account-dropdown,
+        .account-menu:focus-within .account-dropdown {
+            display: block;
+        }
+
+        .text-blue-600,
+        .text-blue-700,
+        .text-blue-800 {
+            color: #f97316 !important;
+        }
+
+        .bg-blue-100 {
+            background-color: #ffedd5 !important;
+        }
+
+        .bg-blue-600 {
+            background-color: #f97316 !important;
+        }
+
+        .hover\:text-blue-600:hover,
+        .hover\:text-blue-700:hover,
+        .hover\:text-blue-800:hover {
+            color: #ea580c !important;
+        }
+
+        .hover\:border-blue-300:hover {
+            border-color: #fdba74 !important;
+        }
+
+        .tool-visual {
+            position: relative;
+            min-height: 118px;
+            margin-top: 1.25rem;
+            overflow: hidden;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #fff7ed, #eff6ff);
+        }
+
+        .community-bubble,
+        .credential-badge {
+            position: absolute;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+            animation: floatSoft 4.8s ease-in-out infinite;
+        }
+
+        .community-bubble {
+            width: 54px;
+            height: 54px;
+            border-radius: 999px;
+            color: white;
+        }
+
+        .credential-badge {
+            width: 72px;
+            height: 44px;
+            border-radius: 0.9rem;
+            background: white;
+            color: #166534;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .community-bubble:nth-child(2),
+        .credential-badge:nth-child(2) {
+            animation-delay: -1.4s;
+        }
+
+        .community-bubble:nth-child(3),
+        .credential-badge:nth-child(3) {
+            animation-delay: -2.6s;
+        }
+
+        @keyframes floatSoft {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.04); }
+        }
+
+        .stories-marquee {
+            overflow: hidden;
+            padding: 1rem 0 1.5rem;
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+        }
+
+        .stories-track {
+            display: flex;
+            gap: 1.5rem;
+            width: max-content;
+            animation: storyScroll 38s linear infinite;
+        }
+
+        .stories-marquee:hover .stories-track {
+            animation-play-state: paused;
+        }
+
+        .story-card {
+            width: 360px;
+            flex: 0 0 360px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .story-card:hover {
+            transform: scale(1.06);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+            z-index: 5;
+        }
+
+        @keyframes storyScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(-50% - 0.75rem)); }
+        }
     </style>
 </head>
 <body data-page="individual">
@@ -386,22 +543,22 @@
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
                     <a href="../index.html" class="flex items-center">
-                        <i class="fas fa-handshake text-2xl text-blue-600 mr-2"></i>
+                        <i class="fas fa-handshake text-2xl text-orange-600 mr-2"></i>
                         <span class="text-xl font-bold text-gray-800">GBA Platform</span>
                     </a>
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="#dashboard" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
+                    <a href="#dashboard" class="text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
                     <a href="#ai-features" class="text-orange-700 font-semibold hover:text-orange-600 transition-colors" data-i18n="nav-demos">Interactive tools</a>
-                    <a href="#resources" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-resources">Resources</a>
-                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
-                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
+                    <a href="#resources" class="text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-resources">Resources</a>
+                    <a href="#success-stories" class="text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
+                    <a href="#faq" class="text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-faq">FAQ</a>
                 </div>
                 
                 <div class="flex items-center space-x-4">
                     <div class="language-selector">
-                        <button class="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
+                        <button class="flex items-center space-x-1 text-gray-600 hover:text-orange-600 transition-colors">
                             <i class="fas fa-globe"></i>
                             <span id="current-language">English</span>
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -414,9 +571,22 @@
                         </div>
                     </div>
                     
-                    <div class="flex items-center space-x-2">
-                        <img src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" alt="User" class="w-8 h-8 rounded-full">
-                        <span class="text-gray-700 font-medium">My Account</span>
+                    <div class="account-menu">
+                        <button type="button" class="flex items-center space-x-2 rounded-full px-2 py-1 hover:bg-orange-50 transition-colors">
+                            <img src="https://ui-avatars.com/api/?name=User&background=f97316&color=fff" alt="User" class="w-8 h-8 rounded-full">
+                            <span class="text-gray-700 font-medium">My Account</span>
+                            <i class="fas fa-chevron-down text-xs text-orange-600"></i>
+                        </button>
+                        <div class="account-dropdown">
+                            <a href="my-resume.html" class="flex items-center gap-3 rounded-xl px-3 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors">
+                                <span class="w-9 h-9 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center"><i class="fas fa-file-lines"></i></span>
+                                <span><strong class="block text-sm">My resume</strong><small class="text-gray-500">Upload and parse profile</small></span>
+                            </a>
+                            <a href="course-learning.html" class="flex items-center gap-3 rounded-xl px-3 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors">
+                                <span class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fas fa-graduation-cap"></i></span>
+                                <span><strong class="block text-sm">Course learning</strong><small class="text-gray-500">Build job-ready skills</small></span>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 
@@ -429,11 +599,13 @@
             
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
-                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
+                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
                 <a href="#ai-features" class="block py-2 text-orange-700 font-semibold hover:text-orange-600 transition-colors" data-i18n="nav-demos">Interactive tools</a>
-                <a href="#resources" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-resources">Resources</a>
-                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
-                <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
+                <a href="#resources" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-resources">Resources</a>
+                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
+                <a href="my-resume.html" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors">My resume</a>
+                <a href="course-learning.html" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors">Course learning</a>
+                <a href="#faq" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-faq">FAQ</a>
             </div>
         </div>
     </nav>
@@ -573,69 +745,22 @@
             </div>
             
             <!-- Recommended Jobs -->
-            <div class="bg-white rounded-xl shadow-sm p-6 mb-12">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-gray-800">Recommended Jobs For You</h3>
-                    <a href="demo-jobs-database.html" class="text-blue-600 hover:text-blue-800 font-medium">View All</a>
+            <div class="recommended-jobs-panel bg-white rounded-xl shadow-sm p-6 mb-12 border border-orange-100">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800">Recommended Jobs For You</h3>
+                        <p class="text-sm text-gray-500 mt-1">Scroll inside this panel to browse more matched roles.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button type="button" id="refresh-recommended-jobs" class="btn-secondary text-sm py-2 px-4">
+                            <i class="fas fa-rotate-right"></i>
+                            <span>Refresh</span>
+                        </button>
+                        <a href="demo-jobs-database.html" class="text-blue-600 hover:text-blue-800 font-medium">View All</a>
+                    </div>
                 </div>
                 
-                <div class="space-y-4">
-                    <!-- Job Card 1 -->
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-800">Digital Marketing Specialist</h4>
-                                <p class="text-gray-600">Tech Solutions Ltd. - Hong Kong</p>
-                                <div class="flex items-center mt-2">
-                                    <span class="tag tag-primary">Full-time</span>
-                                    <span class="tag tag-secondary">Remote</span>
-                                    <span class="tag tag-accent">¥25K-35K</span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-green-600 font-semibold mb-2">92% Match</div>
-                                <a href="apply.html?role=digital-marketing-specialist" class="btn-primary justify-center">Apply Now</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Job Card 2 -->
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-800">Financial Analyst</h4>
-                                <p class="text-gray-600">Global Finance Group - Shenzhen</p>
-                                <div class="flex items-center mt-2">
-                                    <span class="tag tag-primary">Full-time</span>
-                                    <span class="tag tag-accent">¥30K-40K</span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-green-600 font-semibold mb-2">88% Match</div>
-                                <a href="apply.html?role=financial-analyst" class="btn-primary justify-center">Apply Now</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Job Card 3 -->
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-800">Customer Service Representative</h4>
-                                <p class="text-gray-600">Service Excellence Co. - Macau</p>
-                                <div class="flex items-center mt-2">
-                                    <span class="tag tag-primary">Full-time</span>
-                                    <span class="tag tag-secondary">Remote</span>
-                                    <span class="tag tag-accent">¥18K-25K</span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-green-600 font-semibold mb-2">95% Match</div>
-                                <a href="apply.html?role=customer-service-representative" class="btn-primary justify-center">Apply Now</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div id="recommended-jobs-list" class="recommended-jobs-scroll space-y-4" aria-live="polite"></div>
             </div>
         </div>
     </section>
@@ -726,16 +851,26 @@
                     <p class="text-gray-600 text-sm flex-1">Tailors module stacks from your stated experience plus target role competency bands.</p>
                     <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
-                <a href="#service-loop" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-wheelchair-move"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Accessibility workstation planner</h3>
-                    <p class="text-gray-600 text-sm flex-1">Plan screen-reader support, large-text mode, voice input and ergonomic equipment needs before onboarding.</p>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">View planner <i class="fas fa-chevron-right ml-1"></i></span>
+                <a href="community.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-people-group"></i></div>
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Job-seeking Community</h3>
+                    <p class="text-gray-600 text-sm flex-1">Find peer circles, mentor office hours and warm introductions for cross-border job search confidence.</p>
+                    <div class="tool-visual" aria-hidden="true">
+                        <span class="community-bubble bg-fuchsia-500 left-6 top-7"><i class="fas fa-user"></i></span>
+                        <span class="community-bubble bg-blue-500 left-20 top-12"><i class="fas fa-comments"></i></span>
+                        <span class="community-bubble bg-amber-500 right-8 top-6"><i class="fas fa-handshake"></i></span>
+                    </div>
+                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">View community <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
-                <a href="#resources" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
+                <a href="credentials.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-lime-500 to-emerald-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-certificate"></i></div>
                     <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Micro-credential wallet</h3>
                     <p class="text-gray-600 text-sm flex-1">Track skill badges for e-commerce service, data labeling and live-commerce support across GBA employers.</p>
+                    <div class="tool-visual" aria-hidden="true">
+                        <span class="credential-badge left-6 top-8"><i class="fas fa-store mr-1"></i> EC</span>
+                        <span class="credential-badge left-28 top-14"><i class="fas fa-database mr-1"></i> DATA</span>
+                        <span class="credential-badge right-6 top-7"><i class="fas fa-video mr-1"></i> LIVE</span>
+                    </div>
                     <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">View credentials <i class="fas fa-chevron-right ml-1"></i></span>
                 </a>
                 <div id="feedback" class="module-card bg-white rounded-2xl shadow border border-gray-100 p-6 border-dashed border-2 border-emerald-200 scroll-mt-28">
@@ -826,58 +961,71 @@
             <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-stories-title">Success Stories</h2>
             <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Real stories from individuals who found cross-border employment through our platform</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Story 1 -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
-                    <div class="p-6">
+            <div class="stories-marquee">
+                <div class="stories-track">
+                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
                         <div class="flex items-center mb-4">
                             <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="Zhang Wei" class="w-12 h-12 rounded-full mr-4">
-                            <div>
-                                <h4 class="font-semibold text-gray-800">Zhang Wei</h4>
-                                <p class="text-gray-600 text-sm">Software Developer</p>
-                            </div>
+                            <div><h4 class="font-semibold text-gray-800">Zhang Wei</h4><p class="text-gray-600 text-sm">Software Developer</p></div>
                         </div>
                         <p class="text-gray-600 mb-4">"The AI resume optimization helped me highlight my skills effectively. I successfully got a job at a tech company in Hong Kong after struggling for months."</p>
-                        <div class="flex items-center text-sm text-gray-500">
-                            <i class="fas fa-map-marker-alt mr-2"></i>
-                            <span>Shenzhen → Hong Kong</span>
-                        </div>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Shenzhen → Hong Kong</span></div>
                     </div>
-                </div>
-                
-                <!-- Story 2 -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
-                    <div class="p-6">
+                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
                         <div class="flex items-center mb-4">
                             <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=10b981&color=fff" alt="Maria Chen" class="w-12 h-12 rounded-full mr-4">
-                            <div>
-                                <h4 class="font-semibold text-gray-800">Maria Chen</h4>
-                                <p class="text-gray-600 text-sm">Marketing Specialist</p>
-                            </div>
+                            <div><h4 class="font-semibold text-gray-800">Maria Chen</h4><p class="text-gray-600 text-sm">Marketing Specialist</p></div>
                         </div>
                         <p class="text-gray-600 mb-4">"As someone with a disability, I appreciated the blind screening feature. It gave me a fair chance, and I'm now working at a multinational company in Macau."</p>
-                        <div class="flex items-center text-sm text-gray-500">
-                            <i class="fas fa-map-marker-alt mr-2"></i>
-                            <span>Guangzhou → Macau</span>
-                        </div>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Guangzhou → Macau</span></div>
                     </div>
-                </div>
-                
-                <!-- Story 3 -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
-                    <div class="p-6">
+                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
                         <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=David+Lau&background=f97316&color=fff" alt="David Lau" class="w-12 h-12 rounded-full mr-4">
-                            <div>
-                                <h4 class="font-semibold text-gray-800">David Lau</h4>
-                                <p class="text-gray-600 text-sm">Financial Analyst</p>
-                            </div>
+                            <img src="https://ui-avatars.com/api/?name=David+Lau&background=c9793a&color=fff" alt="David Lau" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">David Lau</h4><p class="text-gray-600 text-sm">Financial Analyst</p></div>
                         </div>
                         <p class="text-gray-600 mb-4">"The interview coaching was invaluable. It prepared me for cross-cultural interview questions and helped me secure my dream job in Shenzhen."</p>
-                        <div class="flex items-center text-sm text-gray-500">
-                            <i class="fas fa-map-marker-alt mr-2"></i>
-                            <span>Hong Kong → Shenzhen</span>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Hong Kong → Shenzhen</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Lin+Qiao&background=14b8a6&color=fff" alt="Lin Qiao" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Lin Qiao</h4><p class="text-gray-600 text-sm">Data Annotation Trainee</p></div>
                         </div>
+                        <p class="text-gray-600 mb-4">"The micro-credential wallet helped me show verified skills even without a degree, and a remote AI data team invited me to join."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span>Micro-credential → Data labeling role</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Zhang Wei</h4><p class="text-gray-600 text-sm">Software Developer</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The AI resume optimization helped me highlight my skills effectively."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Shenzhen → Hong Kong</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=10b981&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Maria Chen</h4><p class="text-gray-600 text-sm">Marketing Specialist</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The blind screening feature gave me a fair chance."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Guangzhou → Macau</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=David+Lau&background=c9793a&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">David Lau</h4><p class="text-gray-600 text-sm">Financial Analyst</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The interview coaching prepared me for cross-cultural questions."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Hong Kong → Shenzhen</span></div>
+                    </div>
+                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Lin+Qiao&background=14b8a6&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
+                            <div><h4 class="font-semibold text-gray-800">Lin Qiao</h4><p class="text-gray-600 text-sm">Data Annotation Trainee</p></div>
+                        </div>
+                        <p class="text-gray-600 mb-4">"The wallet helped me show verified skills even without a degree."</p>
+                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span>Micro-credential → Data labeling role</span></div>
                     </div>
                 </div>
             </div>

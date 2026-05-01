@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Learning - GBA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; background: #fffaf3; }
+        .course-card { transition: transform .25s ease, box-shadow .25s ease; }
+        .course-card:hover { transform: translateY(-6px); box-shadow: 0 20px 42px rgba(124,45,18,.14); }
+    </style>
+</head>
+<body data-page="individual" class="text-gray-800">
+    <nav class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="portal.html" class="font-bold text-gray-900 flex items-center"><i class="fas fa-handshake text-orange-600 text-2xl mr-2"></i>GBA Platform</a>
+            <a href="portal.html" class="text-sm text-orange-700 hover:underline">Back to portal</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="bg-gradient-to-br from-orange-100 via-white to-amber-50 py-16">
+            <div class="container mx-auto px-4">
+                <div class="max-w-4xl">
+                    <span class="inline-flex items-center bg-white rounded-full px-4 py-2 text-orange-700 font-semibold shadow-sm mb-5"><i class="fas fa-graduation-cap mr-2"></i>Course learning</span>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4">Build job-ready skills with guided learning paths.</h1>
+                    <p class="text-lg text-gray-600">A Coursera-style learning hub for cross-border employment: short courses, mentor projects, micro-credentials and role-based recommendations.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-12">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-wrap gap-3 mb-8">
+                    <button class="px-5 py-2 rounded-full bg-orange-600 text-white font-semibold">Recommended</button>
+                    <button class="px-5 py-2 rounded-full bg-white text-gray-600 border border-orange-100">Data & AI</button>
+                    <button class="px-5 py-2 rounded-full bg-white text-gray-600 border border-orange-100">E-commerce</button>
+                    <button class="px-5 py-2 rounded-full bg-white text-gray-600 border border-orange-100">Interview</button>
+                    <button class="px-5 py-2 rounded-full bg-white text-gray-600 border border-orange-100">Policy</button>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <article class="course-card bg-white rounded-2xl overflow-hidden border border-orange-100">
+                        <div class="h-36 bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white text-5xl"><i class="fas fa-store"></i></div>
+                        <div class="p-6">
+                            <p class="text-sm text-orange-600 font-semibold mb-2">Beginner · 4 weeks</p>
+                            <h3 class="font-bold text-xl mb-2">E-commerce Service Starter</h3>
+                            <p class="text-gray-600 text-sm mb-4">Customer chat, product listing, after-sales workflow and remote collaboration.</p>
+                            <div class="flex justify-between text-sm text-gray-500"><span><i class="fas fa-star text-amber-400"></i> 4.8</span><span>Micro-credential</span></div>
+                        </div>
+                    </article>
+                    <article class="course-card bg-white rounded-2xl overflow-hidden border border-orange-100">
+                        <div class="h-36 bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-5xl"><i class="fas fa-database"></i></div>
+                        <div class="p-6">
+                            <p class="text-sm text-orange-600 font-semibold mb-2">Beginner · 3 weeks</p>
+                            <h3 class="font-bold text-xl mb-2">Data Labeling Accuracy</h3>
+                            <p class="text-gray-600 text-sm mb-4">Annotation rules, quality checks, privacy basics and AI dataset workflows.</p>
+                            <div class="flex justify-between text-sm text-gray-500"><span><i class="fas fa-star text-amber-400"></i> 4.7</span><span>Portfolio task</span></div>
+                        </div>
+                    </article>
+                    <article class="course-card bg-white rounded-2xl overflow-hidden border border-orange-100">
+                        <div class="h-36 bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white text-5xl"><i class="fas fa-comments"></i></div>
+                        <div class="p-6">
+                            <p class="text-sm text-orange-600 font-semibold mb-2">Career · 2 weeks</p>
+                            <h3 class="font-bold text-xl mb-2">Cross-border Interview Sprint</h3>
+                            <p class="text-gray-600 text-sm mb-4">STAR answers, bilingual self-introduction and disability-friendly disclosure strategy.</p>
+                            <div class="flex justify-between text-sm text-gray-500"><span><i class="fas fa-star text-amber-400"></i> 4.9</span><span>Mentor review</span></div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="pb-16">
+            <div class="container mx-auto px-4">
+                <div class="bg-white rounded-3xl shadow-sm border border-orange-100 p-8">
+                    <h2 class="text-2xl font-bold mb-6">Continue learning</h2>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="rounded-2xl bg-orange-50 p-6"><div class="flex justify-between mb-2"><strong>Policy navigator basics</strong><span>45%</span></div><div class="h-2 bg-white rounded"><div class="h-2 bg-orange-500 rounded w-[45%]"></div></div></div>
+                        <div class="rounded-2xl bg-amber-50 p-6"><div class="flex justify-between mb-2"><strong>Remote work communication</strong><span>72%</span></div><div class="h-2 bg-white rounded"><div class="h-2 bg-amber-500 rounded w-[72%]"></div></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="../assets/site-enhancements.js"></script>
+</body>
+</html>
