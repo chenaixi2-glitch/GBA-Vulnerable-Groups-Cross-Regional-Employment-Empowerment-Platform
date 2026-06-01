@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBA Cross-Border Employment Platform - Individual Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Axios for HTTP requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #10b981;
+            --accent-color: #f97316;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .agent-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .agent-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .agent-running {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .agent-completed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .agent-failed {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                    GBA
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Employment Empowerment Platform</h1>
+                    <p class="text-sm text-gray-500">Individual Portal</p>
+                </div>
+            </div>
+            
+            <nav class="hidden md:flex items-center gap-6">
+                <a href="#dashboard" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Dashboard</a>
+                <a href="#resume-generator" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Resume Generator</a>
+                <a href="#interview-prep" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Interview Prep</a>
+                <a href="#learning-path" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Learning Path</a>
+            </nav>
+            
+            <div class="flex items-center gap-3">
+                <button id="session-info-btn" class="text-sm text-gray-600 hover:text-blue-600">
+                    <i class="fas fa-user-circle mr-1"></i>
+                    <span id="session-id-display">Not Connected</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="mb-12">
+            <div class="bg-gradient-to-r from-blue-600 to-green-500 rounded-2xl p-8 text-white mb-8">
+                <h2 class="text-3xl font-bold mb-2">Welcome to Your Career Assistant</h2>
+                <p class="text-blue-100">AI-powered tools to help you land your dream job in the Greater Bay Area</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Resume Generator Card -->
+                <a href="demo-resume-generator.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-file-alt text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Smart Resume Generator</h3>
+                    <p class="text-gray-600 text-sm mb-4">Upload your resume and target job description. AI will analyze gaps and generate a customized resume.</p>
+                    <div class="flex items-center text-blue-600 text-sm font-medium">
+                        <span>Get Started</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </a>
+                
+                <!-- Interview Preparation Card -->
+                <a href="demo-interview.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                    <div class="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-comments text-2xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Interview Preparation</h3>
+                    <p class="text-gray-600 text-sm mb-4">Practice with AI-generated interview questions tailored to your target role and experience.</p>
+                    <div class="flex items-center text-green-600 text-sm font-medium">
+                        <span>Start Practice</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </a>
+                
+                <!-- Learning Path Card -->
+                <a href="demo-learning-path.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                    <div class="w-14 h-14 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-graduation-cap text-2xl text-orange-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Personalized Learning Path</h3>
+                    <p class="text-gray-600 text-sm mb-4">Get customized learning recommendations to bridge skill gaps and advance your career.</p>
+                    <div class="flex items-center text-orange-600 text-sm font-medium">
+                        <span>Explore Paths</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Quick Actions -->
+        <section class="bg-white rounded-xl p-6 border shadow-sm">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid md:grid-cols-4 gap-4">
+                <button onclick="startNewSession()" class="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-plus-circle text-blue-600 text-xl"></i>
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">New Session</div>
+                        <div class="text-xs text-gray-500">Start fresh</div>
+                    </div>
+                </button>
+                
+                <button onclick="loadLastSession()" class="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-history text-green-600 text-xl"></i>
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">Load Last Session</div>
+                        <div class="text-xs text-gray-500">Continue working</div>
+                    </div>
+                </button>
+                
+                <button onclick="clearSessionData()" class="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-trash text-red-600 text-xl"></i>
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">Clear Data</div>
+                        <div class="text-xs text-gray-500">Reset session</div>
+                    </div>
+                </button>
+                
+                <button onclick="showApiStatus()" class="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-server text-purple-600 text-xl"></i>
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">API Status</div>
+                        <div class="text-xs text-gray-500">Check connection</div>
+                    </div>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-gray-600">
+                    © 2024 GBA Cross-Border Employment Platform. All rights reserved.
+                </p>
+                <div class="flex items-center gap-4 text-sm text-gray-600">
+                    <a href="#" class="hover:text-blue-600">Privacy Policy</a>
+                    <a href="#" class="hover:text-blue-600">Terms of Service</a>
+                    <a href="#" class="hover:text-blue-600">Contact Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <span id="toast-message"></span>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

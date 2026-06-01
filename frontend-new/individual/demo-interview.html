@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Preparation - GBA Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .interviewer-avatar {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            transition: all 0.3s ease;
+        }
+        
+        .avatar-professional {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: breathe 3s ease-in-out infinite;
+        }
+        
+        .avatar-friendly {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: breathe 4s ease-in-out infinite;
+        }
+        
+        .avatar-pressure {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.7); }
+            50% { box-shadow: 0 0 0 20px rgba(79, 172, 254, 0); }
+        }
+        
+        .question-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .answer-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .feedback-item {
+            border-left: 4px solid;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        .feedback-strength {
+            background-color: #d1fae5;
+            border-left-color: #10b981;
+        }
+        
+        .feedback-improvement {
+            background-color: #fef3c7;
+            border-left-color: #f59e0b;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .tone-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .tone-option {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tone-option:hover {
+            border-color: #667eea;
+        }
+        
+        .tone-option.selected {
+            border-color: #667eea;
+            background-color: #ede9fe;
+        }
+        
+        .session-report {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="portal.html" class="text-gray-600 hover:text-blue-600">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-xl font-bold text-gray-900">Interview Preparation</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="session-badge" class="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
+                    Session: <span id="session-id">Not started</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid lg:grid-cols-[280px_1fr] gap-8">
+            <!-- Left Sidebar: Configuration -->
+            <aside class="space-y-6">
+                <!-- Interviewer Avatar & Tone -->
+                <div class="bg-white rounded-xl p-6 border shadow-sm">
+                    <h3 class="font-bold text-gray-900 mb-4">Interviewer Settings</h3>
+                    
+                    <div class="flex justify-center mb-4">
+                        <div id="interviewer-avatar" class="interviewer-avatar avatar-professional">
+                            🧑‍💼
+                        </div>
+                    </div>
+                    
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Interview Style</label>
+                    <div class="tone-selector">
+                        <div class="tone-option selected" data-tone="professional" onclick="selectTone('professional')">
+                            <i class="fas fa-briefcase text-2xl mb-1 block"></i>
+                            <div class="text-xs font-medium">Professional</div>
+                        </div>
+                        <div class="tone-option" data-tone="friendly" onclick="selectTone('friendly')">
+                            <i class="fas fa-smile text-2xl mb-1 block"></i>
+                            <div class="text-xs font-medium">Friendly</div>
+                        </div>
+                        <div class="tone-option" data-tone="pressure" onclick="selectTone('pressure')">
+                            <i class="fas fa-fire text-2xl mb-1 block"></i>
+                            <div class="text-xs font-medium">Pressure</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Information -->
+                <div class="bg-white rounded-xl p-6 border shadow-sm">
+                    <h3 class="font-bold text-gray-900 mb-4">Target Position</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                            <input type="text" id="job-title" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="e.g., Software Engineer">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Company (Optional)</label>
+                            <input type="text" id="company-name" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="e.g., Tech Corp">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                            <select id="job-industry" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                                <option value="">Select industry</option>
+                                <option value="tech">Technology</option>
+                                <option value="finance">Finance</option>
+                                <option value="ecommerce">E-commerce</option>
+                                <option value="healthcare">Healthcare</option>
+                                <option value="education">Education</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button id="btn-load-questions" onclick="loadInterviewQuestions()" class="mt-4 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-play mr-2"></i>
+                        Start Interview Session
+                    </button>
+                </div>
+
+                <!-- Session Progress -->
+                <div class="bg-white rounded-xl p-6 border shadow-sm">
+                    <h3 class="font-bold text-gray-900 mb-4">Session Progress</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Questions Completed</span>
+                                <span id="progress-text" class="font-medium">0 / 0</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm text-gray-600">
+                            <div class="flex justify-between mb-1">
+                                <span>Current Question:</span>
+                                <span id="current-q-num" class="font-medium">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Panel: Interview Interface -->
+            <div class="space-y-6">
+                <!-- Question Display -->
+                <div id="question-section" class="hidden">
+                    <div class="question-card">
+                        <div class="flex items-start gap-3 mb-3">
+                            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-question-circle text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs opacity-80 mb-1">Question <span id="q-number">1</span></div>
+                                <h3 id="question-text" class="text-lg font-semibold leading-relaxed">
+                                    Your interview question will appear here...
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation Buttons -->
+                    <div class="flex justify-between mb-6">
+                        <button onclick="previousQuestion()" id="btn-prev" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Previous
+                        </button>
+                        <button onclick="nextQuestion()" id="btn-next" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            Next
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Answer Input -->
+                <div id="answer-section" class="bg-white rounded-xl p-6 border shadow-sm hidden">
+                    <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-pen text-blue-600"></i>
+                        Your Answer
+                    </h3>
+                    
+                    <textarea id="answer-input" class="w-full border border-gray-300 rounded-lg p-4 text-sm answer-textarea focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Type your answer here. Use the STAR method (Situation, Task, Action, Result) for behavioral questions..."></textarea>
+                    
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Tip: Be specific and provide concrete examples
+                        </div>
+                        <button onclick="submitAnswer()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                            <i class="fas fa-check mr-2"></i>
+                            Submit Answer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Feedback -->
+                <div id="feedback-section" class="hidden">
+                    <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-robot text-purple-600"></i>
+                        AI Feedback & Suggestions
+                    </h3>
+                    
+                    <div id="feedback-content">
+                        <!-- Feedback items will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Session Report -->
+                <div id="report-section" class="session-report hidden">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-line"></i>
+                        Interview Session Report
+                    </h3>
+                    
+                    <div id="report-content" class="space-y-4">
+                        <!-- Report content will be inserted here -->
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="downloadReport()" class="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                            <i class="fas fa-download mr-2"></i>
+                            Download Report
+                        </button>
+                        <button onclick="restartSession()" class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                            <i class="fas fa-redo mr-2"></i>
+                            New Session
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="bg-white rounded-xl p-12 border shadow-sm text-center">
+                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-comments text-3xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Ready to Practice?</h3>
+                    <p class="text-gray-600 mb-6">Configure your target position and start an AI-powered interview session</p>
+                    
+                    <div class="grid md:grid-cols-3 gap-4 text-sm">
+                        <div class="p-4 bg-purple-50 rounded-lg">
+                            <i class="fas fa-brain text-purple-600 text-2xl mb-2"></i>
+                            <div class="font-medium mb-1">AI-Powered Questions</div>
+                            <div class="text-gray-600 text-xs">Personalized to your role</div>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <i class="fas fa-lightbulb text-blue-600 text-2xl mb-2"></i>
+                            <div class="font-medium mb-1">Instant Feedback</div>
+                            <div class="text-gray-600 text-xs">Improve in real-time</div>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <i class="fas fa-chart-bar text-green-600 text-2xl mb-2"></i>
+                            <div class="font-medium mb-1">Performance Tracking</div>
+                            <div class="text-gray-600 text-xs">Monitor your progress</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-8 text-center max-w-md">
+            <div class="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Generating Questions</h3>
+            <p id="loading-message" class="text-gray-600 text-sm">AI is analyzing your profile and job requirements...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <span id="toast-message"></span>
+    </div>
+
+    <script src="../assets/js/interview-prep.js"></script>
+</body>
+</html>
