@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Resume Generator - GBA Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #f3f4f6;
+            color: #6b7280;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .step.completed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .step-number {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: currentColor;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .agent-status-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .agent-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .agent-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .resume-preview-container {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            min-height: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .gap-analysis-card {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="portal.html" class="text-gray-600 hover:text-blue-600">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-xl font-bold text-gray-900">Smart Resume Generator</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="session-badge" class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                    Session: <span id="session-id">Not started</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Step Indicators -->
+        <div class="step-indicator">
+            <div class="step active" id="step-1">
+                <div class="step-number">1</div>
+                <span>Upload Resume</span>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+            <div class="step" id="step-2">
+                <div class="step-number">2</div>
+                <span>Target Job Description</span>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+            <div class="step" id="step-3">
+                <div class="step-number">3</div>
+                <span>Generate & Review</span>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Left Panel: Input Section -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Step 1: Upload Resume -->
+                <section id="upload-section" class="bg-white rounded-xl p-6 border shadow-sm">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-upload text-blue-600"></i>
+                        Step 1: Upload Your Resume
+                    </h2>
+                    
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer" onclick="document.getElementById('resume-file').click()">
+                        <input type="file" id="resume-file" accept=".pdf,.docx,.doc,.txt" class="hidden" onchange="handleFileSelect(event)">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-sm text-gray-600 mb-2">Click to upload or drag and drop</p>
+                        <p class="text-xs text-gray-500">PDF, DOCX, DOC, or TXT (Max 10MB)</p>
+                    </div>
+                    
+                    <div id="file-info" class="mt-4 hidden">
+                        <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                            <i class="fas fa-file-alt text-blue-600 text-xl"></i>
+                            <div class="flex-1">
+                                <p id="file-name" class="text-sm font-medium text-gray-900"></p>
+                                <p id="file-size" class="text-xs text-gray-500"></p>
+                            </div>
+                            <button onclick="clearFile()" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Or paste your resume text</label>
+                        <textarea id="resume-text" rows="8" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Paste your current resume content here..."></textarea>
+                    </div>
+                    
+                    <button id="btn-upload-resume" onclick="uploadResume()" class="mt-4 w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        Continue to Step 2
+                    </button>
+                </section>
+
+                <!-- Step 2: Job Description -->
+                <section id="jd-section" class="bg-white rounded-xl p-6 border shadow-sm hidden">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-briefcase text-green-600"></i>
+                        Step 2: Target Job Description
+                    </h2>
+                    
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Paste the job description you're targeting</label>
+                    <textarea id="jd-text" rows="10" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Copy and paste the full job description here..."></textarea>
+                    
+                    <div class="mt-4 grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+                            <select id="industry-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                                <option value="">Select industry</option>
+                                <option value="tech">Technology</option>
+                                <option value="finance">Finance</option>
+                                <option value="ecommerce">E-commerce</option>
+                                <option value="healthcare">Healthcare</option>
+                                <option value="education">Education</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Experience Level</label>
+                            <select id="experience-level" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                                <option value="">Select level</option>
+                                <option value="entry">Entry Level</option>
+                                <option value="mid">Mid Level</option>
+                                <option value="senior">Senior Level</option>
+                                <option value="executive">Executive</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button id="btn-generate" onclick="generateResume()" class="mt-6 w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-magic mr-2"></i>
+                        Generate Customized Resume
+                    </button>
+                </section>
+            </div>
+
+            <!-- Right Panel: Results Section -->
+            <div class="lg:col-span-2">
+                <!-- Agent Status Panel -->
+                <div id="agent-status-panel" class="agent-status-panel hidden">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-robot"></i>
+                        AI Agents Processing
+                    </h3>
+                    <div class="space-y-2">
+                        <div class="agent-item" id="agent-profile">
+                            <div class="agent-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-medium">Profile Agent</div>
+                                <div class="text-xs opacity-80">Extracting your skills and experience</div>
+                            </div>
+                            <div class="status-icon">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="agent-item" id="agent-jd">
+                            <div class="agent-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-medium">JD Analysis Agent</div>
+                                <div class="text-xs opacity-80">Analyzing job requirements</div>
+                            </div>
+                            <div class="status-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="agent-item" id="agent-gap">
+                            <div class="agent-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-medium">Gap Analysis Agent</div>
+                                <div class="text-xs opacity-80">Identifying skill gaps</div>
+                            </div>
+                            <div class="status-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="agent-item" id="agent-content">
+                            <div class="agent-icon">
+                                <i class="fas fa-pen-fancy"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-medium">Content Agent</div>
+                                <div class="text-xs opacity-80">Generating optimized resume</div>
+                            </div>
+                            <div class="status-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="agent-item" id="agent-render">
+                            <div class="agent-icon">
+                                <i class="fas fa-paint-brush"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-medium">Render Agent</div>
+                                <div class="text-xs opacity-80">Formatting and styling</div>
+                            </div>
+                            <div class="status-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gap Analysis Results -->
+                <div id="gap-analysis-section" class="bg-white rounded-xl p-6 border shadow-sm mb-6 hidden">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                        Skill Gap Analysis
+                    </h3>
+                    <div id="gap-analysis-content">
+                        <!-- Gap items will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Resume Preview -->
+                <div id="resume-preview-section" class="hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-eye text-purple-600"></i>
+                            Generated Resume Preview
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="downloadResume('html')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
+                                <i class="fas fa-download mr-2"></i>
+                                Download HTML
+                            </button>
+                            <button onclick="exportResume('pdf')" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm">
+                                <i class="fas fa-file-pdf mr-2"></i>
+                                Export PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="resume-preview-container" id="resume-preview">
+                        <div class="text-center text-gray-400 py-20">
+                            <i class="fas fa-file-alt text-6xl mb-4"></i>
+                            <p>Your generated resume will appear here</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="bg-white rounded-xl p-12 border shadow-sm text-center">
+                    <i class="fas fa-magic text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Ready to Create Your Perfect Resume</h3>
+                    <p class="text-gray-600 mb-6">Upload your current resume and target job description to get started</p>
+                    <div class="flex items-center justify-center gap-4 text-sm text-gray-500">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                            <span>AI-Powered Optimization</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                            <span>Skill Gap Analysis</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                            <span>Professional Formatting</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">AI is Working</h3>
+            <p id="loading-message" class="text-gray-600 text-sm">Processing your request...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <span id="toast-message"></span>
+    </div>
+
+    <script src="../assets/js/resume-generator.js"></script>
+</body>
+</html>

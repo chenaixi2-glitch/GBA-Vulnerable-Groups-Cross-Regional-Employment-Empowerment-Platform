@@ -1,7 +1,10 @@
 # AI Career Copilot 配置文件
+# 环境相关连接信息（MySQL/Redis 地址、密码）优先由 backend/.env 中的环境变量覆盖。
+# 部署说明见 backend/DEPLOYMENT.md
 
 server:
-  host: "8.153.79.69"
+  # 默认本地；Redis 默认复用此 host。线上若 Redis 在本机，请在 .env 中设 REDIS_HOST=127.0.0.1
+  host: "127.0.0.1"
 
 llm:
   provider: "deepseek"
@@ -25,15 +28,15 @@ rerank:
   top_n: 5
 
 redis:
-  host_from: "server"          # 复用 server.host
+  host_from: "server"          # 可被 REDIS_HOST 覆盖；线上建议 REDIS_HOST=127.0.0.1
   port: 6379
   db: 0
   password: ""
 
 mysql:
-  host_from: "server"          # 复用 server.host
+  host_from: "server"          # 可被 MYSQL_HOST 覆盖；线上填 RDS 地址
   port: 3306
-  user: "root"
+  user: "root"                 # 本地 XAMPP；线上在 .env 设 MYSQL_USER=GBA_platform
   password_env: "MYSQL_PASSWORD"
   database: "ai_career_copilot"
   charset: "utf8mb4"
@@ -49,10 +52,10 @@ fastapi:
   host: "0.0.0.0"
   port: 8000
   debug: true
-  workers: 2 # workers默认值，在env中可以覆盖
+  workers: 2
 
 testing:
   integration:
-    run_real_llm_tests: true # 是否使用真实LLM API来进行测试，开启后需要确保环境变量中有正确的API Key
+    run_real_llm_tests: true
 
 

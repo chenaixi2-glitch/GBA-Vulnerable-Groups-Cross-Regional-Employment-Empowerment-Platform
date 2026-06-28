@@ -7,7 +7,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
-const PORT = Number(process.env.PORT) || 3000;
+// 默认 8080，避免与 Node 认证后端（3000）及 Python AI 后端（8000）端口冲突
+const PORT = Number(process.env.PORT) || 8080;
 
 /** Must stay aligned with PORTALS in mock-api.js (used for server-side rewrites) */
 const PORTAL_ENTRIES = [
@@ -124,7 +125,13 @@ server.on('error', (err) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`GBA platform: http://127.0.0.1:${PORT}`);
-  console.log(`  Individual: http://127.0.0.1:${PORT}/individual/`);
-  console.log(`  Corporate: http://127.0.0.1:${PORT}/corporate/`);
+  console.log(`GBA platform (static): http://127.0.0.1:${PORT}`);
+  console.log(`  Landing:           http://127.0.0.1:${PORT}/`);
+  console.log(`  Individual Portal: http://127.0.0.1:${PORT}/individual/`);
+  console.log(`  Resume Generator:  http://127.0.0.1:${PORT}/individual/demo-resume-generator.html`);
+  console.log(`  Interview Prep:    http://127.0.0.1:${PORT}/individual/demo-interview.html`);
+  console.log(`  Learning Path:     http://127.0.0.1:${PORT}/individual/demo-learning-path.html`);
+  console.log(`  Corporate:         http://127.0.0.1:${PORT}/corporate/`);
+  console.log('');
+  console.log('Services: Node auth API :3000 | Python AI backend :8000 (set AI_BACKEND_URL if different)');
 });

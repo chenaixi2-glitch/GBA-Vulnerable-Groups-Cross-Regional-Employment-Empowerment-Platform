@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post New Job — GBA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; background: #f8fafc; }
+
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.06);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: .4rem;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: .65rem .9rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: .9rem;
+            color: #111827;
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+            background: #fafafa;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+            background: white;
+        }
+
+        textarea.form-input { resize: vertical; min-height: 100px; }
+
+        select.form-input { cursor: pointer; }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding-bottom: .75rem;
+            border-bottom: 1.5px solid #f0fdf4;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-title .icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg,#10b981,#059669);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .8rem;
+        }
+
+        .tag-chip {
+            display: inline-flex; align-items: center; gap: .3rem;
+            background: #ecfdf5; color: #065f46;
+            border: 1px solid #a7f3d0;
+            border-radius: 999px;
+            padding: .2rem .65rem;
+            font-size: .78rem; font-weight: 500;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .tag-chip:hover { background: #d1fae5; }
+        .tag-chip .remove { color: #6b7280; font-size: .7rem; }
+        .tag-chip .remove:hover { color: #ef4444; }
+
+        .tag-input-wrap {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px; padding: .5rem .7rem;
+            background: #fafafa;
+            cursor: text; min-height: 44px; align-items: center;
+        }
+
+        .tag-input-wrap:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+            background: white;
+        }
+
+        .tag-input-wrap input {
+            border: none; outline: none; background: transparent;
+            font-size: .875rem; color: #111827; flex: 1; min-width: 80px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: .85rem 2.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: .95rem;
+            display: inline-flex; align-items: center; gap: .5rem;
+            transition: opacity .2s, transform .2s;
+            box-shadow: 0 4px 14px rgba(16,185,129,.35);
+            border: none; cursor: pointer;
+        }
+
+        .btn-submit:hover { opacity: .92; transform: translateY(-2px); }
+
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            padding: .85rem 1.8rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: .95rem;
+            display: inline-flex; align-items: center; gap: .5rem;
+            border: 1.5px solid #e5e7eb;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .btn-secondary:hover { background: #f9fafb; }
+
+        .step-indicator {
+            display: flex; align-items: center; gap: 0;
+            margin-bottom: 2rem;
+        }
+
+        .step {
+            display: flex; flex-direction: column; align-items: center;
+            flex: 1; position: relative;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute; top: 16px; left: 50%; right: -50%;
+            height: 2px; background: #e5e7eb;
+            z-index: 0;
+        }
+
+        .step:last-child::after { display: none; }
+
+        .step.active::after { background: #10b981; }
+
+        .step-dot {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            border: 2px solid #e5e7eb;
+            background: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .78rem; font-weight: 700;
+            color: #9ca3af;
+            position: relative; z-index: 1;
+            transition: all .3s;
+        }
+
+        .step.active .step-dot {
+            border-color: #10b981;
+            background: #10b981;
+            color: white;
+        }
+
+        .step.done .step-dot {
+            border-color: #10b981;
+            background: #ecfdf5;
+            color: #10b981;
+        }
+
+        .step-label {
+            font-size: .7rem; font-weight: 500; color: #9ca3af;
+            margin-top: .35rem; text-align: center; white-space: nowrap;
+        }
+
+        .step.active .step-label { color: #10b981; font-weight: 700; }
+        .step.done .step-label { color: #6b7280; }
+
+        .preview-badge {
+            background: #fef3c7; color: #92400e;
+            border: 1px solid #fde68a;
+            border-radius: 6px;
+            font-size: .72rem; font-weight: 600;
+            padding: .15rem .5rem;
+        }
+
+        body.large-text { font-size: 1.15em; }
+        body.high-contrast { background: #000; color: #fff; }
+        body.high-contrast .form-card { background: #1a1a1a; }
+        body.high-contrast .form-input { background: #111; border-color: #555; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <!-- Top navigation bar -->
+    <nav class="bg-white shadow-sm fixed w-full z-50 border-b border-gray-100">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="portal.html" class="flex items-center gap-2 text-gray-500 hover:text-green-600 transition-colors text-sm font-medium">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Portal</span>
+                </a>
+                <span class="text-gray-200">|</span>
+                <a href="../index.html" class="flex items-center gap-1.5">
+                    <i class="fas fa-handshake text-green-600"></i>
+                    <span class="font-bold text-gray-800 text-sm">GBA Platform</span>
+                </a>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="preview-badge"><i class="fas fa-eye mr-1"></i>Preview</span>
+                <img src="https://ui-avatars.com/api/?name=Company&background=10b981&color=fff" alt="Company" class="w-8 h-8 rounded-full">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page content -->
+    <div class="pt-20 pb-16">
+        <div class="max-w-3xl mx-auto px-4">
+
+            <!-- Page header -->
+            <div class="mb-8 pt-4">
+                <h1 class="text-2xl font-bold text-gray-900">Post a New Job</h1>
+                <p class="text-gray-500 text-sm mt-1">Fill in the details below to publish your job opening to GBA talent pool</p>
+            </div>
+
+            <!-- Step indicator -->
+            <div class="step-indicator mb-8">
+                <div class="step active" id="step-1-indicator">
+                    <div class="step-dot">1</div>
+                    <span class="step-label">Basic Info</span>
+                </div>
+                <div class="step" id="step-2-indicator">
+                    <div class="step-dot">2</div>
+                    <span class="step-label">Requirements</span>
+                </div>
+                <div class="step" id="step-3-indicator">
+                    <div class="step-dot">3</div>
+                    <span class="step-label">Benefits</span>
+                </div>
+                <div class="step" id="step-4-indicator">
+                    <div class="step-dot">4</div>
+                    <span class="step-label">Settings</span>
+                </div>
+            </div>
+
+            <form id="post-job-form" novalidate>
+
+                <!-- ===== STEP 1: Basic Info ===== -->
+                <div id="step-1" class="step-panel">
+
+                    <!-- Basic Info Card -->
+                    <div class="form-card">
+                        <div class="section-title">
+                            <span class="icon"><i class="fas fa-briefcase"></i></span>
+                            Basic Information
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <label class="form-label">Job Title <span class="required">*</span></label>
+                                <input type="text" id="job-title" class="form-input" placeholder="e.g. Senior Software Engineer" required>
+                            </div>
+                            <div>
+                                <label class="form-label">Department <span class="required">*</span></label>
+                                <select id="department" class="form-input" required>
+                                    <option value="">Select department</option>
+                                    <option>Technology & Engineering</option>
+                                    <option>Finance & Accounting</option>
+                                    <option>Marketing & Communications</option>
+                                    <option>Human Resources</option>
+                                    <option>Sales & Business Development</option>
+                                    <option>Customer Service</option>
+                                    <option>Operations & Logistics</option>
+                                    <option>Legal & Compliance</option>
+                                    <option>Design & Creative</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Employment Type <span class="required">*</span></label>
+                                <select id="employment-type" class="form-input" required>
+                                    <option value="">Select type</option>
+                                    <option>Full-time</option>
+                                    <option>Part-time</option>
+                                    <option>Contract</option>
+                                    <option>Internship</option>
+                                    <option>Freelance</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Work Location <span class="required">*</span></label>
+                                <select id="work-location" class="form-input" required>
+                                    <option value="">Select location</option>
+                                    <option>Hong Kong</option>
+                                    <option>Macau</option>
+                                    <option>Shenzhen</option>
+                                    <option>Guangzhou</option>
+                                    <option>Foshan</option>
+                                    <option>Dongguan</option>
+                                    <option>Zhuhai</option>
+                                    <option>Remote (GBA)</option>
+                                    <option>Hybrid</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Work Mode</label>
+                                <select id="work-mode" class="form-input">
+                                    <option>On-site</option>
+                                    <option>Remote</option>
+                                    <option>Hybrid</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Salary Range (Monthly, CNY)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="salary-min" class="form-input" placeholder="Min e.g. 10000">
+                                    <span class="text-gray-400 shrink-0">—</span>
+                                    <input type="number" id="salary-max" class="form-input" placeholder="Max e.g. 25000">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">Number of Openings</label>
+                                <input type="number" id="headcount" class="form-input" placeholder="e.g. 2" min="1" value="1">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="form-label">Application Deadline</label>
+                                <input type="date" id="deadline" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Job Description Card -->
+                    <div class="form-card">
+                        <div class="section-title">
+                            <span class="icon"><i class="fas fa-align-left"></i></span>
+                            Job Description
+                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="form-label">Job Summary <span class="required">*</span></label>
+                                <textarea id="job-summary" class="form-input" rows="4" placeholder="Brief overview of this role and its purpose within the team..." required></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label">Key Responsibilities <span class="required">*</span></label>
+                                <textarea id="responsibilities" class="form-input" rows="6" placeholder="• Develop and maintain core platform features&#10;• Collaborate with cross-functional teams&#10;• Conduct code reviews and mentor junior developers" required></textarea>
+                                <p class="text-xs text-gray-400 mt-1">Use bullet points (•) for clarity</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== STEP 2: Requirements ===== -->
+                <div id="step-2" class="step-panel hidden">
+
+                    <div class="form-card">
+                        <div class="section-title">
+                            <span class="icon"><i class="fas fa-graduation-cap"></i></span>
+                            Qualifications & Skills
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="form-label">Minimum Education</label>
+                                <select id="education" class="form-input">
+                                    <option>No requirement</option>
+                                    <option>High School / Secondary</option>
+                                    <option>Diploma / Associate's</option>
+                                    <option>Bachelor's Degree</option>
+                                    <option>Master's Degree</option>
+                                    <option>PhD / Doctorate</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Years of Experience</label>
+                                <select id="experience" class="form-input">
+                                    <option>No experience required</option>
+                                    <option>Less than 1 year</option>
+                                    <option>1 – 3 years</option>
+                                    <option>3 – 5 years</option>
+                                    <option>5 – 10 years</option>
+                                    <option>10+ years</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Language Requirements</label>
+                                <select id="language" class="form-input">
+                                    <option>No specific requirement</option>
+                                    <option>Cantonese</option>
+                                    <option>Mandarin</option>
+                                    <option>English</option>
+                                    <option>Cantonese + English</option>
+                                    <option>Mandarin + English</option>
+                                    <option>Trilingual (Cantonese / Mandarin / English)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Industry Background</label>
+                                <input type="text" id="industry" class="form-input" placeholder="e.g. Fintech, Manufacturing, Retail">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="form-label">Required Skills</label>
+                                <div class="tag-input-wrap" id="skills-wrap">
+                                    <input type="text" id="skills-input" placeholder="Type a skill and press Enter…" autocomplete="off">
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">Press Enter or comma to add each skill</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="form-label">Nice-to-have Skills</label>
+                                <div class="tag-input-wrap" id="nice-skills-wrap">
+                                    <input type="text" id="nice-skills-input" placeholder="Type a skill and press Enter…" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="form-label">Additional Requirements</label>
+                                <textarea id="additional-req" class="form-input" rows="3" placeholder="Certifications, licences, travel requirements, etc."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DEI Section -->
+                    <div class="form-card">
+                        <div class="section-title">
+                            <span class="icon"><i class="fas fa-heart"></i></span>
+                            Diversity &amp; Inclusion
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4">Help us match inclusive talent. This information is used for DEI reporting only and does not restrict applications.</p>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="dei-disability" class="w-4 h-4 accent-emerald-600 cursor-pointer">
+                                <span class="text-sm text-gray-700 group-hover:text-gray-900">Open to candidates with disabilities</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="dei-elderly" class="w-4 h-4 accent-emerald-600 cursor-pointer">
+                                <span class="text-sm text-gray-700 group-hover:text-gray-900">Open to mature workers (45+)</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="dei-returning" class="w-4 h-4 accent-emerald-600 cursor-pointer">
+                                <span class="text-sm text-gray-700 group-hover:text-gray-900">Open to career returners (women returning to work)</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="dei-youth" class="w-4 h-4 accent-emerald-600 cursor-pointer">
+                                <span class="text-sm text-gray-700 group-hover:text-gray-900">Youth-friendly (first-job candidates welcome)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== STEP 3: Benefits ===== -->
+                <div id="step-3" class="step-panel hidden">
+                    <div class="form-card">
+                        <div class="section-title">
+                            <span class="icon"><i class="fas fa-gift"></i></span>
+                            Compensation &amp; Benefits
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm" id="ben-medical-wrap">
+                                <input type="checkbox" id="ben-medical" class="accent-emerald-600">
+                                <i class="fas fa-heartbeat text-rose-400 text-sm"></i>
+                                Medical Insurance
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
+                                <input type="checkbox" id="ben-dental" class="accent-emerald-600">
+                                <i class="fas fa-tooth text-blue-400 text-sm"></i>
+                                Dental Coverage
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
+                                <input type="checkbox" id="ben-remote" class="accent-emerald-600">
+                                <i class="fas fa-house-laptop text-indigo-400 text-sm"></i>
+                                Remote / Flexible
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
+                                <input type="checkbox" id="ben-training" class="accent-emerald-600">
+                                <i class="fas fa-chalkboard-teacher text-amber-400 text-sm"></i>
+                                Training Budget
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
+                                <input type="checkbox" id="ben-bonus" class="accent-emerald-600">
+                                <i class="fas fa-coins text-yellow-500 text-sm"></i>
+                                Performance Bonus
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
+                                <input type="checkbox" id="ben-stock" class="accent-emerald-600">
+                                <i class="fas fa-chart-line text-green-500 text-sm"></i>
+                                Stock Options / ESOP
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
+                                <input type="checkbox" id="ben-childcare" class="accent-emerald-600">
+                                <i class="fas fa-child text-pink-400 text-sm"></i>
+                                Childcare Support
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
+                                <input type="checkbox" id="ben-transport" class="accent-emerald-600">
+                                <i class="fas fa-bus text-teal-400 text-sm"></i>
+                                Transport Allowance
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
+                                <input type="checkbox" id="ben-leave" class="accent-emerald-600">
+                                <i class="fas fa-umbrella-beach text-orange-400 text-sm"></i>
+                                Extra Annual Leave
+                            </label>
+                        </div>
+                        <div>
+                            <label class="form-label">Additional Benefits Description</label>
+                            <textarea id="benefits-extra" class="form-input" rows="3" placeholder="Describe any other perks or benefits not listed above…"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== STEP 4: Settings & Review ===== -->
+                <div id="step-4" class="step-panel hidden">
+                    <div class="form-card">
+                        <div class="section-title">
+                            <span class="icon"><i class="fas fa-sliders"></i></span>
+                            Posting Settings
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="form-label">Posting Visibility</label>
+                                <select id="visibility" class="form-input">
+                                    <option>Public – Visible to all candidates</option>
+                                    <option>Semi-public – Visible after login</option>
+                                    <option>Private – Invite only</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Application Method</label>
+                                <select id="apply-method" class="form-input">
+                                    <option>Via GBA Platform</option>
+                                    <option>External URL</option>
+                                    <option>Email</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2" id="apply-url-wrap">
+                                <label class="form-label">External Application URL</label>
+                                <input type="url" id="apply-url" class="form-input" placeholder="https://your-company.com/careers/...">
+                            </div>
+                        </div>
+                        <div class="mt-5 space-y-3">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="blind-screening" checked class="w-4 h-4 accent-emerald-600">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-800 group-hover:text-gray-900">Enable blind screening</span>
+                                    <p class="text-xs text-gray-500">Hides personal details (age, gender, photo) from initial review to reduce unconscious bias.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="ai-match" checked class="w-4 h-4 accent-emerald-600">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-800">AI candidate matching</span>
+                                    <p class="text-xs text-gray-500">Automatically rank incoming applications by skills and JD alignment score.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="notify-match" checked class="w-4 h-4 accent-emerald-600">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-800">Notify me of strong matches</span>
+                                    <p class="text-xs text-gray-500">Receive email alerts when a candidate matches 90%+ of your requirements.</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Review Summary -->
+                    <div class="form-card" id="review-summary">
+                        <div class="section-title">
+                            <span class="icon"><i class="fas fa-check-double"></i></span>
+                            Review Summary
+                        </div>
+                        <div id="summary-content" class="space-y-3 text-sm text-gray-700">
+                            <p class="text-gray-400 text-xs">Complete previous steps to see your summary here.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between items-center mt-6">
+                    <button type="button" id="btn-prev" class="btn-secondary hidden">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <div class="flex-1"></div>
+                    <button type="button" id="btn-next" class="btn-submit">
+                        Next Step <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="submit" id="btn-submit" class="btn-submit hidden">
+                        <i class="fas fa-paper-plane"></i> Publish Job
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 text-center">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                <i class="fas fa-check text-4xl text-green-600"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Job Posted!</h2>
+            <p class="text-gray-500 mb-6">Your job posting is now live and visible to GBA talent. Our AI matching engine is already finding the best candidates for you.</p>
+            <div class="bg-gray-50 rounded-xl p-4 text-left mb-6">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-500">Job ID</span>
+                    <span class="font-mono font-semibold text-gray-800" id="success-job-id">GBA-2026-0001</span>
+                </div>
+                <div class="flex items-center justify-between text-sm mt-2">
+                    <span class="text-gray-500">Status</span>
+                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">Active</span>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <a href="portal.html#jobs" class="flex-1 btn-secondary justify-center text-sm py-2.5">
+                    <i class="fas fa-list mr-1"></i> View My Jobs
+                </a>
+                <button type="button" onclick="resetForm()" class="flex-1 btn-submit justify-center text-sm py-2.5">
+                    <i class="fas fa-plus mr-1"></i> Post Another
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Multi-step form logic ──────────────────────────────────────────────
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function showStep(n) {
+            for (let i = 1; i <= totalSteps; i++) {
+                document.getElementById('step-' + i).classList.toggle('hidden', i !== n);
+                const ind = document.getElementById('step-' + i + '-indicator');
+                ind.classList.remove('active', 'done');
+                if (i < n) ind.classList.add('done');
+                else if (i === n) ind.classList.add('active');
+            }
+            document.getElementById('btn-prev').classList.toggle('hidden', n === 1);
+            document.getElementById('btn-next').classList.toggle('hidden', n === totalSteps);
+            document.getElementById('btn-submit').classList.toggle('hidden', n !== totalSteps);
+
+            if (n === totalSteps) buildSummary();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('btn-next').addEventListener('click', function () {
+            if (validateStep(currentStep)) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+
+        document.getElementById('btn-prev').addEventListener('click', function () {
+            currentStep--;
+            showStep(currentStep);
+        });
+
+        function validateStep(step) {
+            if (step === 1) {
+                const title = document.getElementById('job-title').value.trim();
+                const dept  = document.getElementById('department').value;
+                const type  = document.getElementById('employment-type').value;
+                const loc   = document.getElementById('work-location').value;
+                const summ  = document.getElementById('job-summary').value.trim();
+                const resp  = document.getElementById('responsibilities').value.trim();
+                if (!title || !dept || !type || !loc || !summ || !resp) {
+                    showToast('Please fill in all required fields before continuing.', 'error');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // ── Tag input ──────────────────────────────────────────────────────────
+        function setupTagInput(inputId, wrapId) {
+            const input = document.getElementById(inputId);
+            const wrap  = document.getElementById(wrapId);
+            const tags  = [];
+
+            function addTag(val) {
+                val = val.trim().replace(/,+$/, '');
+                if (!val || tags.includes(val)) return;
+                tags.push(val);
+                const chip = document.createElement('span');
+                chip.className = 'tag-chip';
+                chip.innerHTML = val + ' <span class="remove" data-tag="' + val + '">×</span>';
+                chip.querySelector('.remove').addEventListener('click', function () {
+                    const idx = tags.indexOf(this.dataset.tag);
+                    if (idx > -1) tags.splice(idx, 1);
+                    chip.remove();
+                });
+                wrap.insertBefore(chip, input);
+                input.value = '';
+            }
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    addTag(this.value);
+                } else if (e.key === 'Backspace' && !this.value && tags.length) {
+                    const last = tags[tags.length - 1];
+                    tags.pop();
+                    wrap.querySelector('[data-tag="' + last + '"]').parentElement.remove();
+                }
+            });
+
+            wrap.addEventListener('click', () => input.focus());
+        }
+
+        setupTagInput('skills-input', 'skills-wrap');
+        setupTagInput('nice-skills-input', 'nice-skills-wrap');
+
+        // ── Application method toggle ──────────────────────────────────────────
+        document.getElementById('apply-method').addEventListener('change', function () {
+            const urlWrap = document.getElementById('apply-url-wrap');
+            urlWrap.style.display = this.value === 'External URL' ? 'block' : 'none';
+        });
+        document.getElementById('apply-url-wrap').style.display = 'none';
+
+        // ── Review summary ─────────────────────────────────────────────────────
+        function buildSummary() {
+            const title   = document.getElementById('job-title').value || '(not set)';
+            const dept    = document.getElementById('department').value || '(not set)';
+            const type    = document.getElementById('employment-type').value || '(not set)';
+            const loc     = document.getElementById('work-location').value || '(not set)';
+            const salMin  = document.getElementById('salary-min').value;
+            const salMax  = document.getElementById('salary-max').value;
+            const salStr  = salMin && salMax ? '¥' + Number(salMin).toLocaleString() + ' – ¥' + Number(salMax).toLocaleString() : 'Not specified';
+            const deadline = document.getElementById('deadline').value || 'Not specified';
+
+            const rows = [
+                ['Job Title',        title],
+                ['Department',       dept],
+                ['Employment Type',  type],
+                ['Location',         loc],
+                ['Salary Range',     salStr],
+                ['Application Deadline', deadline],
+            ];
+
+            const content = document.getElementById('summary-content');
+            content.innerHTML = rows.map(([k, v]) =>
+                `<div class="flex justify-between border-b border-gray-100 pb-2">
+                    <span class="font-medium text-gray-600">${k}</span>
+                    <span class="text-gray-900 text-right max-w-xs">${v}</span>
+                </div>`
+            ).join('');
+        }
+
+        // ── Form submit ────────────────────────────────────────────────────────
+        document.getElementById('post-job-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Publishing…';
+            btn.disabled = true;
+
+            // Simulate API call
+            setTimeout(function () {
+                const jobId = 'GBA-2026-' + String(Math.floor(Math.random() * 9000) + 1000);
+                document.getElementById('success-job-id').textContent = jobId;
+                document.getElementById('success-modal').classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Job';
+                btn.disabled = false;
+            }, 1400);
+        });
+
+        function resetForm() {
+            document.getElementById('success-modal').classList.add('hidden');
+            document.getElementById('post-job-form').reset();
+            currentStep = 1;
+            showStep(1);
+        }
+
+        // ── Toast notification ─────────────────────────────────────────────────
+        function showToast(msg, type) {
+            const existing = document.getElementById('toast-msg');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.id = 'toast-msg';
+            toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 ' +
+                (type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200');
+            toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        // ── Step dot done indicator ────────────────────────────────────────────
+        document.querySelectorAll('.step.done .step-dot').forEach(dot => {
+            dot.innerHTML = '<i class="fas fa-check text-xs"></i>';
+        });
+
+        // update done dots dynamically on step change
+        const origShow = showStep;
+        showStep = function(n) {
+            origShow(n);
+            for (let i = 1; i < n; i++) {
+                const dot = document.querySelector('#step-' + i + '-indicator .step-dot');
+                if (dot) dot.innerHTML = '<i class="fas fa-check text-xs"></i>';
+            }
+            for (let i = n; i <= totalSteps; i++) {
+                const dot = document.querySelector('#step-' + i + '-indicator .step-dot');
+                if (dot && i !== n) dot.innerHTML = i;
+                if (dot && i === n) dot.innerHTML = i;
+            }
+        };
+    </script>
+    <script src="../assets/floating-widget.js"></script>
+</body>
+</html>

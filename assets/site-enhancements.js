@@ -783,7 +783,7 @@
             '.faq-question{border:1px solid rgba(226,232,240,.9);border-radius:1rem;background:linear-gradient(135deg,#fff,#f8fafc)!important}',
             '.faq-question:hover{box-shadow:0 14px 30px rgba(15,23,42,.08);transform:translateY(-1px)}',
             '.faq-answer{margin-top:-.35rem;border:1px solid rgba(226,232,240,.9);border-top:0;border-radius:0 0 1rem 1rem;background:linear-gradient(135deg,#f8fafc,#fff)!important}',
-            '.faq-answer p{font-size:1rem;line-height:1.8;color:#475569!important;border-left:4px solid #60a5fa;padding:.85rem 1rem;background:rgba(255,255,255,.75);border-radius:.75rem;box-shadow:inset 0 0 0 1px rgba(226,232,240,.65)}',
+            '.faq-answer p{font-size:1rem;line-height:1.8;color:#475569!important;padding:.85rem 1rem}',
             '.skip-link{position:absolute;left:-999px;top:0;background:#111827;color:#fff;padding:.75rem 1rem;z-index:9999}',
             '.skip-link:focus{left:1rem;top:1rem;border-radius:.5rem}'
         ].join('');

@@ -1,5 +1,7 @@
 # GBA Platform - New Frontend (Individual Portal)
 
+> **Note:** This directory is the development source for the individual portal. Its contents have been **synced to `/individual/` at the project root** so that `node static-server.js` serves the latest version. Edit files here or in `/individual/` — keep them in sync when making changes.
+
 ## Overview
 
 This is the new frontend implementation for the GBA Cross-Border Employment Empowerment Platform, designed to integrate with the real backend AI Career Copilot system.

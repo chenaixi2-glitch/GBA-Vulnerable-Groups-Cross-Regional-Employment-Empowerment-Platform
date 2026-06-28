@@ -3,1384 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBA Cross-Border Employment Empowerment Platform - Individual</title>
+    <title>GBA Cross-Border Employment Platform - Individual Portal</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- GSAP Animation Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Axios for HTTP requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         :root {
-            --primary-color: #f97316;
-            --secondary-color: #fb923c;
-            --accent-color: #ea580c;
-            --neutral-color: #6b7280;
-            --dark-color: #1f2937;
-            --light-color: #f3f4f6;
+            --primary-color: #2563eb;
+            --secondary-color: #10b981;
+            --accent-color: #f97316;
         }
         
         body {
-            font-family: 'Noto Sans SC', sans-serif;
-            scroll-behavior: smooth;
-        }
-        
-        .hero-section {
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .hero-wave {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 150px;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,202.7C672,203,768,181,864,181.3C960,181,1056,203,1152,202.7C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-            background-size: cover;
-            background-repeat: no-repeat;
+            font-family: 'Inter', sans-serif;
         }
         
         .feature-card {
             transition: all 0.3s ease;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
         
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
         }
         
-        .ai-feature-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
+        .agent-status-indicator {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            font-size: 1.5rem;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
         
-        .accessibility-btn {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 1000;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .agent-pending {
+            background-color: #fef3c7;
+            color: #92400e;
         }
         
-        .accessibility-btn:hover {
-            transform: scale(1.1);
+        .agent-running {
+            background-color: #dbeafe;
+            color: #1e40af;
         }
         
-        .accessibility-panel {
-            position: fixed;
-            bottom: 80px;
-            right: 2rem;
-            z-index: 1000;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-            padding: 1rem;
-            width: 250px;
-            display: none;
+        .agent-completed {
+            background-color: #d1fae5;
+            color: #065f46;
         }
         
-        .accessibility-panel.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
+        .agent-failed {
+            background-color: #fee2e2;
+            color: #991b1b;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .language-selector {
-            position: relative;
-            cursor: pointer;
-        }
-        
-        .language-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 0.5rem 0;
-            min-width: 120px;
-            display: none;
-            z-index: 100;
-        }
-        
-        .language-selector:hover .language-dropdown {
-            display: block;
-        }
-        
-        /* Accessibility Styles */
-        body.high-contrast {
-            --primary-color: #0066cc;
-            --secondary-color: #00cc66;
-            --accent-color: #ff6600;
-            --neutral-color: #333333;
-            --dark-color: #000000;
-            --light-color: #ffffff;
-            background-color: #000000;
-            color: #ffffff;
-        }
-        
-        body.large-text {
-            font-size: 1.2em;
-        }
-        
-        body.large-text h1 {
-            font-size: 2em;
-        }
-        
-        body.large-text h2 {
-            font-size: 1.8em;
-        }
-        
-        /* 3D Background Animation */
-        #hero-bg-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-        
-        /* Loading Animation */
-        .loader {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 4px solid var(--primary-color);
-            width: 30px;
-            height: 30px;
+        .loading-spinner {
             animation: spin 1s linear infinite;
-            margin: 0 auto;
         }
         
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .hero-section {
-                height: auto;
-                min-height: 100vh;
-            }
-            
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .accessibility-panel {
-                width: 200px;
-                right: 1rem;
-            }
-        }
-        
-        /* AI Module Styles */
-        .ai-module {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .ai-module:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .ai-module-header {
-            padding: 1.5rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-        }
-        
-        .ai-module-body {
-            padding: 1.5rem;
-            flex: 1;
-            background-color: white;
-        }
-        
-        .ai-module-footer {
-            padding: 1rem 1.5rem;
-            background-color: var(--light-color);
-            border-top: 1px solid #e5e7eb;
-        }
-        
-        /* Button Styles */
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-primary:hover {
-            background-color: #ea580c;
-            transform: translateY(-2px);
-        }
-        
-        a.btn-primary {
-            text-decoration: none;
-            box-sizing: border-box;
-        }
-        
-        .btn-secondary {
-            background-color: white;
-            color: var(--primary-color);
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: 1px solid var(--primary-color);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-secondary:hover {
-            background-color: var(--light-color);
-            transform: translateY(-2px);
-        }
-        
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 0.75rem;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
-        }
-        
-        /* Label Styles */
-        .tag {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .tag-primary {
-            background-color: rgba(249, 115, 22, 0.1);
-            color: var(--primary-color);
-        }
-        
-        .tag-secondary {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--secondary-color);
-        }
-        
-        .tag-accent {
-            background-color: rgba(249, 115, 22, 0.1);
-            color: var(--accent-color);
-        }
-        
-        /* Individual User Specific Styles */
-        .individual-feature-icon {
-            background: linear-gradient(135deg, #f97316, #fb923c);
-        }
-        
-        .dashboard-card {
-            border-radius: 12px;
-            padding: 1.5rem;
-            background: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-            min-height: 220px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .dashboard-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .progress-bar {
-            height: 8px;
-            background-color: var(--light-color);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-
-        .dashboard-action {
-            margin-top: auto;
-        }
-
-        .module-card {
-            min-height: 260px;
-        }
-
-        .recommended-jobs-panel {
-            background: linear-gradient(135deg, #fffaf3 0%, #ffffff 48%, #f7fbff 100%);
-        }
-
-        .recommended-jobs-scroll {
-            max-height: 330px;
-            overflow-y: auto;
-            padding-right: 0.35rem;
-            scroll-behavior: smooth;
-        }
-
-        .recommended-jobs-scroll:hover {
-            max-height: 520px;
-        }
-
-        .recommended-jobs-scroll::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .recommended-jobs-scroll::-webkit-scrollbar-thumb {
-            background: rgba(249, 115, 22, 0.36);
-            border-radius: 999px;
-        }
-
-        .account-menu {
-            position: relative;
-        }
-
-        .account-dropdown {
-            position: absolute;
-            top: calc(100% + 0.75rem);
-            right: 0;
-            width: 220px;
-            display: none;
-            background: white;
-            border: 1px solid #fed7aa;
-            border-radius: 1rem;
-            box-shadow: 0 18px 45px rgba(124, 45, 18, 0.14);
-            padding: 0.5rem;
-            z-index: 60;
-        }
-
-        .account-menu:hover .account-dropdown,
-        .account-menu:focus-within .account-dropdown {
-            display: block;
-        }
-
-        .text-blue-600,
-        .text-blue-700,
-        .text-blue-800 {
-            color: #f97316 !important;
-        }
-
-        .bg-blue-100 {
-            background-color: #ffedd5 !important;
-        }
-
-        .bg-blue-600 {
-            background-color: #f97316 !important;
-        }
-
-        .hover\:text-blue-600:hover,
-        .hover\:text-blue-700:hover,
-        .hover\:text-blue-800:hover {
-            color: #ea580c !important;
-        }
-
-        .hover\:border-blue-300:hover {
-            border-color: #fdba74 !important;
-        }
-
-        .tool-visual {
-            position: relative;
-            min-height: 118px;
-            margin-top: 1.25rem;
-            overflow: hidden;
-            border-radius: 1rem;
-            background: linear-gradient(135deg, #fff7ed, #eff6ff);
-        }
-
-        .community-bubble,
-        .credential-badge {
-            position: absolute;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
-            animation: floatSoft 4.8s ease-in-out infinite;
-        }
-
-        .community-bubble {
-            width: 54px;
-            height: 54px;
-            border-radius: 999px;
-            color: white;
-        }
-
-        .credential-badge {
-            width: 72px;
-            height: 44px;
-            border-radius: 0.9rem;
-            background: white;
-            color: #166534;
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
-
-        .community-bubble:nth-child(2),
-        .credential-badge:nth-child(2) {
-            animation-delay: -1.4s;
-        }
-
-        .community-bubble:nth-child(3),
-        .credential-badge:nth-child(3) {
-            animation-delay: -2.6s;
-        }
-
-        @keyframes floatSoft {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-10px) scale(1.04); }
-        }
-
-        .stories-marquee {
-            overflow: hidden;
-            padding: 1rem 0 1.5rem;
-            -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-            mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-        }
-
-        .stories-track {
-            display: flex;
-            gap: 1.5rem;
-            width: max-content;
-            animation: storyScroll 38s linear infinite;
-        }
-
-        .stories-marquee:hover .stories-track {
-            animation-play-state: paused;
-        }
-
-        .story-card {
-            width: 360px;
-            flex: 0 0 360px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .story-card:hover {
-            transform: scale(1.06);
-            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
-            z-index: 5;
-        }
-
-        @keyframes storyScroll {
-            from { transform: translateX(0); }
-            to { transform: translateX(calc(-50% - 0.75rem)); }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body data-page="individual">
-    <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md fixed w-full z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <a href="../index.html" class="flex items-center">
-                        <i class="fas fa-handshake text-2xl text-orange-600 mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800">GBA Platform</span>
-                    </a>
-                </div>
-                
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#dashboard" class="text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
-                    <a href="#ai-features" class="text-orange-700 font-semibold hover:text-orange-600 transition-colors" data-i18n="nav-demos">Interactive tools</a>
-                    <a href="#resources" class="text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-resources">Resources</a>
-                    <a href="#success-stories" class="text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
-                    <a href="#faq" class="text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-faq">FAQ</a>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <div class="language-selector">
-                        <button class="flex items-center space-x-1 text-gray-600 hover:text-orange-600 transition-colors">
-                            <i class="fas fa-globe"></i>
-                            <span id="current-language">English</span>
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </button>
-                        <div class="language-dropdown">
-                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="en">English</a>
-                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-CN">Simplified Chinese</a>
-                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-TW">Traditional Chinese</a>
-                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
-                        </div>
+<body class="bg-gray-50 min-h-screen" data-page="individual">
+    <!-- Navigation Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="../index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                        GBA
                     </div>
-                    
-                    <div class="account-menu">
-                        <button type="button" class="flex items-center space-x-2 rounded-full px-2 py-1 hover:bg-orange-50 transition-colors">
-                            <img src="https://ui-avatars.com/api/?name=User&background=f97316&color=fff" alt="User" class="w-8 h-8 rounded-full">
-                            <span class="text-gray-700 font-medium">My Account</span>
-                            <i class="fas fa-chevron-down text-xs text-orange-600"></i>
-                        </button>
-                        <div class="account-dropdown">
-                            <a href="my-resume.html" class="flex items-center gap-3 rounded-xl px-3 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors">
-                                <span class="w-9 h-9 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center"><i class="fas fa-file-lines"></i></span>
-                                <span><strong class="block text-sm">My resume</strong><small class="text-gray-500">Upload and parse profile</small></span>
-                            </a>
-                            <a href="course-learning.html" class="flex items-center gap-3 rounded-xl px-3 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors">
-                                <span class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fas fa-graduation-cap"></i></span>
-                                <span><strong class="block text-sm">Course learning</strong><small class="text-gray-500">Build job-ready skills</small></span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-600 hover:text-blue-600 transition-colors">
-                        <i class="fas fa-bars text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
-                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-dashboard">Dashboard</a>
-                <a href="#ai-features" class="block py-2 text-orange-700 font-semibold hover:text-orange-600 transition-colors" data-i18n="nav-demos">Interactive tools</a>
-                <a href="#resources" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-resources">Resources</a>
-                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
-                <a href="my-resume.html" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors">My resume</a>
-                <a href="course-learning.html" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors">Course learning</a>
-                <a href="#faq" class="block py-2 text-gray-600 hover:text-orange-600 transition-colors" data-i18n="nav-faq">FAQ</a>
-            </div>
-        </div>
-    </nav>
-    
-    <!-- Accessibility Button -->
-    <div class="accessibility-btn" id="accessibility-btn">
-        <i class="fas fa-universal-access text-xl"></i>
-    </div>
-    
-    <!-- Accessibility Panel -->
-    <div class="accessibility-panel" id="accessibility-panel">
-        <h3 class="font-bold mb-3">Accessibility Options</h3>
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <label for="high-contrast" class="text-sm">High Contrast</label>
-                <button id="high-contrast" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
-                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
-                </button>
-            </div>
-            <div class="flex items-center justify-between">
-                <label for="large-text" class="text-sm">Large Text</label>
-                <button id="large-text" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
-                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
-                </button>
-            </div>
-            <div class="flex items-center justify-between">
-                <label for="screen-reader" class="text-sm">Screen Reader</label>
-                <button id="screen-reader" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
-                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
-                </button>
-            </div>
-            <div class="flex items-center justify-between">
-                <label for="keyboard-nav" class="text-sm">Keyboard Navigation</label>
-                <button id="keyboard-nav" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
-                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Hero Section -->
-    <section class="hero-section flex items-center justify-center relative">
-        <canvas id="hero-bg-canvas"></canvas>
-        <div class="container mx-auto px-4 z-10 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6" data-i18n="hero-title">Individual User Dashboard</h1>
-            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="hero-subtitle">Empowering you with AI tools to find cross-border employment opportunities in the Greater Bay Area</p>
-            
-            <a href="#ai-features" class="btn-primary text-lg">
-                <i class="fas fa-chart-line"></i>
-                <span data-i18n="hero-open-demos">Open interactive tools</span>
-            </a>
-            
-            <div class="mt-12 flex flex-wrap justify-center gap-4">
-                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
-                    <i class="fas fa-briefcase text-2xl text-white mr-3"></i>
-                    <div class="text-left">
-                        <div class="text-white font-bold">15+</div>
-                        <div class="text-white text-sm">Job Matches</div>
-                    </div>
-                </div>
-                
-                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
-                    <i class="fas fa-graduation-cap text-2xl text-white mr-3"></i>
-                    <div class="text-left">
-                        <div class="text-white font-bold">85%</div>
-                        <div class="text-white text-sm">Skills Match</div>
-                    </div>
-                </div>
-                
-                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
-                    <i class="fas fa-clock text-2xl text-white mr-3"></i>
-                    <div class="text-left">
-                        <div class="text-white font-bold">3</div>
-                        <div class="text-white text-sm">Interviews Scheduled</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="hero-wave"></div>
-    </section>
-    
-    <!-- Dashboard Section -->
-    <section id="dashboard" class="py-20 bg-gray-50">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="nav-dashboard">Your Personal Dashboard</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <!-- Profile Completeness -->
-                <div class="dashboard-card">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-gray-800">Profile Completeness</h3>
-                        <span class="text-blue-600 font-bold">75%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 75%"></div>
-                    </div>
-                    <p class="text-gray-600 mt-4">Complete your profile to get better job matches</p>
-                    <button class="btn-primary dashboard-action w-full justify-center">Complete Profile</button>
-                </div>
-                
-                <!-- Job Applications -->
-                <div class="dashboard-card">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-gray-800">Applications</h3>
-                        <span class="text-blue-600 font-bold">24</span>
-                    </div>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Pending Review</span>
-                            <span class="tag tag-primary">15</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Interview Stage</span>
-                            <span class="tag tag-secondary">6</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Completed</span>
-                            <span class="tag tag-accent">3</span>
-                        </div>
-                    </div>
-                    <button class="btn-primary dashboard-action w-full justify-center">View Applications</button>
-                </div>
-                
-                <!-- Skill Development -->
-                <div class="dashboard-card">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-gray-800">Skill Development</h3>
-                        <span class="text-blue-600 font-bold">60%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 60%"></div>
-                    </div>
-                    <p class="text-gray-600 mt-4">Continue your learning journey</p>
-                    <a href="demo-learning-path.html" class="btn-primary dashboard-action w-full justify-center">Continue Learning</a>
-                </div>
-            </div>
-            
-            <!-- Recommended Jobs -->
-            <div class="recommended-jobs-panel bg-white rounded-xl shadow-sm p-6 mb-12 border border-orange-100">
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                     <div>
-                        <h3 class="text-2xl font-bold text-gray-800">Recommended Jobs For You</h3>
-                        <p class="text-sm text-gray-500 mt-1">Scroll inside this panel to browse more matched roles.</p>
+                        <h1 class="text-xl font-bold text-gray-900">Employment Empowerment Platform</h1>
+                        <p class="text-sm text-gray-500">Individual Portal</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button type="button" id="refresh-recommended-jobs" class="btn-secondary text-sm py-2 px-4">
-                            <i class="fas fa-rotate-right"></i>
-                            <span>Refresh</span>
-                        </button>
-                        <a href="demo-jobs-database.html" class="text-blue-600 hover:text-blue-800 font-medium">View All</a>
-                    </div>
-                </div>
-                
-                <div id="recommended-jobs-list" class="recommended-jobs-scroll space-y-4" aria-live="polite"></div>
+                </a>
+            </div>
+            
+            <nav class="hidden md:flex items-center gap-6">
+                <a href="#dashboard" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Dashboard</a>
+                <a href="demo-resume-generator.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Resume Generator</a>
+                <a href="demo-interview.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Interview Prep</a>
+                <a href="demo-learning-path.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Learning Path</a>
+            </nav>
+            
+            <div class="flex items-center gap-3">
+                <button id="session-info-btn" class="text-sm text-gray-600 hover:text-blue-600">
+                    <i class="fas fa-user-circle mr-1"></i>
+                    <span id="session-id-display">Not Connected</span>
+                </button>
             </div>
         </div>
-    </section>
-    
-    <!-- Employment Closed Loop Section -->
-    <section id="service-loop" class="py-20 bg-white">
-        <div class="container mx-auto px-4">
-            <div class="max-w-3xl mx-auto text-center mb-12">
-                <span class="inline-block px-4 py-2 rounded-full bg-orange-50 text-orange-700 text-sm font-semibold mb-4">Employment Service Loop</span>
-                <h2 class="text-3xl font-bold mb-4">From registration to post-employment follow-up</h2>
-                <p class="text-gray-600 text-lg">Each step links to a practical workflow so users can move from assessment to matching, training, onboarding and long-term support.</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <a href="#dashboard" class="rounded-2xl border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold mb-4">1</div>
-                    <h3 class="font-bold text-lg mb-2">Register & assess skills</h3>
-                    <p class="text-gray-600 text-sm">Capture ability, work preferences, accessibility needs and preferred GBA cities before matching.</p>
-                </a>
-                <a href="demo-resume-matching.html" class="rounded-2xl border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold mb-4">2</div>
-                    <h3 class="font-bold text-lg mb-2">Optimize resume & match</h3>
-                    <p class="text-gray-600 text-sm">Convert life and service experience into role-relevant skills, then match with blind-screening friendly roles.</p>
-                </a>
-                <a href="demo-learning-path.html" class="rounded-2xl border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold mb-4">3</div>
-                    <h3 class="font-bold text-lg mb-2">Train & earn credentials</h3>
-                    <p class="text-gray-600 text-sm">Generate zero-based e-commerce learning paths and micro-credential style outcomes.</p>
-                </a>
-                <a href="demo-policy-navigator.html" class="rounded-2xl border border-gray-100 p-6 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold mb-4">4</div>
-                    <h3 class="font-bold text-lg mb-2">Onboard & follow up</h3>
-                    <p class="text-gray-600 text-sm">Use policy checklists, social-security guidance and feedback to support long-term employment stability.</p>
-                </a>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Interactive tools hub (modules + feedback) -->
-    <section id="ai-features" class="py-20 bg-white scroll-mt-28">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="nav-demos">Interactive modules</h2>
-            <p class="text-xl text-gray-600 text-center mb-4 max-w-3xl mx-auto">Nine connected tools support matching, policy, learning, accessibility, credentialing and feedback across the employment journey.</p>
-            <p class="text-sm text-gray-500 text-center mb-10 max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-                <span>Quick links:</span>
-                <a href="demo-resume-matching.html" class="text-blue-600 hover:underline">Résumé</a>
-                <a href="demo-olivia.html" class="text-blue-600 hover:underline">Olivia</a>
-                <a href="demo-policy-navigator.html" class="text-blue-600 hover:underline">Policy</a>
-                <a href="demo-interview.html" class="text-blue-600 hover:underline">Interview</a>
-                <a href="demo-jobs-database.html" class="text-blue-600 hover:underline">Job bank</a>
-                <a href="demo-learning-path.html" class="text-blue-600 hover:underline">Learning path</a>
-                <a href="#feedback" class="text-blue-600 hover:underline">Feedback</a>
-            </p>
+    </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14">
-                <a href="demo-resume-matching.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-600 to-amber-400 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-file-alt"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Skills-first AI matching engine</h3>
-                    <p class="text-gray-600 text-sm flex-1">Upload résumé, configure JD / industry / polish, preview-edit, multilingual UI toggle, export.</p>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
-                </a>
-                <a href="demo-olivia.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-microphone-lines"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Olivia conversational AI</h3>
-                    <p class="text-gray-600 text-sm flex-1">Large chat pane, microphone input, synthetic speech playback, guided step strip for low digital literacy paths.</p>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
-                </a>
-                <a href="demo-policy-navigator.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-calculator"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">GBA policy dividend navigator</h3>
-                    <p class="text-gray-600 text-sm flex-1">IIT subsidy calculator, disability levy estimator form, printable social-security transfer playbook.</p>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
-                </a>
-                <a href="demo-interview.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-user-tie"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Interview simulation AI</h3>
-                    <p class="text-gray-600 text-sm flex-1">Question carousel, typed answers, interviewer mood animation, downloadable score synopsis.</p>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
-                </a>
-                <a href="demo-jobs-database.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-briefcase"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">GBA job &amp; knowledge bank</h3>
-                    <p class="text-gray-600 text-sm flex-1">Browse curated openings and practise short knowledge-check items tied to each role cluster.</p>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
-                </a>
-                <a href="demo-learning-path.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-route"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">AI learning path</h3>
-                    <p class="text-gray-600 text-sm flex-1">Tailors module stacks from your stated experience plus target role competency bands.</p>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">Open tool <i class="fas fa-chevron-right ml-1"></i></span>
-                </a>
-                <a href="community.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-people-group"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Job-seeking Community</h3>
-                    <p class="text-gray-600 text-sm flex-1">Find peer circles, mentor office hours and warm introductions for cross-border job search confidence.</p>
-                    <div class="tool-visual" aria-hidden="true">
-                        <span class="community-bubble bg-fuchsia-500 left-6 top-7"><i class="fas fa-user"></i></span>
-                        <span class="community-bubble bg-blue-500 left-20 top-12"><i class="fas fa-comments"></i></span>
-                        <span class="community-bubble bg-amber-500 right-8 top-6"><i class="fas fa-handshake"></i></span>
-                    </div>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">View community <i class="fas fa-chevron-right ml-1"></i></span>
-                </a>
-                <a href="credentials.html" class="module-card group block bg-white rounded-2xl shadow border border-gray-100 p-6 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all h-full flex flex-col">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-lime-500 to-emerald-500 text-white flex items-center justify-center text-2xl mb-4"><i class="fas fa-certificate"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-700 text-gray-900">Micro-credential wallet</h3>
-                    <p class="text-gray-600 text-sm flex-1">Track skill badges for e-commerce service, data labeling and live-commerce support across GBA employers.</p>
-                    <div class="tool-visual" aria-hidden="true">
-                        <span class="credential-badge left-6 top-8"><i class="fas fa-store mr-1"></i> EC</span>
-                        <span class="credential-badge left-28 top-14"><i class="fas fa-database mr-1"></i> DATA</span>
-                        <span class="credential-badge right-6 top-7"><i class="fas fa-video mr-1"></i> LIVE</span>
-                    </div>
-                    <span class="mt-4 inline-flex items-center text-orange-600 text-sm font-medium">View credentials <i class="fas fa-chevron-right ml-1"></i></span>
-                </a>
-                <div id="feedback" class="module-card bg-white rounded-2xl shadow border border-gray-100 p-6 border-dashed border-2 border-emerald-200 scroll-mt-28">
-                    <div class="w-14 h-14 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl mb-4"><i class="fas fa-comment-dots"></i></div>
-                    <h3 class="text-lg font-semibold mb-2 text-gray-900">User feedback</h3>
-                    <p class="text-gray-600 text-sm mb-4">Rate your experience below. Helps us prioritize the next product improvements.</p>
-                    <label class="block text-xs font-medium text-gray-500 mb-2">Star rating</label>
-                    <div id="stars" class="flex gap-1 mb-4 text-2xl text-amber-400 cursor-pointer" role="radiogroup" aria-label="Rating">
-                        <span data-val="1" class="opacity-40 hover:opacity-100">&starf;</span>
-                        <span data-val="2" class="opacity-40 hover:opacity-100">&starf;</span>
-                        <span data-val="3" class="opacity-40 hover:opacity-100">&starf;</span>
-                        <span data-val="4" class="opacity-40 hover:opacity-100">&starf;</span>
-                        <span data-val="5" class="opacity-40 hover:opacity-100">&starf;</span>
-                    </div>
-                    <textarea id="fb-text" rows="3" class="w-full border border-gray-200 rounded-lg p-3 text-sm mb-3" placeholder="Tell us what worked or felt confusing…"></textarea>
-                    <button type="button" id="fb-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg text-sm">Submit feedback</button>
-                    <p id="fb-msg" class="mt-3 text-sm text-emerald-700 hidden" role="status"><i class="fas fa-check-circle mr-1"></i> Thank you. Your feedback was saved in this browser.</p>
-                </div>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="mb-12">
+            <div class="bg-gradient-to-r from-blue-600 to-green-500 rounded-2xl p-8 text-white mb-8">
+                <h2 class="text-3xl font-bold mb-2">Welcome to Your Career Assistant</h2>
+                <p class="text-blue-100">AI-powered tools to help you land your dream job in the Greater Bay Area</p>
             </div>
-        </div>
-    </section>
-    
-    <!-- Resources Section -->
-    <section id="resources" class="py-20 bg-gray-50">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="nav-resources">Resources for Your Success</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Comprehensive resources to help you navigate cross-border employment</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <!-- Resource 1 -->
-                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-book text-blue-600 text-xl"></i>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Resume Generator Card -->
+                <a href="demo-resume-generator.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-file-alt text-2xl text-blue-600"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Guidebooks</h3>
-                    <p class="text-gray-600 mb-4">Comprehensive guides on cross-border employment procedures and requirements.</p>
-                    <a href="demo-policy-navigator.html" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                        <span>View Guidebooks</span>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Smart Resume Generator</h3>
+                    <p class="text-gray-600 text-sm mb-4">Upload your resume and target job description. AI will analyze gaps and generate a customized resume.</p>
+                    <div class="flex items-center text-blue-600 text-sm font-medium">
+                        <span>Get Started</span>
                         <i class="fas fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
+                    </div>
+                </a>
                 
-                <!-- Resource 2 -->
-                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-video text-green-600 text-xl"></i>
+                <!-- Interview Preparation Card -->
+                <a href="demo-interview.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                    <div class="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-comments text-2xl text-green-600"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Video Tutorials</h3>
-                    <p class="text-gray-600 mb-4">Step-by-step video guides for platform features and job application processes.</p>
-                    <a href="demo-learning-path.html" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                        <span>Watch Tutorials</span>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Interview Preparation</h3>
+                    <p class="text-gray-600 text-sm mb-4">Practice with AI-generated interview questions tailored to your target role and experience.</p>
+                    <div class="flex items-center text-green-600 text-sm font-medium">
+                        <span>Start Practice</span>
                         <i class="fas fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
+                    </div>
+                </a>
                 
-                <!-- Resource 3 -->
-                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-calendar-alt text-orange-600 text-xl"></i>
+                <!-- Learning Path Card -->
+                <a href="demo-learning-path.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                    <div class="w-14 h-14 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-graduation-cap text-2xl text-orange-600"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Events</h3>
-                    <p class="text-gray-600 mb-4">Upcoming webinars and workshops on cross-border employment topics.</p>
-                    <a href="#resources" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                        <span>View Events</span>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Personalized Learning Path</h3>
+                    <p class="text-gray-600 text-sm mb-4">Get customized learning recommendations to bridge skill gaps and advance your career.</p>
+                    <div class="flex items-center text-orange-600 text-sm font-medium">
+                        <span>Explore Paths</span>
                         <i class="fas fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
-                
-                <!-- Resource 4 -->
-                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-users text-orange-600 text-xl"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Community</h3>
-                    <p class="text-gray-600 mb-4">Connect with other job seekers and share experiences and advice.</p>
-                    <a href="#feedback" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                        <span>Join Community</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
+                </a>
             </div>
-        </div>
-    </section>
-    
-    <!-- Success Stories Section -->
-    <section id="success-stories" class="py-20 bg-white">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-stories-title">Success Stories</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Real stories from individuals who found cross-border employment through our platform</p>
-            
-            <div class="stories-marquee">
-                <div class="stories-track">
-                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="Zhang Wei" class="w-12 h-12 rounded-full mr-4">
-                            <div><h4 class="font-semibold text-gray-800">Zhang Wei</h4><p class="text-gray-600 text-sm">Software Developer</p></div>
-                        </div>
-                        <p class="text-gray-600 mb-4">"The AI resume optimization helped me highlight my skills effectively. I successfully got a job at a tech company in Hong Kong after struggling for months."</p>
-                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Shenzhen → Hong Kong</span></div>
+        </section>
+        
+        <!-- Quick Actions -->
+        <section class="bg-white rounded-xl p-6 border shadow-sm">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid md:grid-cols-4 gap-4">
+                <button onclick="startNewSession()" class="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-plus-circle text-blue-600 text-xl"></i>
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">New Session</div>
+                        <div class="text-xs text-gray-500">Start fresh</div>
                     </div>
-                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=10b981&color=fff" alt="Maria Chen" class="w-12 h-12 rounded-full mr-4">
-                            <div><h4 class="font-semibold text-gray-800">Maria Chen</h4><p class="text-gray-600 text-sm">Marketing Specialist</p></div>
-                        </div>
-                        <p class="text-gray-600 mb-4">"As someone with a disability, I appreciated the blind screening feature. It gave me a fair chance, and I'm now working at a multinational company in Macau."</p>
-                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Guangzhou → Macau</span></div>
+                </button>
+                
+                <button onclick="loadLastSession()" class="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-history text-green-600 text-xl"></i>
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">Load Last Session</div>
+                        <div class="text-xs text-gray-500">Continue working</div>
                     </div>
-                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=David+Lau&background=c9793a&color=fff" alt="David Lau" class="w-12 h-12 rounded-full mr-4">
-                            <div><h4 class="font-semibold text-gray-800">David Lau</h4><p class="text-gray-600 text-sm">Financial Analyst</p></div>
-                        </div>
-                        <p class="text-gray-600 mb-4">"The interview coaching was invaluable. It prepared me for cross-cultural interview questions and helped me secure my dream job in Shenzhen."</p>
-                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Hong Kong → Shenzhen</span></div>
+                </button>
+                
+                <button onclick="clearSessionData()" class="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-trash text-red-600 text-xl"></i>
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">Clear Data</div>
+                        <div class="text-xs text-gray-500">Reset session</div>
                     </div>
-                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=Lin+Qiao&background=14b8a6&color=fff" alt="Lin Qiao" class="w-12 h-12 rounded-full mr-4">
-                            <div><h4 class="font-semibold text-gray-800">Lin Qiao</h4><p class="text-gray-600 text-sm">Data Annotation Trainee</p></div>
-                        </div>
-                        <p class="text-gray-600 mb-4">"The micro-credential wallet helped me show verified skills even without a degree, and a remote AI data team invited me to join."</p>
-                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span>Micro-credential → Data labeling role</span></div>
+                </button>
+                
+                <button onclick="showApiStatus()" class="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-server text-purple-600 text-xl"></i>
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">API Status</div>
+                        <div class="text-xs text-gray-500">Check connection</div>
                     </div>
-                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                            <div><h4 class="font-semibold text-gray-800">Zhang Wei</h4><p class="text-gray-600 text-sm">Software Developer</p></div>
-                        </div>
-                        <p class="text-gray-600 mb-4">"The AI resume optimization helped me highlight my skills effectively."</p>
-                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Shenzhen → Hong Kong</span></div>
-                    </div>
-                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=10b981&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                            <div><h4 class="font-semibold text-gray-800">Maria Chen</h4><p class="text-gray-600 text-sm">Marketing Specialist</p></div>
-                        </div>
-                        <p class="text-gray-600 mb-4">"The blind screening feature gave me a fair chance."</p>
-                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Guangzhou → Macau</span></div>
-                    </div>
-                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=David+Lau&background=c9793a&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                            <div><h4 class="font-semibold text-gray-800">David Lau</h4><p class="text-gray-600 text-sm">Financial Analyst</p></div>
-                        </div>
-                        <p class="text-gray-600 mb-4">"The interview coaching prepared me for cross-cultural questions."</p>
-                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Hong Kong → Shenzhen</span></div>
-                    </div>
-                    <div class="story-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://ui-avatars.com/api/?name=Lin+Qiao&background=14b8a6&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                            <div><h4 class="font-semibold text-gray-800">Lin Qiao</h4><p class="text-gray-600 text-sm">Data Annotation Trainee</p></div>
-                        </div>
-                        <p class="text-gray-600 mb-4">"The wallet helped me show verified skills even without a degree."</p>
-                        <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span>Micro-credential → Data labeling role</span></div>
-                    </div>
-                </div>
+                </button>
             </div>
-        </div>
-    </section>
-    
-    <!-- FAQ Section -->
-    <section id="faq" class="py-20 bg-gray-50">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-faq-title">Frequently Asked Questions</h2>
-            
-            <div class="max-w-3xl mx-auto">
-                <!-- Question 1 -->
-                <div class="mb-4">
-                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">How does the platform protect my personal information?</span>
-                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
-                    </button>
-                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">We strictly adhere to the principle of cross-border data localization and implement hierarchical privacy storage. The platform provides a blind screening mode to automatically hide users' sensitive information such as age, disability status, and gender. All data transmission uses encryption technology, and privacy impact assessments are conducted regularly to ensure user data security.</p>
-                    </div>
-                </div>
-                
-                <!-- Question 2 -->
-                <div class="mb-4">
-                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">How does the AI job matching work?</span>
-                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
-                    </button>
-                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Our AI matching algorithm analyzes your skills, experience, and preferences, and matches them with job requirements. It uses a "skills-first" approach that focuses on your qualifications rather than personal characteristics. The system can also operate in "blind screening" mode to remove potentially bias-inducing information from your profile.</p>
-                    </div>
-                </div>
-                
-                <!-- Question 3 -->
-                <div class="mb-4">
-                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">Is the platform accessible for users with disabilities?</span>
-                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
-                    </button>
-                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Yes, the platform is designed to be fully accessible. It complies with WCAG 2.2 standards and includes features such as screen reader compatibility, keyboard navigation, high contrast mode, text size adjustment, and a voice assistant for hands-free operation.</p>
-                    </div>
-                </div>
-                
-                <!-- Question 4 -->
-                <div class="mb-4">
-                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">How can I prepare for cross-border interviews?</span>
-                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
-                    </button>
-                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Our AI Interview Coaching feature provides interview simulations with industry-specific questions. It offers real-time feedback on your answers, body language, and communication style. We also provide cross-cultural communication training to help you navigate cultural differences in interviews.</p>
-                    </div>
-                </div>
-                
-                <!-- Question 5 -->
-                <div class="mb-4">
-                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">Are there any fees for using the platform?</span>
-                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
-                    </button>
-                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Basic platform features are free for individual users. We offer premium services such as advanced resume optimization, unlimited interview coaching sessions, and priority matching for a subscription fee. Financial assistance is available for users with limited income.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
+        </section>
+    </main>
+
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <h3 class="text-xl font-bold mb-4">GBA Platform</h3>
-                    <p class="text-gray-400 mb-4">Empowering vulnerable groups through AI technology for cross-border employment in the Greater Bay Area.</p>
-                    <div class="flex space-x-4">
-                        <a href="https://www.facebook.com/" class="text-gray-400 hover:text-white transition-colors">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <a href="https://x.com/" class="text-gray-400 hover:text-white transition-colors">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="https://www.linkedin.com/" class="text-gray-400 hover:text-white transition-colors">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                        <a href="https://www.instagram.com/" class="text-gray-400 hover:text-white transition-colors">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                    </div>
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-gray-600">
+                    © 2024 GBA Cross-Border Employment Platform. All rights reserved.
+                </p>
+                <div class="flex items-center gap-4 text-sm text-gray-600">
+                    <a href="#" class="hover:text-blue-600">Privacy Policy</a>
+                    <a href="#" class="hover:text-blue-600">Terms of Service</a>
+                    <a href="#" class="hover:text-blue-600">Contact Support</a>
                 </div>
-                
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
-                    <ul class="space-y-2">
-                        <li><a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Dashboard</a></li>
-                        <li><a href="#ai-features" class="text-gray-400 hover:text-white transition-colors">Interactive tools</a></li>
-                        <li><a href="#resources" class="text-gray-400 hover:text-white transition-colors">Resources</a></li>
-                        <li><a href="#success-stories" class="text-gray-400 hover:text-white transition-colors">Success Stories</a></li>
-                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Support</h3>
-                    <ul class="space-y-2">
-                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
-                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
-                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">Accessibility Statement</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
-                    <ul class="space-y-2 text-gray-400">
-                        <li class="flex items-start">
-                            <i class="fas fa-map-marker-alt mt-1 mr-3"></i>
-                            <span>GBA Innovation Center, 123 Bay Area Blvd, Shenzhen, China</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-phone mr-3"></i>
-                            <span>+86 400-123-4567</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-envelope mr-3"></i>
-                            <span>info@gba-platform.com</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2026 GBA Cross-Border Employment Empowerment Platform. All rights reserved.</p>
             </div>
         </div>
     </footer>
-    <script>
-        // Execute after page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize 3D background
-            initThreeJsBackground();
-            
-            // Accessibility features
-            initAccessibility();
-            
-            // Mobile menu
-            initMobileMenu();
-            
-            // FAQ accordion
-            initFaqAccordion();
-            
-            // Smooth scrolling
-            initSmoothScroll();
-        });
-        
-        // Initialize 3D background
-        function initThreeJsBackground() {
-            const canvas = document.getElementById('hero-bg-canvas');
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            
-            const renderer = new THREE.WebGLRenderer({
-                canvas: canvas,
-                alpha: true,
-                antialias: true
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            
-            // Create particles
-            const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 1500;
-            
-            const posArray = new Float32Array(particlesCount * 3);
-            
-            for(let i = 0; i < particlesCount * 3; i++) {
-                posArray[i] = (Math.random() - 0.5) * 10;
-            }
-            
-            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            
-            const particlesMaterial = new THREE.PointsMaterial({
-                size: 0.005,
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.8
-            });
-            
-            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-            scene.add(particlesMesh);
-            
-            camera.position.z = 5;
-            
-            // Animation
-            const animate = () => {
-                requestAnimationFrame(animate);
-                
-                particlesMesh.rotation.y += 0.001;
-                
-                renderer.render(scene, camera);
-            };
-            
-            animate();
-            
-            // Responsive adjustment
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
-        
-        // Initialize accessibility features
-        function initAccessibility() {
-            const accessibilityBtn = document.getElementById('accessibility-btn');
-            const accessibilityPanel = document.getElementById('accessibility-panel');
-            const highContrastBtn = document.getElementById('high-contrast');
-            const largeTextBtn = document.getElementById('large-text');
-            const screenReaderBtn = document.getElementById('screen-reader');
-            const keyboardNavBtn = document.getElementById('keyboard-nav');
-            
-            // Show/hide accessibility panel
-            accessibilityBtn.addEventListener('click', () => {
-                accessibilityPanel.classList.toggle('active');
-            });
-            
-            // Close when clicking outside the panel
-            document.addEventListener('click', (e) => {
-                if (!accessibilityPanel.contains(e.target) && e.target !== accessibilityBtn) {
-                    accessibilityPanel.classList.remove('active');
-                }
-            });
-            
-            // High contrast mode
-            highContrastBtn.addEventListener('click', () => {
-                document.body.classList.toggle('high-contrast');
-                toggleSwitch(highContrastBtn);
-            });
-            
-            // Large font mode
-            largeTextBtn.addEventListener('click', () => {
-                document.body.classList.toggle('large-text');
-                toggleSwitch(largeTextBtn);
-            });
-            
-            // Screen reader mode
-            screenReaderBtn.addEventListener('click', () => {
-                toggleSwitch(screenReaderBtn);
-                // Screen reader related functionality can be added here
-                alert('Screen reader mode activated');
-            });
-            
-            // Keyboard navigation mode
-            keyboardNavBtn.addEventListener('click', () => {
-                toggleSwitch(keyboardNavBtn);
-                // Keyboard navigation related functionality can be added here
-                alert('Keyboard navigation mode activated');
-            });
-            
-            // Toggle switch state
-            function toggleSwitch(button) {
-                const isActive = button.getAttribute('aria-checked') === 'true';
-                button.setAttribute('aria-checked', !isActive);
-                
-                if (!isActive) {
-                    button.classList.add('bg-blue-600');
-                    button.querySelector('span').style.transform = 'translateX(16px)';
-                } else {
-                    button.classList.remove('bg-blue-600');
-                    button.querySelector('span').style.transform = 'translateX(0)';
-                }
-            }
-        }
-        
-        // Initialize mobile menu
-        function initMobileMenu() {
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
-        
-        // Initialize FAQ accordion
-        function initFaqAccordion() {
-            const faqQuestions = document.querySelectorAll('.faq-question');
-            
-            faqQuestions.forEach(question => {
-                question.addEventListener('click', () => {
-                    const answer = question.nextElementSibling;
-                    const icon = question.querySelector('i');
-                    
-                    answer.classList.toggle('hidden');
-                    icon.classList.toggle('rotate-180');
-                });
-            });
-        }
-        
-        // Initialize smooth scrolling
-        function initSmoothScroll() {
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const targetId = this.getAttribute('href');
-                    if (targetId === '#') return;
-                    
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                        
-                        // Close menu after clicking on mobile devices
-                        const mobileMenu = document.getElementById('mobile-menu');
-                        if (!mobileMenu.classList.contains('hidden')) {
-                            mobileMenu.classList.add('hidden');
-                        }
-                    }
-                });
-            });
-        }
-    </script>
-    <script>
-        (function () {
-            var rating = 0;
-            var stars = document.querySelectorAll('#stars [data-val]');
-            stars.forEach(function (s) {
-                s.addEventListener('click', function () {
-                    rating = +s.getAttribute('data-val');
-                    stars.forEach(function (x, i) {
-                        x.classList.toggle('opacity-100', i < rating);
-                        x.classList.toggle('opacity-40', i >= rating);
-                    });
-                });
-            });
-            var submit = document.getElementById('fb-submit');
-            if (submit) {
-                submit.addEventListener('click', function () {
-                    try {
-                        localStorage.setItem(
-                            'gba_feedback_demo',
-                            JSON.stringify({ rating: rating, text: document.getElementById('fb-text').value, at: new Date().toISOString() })
-                        );
-                    } catch (e) {}
-                    document.getElementById('fb-msg').classList.remove('hidden');
-                });
-            }
-        })();
-    </script>
-    <script src="../assets/site-enhancements.js"></script>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <span id="toast-message"></span>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script src="../assets/floating-widget.js"></script>
 </body>
 </html>

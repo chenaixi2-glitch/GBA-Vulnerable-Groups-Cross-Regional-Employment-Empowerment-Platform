@@ -1,17 +1,10 @@
-FROM node:20-alpine AS build
-
-WORKDIR /app
-
-COPY frontend/package.json ./package.json
-COPY frontend/package-lock.json ./package-lock.json
-RUN npm ci
-
-COPY frontend ./
-RUN npm run build
-
+# 静态前端：直接托管 individual/ 与根目录 landing 页面
 FROM nginx:1.27-alpine
 
 COPY docker/frontend/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY index.html /usr/share/nginx/html/index.html
+COPY assets /usr/share/nginx/html/assets
+COPY individual /usr/share/nginx/html/individual
+COPY corporate /usr/share/nginx/html/corporate
 
 EXPOSE 80
