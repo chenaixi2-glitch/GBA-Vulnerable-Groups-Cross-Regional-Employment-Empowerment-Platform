@@ -1,0 +1,130 @@
+[
+  {
+    "id": "behavioral_star_weak",
+    "question": "Tell me about a time you handled a difficult customer.",
+    "reference_answer": "Use STAR: Situation with angry customer, Task to resolve refund, Action of listening and escalating, Result with satisfaction restored.",
+    "user_answer": "I talked to a customer and fixed the problem.",
+    "expected_improvement_keywords": ["star", "specific", "quantify", "situation", "result", "metric"],
+    "expected_keywords": ["structure", "detail", "example"],
+    "min_score": 40,
+    "max_score": 75,
+    "reference_evaluation": {
+      "score": 55,
+      "strengths": ["Attempted to address the customer issue", "Shows willingness to help"],
+      "improvements": ["Missing STAR structure", "No specific situation or measurable outcome"],
+      "suggestions": ["Use STAR format with a concrete example", "Quantify the result such as resolution time or satisfaction score"]
+    }
+  },
+  {
+    "id": "behavioral_star_strong",
+    "question": "Describe a project where you improved a process.",
+    "reference_answer": "Led a knowledge-base update that cut first-response time by 18% over 3 months using CRM analytics.",
+    "user_answer": "I led a FAQ refresh project. We analyzed 500 tickets, updated 40 articles, and reduced average first-response time from 4h to 3.3h within 3 months.",
+    "expected_strength_keywords": ["quantify", "metric", "specific", "lead", "result"],
+    "expected_keywords": ["quantified", "specific", "ownership"],
+    "min_score": 75,
+    "max_score": 100,
+    "reference_evaluation": {
+      "score": 88,
+      "strengths": ["Clear quantified results", "Specific actions taken", "Demonstrates ownership"],
+      "improvements": ["Could mention team collaboration", "Add customer impact beyond metrics"],
+      "suggestions": ["Highlight stakeholder communication during the project"]
+    }
+  },
+  {
+    "id": "technical_cross_border",
+    "question": "How would you handle a cross-border refund dispute?",
+    "reference_answer": "Verify order ID, check regional policy, coordinate logistics and payment provider, communicate timeline to customer.",
+    "user_answer": "I would check the order details, review the refund policy for that region, contact logistics and payment teams, and keep the customer updated on the timeline.",
+    "expected_strength_keywords": ["policy", "region", "communicate", "coordinate"],
+    "expected_keywords": ["refund", "cross-border", "customer"],
+    "min_score": 70,
+    "max_score": 95,
+    "reference_evaluation": {
+      "score": 82,
+      "strengths": ["Covers policy and regional context", "Mentions cross-team coordination", "Customer communication included"],
+      "improvements": ["Could mention escalation criteria", "Add example tool or SLA reference"],
+      "suggestions": ["Reference a specific CRM or ticketing workflow"]
+    }
+  },
+  {
+    "id": "self_intro_too_short",
+    "question": "Please introduce yourself.",
+    "reference_answer": "Brief background, relevant experience, key skills aligned to role, career motivation.",
+    "user_answer": "My name is Alex. I work in customer service.",
+    "expected_improvement_keywords": ["background", "skills", "experience", "role", "motivation"],
+    "expected_keywords": ["brief", "skills", "introduction"],
+    "min_score": 30,
+    "max_score": 60,
+    "reference_evaluation": {
+      "score": 45,
+      "strengths": ["Clear and concise opening"],
+      "improvements": ["Too brief for an interview introduction", "Missing skills and career goal alignment"],
+      "suggestions": ["Add 2-3 relevant achievements", "Connect experience to the target role"]
+    }
+  },
+  {
+    "id": "behavioral_conflict",
+    "question": "Tell me about a conflict with a colleague and how you resolved it.",
+    "reference_answer": "Describe disagreement, your listening approach, compromise or data-driven resolution, positive outcome.",
+    "user_answer": "A colleague and I disagreed on ticket priority. I scheduled a short meeting, we reviewed SLA data together, and agreed on a shared triage rule. Escalations dropped 15% the next month.",
+    "expected_strength_keywords": ["data", "agree", "resolve", "outcome", "communicate"],
+    "expected_keywords": ["collaborative", "data", "outcome"],
+    "min_score": 78,
+    "max_score": 100,
+    "reference_evaluation": {
+      "score": 85,
+      "strengths": ["Shows collaborative resolution", "Uses data to align decisions", "Quantified positive outcome"],
+      "improvements": ["Could acknowledge the colleague's perspective explicitly"],
+      "suggestions": ["Mention follow-up to ensure the new rule stuck"]
+    }
+  },
+  {
+    "id": "technical_excel_reporting",
+    "question": "How do you use Excel for operational reporting?",
+    "reference_answer": "Pivot tables, VLOOKUP/XLOOKUP, dashboards, weekly KPI tracking for CS metrics.",
+    "user_answer": "I use pivot tables and charts to track weekly ticket volume and CSAT trends, and share summaries with my manager.",
+    "expected_strength_keywords": ["pivot", "track", "report", "data"],
+    "expected_keywords": ["excel", "kpi", "dashboard"],
+    "min_score": 65,
+    "max_score": 90,
+    "reference_evaluation": {
+      "score": 76,
+      "strengths": ["Mentions pivot tables and trend tracking", "Connects reporting to management"],
+      "improvements": ["Could name specific KPIs or functions", "Add automation or template reuse"],
+      "suggestions": ["Describe a sample dashboard layout or refresh cadence"]
+    }
+  },
+  {
+    "id": "motivation_role_fit",
+    "question": "Why do you want this cross-border customer service role?",
+    "reference_answer": "Interest in GBA opportunities, language skills, e-commerce experience, growth in cross-border operations.",
+    "user_answer": "I enjoy helping customers across regions and want to grow in cross-border e-commerce within the GBA.",
+    "expected_strength_keywords": ["cross-border", "customer", "grow", "gba"],
+    "expected_keywords": ["motivation", "fit", "experience"],
+    "min_score": 60,
+    "max_score": 85,
+    "reference_evaluation": {
+      "score": 72,
+      "strengths": ["Shows motivation for cross-border work", "Mentions GBA career interest"],
+      "improvements": ["Add concrete skills or past examples", "Explain why this company or role specifically"],
+      "suggestions": ["Link language ability or prior e-commerce exposure to the role"]
+    }
+  },
+  {
+    "id": "weakness_question",
+    "question": "What is your greatest weakness?",
+    "reference_answer": "Honest weakness, mitigation steps, improvement progress — avoid cliché without action plan.",
+    "user_answer": "I'm not good at public speaking.",
+    "expected_improvement_keywords": ["improve", "plan", "action", "example", "progress"],
+    "expected_keywords": ["weakness", "develop", "mitigation"],
+    "min_score": 35,
+    "max_score": 65,
+    "reference_evaluation": {
+      "score": 50,
+      "strengths": ["Honest admission of a common weakness"],
+      "improvements": ["No improvement plan provided", "Answer feels incomplete"],
+      "suggestions": ["Describe steps taken such as practice sessions or courses", "Share measurable progress"]
+    }
+  }
+]

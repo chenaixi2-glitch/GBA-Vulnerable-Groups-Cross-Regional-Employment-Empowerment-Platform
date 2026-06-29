@@ -10,6 +10,11 @@ class IntentClassificationOutput(BaseModel):
     reason: str = ""
 
 
+class JDGenerationOutput(BaseModel):
+    title: str = ""
+    jd_text: str = ""
+
+
 class JDAnalysisOutput(BaseModel):
     industry: str = ""
     title: str = ""
@@ -85,7 +90,10 @@ class ResumeProfileOutput(BaseModel):
     phone: str = ""
     city: str = ""
     github: str = ""
+    linkedin: str = ""
+    address: str = ""
     education: list[EducationOutput] = Field(default_factory=list)
+    extras: dict[str, str] = Field(default_factory=dict)
 
 
 class ResumeSectionItemOutput(BaseModel):
@@ -104,6 +112,7 @@ class ResumeGenerationOutput(BaseModel):
     projects: list[ResumeSectionItemOutput] = Field(default_factory=list)
     awards: list[ResumeSectionItemOutput] = Field(default_factory=list)
     papers: list[ResumeSectionItemOutput] = Field(default_factory=list)
+    language: str = "zh"
 
 
 class PageMarginOutput(BaseModel):
@@ -116,6 +125,7 @@ class PageMarginOutput(BaseModel):
 class RenderInstructionOutput(BaseModel):
     template_id: str = "default"
     theme: str = "light"
+    language: str = "zh"
     font_family: str = "Source Han Sans"
     font_size: int = 14
     line_height: float = 1.5
@@ -140,3 +150,96 @@ class InterviewQAOutput(BaseModel):
 
 class InterviewGenerationOutput(BaseModel):
     interview_qa: list[InterviewQAOutput] = Field(default_factory=list)
+
+
+class InteractiveInterviewTurnOutput(BaseModel):
+    brief_feedback: str = ""
+    follow_up_type: str = "new_topic"  # follow_up | new_topic | end
+    interviewer_message: str = ""
+    category: str = ""
+    should_end: bool = False
+
+
+class InteractiveInterviewKeyMomentOutput(BaseModel):
+    question: str = ""
+    your_answer_summary: str = ""
+    analysis: str = ""
+    improved_answer: str = ""
+    score: int = 0
+
+
+class InteractiveInterviewDebriefOutput(BaseModel):
+    overall_score: int = 0
+    summary: str = ""
+    strengths: list[str] = Field(default_factory=list)
+    weaknesses: list[str] = Field(default_factory=list)
+    key_moments: list[InteractiveInterviewKeyMomentOutput] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+    category_scores: dict[str, int] = Field(default_factory=dict)
+
+
+class LLMJudgeRubricOutput(BaseModel):
+    """LLM-as-judge rubric scores (0–100 each dimension)."""
+    relevance: int = 0
+    groundedness: int = 0
+    actionability: int = 0
+    rationale: str = ""
+
+
+class AnswerEvaluationOutput(BaseModel):
+    """Structured feedback for free-text interview answer evaluation."""
+    score: int = 0
+    strengths: list[str] = Field(default_factory=list)
+    improvements: list[str] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
+    judge_scores: LLMJudgeRubricOutput = Field(default_factory=LLMJudgeRubricOutput)
+
+
+class LearningPathGapOutput(BaseModel):
+    id: str = ""
+    type: str = "missing_skill"
+    severity: str = "medium"
+    description: str = ""
+    estimated_hours: int = 0
+    related_section_ids: list[str] = Field(default_factory=list)
+    resolved: bool = False
+    resolution_source: str = "learning_path"
+
+
+class LearningPathResourceOutput(BaseModel):
+    id: str = ""
+    skill: str = ""
+    type: str = "course"  # course | article | video | project
+    title: str = ""
+    platform: str = ""
+    duration: str = ""
+    duration_hours: float = 0.0
+    url: str = ""
+    rating: float = 0.0
+
+
+class LearningPathPhaseOutput(BaseModel):
+    phase: int = 1
+    title: str = ""
+    weeks: str = ""
+    skills: list[str] = Field(default_factory=list)
+    description: str = ""
+
+
+class LearningPathAnalysisOutput(BaseModel):
+    gaps: list[LearningPathGapOutput] = Field(default_factory=list)
+    resources: list[LearningPathResourceOutput] = Field(default_factory=list)
+    estimated_total_hours: int = 0
+    questions_to_ask: list[QuestionOutput] = Field(default_factory=list)
+
+
+class LearningPathTimelineOutput(BaseModel):
+    timeline: list[LearningPathPhaseOutput] = Field(default_factory=list)
+
+
+class LearningPathOutput(BaseModel):
+    """Legacy combined schema — kept for tests."""
+    gaps: list[GapOutput] = Field(default_factory=list)
+    timeline: list[LearningPathPhaseOutput] = Field(default_factory=list)
+    resources: list[LearningPathResourceOutput] = Field(default_factory=list)
+    questions_to_ask: list[QuestionOutput] = Field(default_factory=list)

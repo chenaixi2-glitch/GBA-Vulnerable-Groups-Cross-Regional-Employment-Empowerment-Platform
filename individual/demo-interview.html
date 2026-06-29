@@ -130,6 +130,37 @@
             padding: 2rem;
             border-radius: 1rem;
         }
+
+        .mode-tab {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .mode-tab:hover {
+            border-color: #667eea;
+        }
+
+        .mode-tab.active {
+            border-color: #667eea;
+            background-color: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .interactive-chat {
+            max-height: 420px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 0.75rem;
+            border: 1px solid #e5e7eb;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -155,6 +186,61 @@
         <div class="grid lg:grid-cols-[280px_1fr] gap-8">
             <!-- Left Sidebar: Configuration -->
             <aside class="space-y-6">
+                <!-- Prerequisites for interview_agent -->
+                <div class="bg-white rounded-xl p-6 border shadow-sm">
+                    <h3 class="font-bold text-gray-900 mb-2">Interview Prerequisites</h3>
+                    <p class="text-xs text-gray-500 mb-4">Complete all steps before starting the interview session</p>
+
+                    <div class="space-y-2 mb-4 text-sm">
+                        <div id="prereq-profile" class="flex items-center gap-2">
+                            <i class="prereq-icon fas fa-circle text-gray-300"></i>
+                            <span>Candidate profile</span>
+                        </div>
+                        <div id="prereq-job" class="flex items-center gap-2">
+                            <i class="prereq-icon fas fa-circle text-gray-300"></i>
+                            <span>Job description</span>
+                        </div>
+                        <div id="prereq-resume" class="flex items-center gap-2">
+                            <i class="prereq-icon fas fa-circle text-gray-300"></i>
+                            <span>Resume content</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Step 1: Your Resume / Profile</label>
+                            <input type="file" id="interview-resume-file" accept=".pdf,.docx,.doc,.txt" class="hidden" onchange="handleInterviewFileSelect(event)">
+                            <button type="button" onclick="document.getElementById('interview-resume-file').click()" class="w-full border border-dashed border-gray-300 rounded-lg py-2 text-sm text-gray-600 hover:border-purple-500">
+                                <i class="fas fa-upload mr-1"></i> Upload resume file
+                            </button>
+                            <div id="interview-file-info" class="hidden mt-2 text-xs text-gray-600 flex items-center justify-between">
+                                <span id="interview-file-name"></span>
+                                <button type="button" onclick="clearInterviewFile()" class="text-red-500">Remove</button>
+                            </div>
+                            <textarea id="interview-profile-text" rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-2" placeholder="Or paste resume / profile text..."></textarea>
+                            <button type="button" onclick="uploadInterviewProfile()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700">
+                                Submit Profile
+                            </button>
+                        </div>
+
+                        <div id="interview-jd-section" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Step 2: Target Job Description</label>
+                            <textarea id="interview-jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Paste the full job description..."></textarea>
+                            <button type="button" onclick="submitInterviewJobDescription()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700">
+                                Submit Job Description
+                            </button>
+                        </div>
+
+                        <div id="interview-resume-section" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Step 3: Generate Resume Content</label>
+                            <p class="text-xs text-gray-500 mb-2">Required by interview_agent to tailor questions to your resume</p>
+                            <button type="button" onclick="generateInterviewResume()" class="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700">
+                                Generate Resume Content
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Interviewer Avatar & Tone -->
                 <div class="bg-white rounded-xl p-6 border shadow-sm">
                     <h3 class="font-bold text-gray-900 mb-4">Interviewer Settings</h3>
@@ -210,15 +296,16 @@
                         </div>
                     </div>
                     
-                    <button id="btn-load-questions" onclick="loadInterviewQuestions()" class="mt-4 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <button id="btn-load-questions" onclick="loadInterviewQuestions()" class="mt-4 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Complete all prerequisite steps first">
                         <i class="fas fa-play mr-2"></i>
                         Start Interview Session
                     </button>
+                    <p class="text-xs text-gray-500 mt-2 text-center">Complete profile, JD, and resume steps first</p>
                 </div>
 
                 <!-- Session Progress -->
                 <div class="bg-white rounded-xl p-6 border shadow-sm">
-                    <h3 class="font-bold text-gray-900 mb-4">Session Progress</h3>
+                    <h3 id="sidebar-progress-title" class="font-bold text-gray-900 mb-4">Session Progress</h3>
                     
                     <div class="space-y-3">
                         <div>
@@ -243,6 +330,25 @@
 
             <!-- Right Panel: Interview Interface -->
             <div class="space-y-6">
+                <!-- Mode Selection -->
+                <div class="bg-white rounded-xl p-4 border shadow-sm">
+                    <h3 class="font-bold text-gray-900 mb-3">Practice Mode</h3>
+                    <div class="flex gap-3">
+                        <button type="button" class="mode-tab active" data-mode="question_bank" onclick="selectInterviewMode('question_bank')">
+                            <i class="fas fa-list-ul mr-1"></i>
+                            Question Bank
+                        </button>
+                        <button type="button" class="mode-tab" data-mode="interactive" onclick="selectInterviewMode('interactive')">
+                            <i class="fas fa-comments mr-1"></i>
+                            Interactive Mock
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        <strong>Interactive Mock</strong>: multi-turn dialogue with follow-up questions and debrief after the session.
+                    </p>
+                </div>
+
+                <div id="question-bank-panel">
                 <!-- Question Display -->
                 <div id="question-section" class="hidden">
                     <div class="question-card">
@@ -327,6 +433,69 @@
                         </button>
                     </div>
                 </div>
+                </div><!-- end question-bank-panel -->
+
+                <!-- Interactive Mock Interview Panel -->
+                <div id="interactive-panel" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl p-6 border shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                                <i class="fas fa-comments text-purple-600"></i>
+                                Live Mock Interview
+                            </h3>
+                            <button type="button" onclick="endInteractiveInterview()" class="text-sm px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50">
+                                <i class="fas fa-stop-circle mr-1"></i>
+                                End & Debrief
+                            </button>
+                        </div>
+                        <div id="interactive-chat" class="interactive-chat"></div>
+                    </div>
+
+                    <div id="interactive-input-section" class="bg-white rounded-xl p-6 border shadow-sm">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="fas fa-pen text-blue-600"></i>
+                            Your Response
+                        </h3>
+                        <textarea id="interactive-answer-input" class="w-full border border-gray-300 rounded-lg p-4 text-sm answer-textarea focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Type your answer... The interviewer may follow up based on your response."></textarea>
+                        <div class="flex justify-between items-center mt-4">
+                            <div class="text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Answers drive follow-up questions in real time
+                            </div>
+                            <button type="button" onclick="submitInteractiveAnswer()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Send Answer
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="interactive-debrief-section" class="session-report hidden">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i class="fas fa-clipboard-check"></i>
+                            Interview Debrief (复盘)
+                        </h3>
+                        <div id="interactive-debrief-content"></div>
+                        <p id="interactive-save-login-hint" class="hidden text-sm opacity-80 mt-4">
+                            <i class="fas fa-sign-in-alt mr-1"></i>
+                            <a href="portal.html" class="underline hover:opacity-100">Log in</a> to save this mock interview to your account.
+                        </p>
+                        <p id="interactive-saved-badge" class="hidden text-sm text-green-300 mt-3"></p>
+                        <div class="flex flex-wrap gap-3 mt-6">
+                            <button type="button" id="btn-save-interactive" onclick="saveInteractiveInterviewToAccount()" class="hidden flex-1 min-w-[140px] px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                                <i class="fas fa-cloud-upload-alt mr-2"></i>
+                                Save to Account
+                            </button>
+                            <button type="button" onclick="downloadInteractiveDebrief()" class="flex-1 min-w-[140px] px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                                <i class="fas fa-download mr-2"></i>
+                                Download Debrief
+                            </button>
+                            <button type="button" onclick="restartSession()" class="flex-1 min-w-[140px] px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                <i class="fas fa-redo mr-2"></i>
+                                New Session
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Empty State -->
                 <div id="empty-state" class="bg-white rounded-xl p-12 border shadow-sm text-center">
@@ -343,14 +512,14 @@
                             <div class="text-gray-600 text-xs">Personalized to your role</div>
                         </div>
                         <div class="p-4 bg-blue-50 rounded-lg">
-                            <i class="fas fa-lightbulb text-blue-600 text-2xl mb-2"></i>
-                            <div class="font-medium mb-1">Instant Feedback</div>
-                            <div class="text-gray-600 text-xs">Improve in real-time</div>
+                            <i class="fas fa-comments text-blue-600 text-2xl mb-2"></i>
+                            <div class="font-medium mb-1">Interactive Mock</div>
+                            <div class="text-gray-600 text-xs">Multi-turn follow-up dialogue</div>
                         </div>
                         <div class="p-4 bg-green-50 rounded-lg">
-                            <i class="fas fa-chart-bar text-green-600 text-2xl mb-2"></i>
-                            <div class="font-medium mb-1">Performance Tracking</div>
-                            <div class="text-gray-600 text-xs">Monitor your progress</div>
+                            <i class="fas fa-clipboard-check text-green-600 text-2xl mb-2"></i>
+                            <div class="font-medium mb-1">Debrief Report</div>
+                            <div class="text-gray-600 text-xs">Review & improve after session</div>
                         </div>
                     </div>
                 </div>
@@ -367,11 +536,32 @@
         </div>
     </div>
 
+    <!-- Save Mock Interview Modal (logged-in users only) -->
+    <div id="save-interview-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-8 max-w-md mx-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Save mock interview to your account?</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                Your dialogue and debrief report can be saved to the GBA platform for later review.
+                If you choose not to save, nothing will be written to your account.
+            </p>
+            <div class="flex flex-col gap-2">
+                <button type="button" id="btn-interview-save-confirm" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>
+                    Save to account
+                </button>
+                <button type="button" id="btn-interview-save-skip" class="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50">
+                    Don't save
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
         <span id="toast-message"></span>
     </div>
 
-    <script src="../assets/js/interview-prep.js"></script>
+    <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/interview-prep.js"></script>
 </body>
 </html>

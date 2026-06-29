@@ -23,7 +23,8 @@ RENDER_INSTRUCTION_PROMPT = """你是简历渲染配置专家。请根据用户�
     "line_height": 1.5,
     "page_margin": {{"top": 24, "right": 24, "bottom": 24, "left": 24}},
     "section_order": ["profile", "skills", "projects", "internships", "awards"],
-    "dense_mode": false,
+    "dense_mode": true,
+    "language": "zh",
     "accent_style": "minimal / bold / underline",
     "visibility_map": {{}},
     "layout_mode": "single-column / double-column",
@@ -33,5 +34,6 @@ RENDER_INSTRUCTION_PROMPT = """你是简历渲染配置专家。请根据用户�
 
 注意：
 1. 只修改用户指令涉及的字段，其他保持不变
-2. 即使指令无效，也必须返回合法 JSON 对象
+2. 简历必须控制在一页 A4 内；内容过多时使用 compact 间距、dense_mode 和较小字号
+3. 即使指令无效，也必须返回合法 JSON 对象
 """

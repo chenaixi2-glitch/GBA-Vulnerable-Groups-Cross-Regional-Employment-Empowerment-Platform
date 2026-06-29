@@ -5,10 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from log import get_logger
+from tools.resume_layout import SECTION_LABELS, normalize_language
 
 if TYPE_CHECKING:
     from workflow.state import ResumeContent, RenderConfig
+
+from log import get_logger
 
 logger = get_logger("app")
 
@@ -37,9 +39,12 @@ def render_resume_html(content: "ResumeContent", config: "RenderConfig") -> str:
 
 def _build_template_variables(content: "ResumeContent", config: "RenderConfig") -> dict:
     """构建模板替换变量。"""
+    lang = normalize_language(config.language or content.meta.language)
+    labels = SECTION_LABELS.get(lang, SECTION_LABELS["zh"])
+
     # CSS 变量
     margin = config.page_margin
-    spacing = {"compact": 0.8, "standard": 1.0, "relaxed": 1.2}.get(config.spacing_scale, 1.0)
+    spacing = {"compact": 0.75, "standard": 1.0, "relaxed": 1.2}.get(config.spacing_scale, 1.0)
 
     css_vars = f"""
         --font-family: '{config.font_family}', sans-serif;
@@ -77,10 +82,11 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
     sections_html_map = {
         "profile": f"""
             <section class="section section-profile">
-                <h2>基本信息</h2>
+                <h2>{labels["profile"]}</h2>
                 <div class="profile-info">
                     <span class="name">{profile.name}</span>
                     <span class="contact">{profile.email} | {profile.phone} | {profile.city}</span>
+                    {'<span class="linkedin">' + profile.linkedin + '</span>' if getattr(profile, 'linkedin', '') else ''}
                     {'<span class="github">' + profile.github + '</span>' if profile.github else ''}
                 </div>
                 <div class="education">{edu_html}</div>
@@ -88,37 +94,37 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
         """,
         "summary": f"""
             <section class="section section-summary">
-                <h2>个人总结</h2>
+                <h2>{labels["summary"]}</h2>
                 <p>{content.summary}</p>
             </section>
         """ if content.summary else "",
         "skills": f"""
             <section class="section section-skills">
-                <h2>专业技能</h2>
+                <h2>{labels["skills"]}</h2>
                 {_render_items(content.skills, 'skill')}
             </section>
         """ if content.skills else "",
         "internships": f"""
             <section class="section section-internships">
-                <h2>实习经历</h2>
+                <h2>{labels["internships"]}</h2>
                 {_render_items(content.internships, 'internship')}
             </section>
         """ if content.internships else "",
         "projects": f"""
             <section class="section section-projects">
-                <h2>项目经历</h2>
+                <h2>{labels["projects"]}</h2>
                 {_render_items(content.projects, 'project')}
             </section>
         """ if content.projects else "",
         "awards": f"""
             <section class="section section-awards">
-                <h2>获奖经历</h2>
+                <h2>{labels["awards"]}</h2>
                 {_render_items(content.awards, 'award')}
             </section>
         """ if content.awards else "",
         "papers": f"""
             <section class="section section-papers">
-                <h2>论文</h2>
+                <h2>{labels["papers"]}</h2>
                 {_render_items(content.papers, 'paper')}
             </section>
         """ if content.papers else "",
@@ -148,6 +154,7 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
         "LAYOUT_CLASS": layout_class,
         "DENSE_CLASS": dense_class,
         "THEME_CLASS": theme_class,
+        "HTML_LANG": lang,
         "SECTIONS_HTML": "\n".join(ordered_sections),
         "NAME": profile.name,
         "TARGET_ROLE": content.meta.target_role,

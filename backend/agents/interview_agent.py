@@ -15,6 +15,39 @@ from log import get_logger
 
 logger = get_logger("agent")
 
+FIXED_SELF_INTRO_ID = "qa_self_intro"
+FIXED_SELF_INTRO_CATEGORY = "简历深挖与个人经历"
+FIXED_SELF_INTRO_QUESTION = "自我介绍"
+
+
+def _is_self_intro_question(question: str) -> bool:
+    return "自我介绍" in question.strip()
+
+
+def _ensure_fixed_self_intro(interview_qa: list[InterviewQA]) -> list[InterviewQA]:
+    """Ensure the first QA is always the fixed self-introduction question."""
+    intro_answer = ""
+    intro_refs: list[str] = []
+    remaining: list[InterviewQA] = []
+
+    for item in interview_qa:
+        if _is_self_intro_question(item.question):
+            if not intro_answer:
+                intro_answer = item.answer
+                intro_refs = list(item.source_refs)
+            continue
+        remaining.append(item)
+
+    fixed_intro = InterviewQA(
+        id=FIXED_SELF_INTRO_ID,
+        category=FIXED_SELF_INTRO_CATEGORY,
+        question=FIXED_SELF_INTRO_QUESTION,
+        answer=intro_answer,
+        source_refs=intro_refs,
+        version=1,
+    )
+    return [fixed_intro, *remaining]
+
 
 def _build_interview_qa(parsed: InterviewGenerationOutput) -> list[InterviewQA]:
     interview_qa: list[InterviewQA] = []
@@ -74,7 +107,7 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    interview_qa = _build_interview_qa(parsed)
+    interview_qa = _ensure_fixed_self_intro(_build_interview_qa(parsed))
 
     logger.info("Interview Agent generated %d QAs", len(interview_qa))
 

@@ -173,26 +173,32 @@
                         <option value="manufacturing">Manufacturing</option>
                     </select>
                 </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Timeline</label>
-                    <select id="timeline" class="w-full border border-gray-300 rounded-lg p-3">
-                        <option value="3months">3 Months</option>
-                        <option value="6months" selected>6 Months</option>
-                        <option value="12months">12 Months</option>
-                        <option value="custom">Custom</option>
-                    </select>
-                </div>
             </div>
             
             <div class="mt-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Current Skills (comma-separated)</label>
                 <textarea id="current-skills" rows="3" class="w-full border border-gray-300 rounded-lg p-3" placeholder="e.g., JavaScript, React, Node.js, Git"></textarea>
             </div>
+
+            <div class="mt-6 grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Profile Details (Optional)</label>
+                    <textarea id="profile-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Paste resume summary or experience details for gap_agent..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Job Description (Optional)</label>
+                    <textarea id="jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Paste full JD for more accurate gap analysis..."></textarea>
+                </div>
+            </div>
+
+            <p class="mt-4 text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>
+                Step 1 analyzes skill gaps and resources; Step 2 builds your timeline after you choose daily study hours.
+            </p>
             
-            <button onclick="generateLearningPath()" id="btn-generate-path" class="mt-6 w-full md:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-red-700 transition-all">
+            <button onclick="generateLearningPathAnalysis()" id="btn-generate-path" class="mt-6 w-full md:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-red-700 transition-all">
                 <i class="fas fa-magic mr-2"></i>
-                Generate My Learning Path
+                Analyze Skill Gaps & Resources
             </button>
         </section>
 
@@ -206,12 +212,17 @@
         <!-- Learning Path Results -->
         <div id="learning-path-results" class="hidden space-y-8">
             <!-- Overview Cards -->
-            <div class="grid md:grid-cols-3 gap-6">
+            <div class="grid md:grid-cols-4 gap-6">
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
                     <div class="text-3xl font-bold mb-1" id="total-skills">0</div>
                     <div class="text-blue-100 text-sm">Skills to Master</div>
                 </div>
                 
+                <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-6 text-white">
+                    <div class="text-3xl font-bold mb-1" id="estimated-hours">0</div>
+                    <div class="text-amber-100 text-sm">Estimated Study Hours</div>
+                </div>
+
                 <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
                     <div class="text-3xl font-bold mb-1" id="estimated-weeks">0</div>
                     <div class="text-green-100 text-sm">Estimated Weeks</div>
@@ -228,6 +239,7 @@
                 <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                     <i class="fas fa-chart-bar text-blue-600"></i>
                     Skill Gap Analysis
+                    <span class="text-xs font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">gap_agent</span>
                 </h3>
                 
                 <div id="skill-gaps-container" class="space-y-4">
@@ -235,16 +247,122 @@
                 </div>
             </section>
 
-            <!-- Learning Timeline -->
-            <section class="bg-white rounded-xl p-6 border shadow-sm">
+            <!-- Follow-up Questions from gap_agent -->
+            <section id="follow-up-section" class="hidden bg-white rounded-xl p-6 border shadow-sm">
                 <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <i class="fas fa-calendar-alt text-green-600"></i>
-                    Your Learning Timeline
+                    <i class="fas fa-question-circle text-orange-600"></i>
+                    Questions to Clarify
                 </h3>
+                <div id="follow-up-container" class="space-y-3"></div>
+            </section>
+
+            <!-- Daily Study Hours Selection -->
+            <section id="daily-hours-section" class="bg-white rounded-xl p-6 border shadow-sm border-orange-200">
+                <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <i class="fas fa-clock text-orange-600"></i>
+                    Choose Your Daily Study Time
+                </h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Based on the estimated total hours above, select how many hours you can study each day to generate your personalized timeline.
+                </p>
+
+                <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <label class="daily-hours-option cursor-pointer">
+                        <input type="radio" name="daily-hours" value="1" class="sr-only peer">
+                        <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-600 peer-checked:bg-orange-50 hover:border-orange-300 transition-colors">
+                            <div class="text-2xl font-bold text-gray-900">1h</div>
+                            <div class="text-xs text-gray-500">Light pace</div>
+                        </div>
+                    </label>
+                    <label class="daily-hours-option cursor-pointer">
+                        <input type="radio" name="daily-hours" value="2" class="sr-only peer" checked>
+                        <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-600 peer-checked:bg-orange-50 hover:border-orange-300 transition-colors">
+                            <div class="text-2xl font-bold text-gray-900">2h</div>
+                            <div class="text-xs text-gray-500">Recommended</div>
+                        </div>
+                    </label>
+                    <label class="daily-hours-option cursor-pointer">
+                        <input type="radio" name="daily-hours" value="3" class="sr-only peer">
+                        <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-600 peer-checked:bg-orange-50 hover:border-orange-300 transition-colors">
+                            <div class="text-2xl font-bold text-gray-900">3h</div>
+                            <div class="text-xs text-gray-500">Focused</div>
+                        </div>
+                    </label>
+                    <label class="daily-hours-option cursor-pointer">
+                        <input type="radio" name="daily-hours" value="custom" class="sr-only peer">
+                        <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-600 peer-checked:bg-orange-50 hover:border-orange-300 transition-colors">
+                            <div class="text-2xl font-bold text-gray-900">Custom</div>
+                            <div class="text-xs text-gray-500">Your pace</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="custom-hours-input" class="hidden mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Custom daily hours</label>
+                    <input type="number" id="custom-daily-hours" min="0.5" max="12" step="0.5" value="1.5"
+                        class="w-full md:w-48 border border-gray-300 rounded-lg p-3" placeholder="e.g., 1.5">
+                </div>
+
+                <p id="projected-weeks-hint" class="text-sm text-orange-700 mb-4 font-medium"></p>
+
+                <button onclick="generateLearningPathTimeline()" id="btn-generate-timeline"
+                    class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Generate Learning Timeline
+                </button>
+            </section>
+
+            <!-- Learning Timeline -->
+            <section id="timeline-section" class="hidden bg-white rounded-xl p-6 border shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-green-600"></i>
+                        Your Learning Timeline
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="toggleTimelineEdit()" id="btn-edit-timeline"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-edit mr-1"></i>
+                            Edit Timeline
+                        </button>
+                        <button onclick="applyTimelineEdits()" id="btn-apply-timeline"
+                            class="hidden px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-check mr-1"></i>
+                            Apply Changes
+                        </button>
+                        <button onclick="cancelTimelineEdit()" id="btn-cancel-timeline"
+                            class="hidden px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                <p id="save-status-hint" class="hidden text-sm text-green-700 mb-4 font-medium"></p>
                 
                 <div id="timeline-container" class="space-y-6">
                     <!-- Timeline items will be inserted here -->
                 </div>
+
+                <div id="timeline-actions" class="hidden mt-6 pt-6 border-t border-gray-200 flex flex-wrap gap-3">
+                    <button onclick="saveLearningPathToAccount()" id="btn-save-plan"
+                        class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i>
+                        Save to My Account
+                    </button>
+                    <button onclick="downloadLearningPlan()"
+                        class="px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors">
+                        <i class="fas fa-file-alt mr-2"></i>
+                        Export TXT
+                    </button>
+                    <button onclick="exportLearningPlanJson()"
+                        class="px-6 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-file-code mr-2"></i>
+                        Export JSON
+                    </button>
+                </div>
+                <p id="learning-path-save-login-hint" class="hidden text-sm text-gray-500 mt-4">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Log in via the Individual Portal to save your plan to the database.
+                </p>
             </section>
 
             <!-- Recommended Resources -->
@@ -299,11 +417,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <button onclick="downloadLearningPlan()" class="mt-6 w-full md:w-auto px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium">
-                    <i class="fas fa-download mr-2"></i>
-                    Download Complete Learning Plan
-                </button>
             </section>
         </div>
 
@@ -340,6 +453,7 @@
         <span id="toast-message"></span>
     </div>
 
-    <script src="../assets/js/learning-path.js"></script>
+    <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/learning-path.js"></script>
 </body>
 </html>

@@ -43,18 +43,33 @@ class MySQLStore:
         self._pool = pool
 
     # ---- sessions ----
-    async def upsert_session(self, session_id: str, status: str = "active") -> None:
+    async def upsert_session(self, session_id: str, status: str = "active",
+                             user_id: int | str | None = None) -> None:
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         sql = """
-            INSERT INTO sessions (session_id, created_at, updated_at, status)
-            VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE updated_at = %s, status = %s
+            INSERT INTO sessions (session_id, user_id, created_at, updated_at, status)
+            VALUES (%s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                updated_at = %s,
+                status = %s,
+                user_id = COALESCE(user_id, VALUES(user_id))
         """
         async with self._pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(sql, (session_id, now, now, status, now, status))
+                await cur.execute(sql, (session_id, user_id, now, now, status, now, status))
             await conn.commit()
-        logger.debug("Upserted session %s", session_id)
+        logger.debug("Upserted session %s user_id=%s", session_id, user_id)
+
+    async def get_session_user_id(self, session_id: str) -> int | None:
+        sql = "SELECT user_id FROM sessions WHERE session_id = %s LIMIT 1"
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (session_id,))
+                row = await cur.fetchone()
+        if row is None:
+            return None
+        user_id = row["user_id"]
+        return int(user_id) if user_id is not None else None
 
     # ---- generic JSON table helpers ----
     async def _upsert_json(self, table: str, row_id: str, session_id: str, data: dict, version: int = 1,
@@ -156,6 +171,162 @@ class MySQLStore:
 
     async def save_interview_qa(self, row_id: str, session_id: str, data: dict, version: int = 1) -> None:
         await self._upsert_json("interview_qas", row_id, session_id, data, version)
+
+    async def save_interactive_interview_session(
+        self,
+        row_id: str,
+        session_id: str,
+        user_id: int | str,
+        job_title: str,
+        industry: str,
+        tone: str,
+        overall_score: int | None,
+        round_count: int,
+        data: dict,
+    ) -> None:
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        json_str = json.dumps(data, ensure_ascii=False, default=str)
+        sql = """
+            INSERT INTO interactive_interview_sessions
+                (id, session_id, user_id, job_title, industry, tone,
+                 overall_score, round_count, data, saved_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                job_title = VALUES(job_title),
+                industry = VALUES(industry),
+                tone = VALUES(tone),
+                overall_score = VALUES(overall_score),
+                round_count = VALUES(round_count),
+                data = VALUES(data),
+                saved_at = VALUES(saved_at)
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (
+                    row_id, session_id, int(user_id), job_title, industry, tone,
+                    overall_score, round_count, json_str, now,
+                ))
+            await conn.commit()
+        logger.debug("Saved interactive interview id=%s user=%s session=%s", row_id, user_id, session_id)
+
+    async def list_interactive_interviews_by_user(
+        self, user_id: int | str, limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        sql = """
+            SELECT id, session_id, job_title, industry, tone, overall_score,
+                   round_count, saved_at
+            FROM interactive_interview_sessions
+            WHERE user_id = %s
+            ORDER BY saved_at DESC
+            LIMIT %s
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (int(user_id), limit))
+                rows = await cur.fetchall()
+        return [dict(row) for row in rows]
+
+    async def get_interactive_interview_for_user(
+        self, row_id: str, user_id: int | str,
+    ) -> dict[str, Any] | None:
+        sql = """
+            SELECT id, session_id, job_title, industry, tone, overall_score,
+                   round_count, data, saved_at
+            FROM interactive_interview_sessions
+            WHERE id = %s AND user_id = %s
+            LIMIT 1
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (row_id, int(user_id)))
+                row = await cur.fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        data = result.get("data")
+        if isinstance(data, str):
+            result["data"] = json.loads(data)
+        return result
+
+    async def save_learning_path_plan(
+        self,
+        row_id: str,
+        session_id: str,
+        user_id: int | str,
+        target_job: str,
+        industry: str,
+        estimated_total_hours: int,
+        daily_hours: float,
+        estimated_weeks: int,
+        phase_count: int,
+        data: dict,
+    ) -> None:
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        json_str = json.dumps(data, ensure_ascii=False, default=str)
+        sql = """
+            INSERT INTO learning_path_plans
+                (id, session_id, user_id, target_job, industry,
+                 estimated_total_hours, daily_hours, estimated_weeks, phase_count, data, saved_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                target_job = VALUES(target_job),
+                industry = VALUES(industry),
+                estimated_total_hours = VALUES(estimated_total_hours),
+                daily_hours = VALUES(daily_hours),
+                estimated_weeks = VALUES(estimated_weeks),
+                phase_count = VALUES(phase_count),
+                data = VALUES(data),
+                saved_at = VALUES(saved_at)
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (
+                    row_id, session_id, int(user_id), target_job, industry,
+                    estimated_total_hours, daily_hours, estimated_weeks, phase_count, json_str, now,
+                ))
+            await conn.commit()
+        logger.debug("Saved learning path plan id=%s user=%s session=%s", row_id, user_id, session_id)
+
+    async def list_learning_path_plans_by_user(
+        self, user_id: int | str, limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        sql = """
+            SELECT id, session_id, target_job, industry, estimated_total_hours,
+                   daily_hours, estimated_weeks, phase_count, saved_at
+            FROM learning_path_plans
+            WHERE user_id = %s
+            ORDER BY saved_at DESC
+            LIMIT %s
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (int(user_id), limit))
+                rows = await cur.fetchall()
+        return [dict(row) for row in rows]
+
+    async def get_learning_path_plan_for_user(
+        self, row_id: str, user_id: int | str,
+    ) -> dict[str, Any] | None:
+        sql = """
+            SELECT id, session_id, target_job, industry, estimated_total_hours,
+                   daily_hours, estimated_weeks, phase_count, data, saved_at
+            FROM learning_path_plans
+            WHERE id = %s AND user_id = %s
+            LIMIT 1
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (row_id, int(user_id)))
+                row = await cur.fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        data = result.get("data")
+        if isinstance(data, str):
+            result["data"] = json.loads(data)
+        if result.get("daily_hours") is not None:
+            result["daily_hours"] = float(result["daily_hours"])
+        return result
 
     async def save_event(self, event: dict) -> None:
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

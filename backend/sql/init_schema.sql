@@ -17,10 +17,12 @@ USE ai_career_copilot;
 -- 2. 会话表
 CREATE TABLE IF NOT EXISTS sessions (
     session_id  VARCHAR(64)  PRIMARY KEY,
+    user_id     BIGINT UNSIGNED DEFAULT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     status      ENUM('active', 'archived') NOT NULL DEFAULT 'active',
-    INDEX idx_sessions_status (status)
+    INDEX idx_sessions_status (status),
+    INDEX idx_sessions_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. JD 表
@@ -98,7 +100,44 @@ CREATE TABLE IF NOT EXISTS interview_qas (
     FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 9. 事件流表
+-- 10. 交互式模拟面试记录表（登录用户主动保存）
+CREATE TABLE IF NOT EXISTS interactive_interview_sessions (
+    id            VARCHAR(64)      PRIMARY KEY,
+    session_id    VARCHAR(64)      NOT NULL,
+    user_id       BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+    job_title     VARCHAR(256)     NOT NULL DEFAULT '',
+    industry      VARCHAR(64)      NOT NULL DEFAULT '',
+    tone          VARCHAR(32)      NOT NULL DEFAULT 'professional',
+    overall_score INT              DEFAULT NULL,
+    round_count   INT              NOT NULL DEFAULT 0,
+    data          JSON             NOT NULL,
+    saved_at      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_iis_user (user_id),
+    INDEX idx_iis_session (session_id),
+    INDEX idx_iis_saved_at (saved_at),
+    FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10b. 学习路径计划表（登录用户主动保存）
+CREATE TABLE IF NOT EXISTS learning_path_plans (
+    id                    VARCHAR(64)      PRIMARY KEY,
+    session_id            VARCHAR(64)      NOT NULL,
+    user_id               BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+    target_job            VARCHAR(256)     NOT NULL DEFAULT '',
+    industry              VARCHAR(64)      NOT NULL DEFAULT '',
+    estimated_total_hours INT              NOT NULL DEFAULT 0,
+    daily_hours           DECIMAL(4,1)     NOT NULL DEFAULT 0,
+    estimated_weeks       INT              NOT NULL DEFAULT 0,
+    phase_count           INT              NOT NULL DEFAULT 0,
+    data                  JSON             NOT NULL,
+    saved_at              DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_lpp_user (user_id),
+    INDEX idx_lpp_session (session_id),
+    INDEX idx_lpp_saved_at (saved_at),
+    FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. 事件流表
 CREATE TABLE IF NOT EXISTS conversation_events (
     event_id           VARCHAR(64)  PRIMARY KEY,
     session_id         VARCHAR(64)  NOT NULL,

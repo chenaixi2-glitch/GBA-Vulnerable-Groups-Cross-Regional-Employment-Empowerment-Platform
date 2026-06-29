@@ -9,10 +9,11 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ValidationError
 
-from config_loader import get_config, get_llm_config, _resolve_api_key
+from config_loader import get_config, get_llm_config, get_judge_llm_config, _resolve_api_key
 
 
 _llm_instance: Any | None = None
+_judge_llm_instance: Any | None = None
 _SchemaT = TypeVar("_SchemaT", bound=BaseModel)
 
 
@@ -136,6 +137,32 @@ def get_llm() -> Any:
         )
 
     return _llm_instance
+
+
+def get_judge_llm() -> Any:
+    """Get or create the LLM-as-judge instance (separate model config)."""
+    global _judge_llm_instance
+    if _judge_llm_instance is not None:
+        return _judge_llm_instance
+
+    cfg = get_judge_llm_config()
+    provider = _normalize_provider(cfg.get("provider", "openai"))
+
+    if provider in {"openai", "deepseek", "qwen", "openai_compatible"}:
+        _judge_llm_instance = _create_openai_compatible_llm(cfg)
+    elif provider in {"azure_openai", "azure"}:
+        _judge_llm_instance = _create_azure_openai_llm(cfg)
+    elif provider in {"anthropic", "claude"}:
+        _judge_llm_instance = _create_anthropic_llm(cfg)
+    elif provider in {"ollama", "local"}:
+        _judge_llm_instance = _create_ollama_llm(cfg)
+    else:
+        raise ValueError(
+            "Unsupported judge llm.provider='{}'. Supported providers: openai, deepseek, "
+            "qwen, openai_compatible, azure_openai, anthropic, ollama".format(provider)
+        )
+
+    return _judge_llm_instance
 
 
 def _extract_text_content(response: Any) -> str:

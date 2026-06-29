@@ -3,6 +3,16 @@
 const JobModel = require('../models/job.model');
 const ApiError = require('../utils/ApiError');
 
+function assertInternalJobOwner(existing, user) {
+  if (user.role === 'admin') return;
+  if (existing.company_user_id == null) {
+    throw ApiError.forbidden('无权操作该岗位');
+  }
+  if (existing.company_user_id !== user.id) {
+    throw ApiError.forbidden('无权操作该岗位');
+  }
+}
+
 async function list(req, res) {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 10));
@@ -32,6 +42,7 @@ async function update(req, res) {
   if (existing.source !== 'internal') {
     throw ApiError.forbidden('外部岗位不可编辑');
   }
+  assertInternalJobOwner(existing, req.user);
 
   const job = await JobModel.updateJob(req.params.id, req.body);
   res.json({ success: true, message: '岗位已更新', data: { job } });
@@ -48,14 +59,21 @@ async function updateStatus(req, res) {
   if (existing.source !== 'internal') {
     throw ApiError.forbidden('外部岗位不可修改状态');
   }
+  assertInternalJobOwner(existing, req.user);
 
   const job = await JobModel.updateStatus(req.params.id, status);
   res.json({ success: true, message: '状态已更新', data: { job } });
 }
 
 async function clone(req, res) {
+  const existing = await JobModel.findById(req.params.id);
+  if (!existing) throw ApiError.notFound('岗位不存在');
+  if (existing.source !== 'internal') {
+    throw ApiError.forbidden('仅可克隆企业自建岗位');
+  }
+  assertInternalJobOwner(existing, req.user);
+
   const job = await JobModel.cloneJob(req.params.id);
-  if (!job) throw ApiError.notFound('仅可克隆企业自建岗位');
   res.status(201).json({ success: true, message: '岗位已克隆', data: { job } });
 }
 
@@ -65,6 +83,7 @@ async function remove(req, res) {
   if (existing.source !== 'internal') {
     throw ApiError.forbidden('外部岗位不可删除');
   }
+  assertInternalJobOwner(existing, req.user);
 
   await JobModel.deleteJob(req.params.id);
   res.json({ success: true, message: '岗位已删除' });

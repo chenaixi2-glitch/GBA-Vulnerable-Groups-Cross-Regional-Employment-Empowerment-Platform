@@ -20,6 +20,8 @@ from agents.content_agent import content_node_async
 from agents.render_agent import render_node_async
 from agents.interview_agent import interview_node_async
 from agents.question_agent import question_node_async
+from agents.answer_evaluation_agent import answer_evaluation_node_async
+from agents.learning_path_agent import learning_path_node_async
 from log import get_logger
 
 logger = get_logger("agent")
@@ -127,6 +129,16 @@ def _final_result_summary(state: CopilotState) -> str:
                 if item.node == "question_agent":
                     return item.output_summary or "问题已处理完成。"
 
+        if state.current_intent == "evaluate_answer":
+            for item in reversed(state.workflow_trace):
+                if item.node == "answer_evaluation_agent":
+                    return item.output_summary or "答案评估已完成。"
+
+        if state.current_intent == "learning_path":
+            for item in reversed(state.workflow_trace):
+                if item.node == "learning_path_agent":
+                    return item.output_summary or "学习路径已生成。"
+
         non_planner_items = [item for item in state.workflow_trace if item.node != "planner"]
         if non_planner_items:
             return non_planner_items[-1].output_summary or "本轮处理已完成。"
@@ -149,6 +161,8 @@ def build_graph() -> StateGraph:
     graph.add_node("render_agent", render_node_async)
     graph.add_node("interview_agent", interview_node_async)
     graph.add_node("question_agent", question_node_async)
+    graph.add_node("answer_evaluation_agent", answer_evaluation_node_async)
+    graph.add_node("learning_path_agent", learning_path_node_async)
     graph.add_node("respond", _respond)
 
     # 入口
@@ -163,6 +177,8 @@ def build_graph() -> StateGraph:
         "render_agent": "render_agent",
         "interview_agent": "interview_agent",
         "question_agent": "question_agent",
+        "answer_evaluation_agent": "answer_evaluation_agent",
+        "learning_path_agent": "learning_path_agent",
         "respond": "respond",
     })
 
@@ -202,6 +218,12 @@ def build_graph() -> StateGraph:
 
     # Question Agent → Respond
     graph.add_edge("question_agent", "respond")
+
+    # Answer Evaluation Agent → Respond
+    graph.add_edge("answer_evaluation_agent", "respond")
+
+    # Learning Path Agent → Respond
+    graph.add_edge("learning_path_agent", "respond")
 
     # Respond → END
     graph.add_edge("respond", END)

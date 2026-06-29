@@ -55,7 +55,10 @@ class ResumeProfile(BaseModel):
     phone: str = ""
     city: str = ""
     github: str = ""
+    linkedin: str = ""
+    address: str = ""  # 中文简历详细住址
     education: list[Education] = Field(default_factory=list)
+    extras: dict[str, str] = Field(default_factory=dict)  # photo_url, age, gender, native_place, political_status, etc.
 
 
 class SectionItem(BaseModel):
@@ -68,6 +71,7 @@ class SectionItem(BaseModel):
 
 class ResumeContentMeta(BaseModel):
     target_role: str = ""
+    language: str = "zh"  # zh | en
     version: int = 1
     last_updated_at: str = ""
     content_hash: str = ""
@@ -94,18 +98,19 @@ class PageMargin(BaseModel):
 class RenderConfig(BaseModel):
     template_id: str = "default"
     theme: str = "light"
+    language: str = "zh"  # zh | en — controls section labels and layout defaults
     font_family: str = "Source Han Sans"
-    font_size: int = 14
-    line_height: float = 1.5
+    font_size: int = 13
+    line_height: float = 1.35
     page_margin: PageMargin = Field(default_factory=PageMargin)
     section_order: list[str] = Field(
         default_factory=lambda: ["profile", "skills", "projects", "internships", "awards"]
     )
-    dense_mode: bool = False
+    dense_mode: bool = True
     accent_style: str = "minimal"
     visibility_map: dict[str, bool] = Field(default_factory=dict)
     layout_mode: str = "single-column"
-    spacing_scale: str = "standard"
+    spacing_scale: str = "compact"
     version: int = 1
     last_render_reason: str = ""
 
@@ -124,6 +129,7 @@ class Gap(BaseModel):
     type: str  # missing_skill / missing_experience / no_quantification / low_relevance
     severity: str  # high / medium / low
     description: str
+    estimated_hours: int = 0
     related_section_ids: list[str] = Field(default_factory=list)
     resolved: bool = False
     resolution_source: str = ""
@@ -146,6 +152,86 @@ class InterviewQA(BaseModel):
     answer: str
     source_refs: list[str] = Field(default_factory=list)
     version: int = 1
+
+
+class AnswerEvaluation(BaseModel):
+    """Structured feedback from answer_evaluation_agent."""
+    question_id: str = ""
+    user_answer: str = ""
+    score: int = 0
+    strengths: list[str] = Field(default_factory=list)
+    improvements: list[str] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
+    judge_relevance: int = 0
+    judge_groundedness: int = 0
+    judge_actionability: int = 0
+    judge_rationale: str = ""
+
+
+class LearningPathPhase(BaseModel):
+    phase: int = 1
+    title: str = ""
+    weeks: str = ""
+    skills: list[str] = Field(default_factory=list)
+    description: str = ""
+
+
+class LearningPathResource(BaseModel):
+    id: str = ""
+    skill: str = ""
+    type: str = "course"
+    title: str = ""
+    platform: str = ""
+    duration: str = ""
+    duration_hours: float = 0.0
+    url: str = ""
+    rating: float = 0.0
+
+
+class InteractiveInterviewTurn(BaseModel):
+    """交互式模拟面试单轮对话记录。"""
+    id: str = ""
+    role: str = "interviewer"  # interviewer | candidate
+    content: str = ""
+    turn_type: str = "question"  # question | follow_up | answer | brief_feedback | opening
+    category: str = ""
+    round: int = 0
+    created_at: str = ""
+
+
+class InteractiveInterviewKeyMoment(BaseModel):
+    """复盘中的关键问答节点。"""
+    question: str = ""
+    your_answer_summary: str = ""
+    analysis: str = ""
+    improved_answer: str = ""
+    score: int = 0
+
+
+class InteractiveInterviewDebrief(BaseModel):
+    """模拟面试结束后的复盘报告。"""
+    overall_score: int = 0
+    summary: str = ""
+    strengths: list[str] = Field(default_factory=list)
+    weaknesses: list[str] = Field(default_factory=list)
+    key_moments: list[InteractiveInterviewKeyMoment] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+    category_scores: dict[str, int] = Field(default_factory=dict)
+    generated_at: str = ""
+
+
+class InteractiveInterviewSession(BaseModel):
+    """多轮对话式模拟面试会话状态。"""
+    status: str = "idle"  # idle | active | completed
+    tone: str = "professional"  # professional | friendly | pressure
+    job_title: str = ""
+    industry: str = ""
+    max_rounds: int = 10
+    round_count: int = 0
+    turns: list[InteractiveInterviewTurn] = Field(default_factory=list)
+    debrief: Optional[InteractiveInterviewDebrief] = None
+    started_at: str = ""
+    ended_at: str = ""
 
 
 class ConversationEvent(BaseModel):
@@ -181,6 +267,7 @@ class Meta(BaseModel):
     active_html_version: int = 0
     last_user_message_id: str = ""
     last_successful_pipeline: str = ""
+    employer_type: str = ""  # soe | public | foreign | private | npo | hmt | other
     dirty_flags: DirtyFlags = Field(default_factory=DirtyFlags)
 
 
@@ -223,7 +310,13 @@ class CopilotState(BaseModel):
     resume_html: ResumeHtml = Field(default_factory=ResumeHtml)
     gaps: list[Gap] = Field(default_factory=list)
     questions_to_ask: list[Question] = Field(default_factory=list)
+    learning_path_timeline: list[LearningPathPhase] = Field(default_factory=list)
+    learning_path_resources: list[LearningPathResource] = Field(default_factory=list)
+    learning_path_estimated_hours: int = 0
+    learning_path_daily_hours: float = 0.0
+    last_answer_evaluation: Optional[AnswerEvaluation] = None
     interview_qa: list[InterviewQA] = Field(default_factory=list)
+    interactive_interview: InteractiveInterviewSession = Field(default_factory=InteractiveInterviewSession)
     conversation_events: list[ConversationEvent] = Field(default_factory=list)
     meta: Meta = Field(default_factory=Meta)
     pending_actions: list[PendingAction] = Field(default_factory=list)
@@ -236,3 +329,4 @@ class CopilotState(BaseModel):
     reply_message: str = ""
     triggered_agents: list[str] = Field(default_factory=list)
     workflow_trace: list[WorkflowTraceItem] = Field(default_factory=list)
+    resume_language_target: str = ""  # runtime: zh | en for language_convert intent

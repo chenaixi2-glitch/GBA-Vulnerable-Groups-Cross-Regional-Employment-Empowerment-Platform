@@ -230,9 +230,15 @@
                     </h2>
                     
                     <label class="block text-sm font-medium text-gray-700 mb-2">Paste the job description you're targeting</label>
-                    <textarea id="jd-text" rows="10" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Copy and paste the full job description here..."></textarea>
+                    <p class="text-xs text-gray-500 mb-2">Optional — leave blank and select Industry, Employer Type + Experience Level below to auto-generate a generic JD you can edit.</p>
+                    <textarea id="jd-text" rows="10" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Copy and paste the full job description here, or generate one below..."></textarea>
                     
-                    <div class="mt-4 grid grid-cols-2 gap-3">
+                    <div id="jd-generated-hint" class="hidden mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                        <i class="fas fa-lightbulb mr-1"></i>
+                        Suggested job description generated from your resume, industry, and experience level. Feel free to edit before generating.
+                    </div>
+                    
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Industry</label>
                             <select id="industry-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
@@ -246,6 +252,19 @@
                             </select>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Employer Type / 单位性质</label>
+                            <select id="employer-type-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                                <option value="">Select type</option>
+                                <option value="soe">State-owned (国央企)</option>
+                                <option value="public">Public Sector (体制内)</option>
+                                <option value="foreign">Foreign Enterprise (外企)</option>
+                                <option value="private">Private Enterprise (民企)</option>
+                                <option value="npo">Non-profit (NPO/NGO 非营利社会组织)</option>
+                                <option value="hmt">HK/Macau/TW-funded (港澳台资企业)</option>
+                                <option value="other">Other (其他)</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Experience Level</label>
                             <select id="experience-level" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                                 <option value="">Select level</option>
@@ -256,8 +275,28 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Resume Language / 简历语言</label>
+                        <p class="text-xs text-gray-500 mb-2">选择后将检查该语言格式下的缺失内容并提醒补充</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" data-resume-lang="zh" onclick="onResumeLanguageSelected('zh')"
+                                class="px-3 py-2.5 border border-red-300 rounded-lg text-sm font-medium text-red-800 hover:bg-red-50 ring-2 ring-blue-500 bg-blue-50">
+                                <i class="fas fa-file-alt mr-1"></i>中文简历
+                            </button>
+                            <button type="button" data-resume-lang="en" onclick="onResumeLanguageSelected('en')"
+                                class="px-3 py-2.5 border border-blue-300 rounded-lg text-sm font-medium text-blue-800 hover:bg-blue-50">
+                                <i class="fas fa-globe mr-1"></i>English Resume
+                            </button>
+                        </div>
+                    </div>
                     
-                    <button id="btn-generate" onclick="generateResume()" class="mt-6 w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button id="btn-generate-jd" type="button" onclick="generateSuggestedJd()" class="mt-4 w-full border border-green-600 text-green-700 py-2.5 rounded-lg font-medium hover:bg-green-50 transition-colors">
+                        <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                        Generate Suggested Job Description
+                    </button>
+                    
+                    <button id="btn-generate" onclick="generateResume()" class="mt-3 w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-magic mr-2"></i>
                         Generate Customized Resume
                     </button>
@@ -340,6 +379,16 @@
                     </div>
                 </div>
 
+                <!-- Language Format Checklist -->
+                <div id="language-checklist-section" class="bg-white rounded-xl p-6 border shadow-sm mb-6 hidden">
+                    <h3 id="language-checklist-title" class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                        <i class="fas fa-clipboard-check text-indigo-600"></i>
+                        简历格式检查
+                    </h3>
+                    <p class="text-xs text-gray-500 mb-4">根据中/英文简历规范对比照片、排版、模块、用词等差异，提醒补充缺失内容</p>
+                    <div id="language-checklist-content"></div>
+                </div>
+
                 <!-- Gap Analysis Results -->
                 <div id="gap-analysis-section" class="bg-white rounded-xl p-6 border shadow-sm mb-6 hidden">
                     <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -353,17 +402,32 @@
 
                 <!-- Resume Preview -->
                 <div id="resume-preview-section" class="hidden">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-eye text-purple-600"></i>
-                            Generated Resume Preview
-                        </h3>
-                        <div class="flex gap-2">
-                            <button onclick="downloadResume('html')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <i class="fas fa-eye text-purple-600"></i>
+                                Generated Resume Preview
+                            </h3>
+                            <span id="resume-language-badge" class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">中文</span>
+                            <span id="resume-a4-badge" class="hidden px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-file-alt mr-1"></i>A4 Single Page
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button id="btn-translate-en" onclick="translateResumeToEnglish()" class="px-3 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm disabled:opacity-40" disabled>
+                                <i class="fas fa-language mr-1"></i>English
+                            </button>
+                            <button id="btn-translate-zh" onclick="translateResumeToChinese()" class="px-3 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm">
+                                <i class="fas fa-language mr-1"></i>中文
+                            </button>
+                            <button onclick="optimizeResume()" class="px-3 py-2 border border-amber-400 text-amber-800 rounded-lg hover:bg-amber-50 transition-colors text-sm">
+                                <i class="fas fa-compress-alt mr-1"></i>Optimize (A4)
+                            </button>
+                            <button onclick="promptExportResume('html')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
                                 <i class="fas fa-download mr-2"></i>
                                 Download HTML
                             </button>
-                            <button onclick="exportResume('pdf')" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm">
+                            <button onclick="promptExportResume('pdf')" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm">
                                 <i class="fas fa-file-pdf mr-2"></i>
                                 Export PDF
                             </button>
@@ -376,6 +440,49 @@
                             <p>Your generated resume will appear here</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Profile Editor (shown after upload) -->
+                <div id="profile-editor-section" class="bg-white rounded-xl p-6 border shadow-sm hidden text-left">
+                    <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <i class="fas fa-user-edit text-blue-600"></i>
+                                Resume Analysis Results
+                            </h3>
+                            <p class="text-sm text-gray-500 mt-1">Each item is parsed and stored separately. Add or edit entries below.</p>
+                        </div>
+                        <span id="draft-save-status" class="text-xs text-gray-400"></span>
+                    </div>
+
+                    <div id="profile-restored-hint" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                        <i class="fas fa-history mr-1"></i>
+                        Your draft was restored from your last session (available for 12 hours while logged in).
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-3 mb-6">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Name</label>
+                            <input id="profile-name" type="text" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Email</label>
+                            <input id="profile-email" type="email" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Phone</label>
+                            <input id="profile-phone" type="text" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">City</label>
+                            <input id="profile-city" type="text" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-3 mt-2">
+                        <h4 class="font-semibold text-gray-800">Parsed Entries (<span id="profile-module-count">0</span>)</h4>
+                    </div>
+                    <div id="profile-editor-body"></div>
                 </div>
 
                 <!-- Empty State -->
@@ -394,7 +501,11 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <i class="fas fa-check-circle text-green-500"></i>
-                            <span>Professional Formatting</span>
+                            <span>CN/EN Resume Conversion</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                            <span>One A4 Page Layout</span>
                         </div>
                     </div>
                 </div>
@@ -411,11 +522,41 @@
         </div>
     </div>
 
+    <!-- Save to Account Modal -->
+    <div id="save-resume-modal" class="loading-overlay hidden">
+        <div class="loading-content max-w-md text-left">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Save resume to your account?</h3>
+            <p class="text-sm text-gray-600 mb-3">
+                Before exporting, you can save this resume to the GBA platform. Your data is encrypted in transit,
+                stored securely, and used only to provide career services. We never sell your personal information.
+            </p>
+            <ul class="text-xs text-gray-500 mb-4 space-y-1 list-disc pl-4">
+                <li>Draft edits are kept in temporary storage for up to 12 hours while logged in</li>
+                <li>Confirmed saves are stored in your account until you delete them</li>
+                <li>You can export without saving at any time</li>
+            </ul>
+            <div class="flex flex-col gap-2">
+                <button id="btn-save-and-export" type="button" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700">
+                    Save to account &amp; export
+                </button>
+                <button id="btn-export-only" type="button" class="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50">
+                    Export only (don't save)
+                </button>
+                <button id="btn-cancel-export" type="button" class="w-full text-gray-500 py-2 text-sm hover:text-gray-700">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
         <span id="toast-message"></span>
     </div>
 
-    <script src="../assets/js/resume-generator.js"></script>
+    <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/resume-language-checklist.js"></script>
+    <script src="assets/js/resume-profile-editor.js"></script>
+    <script src="assets/js/resume-generator.js"></script>
 </body>
 </html>

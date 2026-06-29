@@ -21,13 +21,13 @@ PROFILE_EXTRACTION_PROMPT = """你是一个候选人画像构建专家。请从�
         "email": "邮箱",
         "phone": "电话",
         "city": "城市",
-        "school": "学校"
+        "school": "最高学历学校（如有，仅一所；多段学历请写入 facts）"
     }},
     "facts": [
         {{
             "id": "fact_<type>_<序号>",
-            "type": "skill | project | internship | award | paper",
-            "content": "结构化描述内容（JSON 格式的字符串，包含关键细节）",
+            "type": "education | skill | project | internship | award | paper",
+            "content": "结构化描述（JSON 字符串，见下方说明）",
             "source_refs": ["material_<id>"],
             "updated_at": ""
         }}
@@ -35,10 +35,12 @@ PROFILE_EXTRACTION_PROMPT = """你是一个候选人画像构建专家。请从�
 }}
 
 注意：
-1. type 只能是: skill, project, internship, award, paper 之一
-2. content 字段应包含足够的细节，便于后续简历生成
-3. 对于项目和实习，content 应包含：名称、时间、角色、技术栈、职责、成果
-4. 对于技能，content 应包含：技能名称、熟练程度、应用场景
-5. 即使信息不足，也必须返回合法 JSON 对象
-6. 保留已有画像中的信息，只添加或更新
+1. type 只能是: education, skill, project, internship, award, paper 之一
+2. **每条经历/技能/项目必须单独一条 fact**，禁止合并多条为一条
+3. education 的 content JSON 格式：{{"school":"","major":"","degree":"","start_date":"","end_date":""}}，每所学校一条
+4. skill 的 content：单个技能名称或 {{"skill":"","level":"","context":""}}，每个技能一条 fact
+5. internship / project 的 content JSON：{{"title":"","company":"","role":"","start_date":"","end_date":"","tech_stack":[],"responsibilities":"","achievements":""}}，每段经历一条
+6. award / paper 同理，每项一条
+7. 即使信息不足，也必须返回合法 JSON 对象
+8. 保留已有画像中的信息，只添加或更新
 """

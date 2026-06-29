@@ -82,7 +82,7 @@ def get_server_host() -> str:
     return get_server_config()["host"]
 
 def get_llm_config() -> dict:
-    """返回 LLM 配置（provider, model, api_base, api_key, temperature, max_tokens）。"""
+    """Return LLM config (provider, model, api_base, api_key, temperature, max_tokens)."""
     cfg = get_config()["llm"]
     api_key_env = cfg.get("api_key_env", "")
     return {
@@ -92,6 +92,24 @@ def get_llm_config() -> dict:
         "api_key": _resolve_api_key(api_key_env) if api_key_env else "",
         "temperature": cfg.get("temperature", 0.3),
         "max_tokens": cfg.get("max_tokens", 4096),
+        "api_version": cfg.get("api_version", ""),
+        "deployment": cfg.get("deployment", ""),
+        "model_kwargs": cfg.get("model_kwargs", {}),
+        "timeout": cfg.get("timeout", None),
+    }
+
+
+def get_judge_llm_config() -> dict:
+    """Return LLM-as-judge config; falls back to main llm if judge section absent."""
+    cfg = get_config().get("judge") or get_config().get("llm", {})
+    api_key_env = cfg.get("api_key_env", "")
+    return {
+        "provider": cfg.get("provider", "openai"),
+        "model": cfg["model"],
+        "api_base": cfg.get("api_base", ""),
+        "api_key": _resolve_api_key(api_key_env) if api_key_env else "",
+        "temperature": cfg.get("temperature", 0.1),
+        "max_tokens": cfg.get("max_tokens", 2048),
         "api_version": cfg.get("api_version", ""),
         "deployment": cfg.get("deployment", ""),
         "model_kwargs": cfg.get("model_kwargs", {}),
@@ -162,6 +180,14 @@ def get_mysql_config() -> dict:
         "database": _resolve_env_override("MYSQL_DATABASE", cfg.get("database", "ai_career_copilot")),
         "charset": _resolve_env_override("MYSQL_CHARSET", cfg.get("charset", "utf8mb4")),
         "pool_size": _resolve_int_override("MYSQL_POOL_SIZE", cfg.get("pool_size", 5)),
+    }
+
+
+def get_jwt_config() -> dict:
+    """返回 JWT 配置（secret, expires_in），与 Node 认证服务保持一致。"""
+    return {
+        "secret": _resolve_env_override("JWT_SECRET", "change_me"),
+        "expires_in": _resolve_env_override("JWT_EXPIRES_IN", "7d"),
     }
 
 

@@ -11,6 +11,7 @@ from agents.json_contracts import RenderInstructionOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.render_instruction import RENDER_INSTRUCTION_PROMPT
 from tools.template_renderer import render_resume_html
+from tools.resume_layout import apply_a4_compact_render_config, normalize_language
 from workflow.state import CopilotState, RenderConfig, ResumeHtml, PageMargin
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
@@ -31,6 +32,7 @@ async def _update_render_config_from_llm_async(state: CopilotState) -> RenderCon
     new_config = RenderConfig(
         template_id=parsed.template_id or state.render_config.template_id,
         theme=parsed.theme or state.render_config.theme,
+        language=normalize_language(parsed.language or state.render_config.language),
         font_family=parsed.font_family or state.render_config.font_family,
         font_size=parsed.font_size,
         line_height=parsed.line_height,
@@ -77,11 +79,19 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
             }
         logger.info("Render config updated to v%d", render_config.version)
     else:
-        # 内容更新触发，只递增版本
-        render_config = render_config.model_copy(update={
-            "version": render_config.version + 1,
-            "last_render_reason": "内容更新触发渲染",
-        })
+        # 内容更新触发；若 content_agent 已应用 A4 紧凑配置则直接沿用
+        lang = normalize_language(
+            (state.resume_content_json.meta.language if state.resume_content_json else None)
+            or state.render_config.language
+        )
+        if state.render_config.dense_mode and state.render_config.spacing_scale == "compact":
+            render_config = state.render_config
+        else:
+            render_config = apply_a4_compact_render_config(state.render_config, lang)
+        if intent in ("language_convert", "content_edit") or state.current_intent == "upload_jd":
+            render_config = render_config.model_copy(update={
+                "last_render_reason": "内容更新触发渲染（A4 单页）",
+            })
 
     # 生成 HTML
     resume_content = state.resume_content_json

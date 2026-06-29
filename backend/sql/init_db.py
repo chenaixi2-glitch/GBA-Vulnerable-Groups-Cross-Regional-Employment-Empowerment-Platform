@@ -57,8 +57,92 @@ def run_init_schema() -> None:
                 except pymysql.Error as e:
                     print(f"  [{i}/{len(statements)}] WARN: {e}")
         print("[INFO] 数据库初始化完成。")
+        _migrate_sessions_user_id(connection)
+        _migrate_interactive_interview_sessions(connection)
+        _migrate_learning_path_plans(connection)
     finally:
         connection.close()
+
+
+def _migrate_sessions_user_id(connection) -> None:
+    """为已有 sessions 表补充 user_id 列（幂等）。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    sql = f"""
+        ALTER TABLE `{db_name}`.`sessions`
+        ADD COLUMN user_id BIGINT UNSIGNED DEFAULT NULL
+            COMMENT '登录用户 ID（来自 Node JWT sub）' AFTER session_id
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+        print("[INFO] sessions.user_id 列已添加。")
+    except pymysql.Error as e:
+        if e.args and e.args[0] == 1060:
+            print("[INFO] sessions.user_id 列已存在，跳过迁移。")
+        else:
+            print(f"[WARN] sessions.user_id 迁移失败: {e}")
+
+
+def _migrate_interactive_interview_sessions(connection) -> None:
+    """为已有库补充 interactive_interview_sessions 表（幂等）。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    sql = f"""
+        CREATE TABLE IF NOT EXISTS `{db_name}`.`interactive_interview_sessions` (
+            id            VARCHAR(64)      PRIMARY KEY,
+            session_id    VARCHAR(64)      NOT NULL,
+            user_id       BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+            job_title     VARCHAR(256)     NOT NULL DEFAULT '',
+            industry      VARCHAR(64)      NOT NULL DEFAULT '',
+            tone          VARCHAR(32)      NOT NULL DEFAULT 'professional',
+            overall_score INT              DEFAULT NULL,
+            round_count   INT              NOT NULL DEFAULT 0,
+            data          JSON             NOT NULL,
+            saved_at      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_iis_user (user_id),
+            INDEX idx_iis_session (session_id),
+            INDEX idx_iis_saved_at (saved_at),
+            FOREIGN KEY (session_id) REFERENCES `{db_name}`.`sessions`(session_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+        print("[INFO] interactive_interview_sessions 表已就绪。")
+    except pymysql.Error as e:
+        print(f"[WARN] interactive_interview_sessions 迁移失败: {e}")
+
+
+def _migrate_learning_path_plans(connection) -> None:
+    """为已有库补充 learning_path_plans 表（幂等）。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    sql = f"""
+        CREATE TABLE IF NOT EXISTS `{db_name}`.`learning_path_plans` (
+            id                    VARCHAR(64)      PRIMARY KEY,
+            session_id            VARCHAR(64)      NOT NULL,
+            user_id               BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+            target_job            VARCHAR(256)     NOT NULL DEFAULT '',
+            industry              VARCHAR(64)      NOT NULL DEFAULT '',
+            estimated_total_hours INT              NOT NULL DEFAULT 0,
+            daily_hours           DECIMAL(4,1)     NOT NULL DEFAULT 0,
+            estimated_weeks       INT              NOT NULL DEFAULT 0,
+            phase_count           INT              NOT NULL DEFAULT 0,
+            data                  JSON             NOT NULL,
+            saved_at              DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_lpp_user (user_id),
+            INDEX idx_lpp_session (session_id),
+            INDEX idx_lpp_saved_at (saved_at),
+            FOREIGN KEY (session_id) REFERENCES `{db_name}`.`sessions`(session_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+        print("[INFO] learning_path_plans 表已就绪。")
+    except pymysql.Error as e:
+        print(f"[WARN] learning_path_plans 迁移失败: {e}")
 
 
 def _is_comment_only(sql: str) -> bool:

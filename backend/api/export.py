@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
 
+from auth.jwt import get_optional_user
+from auth.session_access import ensure_session_access
 from storage.redis_client import get_redis_client, RedisSessionStore
 from workflow.state import CopilotState, Gap, InterviewQA, Job, Question
 from log import get_logger
@@ -310,9 +312,12 @@ def _export_target(state: CopilotState, target: str, export_format: str) -> tupl
 
 
 @router.post("/export")
-async def export_resume(req: ExportRequest):
+async def export_resume(req: ExportRequest, request: Request):
     """导出简历、岗位解析、缺失信息或面试问答。"""
     from api.chat import _aload_state
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)

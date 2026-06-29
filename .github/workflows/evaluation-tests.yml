@@ -1,0 +1,41 @@
+name: Answer Evaluation Golden Set
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/evaluation-tests.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+
+jobs:
+  golden-set:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run golden-set keyword and schema tests
+        env:
+          PYTHONPATH: .
+        run: pytest tests/test_answer_evaluation_golden.py -v --tb=short -k "not embedding"
+
+      - name: Run embedding similarity tests (optional)
+        if: env.DASHSCOPE_API_KEY != ''
+        env:
+          PYTHONPATH: .
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+        run: pytest tests/test_answer_evaluation_golden.py -v --tb=short -k "embedding"

@@ -11,6 +11,14 @@ from typing import Any
 from agents.json_contracts import ResumeGenerationOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.resume_generation import RESUME_GENERATION_PROMPT, RESUME_SECTION_UPDATE_PROMPT
+from prompts.resume_language_convert import RESUME_LANGUAGE_CONVERT_PROMPT
+from prompts.resume_constraints import RESUME_A4_ONE_PAGE_CONSTRAINTS
+from tools.resume_layout import (
+    apply_a4_compact_render_config,
+    language_label,
+    normalize_language,
+    opposite_language,
+)
 from workflow.state import (
     CopilotState, ResumeContent, ResumeProfile, ResumeContentMeta,
     SectionItem, Education,
@@ -21,9 +29,25 @@ from log import get_logger
 logger = get_logger("agent")
 
 
-def _build_resume_from_parsed(parsed: ResumeGenerationOutput, state: CopilotState) -> ResumeContent:
+def _resolve_target_language(state: CopilotState) -> str:
+    if state.resume_language_target:
+        return normalize_language(state.resume_language_target)
+    if state.render_config and state.render_config.language:
+        return normalize_language(state.render_config.language)
+    if state.resume_content_json and state.resume_content_json.meta.language:
+        return normalize_language(state.resume_content_json.meta.language)
+    return "zh"
+
+
+def _build_resume_from_parsed(
+    parsed: ResumeGenerationOutput,
+    state: CopilotState,
+    *,
+    language: str | None = None,
+) -> ResumeContent:
     """从 LLM 返回的 JSON 构建 ResumeContent 对象。"""
     now = datetime.now(timezone.utc).isoformat()
+    lang = normalize_language(language or parsed.language or _resolve_target_language(state))
 
     profile_data = parsed.profile
     education_list = []
@@ -43,7 +67,10 @@ def _build_resume_from_parsed(parsed: ResumeGenerationOutput, state: CopilotStat
         phone=profile_data.phone,
         city=profile_data.city,
         github=profile_data.github,
+        linkedin=getattr(profile_data, "linkedin", "") or "",
+        address=getattr(profile_data, "address", "") or "",
         education=education_list,
+        extras=getattr(profile_data, "extras", None) or {},
     )
 
     def _parse_items(items: list[Any]) -> list[SectionItem]:
@@ -65,6 +92,8 @@ def _build_resume_from_parsed(parsed: ResumeGenerationOutput, state: CopilotStat
     target_role = ""
     if state.job:
         target_role = state.job.title
+    elif state.resume_content_json:
+        target_role = state.resume_content_json.meta.target_role
 
     return ResumeContent(
         profile=resume_profile,
@@ -76,6 +105,7 @@ def _build_resume_from_parsed(parsed: ResumeGenerationOutput, state: CopilotStat
         papers=_parse_items(parsed.papers),
         meta=ResumeContentMeta(
             target_role=target_role,
+            language=lang,
             version=version,
             last_updated_at=now,
             content_hash=content_hash,
@@ -90,15 +120,40 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
     intent = state.current_intent
     llm = get_llm()
 
-    if intent == "content_edit" and state.resume_content_json:
-        # 局部更新
+    if intent == "language_convert":
+        if state.resume_content_json is None:
+            return {
+                "workflow_trace": append_trace(
+                    state,
+                    node="content_agent",
+                    status="skipped",
+                    input_summary=f"中英文简历互转：{summarize_user_message(state.user_message)}",
+                    output_summary="暂无简历内容，无法转换。请先生成或上传简历。",
+                ),
+            }
+
+        source_lang = normalize_language(state.resume_content_json.meta.language)
+        target_lang = normalize_language(state.resume_language_target) if state.resume_language_target else opposite_language(source_lang)
+
+        prompt = RESUME_LANGUAGE_CONVERT_PROMPT.format(
+            source_language_label=language_label(source_lang),
+            target_language_label=language_label(target_lang),
+            target_language=target_lang,
+            current_resume_json=state.resume_content_json.model_dump_json(indent=2),
+            job_json=state.job.model_dump_json(indent=2) if state.job else "{}",
+            RESUME_A4_ONE_PAGE_CONSTRAINTS=RESUME_A4_ONE_PAGE_CONSTRAINTS,
+        )
+    elif intent == "content_edit" and state.resume_content_json:
+        lang = normalize_language(state.resume_content_json.meta.language)
         prompt = RESUME_SECTION_UPDATE_PROMPT.format(
+            RESUME_A4_ONE_PAGE_CONSTRAINTS=RESUME_A4_ONE_PAGE_CONSTRAINTS,
+            target_language_label=language_label(lang),
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
             job_json=state.job.model_dump_json(indent=2) if state.job else "{}",
             edit_instruction=state.user_message,
         )
     else:
-        # 全量生成
+        lang = _resolve_target_language(state)
         job_json = state.job.model_dump_json(indent=2) if state.job else "{}"
         profile_json = state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}"
 
@@ -107,6 +162,9 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             edit_instruction = f"用户修改指令：{state.user_message}"
 
         prompt = RESUME_GENERATION_PROMPT.format(
+            target_language=lang,
+            target_language_label=language_label(lang),
+            RESUME_A4_ONE_PAGE_CONSTRAINTS=RESUME_A4_ONE_PAGE_CONSTRAINTS,
             job_json=job_json,
             profile_json=profile_json,
             edit_instruction=edit_instruction,
@@ -127,10 +185,17 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    resume_content = _build_resume_from_parsed(parsed, state)
+    target_lang = normalize_language(
+        state.resume_language_target
+        or parsed.language
+        or (state.resume_content_json.meta.language if state.resume_content_json else "zh")
+    )
+    resume_content = _build_resume_from_parsed(parsed, state, language=target_lang)
 
-    logger.info("Resume content generated v%d, hash=%s",
-                resume_content.meta.version, resume_content.meta.content_hash)
+    logger.info("Resume content generated v%d, hash=%s, lang=%s",
+                resume_content.meta.version, resume_content.meta.content_hash, resume_content.meta.language)
+
+    render_config = apply_a4_compact_render_config(state.render_config, resume_content.meta.language)
 
     meta = state.meta.model_copy(update={
         "active_resume_content_version": resume_content.meta.version,
@@ -142,17 +207,26 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
         })
     })
 
+    output_summary = f"简历内容已生成（v{resume_content.meta.version}，{language_label(resume_content.meta.language)}，A4 单页）。"
+    if intent == "language_convert":
+        output_summary = (
+            f"简历已转换为{language_label(resume_content.meta.language)}版本"
+            f"（v{resume_content.meta.version}，A4 单页）。"
+        )
+
     return {
         "resume_content_json": resume_content,
+        "render_config": render_config,
         "meta": meta,
         "workflow_trace": append_trace(
             state,
             node="content_agent",
             input_summary=f"根据岗位、候选人画像和用户指令生成简历内容：{summarize_user_message(state.user_message)}",
-            output_summary=f"简历内容已生成（v{resume_content.meta.version}）。",
+            output_summary=output_summary,
             artifacts={
                 "resume_content_version": resume_content.meta.version,
                 "target_role": resume_content.meta.target_role,
+                "language": resume_content.meta.language,
                 "skill_count": len(resume_content.skills),
                 "project_count": len(resume_content.projects),
                 "internship_count": len(resume_content.internships),

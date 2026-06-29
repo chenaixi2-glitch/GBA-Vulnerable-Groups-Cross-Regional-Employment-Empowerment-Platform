@@ -22,9 +22,13 @@ _INTENT_PLAN: dict[str, list[str]] = {
     "upload_jd": ["jd_agent", "gap_agent", "content_agent", "render_agent", "interview_agent"],
     "upload_profile": ["profile_agent", "content_agent", "render_agent", "interview_agent"],
     "gap_analysis": ["gap_agent"],
+    "learning_path": ["learning_path_agent"],
     "content_edit": ["content_agent", "render_agent"],
+    "language_convert": ["content_agent", "render_agent"],
     "render_edit": ["render_agent"],
     "export": [],
+    "start_interview": ["interview_agent"],
+    "evaluate_answer": ["answer_evaluation_agent"],
     "ask_question": ["question_agent"],
 }
 

@@ -217,17 +217,16 @@ After backend passes all tests:
    python main.py
    ```
 
-2. **Start Frontend:**
+2. **Start Frontend:** (from project root)
    ```bash
-   cd frontend-new
    node static-server.js
    ```
 
 3. **Open Browser:**
-   - Portal: http://localhost:3000/individual/portal.html
-   - Resume Generator: http://localhost:3000/individual/demo-resume-generator.html
-   - Interview Prep: http://localhost:3000/individual/demo-interview.html
-   - Learning Path: http://localhost:3000/individual/demo-learning-path.html
+   - Portal: http://localhost:8080/individual/portal.html
+   - Resume Generator: http://localhost:8080/individual/demo-resume-generator.html
+   - Interview Prep: http://localhost:8080/individual/demo-interview.html
+   - Learning Path: http://localhost:8080/individual/demo-learning-path.html
 
 4. **Test Features:**
    - Upload a resume file or paste text

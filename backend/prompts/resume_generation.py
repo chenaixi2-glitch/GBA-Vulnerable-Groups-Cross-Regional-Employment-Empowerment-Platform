@@ -1,6 +1,16 @@
 """简历内容生成 Prompt。"""
 
+from prompts.resume_constraints import RESUME_A4_ONE_PAGE_CONSTRAINTS
+
 RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。根据岗位需求和候选人画像，生成针对性的简历内容 JSON。
+
+目标语言：{target_language_label}（language 字段设为 "{target_language}"）
+
+{RESUME_A4_ONE_PAGE_CONSTRAINTS}
+
+语言与格式要求：
+- 中文简历（zh）：章节用中文标题；日期 YYYY.MM；教育信息放在 profile.education
+- 英文简历（en）：章节用英文标题语义；日期 Mon YYYY；动词开头 bullet；Skills 紧凑列表；不写年龄性别等无关信息
 
 目标岗位信息：
 {job_json}
@@ -72,7 +82,8 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
             "updated_at": ""
         }}
     ],
-    "papers": []
+    "papers": [],
+    "language": "{target_language}"
 }}
 
 注意：
@@ -80,10 +91,15 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 2. 根据 JD 的技术栈和关键词优化内容排序和措辞
 3. 项目和实习描述使用 STAR 格式，突出与目标岗位相关的技能
 4. 技能根据 JD 要求的优先级排序
-5. 即使部分字段为空，也必须返回合法 JSON 对象
+5. 整份简历必须能排版在一页 A4 内，宁可精简内容也不要超长
+6. 即使部分字段为空，也必须返回合法 JSON 对象
 """
 
 RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用户的修改指令，只更新简历中受影响的部分。
+
+{RESUME_A4_ONE_PAGE_CONSTRAINTS}
+
+当前简历语言：{target_language_label}
 
 当前简历内容：
 {current_resume_json}
@@ -105,5 +121,6 @@ RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用�
 注意：
 1. 不得捏造用户未提供的事实
 2. 保持未修改部分不变
-3. 即使指令不明确，也必须返回合法 JSON 对象
+3. 优化或修改后仍须控制在一页 A4 内，必要时缩减文字或合并条目
+4. 即使指令不明确，也必须返回合法 JSON 对象
 """

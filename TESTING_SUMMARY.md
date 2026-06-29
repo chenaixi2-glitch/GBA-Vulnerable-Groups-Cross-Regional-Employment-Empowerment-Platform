@@ -21,7 +21,7 @@ I've created comprehensive testing resources for both backend and frontend:
 
 ### Frontend Tests
 
-3. **`frontend-new/individual/test-api.html`** - Browser-based test interface
+3. **`individual/test-api.html`** - Browser-based test interface
    - Visual test runner with real-time results
    - One-click "Run All Tests" button
    - Detailed response data display
@@ -71,12 +71,11 @@ Total: 3/3 tests passed
 cd backend
 python main.py
 
-# Terminal 2: Start frontend
-cd frontend-new
+# Terminal 2: Start frontend (project root)
 node static-server.js
 
 # Open browser
-http://localhost:3000/individual/test-api.html
+http://localhost:8080/individual/test-api.html
 ```
 
 Then click **"Run All Tests"** button and watch the results appear in real-time!
@@ -320,15 +319,14 @@ After backend tests pass, test full integration:
 cd backend
 python main.py
 
-# Terminal 2: Frontend
-cd frontend-new
+# Terminal 2: Frontend (project root)
 node static-server.js
 ```
 
 ### 2. Test Each Feature
 
 #### Resume Generator
-1. Open: http://localhost:3000/individual/demo-resume-generator.html
+1. Open: http://localhost:8080/individual/demo-resume-generator.html
 2. Paste sample resume text
 3. Click "Continue to Step 2"
 4. Paste job description
@@ -338,7 +336,7 @@ node static-server.js
 8. Download or export resume
 
 #### Interview Preparation
-1. Open: http://localhost:3000/individual/demo-interview.html
+1. Open: http://localhost:8080/individual/demo-interview.html
 2. Enter job title: "Software Engineer"
 3. Select interviewer tone
 4. Click "Start Interview Session"
@@ -348,7 +346,7 @@ node static-server.js
 8. Check AI feedback displays
 
 #### Learning Path
-1. Open: http://localhost:3000/individual/demo-learning-path.html
+1. Open: http://localhost:8080/individual/demo-learning-path.html
 2. Enter target job: "Senior Developer"
 3. List current skills
 4. Select timeline

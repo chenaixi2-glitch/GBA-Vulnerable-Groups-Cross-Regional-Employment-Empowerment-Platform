@@ -6,10 +6,12 @@ import asyncio
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from api.chat_input import prepare_chat_input
+from auth.jwt import get_optional_user
+from auth.session_access import bind_session_owner, ensure_session_access
 from workflow.graph import compile_graph
 from workflow.state import CopilotState
 from storage.redis_client import get_redis_client, RedisSessionStore
@@ -53,6 +55,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     session_id: str
     reply_message: str = ""
+    candidate_profile: dict | None = None
     job: dict | None = None
     gaps: list[dict] = Field(default_factory=list)
     questions_to_ask: list[dict] = Field(default_factory=list)
@@ -61,13 +64,29 @@ class ChatResponse(BaseModel):
     resume_html: dict | None = None
     interview_qa: list[dict] = Field(default_factory=list)
     triggered_agents: list[str] = Field(default_factory=list)
+    # Answer evaluation (answer_evaluation_agent)
+    score: int | None = None
+    strengths: list[str] = Field(default_factory=list)
+    improvements: list[str] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
+    judge_scores: dict | None = None
+    # Learning path (learning_path_agent)
+    timeline: list[dict] = Field(default_factory=list)
+    resources: list[dict] = Field(default_factory=list)
+    estimated_total_hours: int = 0
+    daily_hours: float = 0.0
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest, background_tasks: BackgroundTasks) -> ChatResponse:
+async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundTasks) -> ChatResponse:
     """主对话接口。"""
     session_id = req.session_id or f"sess_{uuid.uuid4().hex[:16]}"
-    logger.info("Chat request: session=%s, msg_len=%d", session_id, len(req.message))
+    user = get_optional_user(request)
+    await ensure_session_access(session_id, user)
+    if user:
+        await bind_session_owner(session_id, user)
+    logger.info("Chat request: session=%s, msg_len=%d, authenticated=%s",
+                session_id, len(req.message), user is not None)
 
     # 从 Redis 加载或创建状态
     redis_client = await get_redis_client()
@@ -98,15 +117,16 @@ async def chat(req: ChatRequest, background_tasks: BackgroundTasks) -> ChatRespo
     # 持久化到 Redis
     persist_data = final_state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
                                                      "execution_plan", "reply_message", "triggered_agents",
-                                                     "workflow_trace"})
+                                                     "workflow_trace", "resume_language_target"})
     await _asave_state(store, persist_data)
 
-    # 后台持久化到 MySQL，避免同步阻塞请求主链。
-    background_tasks.add_task(_persist_to_mysql_safe, final_state)
+    # 草稿暂存 Redis；数据库持久化仅在用户确认保存（POST /api/resume/save）时执行
+    logger.debug("Session %s persisted to Redis only (MySQL on explicit save)", session_id)
 
     return ChatResponse(
         session_id=session_id,
         reply_message=final_state.reply_message,
+        candidate_profile=final_state.candidate_profile.model_dump() if final_state.candidate_profile else None,
         job=final_state.job.model_dump() if final_state.job else None,
         gaps=[g.model_dump() for g in final_state.gaps],
         questions_to_ask=[q.model_dump() for q in final_state.questions_to_ask],
@@ -115,14 +135,28 @@ async def chat(req: ChatRequest, background_tasks: BackgroundTasks) -> ChatRespo
         resume_html=final_state.resume_html.model_dump(),
         interview_qa=[qa.model_dump() for qa in final_state.interview_qa],
         triggered_agents=final_state.triggered_agents,
+        score=final_state.last_answer_evaluation.score if final_state.last_answer_evaluation else None,
+        strengths=list(final_state.last_answer_evaluation.strengths) if final_state.last_answer_evaluation else [],
+        improvements=list(final_state.last_answer_evaluation.improvements) if final_state.last_answer_evaluation else [],
+        suggestions=list(final_state.last_answer_evaluation.suggestions) if final_state.last_answer_evaluation else [],
+        judge_scores={
+            "relevance": final_state.last_answer_evaluation.judge_relevance,
+            "groundedness": final_state.last_answer_evaluation.judge_groundedness,
+            "actionability": final_state.last_answer_evaluation.judge_actionability,
+            "rationale": final_state.last_answer_evaluation.judge_rationale,
+        } if final_state.last_answer_evaluation else None,
+        timeline=[p.model_dump() for p in final_state.learning_path_timeline],
+        resources=[r.model_dump() for r in final_state.learning_path_resources],
+        estimated_total_hours=final_state.learning_path_estimated_hours,
+        daily_hours=final_state.learning_path_daily_hours,
     )
 
 
-async def _persist_to_mysql(state: CopilotState) -> None:
-    """将关键状态异步持久化到 MySQL。"""
+async def _persist_to_mysql(state: CopilotState, user_id: int | str | None = None) -> None:
+    """将关键状态异步持久化到 MySQL（仅对已登录用户调用）。"""
     pool = await get_mysql_pool()
     db = MySQLStore(pool)
-    await db.upsert_session(state.session_id)
+    await db.upsert_session(state.session_id, user_id=user_id)
 
     if state.job:
         await db.save_job(state.job.id, state.session_id, state.job.model_dump(), state.job.version)
@@ -163,8 +197,8 @@ async def _persist_to_mysql(state: CopilotState) -> None:
         )
 
 
-async def _persist_to_mysql_safe(state: CopilotState) -> None:
+async def _persist_to_mysql_safe(state: CopilotState, user_id: int | str | None = None) -> None:
     try:
-        await _persist_to_mysql(state)
+        await _persist_to_mysql(state, user_id)
     except Exception as e:
         logger.error("MySQL persistence failed: %s", e, exc_info=True)

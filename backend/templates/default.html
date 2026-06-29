@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="{{THEME_CLASS}}">
+<html lang="{{HTML_LANG}}" class="{{THEME_CLASS}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +15,11 @@
             box-sizing: border-box;
         }
 
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
         body {
             font-family: var(--font-family);
             font-size: var(--font-size);
@@ -24,30 +29,39 @@
         }
 
         .resume-container {
-            max-width: 210mm;
+            width: 210mm;
+            min-height: 297mm;
+            max-height: 297mm;
             margin: 0 auto;
             padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
+            overflow: hidden;
         }
 
         .resume-container.dense .section {
-            margin-bottom: calc(12px * var(--spacing-scale));
+            margin-bottom: calc(10px * var(--spacing-scale));
         }
 
         .resume-container.dense .item {
+            margin-bottom: calc(4px * var(--spacing-scale));
+        }
+
+        .resume-container.dense .section h2 {
             margin-bottom: calc(6px * var(--spacing-scale));
+            padding-bottom: 2px;
         }
 
         /* Sections */
         .section {
-            margin-bottom: calc(20px * var(--spacing-scale));
+            margin-bottom: calc(14px * var(--spacing-scale));
+            page-break-inside: avoid;
         }
 
         .section h2 {
-            font-size: calc(var(--font-size) * 1.2);
+            font-size: calc(var(--font-size) * 1.15);
             color: #1a1a1a;
             border-bottom: 2px solid #333;
-            padding-bottom: 4px;
-            margin-bottom: calc(10px * var(--spacing-scale));
+            padding-bottom: 3px;
+            margin-bottom: calc(8px * var(--spacing-scale));
         }
 
         /* Profile */
@@ -138,7 +152,9 @@
                 color: #000;
             }
             .resume-container {
-                max-width: none;
+                width: 210mm;
+                max-height: 297mm;
+                overflow: hidden;
                 padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
             }
         }
