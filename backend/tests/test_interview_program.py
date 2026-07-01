@@ -4,6 +4,7 @@ from tools.interview_program import (
     build_interview_program,
     detect_job_track,
     format_program_overview,
+    format_stages_generation_spec,
 )
 
 
@@ -75,3 +76,12 @@ def test_format_program_overview():
     assert "完整版" in overview
     assert "阶段1" in overview
     assert "阶段3" in overview
+
+
+def test_format_stages_generation_spec():
+    program = build_interview_program(version="quick", job_title="后端工程师")
+    spec = format_stages_generation_spec(program)
+    assert "stage_index=0" in spec
+    assert "stage_index=1" in spec
+    assert "恰好 5 条" in spec
+    assert "恰好 8 条" in spec

@@ -1,8 +1,9 @@
-"""Interview Agent — 生成面试问答集。"""
+"""Interview Agent — 按结构化阶段生成面试问答集。"""
 
 from __future__ import annotations
 
 import asyncio
+import re
 import uuid
 from typing import Any
 
@@ -11,6 +12,11 @@ from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.interview_generation import (
     INTERVIEW_GENERATION_PROMPT,
     STANDALONE_INTERVIEW_GENERATION_PROMPT,
+)
+from tools.interview_program import (
+    InterviewProgramConfig,
+    build_interview_program,
+    format_stages_generation_spec,
 )
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import CopilotState, InterviewQA
@@ -28,11 +34,34 @@ def _is_self_intro_question(question: str) -> bool:
     return "自我介绍" in question.strip()
 
 
-def _ensure_fixed_self_intro(interview_qa: list[InterviewQA]) -> list[InterviewQA]:
-    """Ensure the first QA is always the fixed self-introduction question."""
+def _parse_program_from_message(message: str) -> tuple[str, str]:
+    """从用户消息解析面试程序版本与专项方向。"""
+    version = "quick"
+    focus = ""
+    if match := re.search(r"Program version:\s*(quick|full|specialized)", message, re.I):
+        version = match.group(1).lower()
+    if match := re.search(r"Specialized focus:\s*(technical|final_negotiation|resume_deep_dive)", message, re.I):
+        focus = match.group(1).lower()
+    return version, focus
+
+
+def _extract_job_title(state: CopilotState, message: str) -> str:
+    if state.job and state.job.title:
+        return state.job.title
+    if match := re.search(r"Target role:\s*([^.]+)", message, re.I):
+        return match.group(1).strip()
+    return ""
+
+
+def _ensure_fixed_self_intro(
+    interview_qa: list[InterviewQA],
+    program: InterviewProgramConfig | None = None,
+) -> list[InterviewQA]:
+    """Ensure the first QA is always the fixed self-introduction in stage 0."""
     intro_answer = ""
     intro_refs: list[str] = []
     remaining: list[InterviewQA] = []
+    first_stage = program.stages[0] if program and program.stages else None
 
     for item in interview_qa:
         if _is_self_intro_question(item.question):
@@ -49,8 +78,53 @@ def _ensure_fixed_self_intro(interview_qa: list[InterviewQA]) -> list[InterviewQ
         answer=intro_answer,
         source_refs=intro_refs,
         version=1,
+        stage_id=first_stage.stage_id if first_stage else "screening",
+        stage_name=first_stage.name if first_stage else "初筛面试",
+        stage_index=0,
     )
     return [fixed_intro, *remaining]
+
+
+def _assign_stages_from_program(
+    interview_qa: list[InterviewQA],
+    program: InterviewProgramConfig,
+) -> list[InterviewQA]:
+    """按程序配置为题目补全或规范化阶段信息。"""
+    if not interview_qa or not program.stages:
+        return interview_qa
+
+    if any(qa.stage_index > 0 or qa.stage_id for qa in interview_qa):
+        normalized: list[InterviewQA] = []
+        for qa in interview_qa:
+            idx = max(0, min(qa.stage_index, len(program.stages) - 1))
+            stage = program.stages[idx]
+            normalized.append(qa.model_copy(update={
+                "stage_id": stage.stage_id,
+                "stage_name": stage.name,
+                "stage_index": idx,
+            }))
+        return normalized
+
+    result: list[InterviewQA] = []
+    cursor = 0
+    for stage_index, stage in enumerate(program.stages):
+        chunk = interview_qa[cursor: cursor + stage.max_turns]
+        for qa in chunk:
+            result.append(qa.model_copy(update={
+                "stage_id": stage.stage_id,
+                "stage_name": stage.name,
+                "stage_index": stage_index,
+            }))
+        cursor += stage.max_turns
+
+    last = program.stages[-1]
+    for qa in interview_qa[cursor:]:
+        result.append(qa.model_copy(update={
+            "stage_id": last.stage_id,
+            "stage_name": last.name,
+            "stage_index": len(program.stages) - 1,
+        }))
+    return result
 
 
 def _build_interview_qa(parsed: InterviewGenerationOutput) -> list[InterviewQA]:
@@ -63,6 +137,9 @@ def _build_interview_qa(parsed: InterviewGenerationOutput) -> list[InterviewQA]:
             answer=item.answer,
             source_refs=item.source_refs,
             version=item.version,
+            stage_id=item.stage_id,
+            stage_name=item.stage_name,
+            stage_index=item.stage_index,
         ))
     return interview_qa
 
@@ -81,23 +158,39 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
 
     llm = get_llm()
     standalone = not _has_full_context(state)
+    user_message = state.user_message or ""
 
     if standalone:
         logger.info("Interview Agent using standalone mode (partial session context)")
         prompt = STANDALONE_INTERVIEW_GENERATION_PROMPT.format(
-            user_message=state.user_message or "",
+            user_message=user_message,
             job_json=build_enriched_job_json(state),
             profile_json=state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}",
             resume_json=state.resume_content_json.model_dump_json(indent=2) if state.resume_content_json else "{}",
         )
-        input_summary = "基于用户消息与已有部分上下文生成面试题（独立模式）。"
+        input_summary = "基于用户消息与已有部分上下文分阶段生成面试题（独立模式）。"
+        program = None
     else:
+        program_version, specialized_focus = _parse_program_from_message(user_message)
+        job_title = _extract_job_title(state, user_message)
+        jd_text = (state.meta.target_jd_text or "") if state.meta else ""
+        program = build_interview_program(
+            version=program_version,
+            specialized_focus=specialized_focus,
+            job_title=job_title,
+            jd_text=jd_text,
+        )
         prompt = INTERVIEW_GENERATION_PROMPT.format(
+            stages_generation_spec=format_stages_generation_spec(program),
+            total_questions=program.max_rounds,
             job_json=build_enriched_job_json(state),
             profile_json=state.candidate_profile.model_dump_json(indent=2),
             resume_json=state.resume_content_json.model_dump_json(indent=2),
         )
-        input_summary = "读取岗位、候选人画像和简历内容生成面试问答。"
+        input_summary = (
+            f"按{program.version}程序分{program.stage_count}阶段生成面试问答"
+            f"（共{program.max_rounds}条，赛道={program.job_track}）。"
+        )
 
     try:
         parsed = await ainvoke_json_with_schema(llm, prompt, InterviewGenerationOutput, logger, "Interview Agent")
@@ -115,7 +208,10 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    interview_qa = _ensure_fixed_self_intro(_build_interview_qa(parsed))
+    interview_qa = _build_interview_qa(parsed)
+    if program:
+        interview_qa = _assign_stages_from_program(interview_qa, program)
+    interview_qa = _ensure_fixed_self_intro(interview_qa, program)
 
     if not interview_qa or (len(interview_qa) == 1 and not (interview_qa[0].answer or interview_qa[0].question)):
         logger.warning("Interview Agent produced no usable questions")
@@ -130,7 +226,12 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    logger.info("Interview Agent generated %d QAs (standalone=%s)", len(interview_qa), standalone)
+    logger.info(
+        "Interview Agent generated %d QAs (standalone=%s, stages=%s)",
+        len(interview_qa),
+        standalone,
+        sorted({item.stage_name for item in interview_qa if item.stage_name}),
+    )
 
     meta = state.meta.model_copy(update={
         "dirty_flags": state.meta.dirty_flags.model_copy(update={
@@ -139,6 +240,7 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
     })
 
     mode_note = "（独立模式，基于岗位描述生成）" if standalone else ""
+    stage_names = [s.name for s in program.stages] if program else []
     return {
         "interview_qa": interview_qa,
         "meta": meta,
@@ -146,11 +248,22 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
             state,
             node="interview_agent",
             input_summary=input_summary,
-            output_summary=f"面试问答已生成，共 {len(interview_qa)} 条{mode_note}。",
+            output_summary=f"面试问答已按阶段生成，共 {len(interview_qa)} 条{mode_note}。",
             artifacts={
                 "interview_qa_count": len(interview_qa),
                 "standalone_mode": standalone,
                 "categories": sorted({item.category for item in interview_qa}),
+                "program_version": program.version if program else "standalone",
+                "stage_names": stage_names,
+                "stages": [
+                    {
+                        "stage_id": s.stage_id,
+                        "stage_name": s.name,
+                        "stage_index": i,
+                        "question_count": sum(1 for q in interview_qa if q.stage_index == i),
+                    }
+                    for i, s in enumerate(program.stages)
+                ] if program else [],
             },
         ),
     }

@@ -303,3 +303,22 @@ def format_program_overview(program: InterviewProgramConfig) -> str:
     for i, stage in enumerate(program.stages, 1):
         lines.append(f"阶段{i}：{stage.name}（{stage.max_turns}轮）")
     return "\n".join(lines)
+
+
+def format_stages_generation_spec(program: InterviewProgramConfig) -> str:
+    """格式化各阶段出题规格，供 Question Bank 批量生成 Prompt 使用。"""
+    lines = [
+        f"面试程序：{format_program_overview(program)}",
+        "",
+        "各阶段出题规格（必须严格按阶段顺序与题量生成）：",
+    ]
+    for i, stage in enumerate(program.stages):
+        lines.extend([
+            "",
+            f"--- 阶段 {i + 1}（stage_index={i}）---",
+            f"stage_id: {stage.stage_id}",
+            f"stage_name: {stage.name}",
+            f"题量: 恰好 {stage.max_turns} 条",
+            format_stage_context(stage, program.job_track),
+        ])
+    return "\n".join(lines)

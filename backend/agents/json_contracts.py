@@ -155,6 +155,9 @@ class InterviewQAOutput(BaseModel):
     answer: str = ""
     source_refs: list[str] = Field(default_factory=list)
     version: int = 1
+    stage_id: str = ""
+    stage_name: str = ""
+    stage_index: int = 0
 
 
 class InterviewGenerationOutput(BaseModel):

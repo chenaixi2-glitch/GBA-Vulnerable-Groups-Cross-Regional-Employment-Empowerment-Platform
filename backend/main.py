@@ -49,7 +49,15 @@ app.include_router(queue_router)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    from tools.resume_export import weasyprint_available
+
+    return {
+        "status": "ok",
+        "export": {
+            "pdf": weasyprint_available(),
+            "docx": True,
+        },
+    }
 
 
 async def _check_mysql_connection() -> None:

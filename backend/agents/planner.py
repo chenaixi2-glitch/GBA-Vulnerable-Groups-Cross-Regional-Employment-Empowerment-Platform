@@ -114,10 +114,10 @@ async def planner_node_async(state: CopilotState) -> dict[str, Any]:
             updates["workflow_trace"] = append_trace(
                 state.model_copy(update={"workflow_trace": updates["workflow_trace"]}),
                 node="export",
-                status="skipped",
+                status="completed",
                 input_summary="用户请求导出。",
-                output_summary="导出功能将在后续版本中支持。",
-                artifacts={"supported": False},
+                output_summary="请使用页面上方的导出按钮（PDF / DOCX / HTML 等），或调用 /api/export/pdf 接口下载简历。",
+                artifacts={"supported": True, "formats": ["pdf", "docx", "html", "json", "markdown"]},
             )
 
     updates["meta"] = state.meta.model_copy(update={

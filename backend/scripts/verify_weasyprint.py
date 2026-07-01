@@ -8,7 +8,7 @@ from pathlib import Path
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
 
-from tools.resume_export import html_to_pdf_bytes  # noqa: E402
+from tools.resume_export import html_to_pdf_bytes, prepare_html_for_pdf, weasyprint_available  # noqa: E402
 
 
 def main() -> int:
@@ -23,10 +23,12 @@ def main() -> int:
     <p>中文测试 · English test · 123</p>
     </body></html>
     """
-    pdf = html_to_pdf_bytes(sample)
+    pdf = html_to_pdf_bytes(prepare_html_for_pdf(sample))
     if pdf[:4] != b"%PDF":
         print("FAIL: output is not a PDF")
         return 1
+    if not weasyprint_available():
+        print("WARN: WeasyPrint reported unavailable but PDF was generated")
     out = BACKEND_DIR / "log" / "weasyprint-test.pdf"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(pdf)

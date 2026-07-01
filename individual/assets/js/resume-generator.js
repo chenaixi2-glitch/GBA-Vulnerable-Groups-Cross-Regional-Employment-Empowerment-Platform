@@ -746,25 +746,76 @@ async function downloadResume(format = 'html') {
 /**
  * Export resume as PDF / DOCX / JSON / Markdown
  */
-async function exportResume(format = 'pdf') {
-    const filenames = {
-        pdf: 'resume.pdf',
-        docx: 'resume.docx',
-        json: 'resume.json',
-        markdown: 'resume.md',
-        md: 'resume.md',
+async function resolveExportFilename(format) {
+    const extMap = {
+        pdf: 'pdf',
+        docx: 'docx',
+        json: 'json',
+        markdown: 'md',
+        md: 'md',
+        html: 'html',
     };
+    const ext = extMap[String(format || 'pdf').toLowerCase()] || format;
+    let base = 'resume';
+    try {
+        const content = await apiClient.getResumeContent();
+        const name = content?.resume_content_json?.profile?.name;
+        if (name && String(name).trim()) {
+            base = String(name).trim().replace(/[<>:"/\\|?*\x00-\x1f]/g, '').slice(0, 80) || base;
+        }
+    } catch (_) {
+        // keep default filename
+    }
+    return `${base}.${ext}`;
+}
+
+async function tryBrowserPdfFallback() {
+    const confirmed = window.confirm(
+        '服务端 PDF 导出暂不可用。\n\n是否改用浏览器打印？\n请在打印对话框中选择「另存为 PDF」或「Microsoft Print to PDF」。'
+    );
+    if (!confirmed) return false;
+
+    const resumeData = await apiClient.getResumeHtml();
+    const html = resumeData?.resume_html?.html;
+    if (!html) {
+        Utils.showToast('暂无简历 HTML，无法打印');
+        return false;
+    }
+
+    await apiClient.printResumeAsPdf(html);
+    Utils.showToast('请在打印对话框中选择「另存为 PDF」');
+    return true;
+}
+
+async function exportResume(format = 'pdf') {
     const normalized = String(format || 'pdf').toLowerCase();
+    const loadingMsg = normalized === 'pdf' ? '正在导出 PDF...' : 'Exporting resume...';
 
     try {
-        Utils.showLoading('Exporting resume...');
+        Utils.showLoading(loadingMsg);
         const blob = await apiClient.exportResumeFormat(normalized);
-        Utils.downloadFile(blob, filenames[normalized] || `resume.${normalized}`);
+        const filename = await resolveExportFilename(normalized);
+        Utils.downloadFile(blob, filename);
         Utils.hideLoading();
-        Utils.showToast('Resume exported successfully');
+        Utils.showToast(normalized === 'pdf' ? 'PDF 导出成功' : 'Resume exported successfully');
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Export failed: ' + error.message);
+        const canFallback = normalized === 'pdf'
+            && (error.code === 'EXPORT_FALLBACK'
+                || /WeasyPrint|503|暂不可用|演示模式|PDF 导出/.test(error.message || ''));
+
+        if (canFallback) {
+            try {
+                const ok = await tryBrowserPdfFallback();
+                if (ok) return;
+            } catch (fallbackErr) {
+                Utils.showToast('浏览器打印失败: ' + fallbackErr.message);
+                console.error('PDF fallback error:', fallbackErr);
+                return;
+            }
+        }
+
+        Utils.showToast('导出失败: ' + error.message);
         console.error('Export error:', error);
     }
 }

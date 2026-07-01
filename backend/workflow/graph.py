@@ -144,7 +144,7 @@ def _final_result_summary(state: CopilotState) -> str:
             return non_planner_items[-1].output_summary or "本轮处理已完成。"
 
     if state.current_intent == "export":
-        return "导出功能将在后续版本中支持。"
+        return "请点击页面上方的 PDF / DOCX / HTML 等导出按钮下载简历；也可直接调用 /api/export/pdf 接口。"
     return "本轮处理已完成。"
 
 

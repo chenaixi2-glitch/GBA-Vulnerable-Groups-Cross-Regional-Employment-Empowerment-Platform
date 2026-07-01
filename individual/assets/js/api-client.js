@@ -179,9 +179,59 @@ class MockAPIService {
         return alexChenMock().gaps;
     }
 
-    interviewPayload(tone = 'professional') {
-        const sets = alexChenMock().interviewSets;
-        return sets[tone] || sets.professional;
+    interviewPayload(tone = 'professional', programVersion = 'quick', specializedFocus = '') {
+        const base = alexChenMock().interviewSets[tone] || alexChenMock().interviewSets.professional;
+        const stagePlans = {
+            quick: [
+                { stage_id: 'screening_final', name: '综合面·初筛+终面', count: 5 },
+                { stage_id: 'professional', name: '第二轮·专业/技术面', count: 8 },
+            ],
+            full: [
+                { stage_id: 'screening', name: '第一轮·初筛面试', count: 5 },
+                { stage_id: 'professional', name: '第二轮·专业/技术面', count: 8 },
+                { stage_id: 'final', name: '第三轮·总监/HR终面', count: 4 },
+            ],
+        };
+        const specializedPlans = {
+            technical: [{ stage_id: 'specialized_technical', name: '专项·技术/专业面', count: 10 }],
+            final_negotiation: [{ stage_id: 'specialized_final_negotiation', name: '专项·终面谈判', count: 6 }],
+            resume_deep_dive: [{ stage_id: 'specialized_resume_deep_dive', name: '专项·简历深挖', count: 8 }],
+        };
+
+        const plans = programVersion === 'specialized'
+            ? (specializedPlans[specializedFocus] || specializedPlans.technical)
+            : (stagePlans[programVersion] || stagePlans.quick);
+
+        const demoQuestions = [
+            { question: '自我介绍', category: '简历深挖与个人经历', answer: '结构化介绍：背景+经历+岗位匹配+求职意向。' },
+            { question: '为什么离开上一家公司？', category: '岗位认知与求职动机', answer: '强调成长空间与稳定性，避免负面评价前雇主。' },
+            { question: '你对我们岗位和业务有什么了解？', category: '岗位认知与求职动机', answer: '结合JD与公司业务简述理解。' },
+            ...base.map(q => ({ question: q.question, category: q.category, answer: q.answer })),
+            { question: '描述一次高压下处理紧急问题的经历', category: '压力应变与短板复盘', answer: 'STAR结构，突出冷静与结果。' },
+            { question: '你的薪资预期是多少？', category: '职业规划与稳定性', answer: '给出合理区间并表达灵活性。' },
+            { question: '你有什么想问我们的？', category: '面试反向提问', answer: '问团队、成长、业务方向等加分问题。' },
+        ];
+
+        const result = [];
+        let qIndex = 0;
+        plans.forEach((plan, stageIndex) => {
+            for (let i = 0; i < plan.count; i += 1) {
+                const template = demoQuestions[qIndex % demoQuestions.length];
+                result.push({
+                    id: `qa_${stageIndex}_${i + 1}`,
+                    stage_id: plan.stage_id,
+                    stage_name: plan.name,
+                    stage_index: stageIndex,
+                    category: template.category,
+                    question: i === 0 && stageIndex === 0 ? '自我介绍' : template.question,
+                    answer: template.answer,
+                    source_refs: [],
+                    version: 1,
+                });
+                qIndex += 1;
+            }
+        });
+        return result;
     }
 
     _mockInteractiveFollowUps() {
@@ -424,10 +474,14 @@ class MockAPIService {
         if (msg.includes('generate interview questions')) {
             const toneMatch = message.match(/interview tone:\s*(\w+)/i);
             const tone = toneMatch ? toneMatch[1].toLowerCase() : this.state.tone;
+            const versionMatch = message.match(/program version:\s*(quick|full|specialized)/i);
+            const programVersion = versionMatch ? versionMatch[1].toLowerCase() : 'quick';
+            const focusMatch = message.match(/specialized focus:\s*(technical|final_negotiation|resume_deep_dive)/i);
+            const specializedFocus = focusMatch ? focusMatch[1].toLowerCase() : '';
             this.state.tone = tone;
             response.triggered_agents = ['interview_agent'];
-            response.interview_qa = this.interviewPayload(tone);
-            response.reply_message = `Generated ${response.interview_qa.length} interview questions (demo mode).`;
+            response.interview_qa = this.interviewPayload(tone, programVersion, specializedFocus);
+            response.reply_message = `Generated ${response.interview_qa.length} staged interview questions (demo mode).`;
             return response;
         }
 
@@ -529,7 +583,9 @@ class MockAPIService {
             return new Blob([this._resumeContentToMarkdown(content)], { type: 'text/markdown' });
         }
         if (normalized === 'pdf' || normalized === 'docx') {
-            throw new Error('PDF/DOCX export requires a connected backend');
+            const err = new Error('演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印');
+            err.code = 'EXPORT_FALLBACK';
+            throw err;
         }
         throw new Error(`Unsupported export format: ${format}`);
     }
@@ -1130,6 +1186,30 @@ class APIClient {
     }
 
     /**
+     * Get current resume content JSON
+     */
+    async getResumeContent() {
+        try {
+            if (!this.sessionId) {
+                throw new Error('No active session');
+            }
+
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return { resume_content_json: this.mockService.profilePayload() };
+            }
+
+            const response = await this.client.get('/resume/content', {
+                params: { session_id: this.sessionId },
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Get resume content error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
      * Preview resume HTML directly
      */
     getResumePreviewUrl() {
@@ -1269,6 +1349,100 @@ class APIClient {
     }
 
     /**
+     * Query backend export capabilities (PDF requires WeasyPrint).
+     */
+    async getExportCapabilities() {
+        try {
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return { pdf: false, docx: false };
+            }
+            const response = await this.client.get('/export/capabilities', { timeout: 5000 });
+            return response.data;
+        } catch (error) {
+            console.warn('Export capabilities check failed:', error);
+            return { pdf: false, docx: true };
+        }
+    }
+
+    /**
+     * Parse FastAPI error body when responseType is blob.
+     */
+    async parseExportError(error) {
+        const data = error?.response?.data;
+        if (data instanceof Blob) {
+            try {
+                const text = await data.text();
+                const parsed = JSON.parse(text);
+                if (parsed.detail) {
+                    return new Error(typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail));
+                }
+                return new Error(text);
+            } catch (_) {
+                return new Error('导出失败，请稍后重试');
+            }
+        }
+        if (error?.response?.status === 503) {
+            const detail = error.response.data?.detail;
+            return new Error(detail || 'PDF 导出服务暂不可用，请使用浏览器打印');
+        }
+        return this.handleError(error);
+    }
+
+    /**
+     * Ensure blob response is a real export file, not a JSON error payload.
+     */
+    async validateExportBlob(blob, format) {
+        if (!(blob instanceof Blob)) {
+            throw new Error('导出响应无效');
+        }
+        const normalized = String(format || '').toLowerCase();
+        if (normalized === 'pdf' && blob.type === 'application/json') {
+            const text = await blob.text();
+            try {
+                const parsed = JSON.parse(text);
+                throw new Error(parsed.detail || 'PDF 导出失败');
+            } catch (err) {
+                if (err instanceof Error && err.message !== text) throw err;
+                throw new Error('PDF 导出失败');
+            }
+        }
+        if (blob.size === 0) {
+            throw new Error('导出文件为空');
+        }
+        return blob;
+    }
+
+    /**
+     * Browser print fallback — user saves as PDF from the print dialog.
+     */
+    printResumeAsPdf(html) {
+        return new Promise((resolve, reject) => {
+            const win = window.open('', '_blank', 'noopener,noreferrer');
+            if (!win) {
+                reject(new Error('请允许弹出窗口，以使用浏览器打印导出 PDF'));
+                return;
+            }
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
+            const trigger = () => {
+                win.focus();
+                win.print();
+                setTimeout(() => {
+                    try { win.close(); } catch (_) { /* ignore */ }
+                    resolve();
+                }, 300);
+            };
+            if (win.document.readyState === 'complete') {
+                trigger();
+            } else {
+                win.onload = trigger;
+            }
+        });
+    }
+
+    /**
      * Export resume in PDF / DOCX / JSON / Markdown
      */
     async exportResumeFormat(format = 'pdf') {
@@ -1284,29 +1458,30 @@ class APIClient {
                 return this.mockService.exportResume(this.sessionId, normalized);
             }
 
+            let response;
             if (normalized === 'pdf') {
-                const response = await this.client.post('/export/pdf', {
+                response = await this.client.post('/export/pdf', {
                     session_id: this.sessionId,
                 }, { responseType: 'blob' });
-                return response.data;
-            }
-
-            if (normalized === 'docx') {
-                const response = await this.client.post('/export/docx', {
+            } else if (normalized === 'docx') {
+                response = await this.client.post('/export/docx', {
                     session_id: this.sessionId,
                 }, { responseType: 'blob' });
-                return response.data;
+            } else {
+                const exportFormat = normalized === 'md' ? 'markdown' : normalized;
+                response = await this.client.post('/export', {
+                    session_id: this.sessionId,
+                    format: exportFormat,
+                    target: 'resume',
+                }, { responseType: 'blob' });
             }
 
-            const exportFormat = normalized === 'md' ? 'markdown' : normalized;
-            const response = await this.client.post('/export', {
-                session_id: this.sessionId,
-                format: exportFormat,
-                target: 'resume',
-            }, { responseType: 'blob' });
-            return response.data;
+            return await this.validateExportBlob(response.data, normalized);
         } catch (error) {
             console.error('Export resume error:', error);
+            if (error.response) {
+                throw await this.parseExportError(error);
+            }
             if (!error.response && !this.useMockMode) {
                 this.enableMockMode();
                 return this.mockService.exportResume(this.sessionId, format);
@@ -1332,7 +1507,7 @@ class APIClient {
     /**
      * Start interview session - triggers interview_agent (requires job, profile, resume in session)
      */
-    async startInterviewSession(jobTitle, industry = '', tone = 'professional', targetContext = null) {
+    async startInterviewSession(jobTitle, industry = '', tone = 'professional', targetContext = null, programVersion = 'quick', specializedFocus = '') {
         try {
             const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
             await this.syncTargetJobContext(ctx);
@@ -1343,6 +1518,8 @@ class APIClient {
                 ctx?.employerTypeLabel ? `Employer type: ${ctx.employerTypeLabel}.` : '',
                 ctx?.experienceLevelLabel ? `Experience level: ${ctx.experienceLevelLabel}.` : '',
                 `Interview tone: ${tone}.`,
+                `Program version: ${programVersion}.`,
+                specializedFocus ? `Specialized focus: ${specializedFocus}.` : '',
             ].filter(Boolean).join(' ');
             const response = await this.chat(message, []);
             return response;

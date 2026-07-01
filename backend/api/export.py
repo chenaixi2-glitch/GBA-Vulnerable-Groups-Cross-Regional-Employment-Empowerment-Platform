@@ -20,7 +20,7 @@ router = APIRouter(prefix="/api", tags=["export"])
 
 class ExportRequest(BaseModel):
     session_id: str
-    format: str = "html"  # html / json / markdown / txt / md
+    format: str = "html"  # html / json / markdown / txt / md / pdf / docx
     target: str = "resume"  # resume / job / gaps / interview
 
 
@@ -29,18 +29,22 @@ class SessionExportRequest(BaseModel):
 
 
 def _build_response(content: str, media_type: str, filename: str) -> Response:
+    from tools.resume_export import build_content_disposition
+
     return Response(
         content=content,
         media_type=media_type,
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={"Content-Disposition": build_content_disposition(filename)},
     )
 
 
 def _build_binary_response(content: bytes, media_type: str, filename: str) -> Response:
+    from tools.resume_export import build_content_disposition
+
     return Response(
         content=content,
         media_type=media_type,
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={"Content-Disposition": build_content_disposition(filename)},
     )
 
 
@@ -56,6 +60,53 @@ async def _load_session_state(session_id: str, request: Request) -> CopilotState
     if not saved:
         raise HTTPException(status_code=404, detail="会话不存在")
     return CopilotState.model_validate(saved)
+
+
+def _resume_export_filename(state: CopilotState, ext: str) -> str:
+    from tools.resume_export import sanitize_export_filename
+
+    name = None
+    if state.resume_content_json and state.resume_content_json.profile.name:
+        name = state.resume_content_json.profile.name
+    return sanitize_export_filename(name, ext)
+
+
+def _export_resume_pdf(state: CopilotState) -> tuple[bytes, str, str]:
+    from tools.resume_export import WeasyPrintUnavailableError, html_to_pdf_bytes, weasyprint_available
+
+    if not state.resume_html.html:
+        raise HTTPException(status_code=404, detail="简历 HTML 尚未生成")
+    if not weasyprint_available():
+        raise HTTPException(status_code=503, detail=WeasyPrintUnavailableError.INSTALL_HINT)
+
+    try:
+        pdf_bytes = html_to_pdf_bytes(state.resume_html.html)
+    except WeasyPrintUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error("PDF export failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="PDF 导出失败，请稍后重试") from exc
+
+    return pdf_bytes, "application/pdf", _resume_export_filename(state, "pdf")
+
+
+def _export_resume_docx(state: CopilotState) -> tuple[bytes, str, str]:
+    from tools.resume_export import resume_content_to_docx_bytes
+
+    if state.resume_content_json is None:
+        raise HTTPException(status_code=404, detail="简历内容尚未生成")
+
+    try:
+        docx_bytes = resume_content_to_docx_bytes(state.resume_content_json)
+    except Exception as exc:
+        logger.error("DOCX export failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="DOCX 导出失败，请稍后重试") from exc
+
+    return (
+        docx_bytes,
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        _resume_export_filename(state, "docx"),
+    )
 
 
 def _export_job_json(job: Job) -> str:
@@ -294,11 +345,21 @@ def _export_target(state: CopilotState, target: str, export_format: str) -> tupl
         if normalized_format == "html":
             if not state.resume_html.html:
                 raise HTTPException(status_code=404, detail="简历 HTML 尚未生成")
-            return state.resume_html.html, "text/html", "resume.html"
+            return state.resume_html.html, "text/html", _resume_export_filename(state, "html")
         if normalized_format == "json":
-            return _export_resume_json(state), "application/json", "resume.json"
+            return _export_resume_json(state), "application/json", _resume_export_filename(state, "json")
         if normalized_format in {"markdown", "md"}:
-            return _export_resume_markdown(state), "text/markdown", "resume.md"
+            return _export_resume_markdown(state), "text/markdown", _resume_export_filename(state, "md")
+        if normalized_format == "pdf":
+            raise HTTPException(
+                status_code=400,
+                detail="PDF 为二进制格式，请使用 POST /api/export/pdf 或 format=pdf 的统一导出接口",
+            )
+        if normalized_format == "docx":
+            raise HTTPException(
+                status_code=400,
+                detail="DOCX 为二进制格式，请使用 POST /api/export/docx 或 format=docx 的统一导出接口",
+            )
         raise HTTPException(status_code=400, detail=f"简历导出不支持格式: {export_format}")
 
     if normalized_target == "job":
@@ -341,6 +402,16 @@ def _export_target(state: CopilotState, target: str, export_format: str) -> tupl
 async def export_resume(req: ExportRequest, request: Request):
     """导出简历、岗位解析、缺失信息或面试问答。"""
     state = await _load_session_state(req.session_id, request)
+    normalized_target = (req.target or "resume").strip().lower()
+    normalized_format = (req.format or "html").strip().lower()
+
+    if normalized_target == "resume" and normalized_format == "pdf":
+        content, media_type, filename = _export_resume_pdf(state)
+        return _build_binary_response(content, media_type, filename)
+    if normalized_target == "resume" and normalized_format == "docx":
+        content, media_type, filename = _export_resume_docx(state)
+        return _build_binary_response(content, media_type, filename)
+
     content, media_type, filename = _export_target(state, req.target, req.format)
     return _build_response(content, media_type, filename)
 
@@ -348,38 +419,31 @@ async def export_resume(req: ExportRequest, request: Request):
 @router.post("/export/pdf")
 async def export_resume_pdf(req: SessionExportRequest, request: Request):
     """导出简历 PDF（由 HTML 渲染）。"""
-    from tools.resume_export import html_to_pdf_bytes
-
     state = await _load_session_state(req.session_id, request)
-    if not state.resume_html.html:
-        raise HTTPException(status_code=404, detail="简历 HTML 尚未生成")
-
-    try:
-        pdf_bytes = html_to_pdf_bytes(state.resume_html.html)
-    except Exception as exc:
-        logger.error("PDF export failed for session %s: %s", req.session_id, exc, exc_info=True)
-        raise HTTPException(status_code=500, detail="PDF 导出失败，请稍后重试") from exc
-
-    return _build_binary_response(pdf_bytes, "application/pdf", "resume.pdf")
+    pdf_bytes, media_type, filename = _export_resume_pdf(state)
+    return _build_binary_response(pdf_bytes, media_type, filename)
 
 
 @router.post("/export/docx")
 async def export_resume_docx(req: SessionExportRequest, request: Request):
     """导出简历 DOCX（由结构化 JSON 生成）。"""
-    from tools.resume_export import resume_content_to_docx_bytes
-
     state = await _load_session_state(req.session_id, request)
-    if state.resume_content_json is None:
-        raise HTTPException(status_code=404, detail="简历内容尚未生成")
+    docx_bytes, media_type, filename = _export_resume_docx(state)
+    return _build_binary_response(docx_bytes, media_type, filename)
 
-    try:
-        docx_bytes = resume_content_to_docx_bytes(state.resume_content_json)
-    except Exception as exc:
-        logger.error("DOCX export failed for session %s: %s", req.session_id, exc, exc_info=True)
-        raise HTTPException(status_code=500, detail="DOCX 导出失败，请稍后重试") from exc
 
-    return _build_binary_response(
-        docx_bytes,
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "resume.docx",
-    )
+@router.get("/export/capabilities")
+async def export_capabilities():
+    """返回当前环境的导出能力（供前端判断是否可用服务端 PDF）。"""
+    from tools.resume_export import weasyprint_available
+
+    return {
+        "pdf": weasyprint_available(),
+        "docx": True,
+        "formats": {
+            "resume": ["html", "json", "markdown", "md", "pdf", "docx"],
+            "job": ["json", "txt", "markdown", "md"],
+            "gaps": ["json", "txt", "markdown", "md"],
+            "interview": ["json", "txt", "markdown", "md"],
+        },
+    }
