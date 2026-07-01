@@ -3,6 +3,11 @@
 const express = require('express');
 const authRoutes = require('./auth.routes');
 const jobsRoutes = require('./jobs.routes');
+const companyRoutes = require('./company.routes');
+const resumesRoutes = require('./resumes.routes');
+const donationsRoutes = require('./donations.routes');
+const legalAidRoutes = require('./legalAid.routes');
+const statsRoutes = require('./stats.routes');
 
 const router = express.Router();
 
@@ -12,5 +17,10 @@ router.get('/', (req, res) => {
 
 router.use('/auth', authRoutes);
 router.use('/jobs', jobsRoutes);
+router.use('/company', companyRoutes);
+router.use('/resumes', resumesRoutes);
+router.use('/donations', donationsRoutes);
+router.use('/legal-aid', legalAidRoutes);
+router.use('/stats', statsRoutes);
 
 module.exports = router;

@@ -80,9 +80,25 @@ class GenerateJdRequest(BaseModel):
     employer_type: str = ""
 
 
+class GenerateJdFromTitleRequest(BaseModel):
+    session_id: str
+    job_title: str
+    industry: str = ""
+    employer_type: str = ""
+    experience_level: str = ""
+
+
 class SetEmployerTypeRequest(BaseModel):
     session_id: str
     employer_type: str = Field(description="soe | public | foreign | private | npo | hmt | other")
+
+
+class TargetJobContextRequest(BaseModel):
+    session_id: str
+    jd_text: str = ""
+    industry: str = ""
+    employer_type: str = ""
+    experience_level: str = ""
 
 
 class ResumeDraftPayload(BaseModel):
@@ -225,7 +241,10 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     from api.chat import _aload_state, _asave_state
     from agents.json_contracts import JDGenerationOutput
     from models.llm import get_llm, ainvoke_json_with_schema
+    from services.llm_queue import SessionBusyError, llm_queue_slot
     from prompts.jd_generation import JD_GENERATION_PROMPT
+    from services.jd_cache_service import lookup_jd_cache_by_params, save_jd_cache
+    from tools.jd_cache import params_cache_key
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -247,6 +266,32 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
 
     employer_type = normalize_employer_type(req.employer_type)
     employer_type_text = employer_type_label(employer_type) or "未指定"
+    p_key = params_cache_key(req.industry.strip(), employer_type, req.experience_level.strip())
+
+    cached = await lookup_jd_cache_by_params(
+        req.industry.strip(),
+        employer_type,
+        req.experience_level.strip(),
+    )
+    if cached and cached.get("jd_text"):
+        logger.info("JD generate-jd cache hit params=%s title=%s", p_key[:12], cached.get("title"))
+        cached_jd = cached.get("jd_text") or ""
+        state.meta = state.meta.model_copy(update={
+            "target_jd_text": cached_jd,
+            "target_industry": req.industry.strip(),
+            "target_experience_level": req.experience_level.strip(),
+            "employer_type": employer_type or state.meta.employer_type,
+        })
+        persist_data = state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
+                                                   "execution_plan", "reply_message", "triggered_agents",
+                                                   "workflow_trace", "resume_language_target"})
+        await _asave_state(store, persist_data)
+        return {
+            "title": cached.get("title") or "",
+            "jd_text": cached_jd,
+            "employer_type": employer_type,
+            "from_cache": True,
+        }
 
     profile_json = state.candidate_profile.model_dump_json(indent=2)
     prompt = JD_GENERATION_PROMPT.format(
@@ -258,7 +303,10 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
 
     llm = get_llm()
     try:
-        parsed = await ainvoke_json_with_schema(llm, prompt, JDGenerationOutput, logger, "JD Generation")
+        async with llm_queue_slot(req.session_id):
+            parsed = await ainvoke_json_with_schema(llm, prompt, JDGenerationOutput, logger, "JD Generation")
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
     except Exception as e:
         logger.error("JD generation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"岗位描述生成失败: {e}")
@@ -267,17 +315,141 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     if not jd_text:
         raise HTTPException(status_code=500, detail="岗位描述生成结果为空")
 
-    if employer_type:
-        state.meta = state.meta.model_copy(update={"employer_type": employer_type})
-        persist_data = state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
-                                                   "execution_plan", "reply_message", "triggered_agents",
-                                                   "workflow_trace", "resume_language_target"})
-        await _asave_state(store, persist_data)
+    title = (parsed.title or "").strip()
+    await save_jd_cache(
+        jd_text=jd_text,
+        title=title,
+        job_title=title,
+        source="generated",
+        industry=req.industry.strip(),
+        employer_type=employer_type,
+        experience_level=req.experience_level.strip(),
+        params_key_value=p_key,
+    )
+
+    state.meta = state.meta.model_copy(update={
+        "target_jd_text": jd_text,
+        "target_industry": req.industry.strip(),
+        "target_experience_level": req.experience_level.strip(),
+        "employer_type": employer_type or state.meta.employer_type,
+    })
+    persist_data = state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
+                                              "execution_plan", "reply_message", "triggered_agents",
+                                              "workflow_trace", "resume_language_target"})
+    await _asave_state(store, persist_data)
 
     return {
-        "title": parsed.title or "",
+        "title": title,
         "jd_text": jd_text,
         "employer_type": employer_type,
+        "from_cache": False,
+    }
+
+
+@router.post("/generate-jd-from-title")
+async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Request):
+    """仅岗位名称时，结合候选人简历生成定向 JD，供用户确认后再进入优化流程。"""
+    from api.chat import _aload_state, _asave_state
+    from services.jd_title_service import generate_jd_from_title_for_profile
+    from services.llm_queue import SessionBusyError, llm_queue_slot
+    from tools.resume_layout import normalize_employer_type
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+
+    job_title = req.job_title.strip()
+    if not job_title:
+        raise HTTPException(status_code=422, detail="请提供岗位名称")
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    saved = await _aload_state(store)
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    state = CopilotState.model_validate(saved)
+    if state.candidate_profile is None:
+        raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
+
+    employer_type = normalize_employer_type(req.employer_type or state.meta.employer_type)
+    try:
+        async with llm_queue_slot(req.session_id):
+            parsed = await generate_jd_from_title_for_profile(
+                state,
+                job_title,
+                industry=req.industry.strip(),
+                employer_type=employer_type,
+                experience_level=req.experience_level.strip(),
+            )
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except RuntimeError as exc:
+        logger.error("JD from title failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"岗位描述生成失败: {exc}")
+
+    jd_text = (parsed.jd_text or "").strip()
+    state.meta = state.meta.model_copy(update={
+        "target_jd_text": jd_text,
+        "target_industry": req.industry.strip() or state.meta.target_industry,
+        "target_experience_level": req.experience_level.strip() or state.meta.target_experience_level,
+        "employer_type": employer_type or state.meta.employer_type,
+    })
+    persist_data = state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
+                                              "execution_plan", "reply_message", "triggered_agents",
+                                              "workflow_trace", "resume_language_target"})
+    await _asave_state(store, persist_data)
+
+    return {
+        "title": parsed.title or job_title,
+        "jd_text": jd_text,
+        "primary_tech_stack": list(parsed.primary_tech_stack or []),
+        "alignment_note": parsed.alignment_note or "",
+        "needs_clarification": bool(parsed.needs_clarification),
+        "clarification_hint": parsed.clarification_hint or "",
+        "requires_user_confirmation": True,
+    }
+
+
+@router.put("/target-context")
+async def set_target_job_context(req: TargetJobContextRequest, request: Request):
+    """同步目标岗位 JD 文本与行业 / 单位性质 / 经验等级到会话，供简历、面试、学习路径等 Agent 使用。"""
+    from api.chat import _aload_state, _asave_state
+    from tools.resume_layout import normalize_employer_type
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    saved = await _aload_state(store)
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    state = CopilotState.model_validate(saved)
+    employer_type = normalize_employer_type(req.employer_type) if req.employer_type.strip() else state.meta.employer_type
+
+    state.meta = state.meta.model_copy(update={
+        "target_jd_text": req.jd_text.strip(),
+        "target_industry": req.industry.strip(),
+        "target_experience_level": req.experience_level.strip(),
+        "employer_type": employer_type or state.meta.employer_type,
+    })
+
+    persist_data = state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
+                                              "execution_plan", "reply_message", "triggered_agents",
+                                              "workflow_trace", "resume_language_target"})
+    await _asave_state(store, persist_data)
+
+    return {
+        "ok": True,
+        "target_context": {
+            "jd_text": state.meta.target_jd_text,
+            "industry": state.meta.target_industry,
+            "employer_type": state.meta.employer_type,
+            "experience_level": state.meta.target_experience_level,
+        },
     }
 
 
@@ -391,6 +563,7 @@ class TranslateResumeRequest(BaseModel):
 async def translate_resume(req: TranslateResumeRequest, request: Request, background_tasks: BackgroundTasks):
     """中英文简历互转 — 触发 language_convert 意图。"""
     from api.chat import _ainvoke_graph, _aload_state, _asave_state, _get_graph, _persist_to_mysql_safe
+    from services.llm_queue import SessionBusyError, llm_queue_slot
     from tools.resume_layout import language_label, normalize_language
     from tools.resume_language_checklist import check_resume_language_requirements
 
@@ -420,7 +593,10 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 
     graph = _get_graph()
     try:
-        result = await _ainvoke_graph(graph, state.model_dump())
+        async with llm_queue_slot(req.session_id):
+            result = await _ainvoke_graph(graph, state.model_dump())
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
     except Exception as e:
         logger.error("Resume translation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"简历转换失败: {e}")
@@ -451,6 +627,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 async def render_resume(req: RenderRequest, request: Request, background_tasks: BackgroundTasks):
     """渲染指令接口。"""
     from api.chat import _ainvoke_graph, _aload_state, _asave_state, _get_graph, _persist_to_mysql_safe
+    from services.llm_queue import SessionBusyError, llm_queue_slot
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -470,7 +647,10 @@ async def render_resume(req: RenderRequest, request: Request, background_tasks: 
 
     graph = _get_graph()
     try:
-        result = await _ainvoke_graph(graph, state.model_dump())
+        async with llm_queue_slot(req.session_id):
+            result = await _ainvoke_graph(graph, state.model_dump())
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
     except Exception as e:
         logger.error("Render failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"渲染失败: {e}")

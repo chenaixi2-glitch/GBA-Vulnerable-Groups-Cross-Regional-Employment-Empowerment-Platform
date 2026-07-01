@@ -65,6 +65,28 @@
         }
 
         /* Profile */
+        .section-profile .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .section-profile .profile-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .section-profile .profile-photo {
+            width: 96px;
+            height: 128px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
         .section-profile .profile-info {
             display: flex;
             flex-wrap: wrap;

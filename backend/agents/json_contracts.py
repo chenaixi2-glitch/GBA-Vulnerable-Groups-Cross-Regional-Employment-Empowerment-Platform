@@ -15,6 +15,15 @@ class JDGenerationOutput(BaseModel):
     jd_text: str = ""
 
 
+class JDTitleGenerationOutput(BaseModel):
+    title: str = ""
+    jd_text: str = ""
+    primary_tech_stack: list[str] = Field(default_factory=list)
+    alignment_note: str = ""
+    needs_clarification: bool = False
+    clarification_hint: str = ""
+
+
 class JDAnalysisOutput(BaseModel):
     industry: str = ""
     title: str = ""

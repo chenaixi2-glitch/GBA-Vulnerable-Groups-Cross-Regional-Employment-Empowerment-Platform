@@ -1,0 +1,16 @@
+Job Title: Senior Full Stack Developer
+
+Requirements:
+- 5+ years of experience in web development
+- Strong proficiency in Python and JavaScript
+- Experience with React and Node.js
+- Knowledge of containerization (Docker, Kubernetes)
+- Cloud platform experience (AWS/Azure/GCP)
+- Excellent problem-solving skills
+- Team leadership experience
+
+Responsibilities:
+- Design and implement scalable web applications
+- Lead technical architecture decisions
+- Mentor junior developers
+- Collaborate with cross-functional teams

@@ -8,7 +8,11 @@ from typing import Any
 
 from agents.json_contracts import InterviewGenerationOutput
 from models.llm import get_llm, ainvoke_json_with_schema
-from prompts.interview_generation import INTERVIEW_GENERATION_PROMPT
+from prompts.interview_generation import (
+    INTERVIEW_GENERATION_PROMPT,
+    STANDALONE_INTERVIEW_GENERATION_PROMPT,
+)
+from tools.target_job_context import build_enriched_job_json
 from workflow.state import CopilotState, InterviewQA
 from workflow.trace import append_trace
 from log import get_logger
@@ -63,34 +67,38 @@ def _build_interview_qa(parsed: InterviewGenerationOutput) -> list[InterviewQA]:
     return interview_qa
 
 
+def _has_full_context(state: CopilotState) -> bool:
+    return (
+        state.job is not None
+        and state.candidate_profile is not None
+        and state.resume_content_json is not None
+    )
+
+
 async def interview_node_async(state: CopilotState) -> dict[str, Any]:
     """Interview Agent 异步节点函数。"""
     logger.info("Interview Agent started for session %s", state.session_id)
 
-    if state.job is None or state.candidate_profile is None or state.resume_content_json is None:
-        logger.warning("Interview Agent skipped due to incomplete state")
-        return {
-            "interview_qa": [],
-            "workflow_trace": append_trace(
-                state,
-                node="interview_agent",
-                status="skipped",
-                input_summary="读取岗位、候选人画像和简历内容生成面试问答。",
-                output_summary="数据不完整，无法生成面试问答。",
-                artifacts={
-                    "has_job": state.job is not None,
-                    "has_candidate_profile": state.candidate_profile is not None,
-                    "has_resume_content": state.resume_content_json is not None,
-                },
-            ),
-        }
-
-    prompt = INTERVIEW_GENERATION_PROMPT.format(
-        job_json=state.job.model_dump_json(indent=2),
-        profile_json=state.candidate_profile.model_dump_json(indent=2),
-        resume_json=state.resume_content_json.model_dump_json(indent=2),
-    )
     llm = get_llm()
+    standalone = not _has_full_context(state)
+
+    if standalone:
+        logger.info("Interview Agent using standalone mode (partial session context)")
+        prompt = STANDALONE_INTERVIEW_GENERATION_PROMPT.format(
+            user_message=state.user_message or "",
+            job_json=build_enriched_job_json(state),
+            profile_json=state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}",
+            resume_json=state.resume_content_json.model_dump_json(indent=2) if state.resume_content_json else "{}",
+        )
+        input_summary = "基于用户消息与已有部分上下文生成面试题（独立模式）。"
+    else:
+        prompt = INTERVIEW_GENERATION_PROMPT.format(
+            job_json=build_enriched_job_json(state),
+            profile_json=state.candidate_profile.model_dump_json(indent=2),
+            resume_json=state.resume_content_json.model_dump_json(indent=2),
+        )
+        input_summary = "读取岗位、候选人画像和简历内容生成面试问答。"
+
     try:
         parsed = await ainvoke_json_with_schema(llm, prompt, InterviewGenerationOutput, logger, "Interview Agent")
     except RuntimeError as exc:
@@ -101,7 +109,7 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
                 state,
                 node="interview_agent",
                 status="failed",
-                input_summary="读取岗位、候选人画像和简历内容生成面试问答。",
+                input_summary=input_summary,
                 output_summary="面试问答生成失败：模型输出格式异常，请重试。",
                 error=str(exc),
             ),
@@ -109,7 +117,20 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
 
     interview_qa = _ensure_fixed_self_intro(_build_interview_qa(parsed))
 
-    logger.info("Interview Agent generated %d QAs", len(interview_qa))
+    if not interview_qa or (len(interview_qa) == 1 and not (interview_qa[0].answer or interview_qa[0].question)):
+        logger.warning("Interview Agent produced no usable questions")
+        return {
+            "interview_qa": [],
+            "workflow_trace": append_trace(
+                state,
+                node="interview_agent",
+                status="failed",
+                input_summary=input_summary,
+                output_summary="未能生成有效面试题，请补充岗位或简历信息后重试。",
+            ),
+        }
+
+    logger.info("Interview Agent generated %d QAs (standalone=%s)", len(interview_qa), standalone)
 
     meta = state.meta.model_copy(update={
         "dirty_flags": state.meta.dirty_flags.model_copy(update={
@@ -117,16 +138,18 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
         })
     })
 
+    mode_note = "（独立模式，基于岗位描述生成）" if standalone else ""
     return {
         "interview_qa": interview_qa,
         "meta": meta,
         "workflow_trace": append_trace(
             state,
             node="interview_agent",
-            input_summary="读取岗位、候选人画像和简历内容生成面试问答。",
-            output_summary=f"面试问答已生成，共 {len(interview_qa)} 条。",
+            input_summary=input_summary,
+            output_summary=f"面试问答已生成，共 {len(interview_qa)} 条{mode_note}。",
             artifacts={
                 "interview_qa_count": len(interview_qa),
+                "standalone_mode": standalone,
                 "categories": sorted({item.category for item in interview_qa}),
             },
         ),

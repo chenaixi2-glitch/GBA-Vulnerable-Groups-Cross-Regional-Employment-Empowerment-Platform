@@ -1,0 +1,23 @@
+{
+  "professional": [
+    "Describe your prior customer service experience, especially a complaint you resolved.",
+    "How do you see the responsibilities of cross-border e-commerce CS?",
+    "What do you understand about our product line?",
+    "How would you handle language barriers with a caller?",
+    "Tell me how you stay effective under high pressure."
+  ],
+  "cold": [
+    "Your resume looks average — why should we hire you?",
+    "What serious mistake have you made in past roles?",
+    "What would you say is your biggest weakness?",
+    "How would you respond if a customer verbally abused you?",
+    "Are you willing to work overtime or irregular shifts?"
+  ],
+  "friendly": [
+    "Briefly introduce yourself.",
+    "What attracts you to our company?",
+    "What role do you usually play on a team?",
+    "Any hobbies or strengths outside work?",
+    "How do you balance work and life?"
+  ]
+}

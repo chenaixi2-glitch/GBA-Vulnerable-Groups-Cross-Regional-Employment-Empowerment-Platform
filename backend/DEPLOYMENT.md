@@ -14,6 +14,8 @@
 
 Redis **不在 RDS 上**，需安装在**阿里云轻量应用服务器**本机（默认端口 6379），供 AI 后端缓存会话状态。
 
+> **服务器规格：2GB 内存** — 同机运行 Nginx、Node、Python、Redis，需严格限制各组件内存占用（见下文「2GB 内存约束」）。
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  阿里云轻量服务器  120.77.249.179                        │
@@ -61,17 +63,75 @@ charset:  utf8mb4
    ```
    该脚本读取 `backend/.env` 中的 `MYSQL_*` 变量，执行 `sql/init_schema.sql` 建库建表。
 
-## 二、轻量服务器准备
+## 二、轻量服务器准备（2GB 内存）
+
+### 0. 2GB 内存约束（必读）
+
+同机需运行 **Nginx + Node + Python + Redis**，建议内存预算如下：
+
+| 组件 | 建议上限 | 配置位置 |
+|------|----------|----------|
+| 系统 + 缓冲 | ~400 MB | — |
+| Nginx / 静态前端 | ~80 MB | — |
+| Node 认证 API | ≤ 300 MB | `server/ecosystem.config.js` → `max_memory_restart: '300M'` |
+| Python AI 后端 | **1 worker** | `backend/.env` → `FASTAPI_WORKERS=1` |
+| Redis 会话缓存 | **128 MB** | `scripts/install-redis.sh` 默认 `maxmemory 128mb` |
+
+**必做：**
+
+1. `FASTAPI_WORKERS=1`（**不要**设为 2，否则易 OOM）
+2. Redis `maxmemory 128mb` + `allkeys-lru`（脚本已默认）
+3. Redis 关闭 RDB/AOF（会话可丢，降低 fork 峰值；脚本已默认）
+4. 建议添加 **1–2GB Swap** 作为兜底：
+   ```bash
+   sudo fallocate -l 2G /swapfile
+   sudo chmod 600 /swapfile
+   sudo mkswap /swapfile
+   sudo swapon /swapfile
+   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+   ```
+5. **不推荐**在 2GB 机器上同时跑 Docker 全栈 + 本机 Redis（Docker 额外占用 ~200MB+）
+
+**监控：**
+
+```bash
+free -h
+redis-cli info memory | grep -E 'used_memory_human|maxmemory_human'
+pm2 monit   # Node 进程
+```
+
+Redis 内存打满时会按 LRU 淘汰旧会话，属正常行为；若整机频繁 swap，需排查 Python/Node 泄漏或降低并发。
 
 ### 1. 安装 Redis
 
+**推荐：一键脚本**（2GB 优化：128MB 上限、关闭持久化、LRU 淘汰）
+
 ```bash
-# Ubuntu/Debian
+# 在服务器上，进入项目根目录后执行
+sudo bash scripts/install-redis.sh
+
+# 可选：自定义上限（2GB 机器不建议超过 192mb）
+sudo REDIS_MAXMEMORY=128mb bash scripts/install-redis.sh
+
+# 可选：设置访问密码
+sudo REDIS_PASSWORD='your_strong_password' bash scripts/install-redis.sh
+```
+
+**或手动安装（Ubuntu/Debian，2GB 需额外改 redis.conf）：**
+
+```bash
 sudo apt update && sudo apt install -y redis-server
 sudo systemctl enable redis-server
 sudo systemctl start redis-server
 redis-cli ping   # 应返回 PONG
+# 手动安装时请在 /etc/redis/redis.conf 中设置：
+#   maxmemory 128mb
+#   maxmemory-policy allkeys-lru
+#   save ""
+#   appendonly no
 ```
+
+安装后确认 `bind 127.0.0.1`（`/etc/redis/redis.conf`），**不要**在安全组开放 6379。
 
 ### 2. 安装 Node.js 18+ 与 Python 3.10+
 
@@ -100,6 +160,7 @@ REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
 
 FASTAPI_DEBUG=false
+FASTAPI_WORKERS=1
 ```
 
 ### 4. 配置 Node 认证后端
@@ -143,6 +204,8 @@ FASTAPI_DEBUG=false
 
 根目录 `docker-compose.yml` + `.env.docker`，参考 `.env.docker.example`。
 Docker 模式下 MySQL/Redis 可指向宿主机 RDS 与本机 Redis。
+
+> **2GB 服务器**：Docker 会额外占用内存，优先使用本机直跑（非 Docker）；若必须用 Docker，请设 `FASTAPI_WORKERS=1` 并监控 `docker stats`。
 
 ## 六、安全组 / 防火墙
 

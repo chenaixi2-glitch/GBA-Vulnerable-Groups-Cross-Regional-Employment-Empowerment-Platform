@@ -543,9 +543,17 @@
                             <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <img src="https://ui-avatars.com/api/?name=Company&background=10b981&color=fff" alt="Company" class="w-8 h-8 rounded-full">
-                        <span class="text-gray-700 font-medium hidden lg:inline">Company Account</span>
+                    <div id="portal-auth-guest" class="flex items-center space-x-2">
+                        <a href="auth.html" class="text-sm text-gray-600 hover:text-green-600 font-medium">登录</a>
+                        <a href="auth.html?tab=register" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium">注册</a>
+                    </div>
+                    <div id="portal-auth-user" class="hidden flex items-center space-x-2">
+                        <div class="text-right hidden lg:block">
+                            <div id="portal-user-name" class="text-sm font-medium text-gray-800"></div>
+                            <div id="portal-user-email" class="text-xs text-gray-500"></div>
+                        </div>
+                        <a href="company-profile.html" class="text-sm text-green-700 hover:text-green-800 font-medium hidden md:inline">企业信息</a>
+                        <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600">退出</button>
                     </div>
                 </div>
 
@@ -562,6 +570,7 @@
                 <a href="#dashboard" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">Dashboard</a>
                 <a href="#ai-features" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">HR Tools</a>
                 <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">My Jobs</a>
+                <a href="donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i>爱心捐款箱</a>
             </div>
         </div>
     </nav>
@@ -640,6 +649,9 @@
                 </div>
             </div>
 
+            <!-- 企业端访问 / 捐款提示 -->
+            <div id="portal-access-banner" class="mb-8 hidden"></div>
+
             <!-- KPI Cards -->
             <div class="stats-grid mb-8">
                 <div class="stat-card">
@@ -671,6 +683,42 @@
                     <div class="text-3xl font-bold text-blue-600 mb-1 counter" data-target="18">0</div>
                     <div class="text-gray-500 text-sm font-medium">Days to Hire</div>
                     <div class="text-xs text-blue-600 mt-1">↓ 2 vs last month</div>
+                </div>
+            </div>
+
+            <!-- HR Team Performance -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-8" id="hr-team-performance">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">HR Team Performance</h3>
+                        <p class="text-sm text-gray-500 mt-1">各 HR 发布岗位、处理投递与录用绩效对比</p>
+                    </div>
+                    <div id="hr-team-meta" class="text-xs text-gray-500 text-right hidden">
+                        <span id="hr-org-name" class="font-medium text-gray-700"></span>
+                        <span id="hr-invite-wrap" class="hidden"> · 邀请码: <code id="hr-invite-code" class="bg-gray-100 px-2 py-0.5 rounded font-mono text-green-700"></code></span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-gray-500 border-b">
+                                <th class="py-2 pr-4 font-medium">HR</th>
+                                <th class="py-2 pr-4 font-medium">角色</th>
+                                <th class="py-2 pr-4 font-medium">发布岗位</th>
+                                <th class="py-2 pr-4 font-medium">收到投递</th>
+                                <th class="py-2 pr-4 font-medium">处理数</th>
+                                <th class="py-2 pr-4 font-medium">录用</th>
+                                <th class="py-2 pr-4 font-medium">录用率</th>
+                                <th class="py-2 font-medium">均匹配分</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hr-team-table-body">
+                            <tr><td colspan="8" class="py-6 text-center text-gray-400">加载 HR 绩效…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-5 chart-container" style="height:220px;">
+                    <canvas id="hrTeamChart"></canvas>
                 </div>
             </div>
 
@@ -725,6 +773,24 @@
             </div>
         </div>
     </section>
+
+    <!-- 爱心捐款箱 · 弱势群体法律服务 -->
+    <section id="donation-fund" class="py-16 bg-gradient-to-b from-amber-50 to-white scroll-mt-20">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-900 mb-3"><i class="fas fa-hand-holding-heart text-amber-500 mr-2"></i>爱心捐款箱 · 弱势群体法律服务</h2>
+                <p class="text-gray-600">招聘发布、岗位匹配与法律帮助<strong class="text-green-700">免费使用</strong>。面试模拟、HR 绩效统计等高级功能需向捐款箱捐款（金额不限）。募集到的资金将<strong class="text-amber-700">全额</strong>用于为弱势求职者提供免费法律服务。</p>
+            </div>
+            <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-lg border p-6 md:p-8">
+                <div id="corporate-donation-mini"></div>
+                <div class="mt-6 text-center">
+                    <a href="donation-legal.html" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:opacity-90">
+                        <i class="fas fa-scale-balanced"></i> 查看法律服务详情并捐款
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
     
     <!-- HR Tools Section (6 tools) -->
     <section id="ai-features" class="py-20 bg-white scroll-mt-20">
@@ -751,7 +817,7 @@
                     </div>
                     <h3 class="text-lg font-bold mb-2 text-gray-900">Interview Preparation</h3>
                     <p class="text-gray-500 text-sm leading-relaxed mb-5">Generate structured question packs, calibrate tone &amp; scoring rubrics, and simulate inclusive interview panels for your hiring managers.</p>
-                    <a href="../individual/demo-interview.html" class="hr-tool-start">Start <i class="fas fa-arrow-right text-sm"></i></a>
+                    <a href="../individual/demo-interview.html" class="hr-tool-start" data-require-premium-access>Start <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
                 <!-- Tool 3: Learning Path -->
@@ -832,6 +898,9 @@
                         <i class="fas fa-plus mr-2"></i>
                         <span>Post New Job</span>
                     </a>
+                    <a href="company-profile.html" class="px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium">
+                        <i class="fas fa-building mr-1"></i>企业信息
+                    </a>
                     <div class="relative">
                         <input id="jobs-search-input" type="text" placeholder="Search jobs..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
@@ -861,6 +930,7 @@
                     <span class="text-xs text-gray-400 font-medium mr-1">Status:</span>
                     <button data-jobs-filter data-status="all" class="px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-lg font-medium">All</button>
                     <button data-jobs-filter data-status="active" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Active</button>
+                    <button data-jobs-filter data-status="interviewing" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Interviewing</button>
                     <button data-jobs-filter data-status="closed" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Closed</button>
                 </div>
             </div>
@@ -1725,6 +1795,8 @@
                 }
             });
 
+            window.recruitmentChart = recruitmentChart;
+
             const recruitmentPeriods = {
                 monthly:  { labels: ['Jan','Feb','Mar','Apr','May','Jun'],
                     values: [[120,150,180,210,254,280],[30,45,55,65,45,50],[8,12,15,18,12,14]] },
@@ -1747,10 +1819,10 @@
             const diversityChart = new Chart(diversityCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Persons with Disabilities','Elderly (45+)','Women Returning','Ethnic Minorities','Low-income Youth','Other'],
+                    labels: ['Persons with Disabilities','Elderly (45+)','Women Returning','Low-income Youth','Other'],
                     datasets: [{
-                        data: [25, 20, 18, 15, 12, 10],
-                        backgroundColor: ['#10b981','#2563eb','#f97316','#8b5cf6','#ef4444','#94a3b8'],
+                        data: [25, 20, 18, 15, 22],
+                        backgroundColor: ['#10b981','#2563eb','#f97316','#8b5cf6','#94a3b8'],
                         borderColor: '#ffffff', borderWidth: 3,
                         hoverOffset: 14, hoverBorderWidth: 0
                     }]
@@ -1773,6 +1845,8 @@
                     }
                 }
             });
+
+            window.diversityChart = diversityChart;
 
             // ── 3. Application Funnel (horizontal bar) ────────────────────────
             const funnelCtx = document.getElementById('funnelChart').getContext('2d');
@@ -1965,7 +2039,38 @@
     </script>
     <script src="../assets/site-enhancements.js"></script>
     <script src="../assets/floating-widget.js"></script>
+    <script src="../assets/js/auth-api.js"></script>
+    <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/api-client.js"></script>
+    <script src="../assets/js/portal-auth.js"></script>
+    <script src="../assets/js/platform-access.js"></script>
+    <script src="../assets/js/donation-box.js"></script>
     <script src="assets/js/my-jobs.js"></script>
+    <script src="assets/js/dashboard-stats.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            PortalAuth.initPortalAuth({ portal: 'corporate', requireAuth: false });
+            PlatformAccess.guardFeatureLinks('[data-require-access]');
+            PlatformAccess.guardPremiumFeatureLinks('[data-require-premium-access]');
+            const miniRoot = document.getElementById('corporate-donation-mini');
+            if (miniRoot && typeof DonationBox !== 'undefined') {
+                DonationBox.renderDonationBox(miniRoot, { portal: 'corporate' });
+            }
+            try {
+                const access = await PlatformAccess.fetchAccess();
+                const banner = document.getElementById('portal-access-banner');
+                if (!banner) return;
+                if (access.requires_premium_donation) {
+                    banner.className = 'mb-8 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex flex-wrap items-center justify-between gap-3';
+                    banner.innerHTML = '<span><i class="fas fa-hand-holding-heart mr-2"></i>招聘与法律帮助已免费开放；<strong>面试模拟、HR 绩效统计</strong>需向捐款箱捐款解锁（金额不限）</span><a href="donation-legal.html" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">前往捐款箱</a>';
+                    banner.classList.remove('hidden');
+                } else if (access.has_premium_access) {
+                    banner.className = 'mb-8 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm';
+                    banner.innerHTML = '<i class="fas fa-check-circle mr-2"></i>您已完成捐款，面试模拟与 HR 绩效统计等高级功能已解锁。感谢您的爱心支持！';
+                    banner.classList.remove('hidden');
+                }
+            } catch (e) { /* ignore */ }
+        });
+    </script>
 </body>
 </html>

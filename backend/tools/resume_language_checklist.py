@@ -30,6 +30,8 @@ def _text_blob(state: CopilotState, resume: ResumeContent | None) -> str:
     if state.candidate_profile:
         pb = state.candidate_profile.profile_basic
         parts.extend([pb.name, pb.email, pb.phone, pb.city, pb.school])
+        for key, val in (getattr(pb, "extras", None) or {}).items():
+            parts.append(f"{key}:{val}")
         for mat in state.candidate_profile.materials:
             parts.append(mat.content)
         for fact in state.candidate_profile.facts:
@@ -54,11 +56,25 @@ def _profile_field(state: CopilotState, resume: ResumeContent | None, field: str
     return val.strip()
 
 
-def _profile_extra(resume: ResumeContent | None, key: str) -> str:
-    if not resume:
-        return ""
-    extras = getattr(resume.profile, "extras", None) or {}
-    return str(extras.get(key, "") or "").strip()
+def _profile_extra(state: CopilotState, resume: ResumeContent | None, key: str) -> str:
+    if resume and resume.profile:
+        extras = getattr(resume.profile, "extras", None) or {}
+        val = str(extras.get(key, "") or "").strip()
+        if val:
+            return val
+    if state.candidate_profile:
+        extras = getattr(state.candidate_profile.profile_basic, "extras", None) or {}
+        return str(extras.get(key, "") or "").strip()
+    return ""
+
+
+def _has_profile_photo(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
+    photo_url = _profile_extra(state, resume, "photo_url")
+    if photo_url:
+        return True
+    if _profile_extra(state, resume, "has_photo") == "true":
+        return True
+    return _has_pattern(text, [r"证件照", r"profile photo", r"headshot", r"\.jpg", r"\.png", r"照片"])
 
 
 def _item(
@@ -194,8 +210,7 @@ def _check_chinese_resume(
     strict_cn = employer in ("soe", "public")
 
     # 照片
-    has_photo = bool(_profile_extra(resume, "photo_url") or _profile_extra(resume, "has_photo"))
-    has_photo = has_photo or _has_pattern(text, [r"证件照", r"photo", r"\.jpg", r"\.png", r"照片"])
+    has_photo = _has_profile_photo(state, resume, text)
     photo_severity = "required" if strict_cn else "recommended"
     photo_msg = "国央企/体制内岗位必须附正装证件照" if strict_cn else "中文简历（国企/事业单位/银行/教师/传统行业）建议附正装证件照"
     items.append(
@@ -214,21 +229,21 @@ def _check_chinese_resume(
     email = _profile_field(state, resume, "email")
     items.append(_item("zh_email", "contact", "email", "邮箱", "required", "邮箱是国内简历常规联系方式", "如 xxx@163.com", bool(email)))
 
-    address = _profile_extra(resume, "address") or _profile_field(state, resume, "city")
+    address = _profile_extra(state, resume, "address") or _profile_field(state, resume, "city")
     has_address = bool(address.strip()) and len(address.strip()) > 6
     items.append(_item("zh_address", "contact", "address", "住址", "recommended",
                         "中文简历通常写详细住址（省市区）", "例：广东省广州市 XX 区", has_address))
 
-    has_age = bool(_profile_extra(resume, "age")) or _has_pattern(text, [r"\d{1,2}\s*岁", r"age\s*[:：]\s*\d", r"年龄"])
+    has_age = bool(_profile_extra(state, resume, "age")) or _has_pattern(text, [r"\d{1,2}\s*岁", r"age\s*[:：]\s*\d", r"年龄"])
     items.append(_item("zh_age", "contact", "age", "年龄", "recommended", "国内常规简历建议注明年龄", "可在个人信息中补充年龄", has_age))
 
-    has_gender = bool(_profile_extra(resume, "gender")) or _has_pattern(text, [r"性别", r"男|女", r"\bgender\b"])
+    has_gender = bool(_profile_extra(state, resume, "gender")) or _has_pattern(text, [r"性别", r"男|女", r"\bgender\b"])
     items.append(_item("zh_gender", "contact", "gender", "性别", "recommended", "国内常规简历建议注明性别", "男 / 女", has_gender))
 
-    has_native = bool(_profile_extra(resume, "native_place")) or _has_pattern(text, [r"籍贯", r"native place"])
+    has_native = bool(_profile_extra(state, resume, "native_place")) or _has_pattern(text, [r"籍贯", r"native place"])
     items.append(_item("zh_native", "contact", "native_place", "籍贯", "recommended", "中文简历常见籍贯信息", "如：广东广州", has_native))
 
-    has_political = bool(_profile_extra(resume, "political_status")) or _has_pattern(text, [r"政治面貌", r"党员", r"团员", r"群众"])
+    has_political = bool(_profile_extra(state, resume, "political_status")) or _has_pattern(text, [r"政治面貌", r"党员", r"团员", r"群众"])
     political_severity = "required" if strict_cn else "recommended"
     items.append(_item("zh_political", "contact", "political_status", "政治面貌", political_severity,
                        "国企/事业单位/考公类岗位常需政治面貌" if strict_cn else "国内部分岗位会关注政治面貌",
@@ -292,8 +307,7 @@ def _check_english_resume(
     profile = resume.profile if resume else None
 
     # 禁止照片（欧美标准）
-    has_photo = bool(_profile_extra(resume, "photo_url") or _profile_extra(resume, "has_photo"))
-    has_photo = has_photo or _has_pattern(text, [r"证件照", r"profile photo", r"headshot"])
+    has_photo = _has_profile_photo(state, resume, text)
     if has_photo:
         items.append(_warn_item("en_no_photo", "forbidden", "photo", "个人照片",
                                 "欧美英文 Resume 严禁放照片（涉嫌歧视，会直接淘汰）",
@@ -317,7 +331,7 @@ def _check_english_resume(
                       "英文简历只写城市，不写详细住址", "e.g. Guangzhou, China — not full street address", bool(city)))
 
     linkedin = getattr(profile, "linkedin", "") if profile else ""
-    linkedin = linkedin or _profile_extra(resume, "linkedin")
+    linkedin = linkedin or _profile_extra(state, resume, "linkedin")
     has_linkedin = bool(linkedin.strip()) or _has_pattern(text, [r"linkedin\.com"])
     items.append(_item("en_linkedin", "contact", "linkedin", "LinkedIn", "recommended",
                       "英文简历强烈建议附 LinkedIn 链接", "https://linkedin.com/in/yourname", has_linkedin))

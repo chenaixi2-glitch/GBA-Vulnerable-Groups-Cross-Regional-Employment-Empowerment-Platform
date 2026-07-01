@@ -14,12 +14,12 @@
             en: {
                 title: 'GBA Cross-Regional Employment Empowerment',
                 subtitle:
-                    'An ability-first platform for matching, policy navigation, compliant data flow, and inclusive remote work across the Guangdong-Hong Kong-Macao Greater Bay Area.',
+                    'Live job matching, applications, and employer workflows across the GBA — deployed on Alibaba Cloud with Node.js, MySQL, and Python AI services.',
                 individual: 'Individual Access',
                 corporate: 'Corporate Access',
                 features: 'Platform Capabilities',
                 featuresLead:
-                    'Explore the key platform capabilities that help job seekers and inclusive employers move from discovery to matching, training, compliance, and long-term support.',
+                    'Individuals browse matched jobs (internal + external), apply online, and use Python AI demos. Companies post roles with target criteria and review scored applicants — all on the live Alibaba Cloud stack.',
                 workflow: 'One-stop Employment Loop',
                 benefits: 'Who We Serve',
                 stories: 'Success Stories',
@@ -29,12 +29,12 @@
             'zh-CN': {
                 title: '粤港澳大湾区跨区域就业赋能',
                 subtitle:
-                    '以能力优先匹配、政策红利导航、合规数据流转与包容远程就业为核心，服务大湾区跨区域就业。',
+                    '已部署于阿里云：Node.js + MySQL 提供岗位匹配与投递，Python AI 提供简历/面试/学习路径演示。',
                 individual: '个人端入口',
                 corporate: '企业端入口',
                 features: '平台能力',
                 featuresLead:
-                    '了解平台如何帮助求职者与包容雇主完成机会发现、岗位匹配、技能提升、合规支持与长期跟进。',
+                    '个人端可浏览内外部匹配岗位、在线投递并使用 Python AI 演示；企业端可发布带目标条件的岗位并查看评分申请人，运行于阿里云生产环境。',
                 workflow: '一站式就业闭环',
                 benefits: '服务对象',
                 stories: '成功案例',
@@ -44,12 +44,12 @@
             'zh-TW': {
                 title: '粵港澳大灣區跨區域就業賦能',
                 subtitle:
-                    '以能力優先匹配、政策紅利導航、合規資料流轉與包容遠端就業為核心，服務大灣區跨區域就業。',
+                    '已部署於阿里雲：Node.js + MySQL 提供崗位匹配與投遞，Python AI 提供履歷/面試/學習路徑示範。',
                 individual: '個人端入口',
                 corporate: '企業端入口',
                 features: '平台能力',
                 featuresLead:
-                    '了解平台如何幫助求職者與包容僱主完成機會發現、職位匹配、技能提升、合規支援與長期跟進。',
+                    '個人端可瀏覽匹配崗位、保存履歷並在線投遞；企業端可發布帶目標條件的崗位並查看評分排序的申請人，均由即時後端 API 支撐。',
                 workflow: '一站式就業閉環',
                 benefits: '服務對象',
                 stories: '成功案例',
@@ -59,12 +59,12 @@
             pt: {
                 title: 'Empoderamento Laboral Transregional da GBA',
                 subtitle:
-                    'Plataforma para correspondência por competências, navegação de políticas, fluxo de dados conforme e trabalho remoto inclusivo na Grande Baía Guangdong-Hong Kong-Macau.',
+                    'Matching de vagas, candidaturas e fluxos empresariais na GBA — em Alibaba Cloud com Node.js, MySQL e serviços Python AI.',
                 individual: 'Acesso individual',
                 corporate: 'Acesso empresarial',
                 features: 'Capacidades da plataforma',
                 featuresLead:
-                    'Explore capacidades que ajudam candidatos e empregadores inclusivos na descoberta, matching, formação, conformidade e acompanhamento.',
+                    'Candidatos navegam vagas com score e candidatam-se online; empresas publicam vagas com critérios-alvo e analisam candidatos por pontuação — tudo via API em produção.',
                 workflow: 'Ciclo completo de emprego',
                 benefits: 'Quem servimos',
                 stories: 'Histórias de sucesso',

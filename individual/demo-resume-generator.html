@@ -192,10 +192,31 @@
                     </h2>
                     
                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer" onclick="document.getElementById('resume-file').click()">
-                        <input type="file" id="resume-file" accept=".pdf,.docx,.doc,.txt" class="hidden" onchange="handleFileSelect(event)">
+                        <input type="file" id="resume-file" accept=".pdf,.docx,.txt,.md" class="hidden" onchange="handleFileSelect(event)">
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
-                        <p class="text-sm text-gray-600 mb-2">Click to upload or drag and drop</p>
-                        <p class="text-xs text-gray-500">PDF, DOCX, DOC, or TXT (Max 10MB)</p>
+                        <p class="text-sm text-gray-600 mb-2">点击上传或拖拽文件到此处</p>
+                        <p class="text-xs text-gray-500">支持 PDF、DOCX、TXT、MD，单文件不超过 10MB</p>
+                    </div>
+
+                    <div class="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4 text-xs text-gray-700 space-y-3">
+                        <div>
+                            <p class="font-semibold text-blue-900 mb-1"><i class="fas fa-file-circle-check text-blue-600 mr-1"></i>支持格式</p>
+                            <ul class="list-disc list-inside space-y-0.5 text-gray-600">
+                                <li><strong>PDF</strong>（.pdf）— 推荐，文字型 PDF 解析效果最佳</li>
+                                <li><strong>Word</strong>（.docx）— 仅支持新版 Word，不支持旧版 .doc</li>
+                                <li><strong>纯文本</strong>（.txt）与 <strong>Markdown</strong>（.md）</li>
+                            </ul>
+                            <p class="mt-1.5 text-gray-500">不支持：图片文件（.jpg / .png）、旧版 Word（.doc）、纯扫描图片简历（请先 OCR 为文字或 PDF）</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-blue-900 mb-1"><i class="fas fa-image text-blue-600 mr-1"></i>简历中的照片如何处理</p>
+                            <ul class="list-disc list-inside space-y-0.5 text-gray-600">
+                                <li>系统<strong>仅解析文字内容</strong>，不会从 PDF/Word 中单独提取证件照</li>
+                                <li>生成<strong>中文简历</strong>时，可在下方「简历分析结果」中<strong>上传个人证件照</strong>（国企/体制内建议附正装一寸照）</li>
+                                <li>生成<strong>英文简历</strong>遵循欧美规范，输出不含照片</li>
+                                <li>若企业开启盲筛，招聘方初审时不会看到照片、年龄、性别等敏感信息</li>
+                            </ul>
+                        </div>
                     </div>
                     
                     <div id="file-info" class="mt-4 hidden">
@@ -235,7 +256,7 @@
                     
                     <div id="jd-generated-hint" class="hidden mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                         <i class="fas fa-lightbulb mr-1"></i>
-                        Suggested job description generated from your resume, industry, and experience level. Feel free to edit before generating.
+                        已生成建议岗位描述。点击「Generate Customized Resume」后需您确认 JD，并可能追问技术栈等细节。
                     </div>
                     
                     <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -300,6 +321,10 @@
                         <i class="fas fa-magic mr-2"></i>
                         Generate Customized Resume
                     </button>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        仅填写岗位名称时将结合您的简历生成 JD 并请您确认；优化前可能追问技术栈等细节。
+                    </p>
                 </section>
             </div>
 
@@ -479,6 +504,35 @@
                         </div>
                     </div>
 
+                    <div id="profile-photo-section" class="mb-6 p-4 border border-red-100 bg-red-50/50 rounded-lg">
+                        <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                                    <i class="fas fa-id-card text-red-600"></i>
+                                    个人证件照 <span class="text-xs font-normal text-gray-500">（中文简历）</span>
+                                </h4>
+                                <p class="text-xs text-gray-500 mt-1">建议白底/浅蓝底正装一寸照，将显示在简历右上角。国央企/体制内岗位强烈建议上传。</p>
+                            </div>
+                            <span id="profile-photo-status" class="text-xs text-gray-400"></span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div id="profile-photo-preview" class="w-24 h-32 border border-gray-300 rounded bg-white flex items-center justify-center overflow-hidden shrink-0">
+                                <i class="fas fa-user text-3xl text-gray-300" id="profile-photo-placeholder"></i>
+                                <img id="profile-photo-img" src="" alt="证件照预览" class="hidden w-full h-full object-cover">
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <input type="file" id="profile-photo-input" accept="image/jpeg,image/png,image/webp" class="hidden">
+                                <button type="button" id="profile-photo-upload-btn" class="px-3 py-2 text-sm bg-white border border-red-300 text-red-800 rounded-lg hover:bg-red-50 font-medium">
+                                    <i class="fas fa-upload mr-1"></i>上传照片
+                                </button>
+                                <button type="button" id="profile-photo-remove-btn" class="px-3 py-2 text-sm text-red-600 hover:text-red-800 hidden">
+                                    <i class="fas fa-trash-alt mr-1"></i>移除照片
+                                </button>
+                                <p class="text-xs text-gray-400">支持 JPG / PNG / WebP，单张不超过 2MB</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex items-center justify-between mb-3 mt-2">
                         <h4 class="font-semibold text-gray-800">Parsed Entries (<span id="profile-module-count">0</span>)</h4>
                     </div>
@@ -522,6 +576,49 @@
         </div>
     </div>
 
+    <!-- JD Confirmation Modal (title-only / auto-generated JD) -->
+    <div id="jd-confirmation-modal" class="loading-overlay hidden z-[60]">
+        <div class="loading-content max-w-2xl text-left w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold text-gray-900 mb-1">确认目标岗位描述</h3>
+            <p class="text-xs text-gray-500 mb-3">「软件工程师」与「Java 开发工程师」等技术方向不同。系统已结合您的简历生成下方 JD，请确认或编辑后再进入简历优化。</p>
+            <p id="jd-confirmation-note" class="text-sm text-gray-700 mb-2 p-3 bg-blue-50 border border-blue-100 rounded-lg"></p>
+            <div id="jd-confirmation-stack" class="mb-2 text-sm hidden"></div>
+            <p id="jd-confirmation-hint" class="hidden"></p>
+            <label class="block text-sm font-medium text-gray-700 mt-3 mb-1">岗位描述（可编辑）</label>
+            <textarea id="jd-confirmation-text" rows="12" class="w-full border border-gray-300 rounded-lg p-3 text-sm font-mono"></textarea>
+            <div class="flex flex-col sm:flex-row gap-2 mt-4">
+                <button type="button" onclick="confirmJdModal()" class="flex-1 bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700">
+                    确认并继续
+                </button>
+                <button type="button" onclick="regenerateJdInModal()" class="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50">
+                    重新生成
+                </button>
+                <button type="button" onclick="cancelJdModal()" class="flex-1 text-gray-500 py-2.5 text-sm hover:text-gray-700">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resume Optimization Q&A Dialog -->
+    <div id="resume-optimization-dialog" class="loading-overlay hidden z-[60]">
+        <div class="loading-content max-w-2xl text-left w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold text-gray-900 mb-1">简历优化 · 补充信息</h3>
+            <p class="text-xs text-gray-500 mb-3">请回答以下问题，以便更精准地优化简历（标 * 为必填）。</p>
+            <p id="optimization-hint" class="hidden text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded p-2 mb-3"></p>
+            <div id="optimization-gaps-summary" class="mb-4 hidden"></div>
+            <div id="optimization-questions" class="space-y-2"></div>
+            <div class="flex flex-col sm:flex-row gap-2 mt-4">
+                <button type="button" onclick="submitOptimizationDialog()" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700">
+                    提交并生成简历
+                </button>
+                <button type="button" onclick="cancelOptimizationDialog()" class="flex-1 text-gray-500 py-2.5 text-sm hover:text-gray-700">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Save to Account Modal -->
     <div id="save-resume-modal" class="loading-overlay hidden">
         <div class="loading-content max-w-md text-left">
@@ -554,9 +651,19 @@
         <span id="toast-message"></span>
     </div>
 
+    <script src="../test-data/browser-bundle.js"></script>
+    <script src="assets/js/target-job-context.js"></script>
     <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/platform-api.js"></script>
+    <script src="../assets/js/platform-access.js"></script>
     <script src="assets/js/resume-language-checklist.js"></script>
     <script src="assets/js/resume-profile-editor.js"></script>
+    <script src="assets/js/resume-optimization-flow.js"></script>
     <script src="assets/js/resume-generator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            PlatformAccess.guardCurrentPage({ showModal: true, skipOnDonationPage: true });
+        });
+    </script>
 </body>
 </html>

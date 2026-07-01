@@ -14,7 +14,6 @@
             { label: 'Platform Overview', href: '#top-hero', icon: 'fa-home' },
             { label: 'Features', href: '#features', icon: 'fa-star' },
             { label: 'How It Works', href: '#how-it-works', icon: 'fa-circle-info' },
-            { label: 'Success Stories', href: '#success-stories', icon: 'fa-trophy' },
             { label: 'FAQ', href: '#faq', icon: 'fa-circle-question' },
         ],
         individual: [
@@ -22,11 +21,13 @@
             { label: 'Resume Generator', href: 'demo-resume-generator.html', icon: 'fa-file-lines' },
             { label: 'Interview Prep', href: 'demo-interview.html', icon: 'fa-comments' },
             { label: 'Learning Path', href: 'demo-learning-path.html', icon: 'fa-route' },
+            { label: '爱心捐款箱', href: 'donation-legal.html', icon: 'fa-hand-holding-heart' },
         ],
         corporate: [
             { label: 'Recruiter Dashboard', href: '#dashboard', icon: 'fa-chart-line' },
             { label: 'HR Tools', href: '#ai-features', icon: 'fa-toolbox' },
             { label: 'My Jobs', href: '#jobs', icon: 'fa-briefcase' },
+            { label: '爱心捐款箱', href: 'donation-legal.html', icon: 'fa-hand-holding-heart' },
         ],
     };
 

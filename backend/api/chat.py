@@ -16,6 +16,7 @@ from workflow.graph import compile_graph
 from workflow.state import CopilotState
 from storage.redis_client import get_redis_client, RedisSessionStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
+from services.llm_queue import SessionBusyError, llm_queue_slot
 from log import get_logger
 
 logger = get_logger("api")
@@ -106,7 +107,12 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     # 执行 workflow graph，加上config指定langsmith的run_name，方便在LangSmith上查看每次API调用的执行详情
     graph = _get_graph()
     try:
-        result = await _ainvoke_graph(graph, state.model_dump(), config={"run_name": f"API-Chat-Request: {session_id}"})
+        async with llm_queue_slot(session_id):
+            result = await _ainvoke_graph(
+                graph, state.model_dump(), config={"run_name": f"API-Chat-Request: {session_id}"}
+            )
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
     except Exception as e:
         logger.error("Workflow execution failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"处理失败: {e}")

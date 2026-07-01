@@ -1,0 +1,16 @@
+John Doe
+Email: john.doe@example.com
+Phone: +86 138-0000-0000
+
+EXPERIENCE:
+Senior Software Engineer at Tech Corp (2020-Present)
+- Led development of microservices architecture
+- Implemented CI/CD pipelines using Docker and Kubernetes
+- Mentored junior developers and conducted code reviews
+
+SKILLS:
+Python, JavaScript, React, Node.js, Docker, Kubernetes, AWS, Git
+
+EDUCATION:
+Bachelor of Science in Computer Science
+University of Technology, 2019

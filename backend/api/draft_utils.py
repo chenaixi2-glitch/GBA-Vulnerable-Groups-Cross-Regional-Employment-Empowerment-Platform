@@ -126,12 +126,19 @@ def draft_to_profile(draft: dict[str, Any]) -> CandidateProfile:
     education_entries = draft.get("education") or []
     first_school = education_entries[0].get("school", "") if education_entries else ""
 
+    basic_extras = {
+        str(k): str(v)
+        for k, v in (basic_data.get("extras") or {}).items()
+        if v is not None and str(v).strip()
+    }
+
     basic = ProfileBasic(
         name=str(basic_data.get("name") or ""),
         email=str(basic_data.get("email") or ""),
         phone=str(basic_data.get("phone") or ""),
         city=str(basic_data.get("city") or ""),
         school=str(first_school),
+        extras=basic_extras,
     )
 
     now = datetime.now(timezone.utc).isoformat()

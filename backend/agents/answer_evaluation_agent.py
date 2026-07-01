@@ -9,6 +9,7 @@ from typing import Any
 from agents.json_contracts import AnswerEvaluationOutput, LLMJudgeRubricOutput
 from models.llm import get_llm, get_judge_llm, ainvoke_json_with_schema
 from prompts.answer_evaluation import ANSWER_EVALUATION_PROMPT, LLM_JUDGE_RUBRIC_PROMPT
+from tools.target_job_context import build_enriched_job_json
 from workflow.state import AnswerEvaluation, CopilotState, InterviewQA
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
@@ -38,9 +39,9 @@ def _find_interview_qa(state: CopilotState, question_id: str) -> InterviewQA | N
 
 
 def _job_context(state: CopilotState) -> str:
-    if state.job is None:
+    if state.job is None and not (state.meta.target_jd_text or "").strip():
         return "（无岗位信息）"
-    return state.job.model_dump_json(indent=2)
+    return build_enriched_job_json(state)
 
 
 def _blend_score(primary_score: int, judge: LLMJudgeRubricOutput) -> int:

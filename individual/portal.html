@@ -94,13 +94,26 @@
             
             <nav class="hidden md:flex items-center gap-6">
                 <a href="#dashboard" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Dashboard</a>
-                <a href="demo-resume-generator.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Resume Generator</a>
-                <a href="demo-interview.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Interview Prep</a>
-                <a href="demo-learning-path.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Learning Path</a>
+                <a href="demo-resume-generator.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access>Resume Generator</a>
+                <a href="demo-interview.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access>Interview Prep</a>
+                <a href="demo-learning-path.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access>Learning Path</a>
+                <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i>捐款箱</a>
             </nav>
             
             <div class="flex items-center gap-3">
-                <button id="session-info-btn" class="text-sm text-gray-600 hover:text-blue-600">
+                <div id="portal-auth-guest" class="flex items-center gap-2">
+                    <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5">登录</a>
+                    <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg">注册</a>
+                </div>
+                <div id="portal-auth-user" class="hidden flex items-center gap-3">
+                    <a href="profile.html" class="text-sm text-blue-700 hover:text-blue-800 font-medium hidden sm:inline">个人资料</a>
+                    <div class="text-right hidden sm:block">
+                        <div id="portal-user-name" class="text-sm font-medium text-gray-900"></div>
+                        <div id="portal-user-email" class="text-xs text-gray-500"></div>
+                    </div>
+                    <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600 px-2 py-1">退出</button>
+                </div>
+                <button id="session-info-btn" class="text-sm text-gray-600 hover:text-blue-600 hidden">
                     <i class="fas fa-user-circle mr-1"></i>
                     <span id="session-id-display">Not Connected</span>
                 </button>
@@ -116,10 +129,13 @@
                 <h2 class="text-3xl font-bold mb-2">Welcome to Your Career Assistant</h2>
                 <p class="text-blue-100">AI-powered tools to help you land your dream job in the Greater Bay Area</p>
             </div>
+
+            <!-- 捐款箱 / 访问状态横幅 -->
+            <div id="portal-access-banner" class="mb-6 hidden"></div>
             
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Resume Generator Card -->
-                <a href="demo-resume-generator.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                <a href="demo-resume-generator.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block" data-require-access>
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                         <i class="fas fa-file-alt text-2xl text-blue-600"></i>
                     </div>
@@ -132,7 +148,7 @@
                 </a>
                 
                 <!-- Interview Preparation Card -->
-                <a href="demo-interview.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                <a href="demo-interview.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block" data-require-access>
                     <div class="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center mb-4">
                         <i class="fas fa-comments text-2xl text-green-600"></i>
                     </div>
@@ -145,7 +161,7 @@
                 </a>
                 
                 <!-- Learning Path Card -->
-                <a href="demo-learning-path.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block">
+                <a href="demo-learning-path.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block" data-require-access>
                     <div class="w-14 h-14 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                         <i class="fas fa-graduation-cap text-2xl text-orange-600"></i>
                     </div>
@@ -153,6 +169,46 @@
                     <p class="text-gray-600 text-sm mb-4">Get customized learning recommendations to bridge skill gaps and advance your career.</p>
                     <div class="flex items-center text-orange-600 text-sm font-medium">
                         <span>Explore Paths</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </a>
+
+                <!-- Job Matching Card -->
+                <a href="demo-jobs-database.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block" data-require-access>
+                    <div class="w-14 h-14 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-briefcase text-2xl text-teal-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">岗位匹配与投递</h3>
+                    <p class="text-gray-600 text-sm mb-4">按人群类型与简历评分推荐岗位。企业岗位平台内投递，爬虫岗位跳转源站。</p>
+                    <div class="flex items-center text-teal-600 text-sm font-medium">
+                        <span>浏览岗位</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </a>
+
+                <!-- My Applications Card -->
+                <a href="my-applications.html" class="feature-card bg-white rounded-xl p-6 border shadow-sm block" data-require-access>
+                    <div class="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-paper-plane text-2xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">我的投递</h3>
+                    <p class="text-gray-600 text-sm mb-4">查看平台内投递记录、匹配分与状态，pending 状态可撤销。</p>
+                    <div id="portal-app-stats" class="text-xs text-purple-700 mb-2 hidden"></div>
+                    <div class="flex items-center text-purple-600 text-sm font-medium">
+                        <span>查看记录</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </a>
+
+                <!-- Donation & Legal Services Card -->
+                <a href="donation-legal.html" class="feature-card bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200 shadow-sm block">
+                    <div class="w-14 h-14 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-hand-holding-heart text-2xl text-amber-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">爱心捐款箱 · 法律服务</h3>
+                    <p class="text-gray-600 text-sm mb-4">弱势群体免费使用平台；非弱势群体捐款（不限金额）支持法律服务并解锁功能。资金100%用于弱势群体法律帮扶。</p>
+                    <div class="flex items-center text-amber-700 text-sm font-medium">
+                        <span>了解并捐款</span>
                         <i class="fas fa-arrow-right ml-2"></i>
                     </div>
                 </a>
@@ -219,7 +275,46 @@
         <span id="toast-message"></span>
     </div>
 
+    <script src="../assets/js/auth-api.js"></script>
     <script src="assets/js/app.js"></script>
+    <script src="assets/js/platform-api.js"></script>
+    <script src="../assets/js/portal-auth.js"></script>
+    <script src="../assets/js/platform-access.js"></script>
     <script src="../assets/floating-widget.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            PortalAuth.initPortalAuth({ portal: 'individual', requireAuth: false });
+            PlatformAccess.guardFeatureLinks('[data-require-access]');
+            try {
+                const access = await PlatformAccess.fetchAccess();
+                const banner = document.getElementById('portal-access-banner');
+                if (!banner) return;
+                if (access.is_vulnerable) {
+                    banner.className = 'mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm';
+                    banner.innerHTML = '<i class="fas fa-gift mr-2"></i><strong>弱势群体用户</strong>：您已识别为「' + (access.group_types_label || '弱势群体') + '」，平台功能<strong>免费</strong>使用。';
+                    banner.classList.remove('hidden');
+                } else if (access.requires_donation) {
+                    banner.className = 'mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex flex-wrap items-center justify-between gap-3';
+                    banner.innerHTML = '<span><i class="fas fa-hand-holding-heart mr-2"></i>使用平台功能需向<strong>弱势群体法律服务</strong>捐款箱捐款（金额不限）</span><a href="donation-legal.html" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">前往捐款箱</a>';
+                    banner.classList.remove('hidden');
+                } else if (access.has_access) {
+                    banner.className = 'mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm';
+                    banner.innerHTML = '<i class="fas fa-check-circle mr-2"></i>您已完成捐款，平台功能已解锁。感谢您的爱心支持！';
+                    banner.classList.remove('hidden');
+                }
+            } catch (e) { /* ignore */ }
+
+            if (PlatformAPI.getToken()) {
+                try {
+                    const stats = await PlatformAPI.StatsAPI.individual();
+                    const el = document.getElementById('portal-app-stats');
+                    if (el && stats.data) {
+                        el.classList.remove('hidden');
+                        el.textContent = '已投递 ' + (stats.data.total_applications || 0) + ' 个 · 外部跳转 ' + (stats.data.external_interests || 0) + ' 次';
+                    }
+                } catch (e2) { /* ignore */ }
+            }
+        });
+    </script>
 </body>
 </html>

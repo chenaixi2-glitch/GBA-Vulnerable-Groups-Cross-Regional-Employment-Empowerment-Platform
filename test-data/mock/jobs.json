@@ -1,0 +1,114 @@
+[
+  {
+    "id": 1,
+    "title": "Cross-border E-commerce Customer Service Specialist",
+    "company": "Global E-Trade Co., Ltd.",
+    "location": "Shenzhen",
+    "salary": "6K-8K",
+    "type": "Full-time",
+    "remote": true,
+    "accessibility": true,
+    "skills": [
+      "Communication",
+      "English",
+      "Customer service",
+      "Problem solving"
+    ],
+    "description": "Handle international customer inquiries and provide product and after-sales support",
+    "matchScore": 92,
+    "matchReasons": [
+      "Your CS background aligns strongly with this role",
+      "Your English fits international support needs",
+      "Patience and communication are central to success here"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Data Annotator",
+    "company": "Smart Tech Co., Ltd.",
+    "location": "Guangzhou",
+    "salary": "5K-7K",
+    "type": "Part-time",
+    "remote": true,
+    "accessibility": true,
+    "skills": [
+      "Attention to detail",
+      "Focus",
+      "Basic computer skills"
+    ],
+    "description": "Label and review data for AI model training",
+    "matchScore": 88,
+    "matchReasons": [
+      "Your careful working style suits annotation work",
+      "Remote-friendly with flexible hours",
+      "Accessible workplace friendly to diverse candidates"
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Content Moderator",
+    "company": "New Media Tech Co., Ltd.",
+    "location": "Zhuhai",
+    "salary": "5.5K-7.5K",
+    "type": "Full-time",
+    "remote": false,
+    "accessibility": true,
+    "skills": [
+      "Responsibility",
+      "Judgment",
+      "Basic computer skills"
+    ],
+    "description": "Review platform content and ensure compliance",
+    "matchScore": 85,
+    "matchReasons": [
+      "Strong sense of duty and judgment fits moderation",
+      "Company provides an accessible workspace",
+      "Stable schedule for those who need routine"
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Live Stream Assistant",
+    "company": "E-commerce Live Co., Ltd.",
+    "location": "Shenzhen",
+    "salary": "6K-8K",
+    "type": "Part-time",
+    "remote": false,
+    "accessibility": false,
+    "skills": [
+      "Communication",
+      "Adaptability",
+      "Basic computer skills"
+    ],
+    "description": "Assist hosts during live sales and resolve on-air issues",
+    "matchScore": 80,
+    "matchReasons": [
+      "Communication and composure suit live commerce",
+      "Training provided — beginners welcome",
+      "Part-time with flexible scheduling"
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Operations Assistant",
+    "company": "Cross-border Commerce Co., Ltd.",
+    "location": "Hong Kong",
+    "salary": "8K-10K",
+    "type": "Full-time",
+    "remote": false,
+    "accessibility": true,
+    "skills": [
+      "Data literacy",
+      "Communication",
+      "English",
+      "Office productivity"
+    ],
+    "description": "Support daily ops: metrics, coordination, campaign planning alongside the Ops lead",
+    "matchScore": 78,
+    "matchReasons": [
+      "English meets cross-border ops needs",
+      "Detail orientation supports operations workflows",
+      "Structured onboarding and training"
+    ]
+  }
+]

@@ -137,16 +137,25 @@ async function uploadInterviewProfile() {
 
 async function submitInterviewJobDescription() {
     const jdText = document.getElementById('interview-jd-text').value.trim();
+    const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
+        fields: {
+            jdText: ['interview-jd-text'],
+            industry: ['job-industry'],
+            employerType: ['interview-employer-type'],
+            experienceLevel: ['interview-experience-level'],
+        },
+        jdTextOverride: jdText,
+    }) : null;
 
-    if (!jdText) {
-        Utils.showToast('Please paste the target job description');
+    if (!jdText && !targetContext?.industry && !targetContext?.employer_type && !targetContext?.experience_level) {
+        Utils.showToast('Please paste the target job description or fill in target job fields');
         return;
     }
 
     try {
         Utils.showLoading('Analyzing job description...');
 
-        const response = await apiClient.submitJobDescription(jdText);
+        const response = await apiClient.submitJobDescription(jdText || targetContext?.jd_text || document.getElementById('job-title').value.trim(), targetContext);
         interviewPrerequisites.jobReady = true;
         updatePrerequisiteStatus();
 
@@ -164,9 +173,18 @@ async function submitInterviewJobDescription() {
 async function generateInterviewResume() {
     try {
         Utils.showLoading('Generating tailored resume content...');
+        const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
+            fields: {
+                jdText: ['interview-jd-text'],
+                industry: ['job-industry'],
+                employerType: ['interview-employer-type'],
+                experienceLevel: ['interview-experience-level'],
+            },
+        }) : null;
 
         const response = await apiClient.generateResume(
-            'Please generate a customized resume based on my experience and target position'
+            'Please generate a customized resume based on my experience and target position',
+            targetContext
         );
 
         if (response.resume_content_json) {
@@ -245,8 +263,16 @@ async function loadInterviewQuestions() {
 
     try {
         Utils.showLoading('Generating personalized questions...');
+        const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
+            fields: {
+                jdText: ['interview-jd-text'],
+                industry: ['job-industry'],
+                employerType: ['interview-employer-type'],
+                experienceLevel: ['interview-experience-level'],
+            },
+        }) : null;
 
-        const response = await apiClient.startInterviewSession(jobTitle, industry, interviewSession.tone);
+        const response = await apiClient.startInterviewSession(jobTitle, industry, interviewSession.tone, targetContext);
 
         if (response.interview_qa && response.interview_qa.length > 0) {
             interviewSession.questions = response.interview_qa.map((qa, index) => ({
@@ -294,12 +320,21 @@ async function startInteractiveInterview() {
 
     try {
         Utils.showLoading('Starting interactive mock interview...');
+        const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
+            fields: {
+                jdText: ['interview-jd-text'],
+                industry: ['job-industry'],
+                employerType: ['interview-employer-type'],
+                experienceLevel: ['interview-experience-level'],
+            },
+        }) : null;
 
         const response = await apiClient.startInteractiveInterview({
             tone: interviewSession.tone,
             jobTitle,
             industry,
             maxRounds: 10,
+            targetContext,
         });
 
         const session = response.interactive_interview;
@@ -973,6 +1008,7 @@ function restartSession() {
         };
 
         hideInteractiveSaveModal();
+        interviewPrerequisites = {
             profileReady: false,
             jobReady: false,
             resumeReady: false,

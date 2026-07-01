@@ -36,6 +36,28 @@ function updateSaveLoginHint() {
 }
 
 function getFormInputs() {
+    if (typeof collectTargetJobContext === 'function') {
+        const ctx = collectTargetJobContext({
+            fields: {
+                jdText: ['jd-text'],
+                industry: ['industry-focus'],
+                employerType: ['learning-employer-type'],
+                experienceLevel: ['learning-experience-level'],
+            },
+        });
+        return {
+            targetJob: document.getElementById('target-job').value.trim(),
+            currentRole: document.getElementById('current-role').value.trim(),
+            industry: ctx.industry,
+            industryLabel: ctx.industryLabel,
+            employerType: ctx.employer_type,
+            experienceLevel: ctx.experience_level,
+            currentSkillsText: document.getElementById('current-skills').value.trim(),
+            profileText: document.getElementById('profile-text')?.value.trim() || '',
+            jdText: ctx.jd_text,
+            targetContext: ctx,
+        };
+    }
     return {
         targetJob: document.getElementById('target-job').value.trim(),
         currentRole: document.getElementById('current-role').value.trim(),
@@ -81,10 +103,13 @@ async function generateLearningPathAnalysis() {
         const response = await apiClient.generateLearningPathAnalysis({
             targetJob: inputs.targetJob,
             currentRole: inputs.currentRole,
-            industry: inputs.industry,
+            industry: inputs.industryLabel || inputs.industry,
+            employerType: inputs.employerType || '',
+            experienceLevel: inputs.experienceLevel || '',
             currentSkills,
             profileText: inputs.profileText,
             jdText: inputs.jdText,
+            targetContext: inputs.targetContext,
         });
 
         learningPathData = processAnalysisResponse(response, {
@@ -131,7 +156,17 @@ async function generateLearningPathTimeline() {
         document.getElementById('loading-state').querySelector('p').textContent =
             'Building your personalized learning timeline...';
 
-        const response = await apiClient.generateLearningPathTimeline(dailyHours);
+        const targetContext = typeof collectTargetJobContext === 'function'
+            ? collectTargetJobContext({
+                fields: {
+                    jdText: ['jd-text'],
+                    industry: ['industry-focus'],
+                    employerType: ['learning-employer-type'],
+                    experienceLevel: ['learning-experience-level'],
+                },
+            })
+            : null;
+        const response = await apiClient.generateLearningPathTimeline(dailyHours, targetContext);
 
         learningPathData.dailyHours = dailyHours;
         learningPathData.timeline = response.timeline || [];

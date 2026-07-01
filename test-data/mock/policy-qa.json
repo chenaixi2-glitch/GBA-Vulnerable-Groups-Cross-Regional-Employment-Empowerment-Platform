@@ -1,0 +1,106 @@
+[
+  {
+    "keys": [
+      "cross-border social security",
+      "social security transfer",
+      "社保转移",
+      "跨境社保"
+    ],
+    "data": {
+      "question": "Cross-border social security transfer",
+      "answer": "Under Greater Bay Area (GBA) integration, HK and Macau residents employed in mainland GBA cities may participate in mainland social insurance. Returning to HK/Macau, they may retain or transfer coverage. Outline: (1) obtain contribution proof from the original bureau; (2) apply to the new bureau; (3) the new bureau coordinates transfer with the old one.",
+      "steps": [
+        "Gather ID / travel permit and employment proof",
+        "Request a formal contribution record from your original bureau",
+        "Submit a transfer request to the new bureau",
+        "Allow review — often 15–30 business days",
+        "Upon approval your relationship formally transfers"
+      ]
+    }
+  },
+  {
+    "keys": [
+      "15%",
+      "individual income tax subsidy",
+      "税费补贴"
+    ],
+    "data": {
+      "question": "15% IIT subsidy for HK/Macau talents",
+      "answer": "Eligible overseas high-end and urgently-needed talents working in the GBA may receive a fiscal subsidy equal to IIT paid minus 15% of taxable income, for the Pearl River Delta municipalities. Typically tax-free itself. Applicants must qualify as recognised talent categories, earn income taxed in the GBA, and have no serious compliance violations.",
+      "formula": "Subsidy = IIT paid − (Taxable income × 15%)",
+      "example": "Example: taxable income CN¥ 1m, IIT paid CN¥ 300k → subsidy ≈ 300k − 150k = 150k (illustrative only)."
+    }
+  },
+  {
+    "keys": [
+      "disability insurance fund",
+      "employment quota",
+      "残保金"
+    ],
+    "data": {
+      "question": "Disability employment security fund exemptions",
+      "answer": "Employers generally must hire persons with disabilities at a minimum ratio of total headcount (often ~1.5%, varies locally). Meet or exceed the ratio to avoid assessments; otherwise pay into the security fund. Hiring PWD employees can also qualify for VAT relief, extra CIT deductions, etc.—rules vary—confirm with local Disabled Persons Federation or tax bureau.",
+      "calculation": "Annual levy basis ≈ (Headcount × required ratio − actual hires with disabilities) × average payroll (local formula applies)"
+    }
+  },
+  {
+    "keys": [
+      "employer subsidy",
+      "hiring subsidy",
+      "贴"
+    ],
+    "data": {
+      "question": "Employer hiring subsidies",
+      "answer": "GBA municipalities offer grants for inclusive hiring—typical pillars: onboarding incentives for underserved groups; training subsidies for skills programmes; partial social-premium rebates; incubator or base rent support. Processes usually include filings, audits, publicity, payout.",
+      "requiredMaterials": [
+        "Business licence copy",
+        "Tax registration certificate copy",
+        "Unified org code certificate (historical filings)",
+        "Roster of hires under the programme",
+        "Signed labour contracts copies",
+        "Payroll evidence",
+        "Social insurance contribution proof",
+        "Disability certificate or equivalent supporting proof"
+      ]
+    }
+  },
+  {
+    "keys": [
+      "qualification recognition",
+      "professional recognition",
+      "资质",
+      "互认"
+    ],
+    "data": {
+      "question": "Cross-border professional recognition",
+      "answer": "The GBA is expanding mutual recognition of qualifications in construction, healthcare, education, accounting, and more. Examples: HK architects/engineers may practice on the mainland via streamlined routes; doctors and teachers may serve in qualified facilities. Scope and tests differ by sector—check professional bodies and regulators.",
+      "recognizedFields": [
+        "Built environment: architects, engineers",
+        "Healthcare: doctors, nurses",
+        "Education: teachers, professors",
+        "Accounting: CPAs, auditors",
+        "Legal: limited-scope practice arrangements"
+      ]
+    }
+  },
+  {
+    "keys": [
+      "visa",
+      "work permit",
+      "residence permit",
+      "签证"
+    ],
+    "data": {
+      "question": "Visas / work permits for HK & Macau residents",
+      "answer": "HK residents usually need a Home Return Permit (Mainland Travel Permit) for mainland mobility; Macau residents may use passports or relevant travel permits. Long-term mainland employment additionally requires compliant work/residence permits — consult PSB exit-entry offices for timelines and dossiers.",
+      "requiredDocuments": [
+        "Valid ID / travel permits or passport",
+        "Job offer letter or sponsor invitation",
+        "Medical clearance",
+        "Criminal-record certificate where required",
+        "Recent biography photo",
+        "Completed official application forms"
+      ]
+    }
+  }
+]

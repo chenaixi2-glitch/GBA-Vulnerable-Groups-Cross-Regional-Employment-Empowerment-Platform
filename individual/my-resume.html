@@ -42,7 +42,11 @@
                     <div class="upload-zone rounded-3xl p-10 text-center">
                         <div class="w-20 h-20 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-4xl mx-auto mb-5"><i class="fas fa-cloud-arrow-up"></i></div>
                         <h3 class="text-xl font-bold mb-2">Drag your resume here</h3>
-                        <p class="text-gray-500 mb-6">Supports PDF, DOCX and image resumes. The parser will extract education, skills, projects, work history and accessibility preferences.</p>
+                        <p class="text-gray-500 mb-4">支持 PDF、DOCX、TXT、MD（单文件 ≤ 10MB）。解析器将提取教育、技能、项目、工作经历等信息。</p>
+                        <div class="text-left text-sm text-gray-600 bg-white/80 rounded-2xl p-4 mb-6 space-y-2 max-w-lg mx-auto">
+                            <p><strong class="text-orange-800">不支持：</strong>图片文件（.jpg/.png）、旧版 Word（.doc）、纯扫描图片简历。</p>
+                            <p><strong class="text-orange-800">照片说明：</strong>仅解析文字，不提取或保存简历内证件照；生成英文简历时不含照片；企业盲筛模式下招聘方初审不见照片。</p>
+                        </div>
                         <button class="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-xl shadow"><i class="fas fa-upload mr-2"></i>Choose file</button>
                     </div>
                     <div class="grid md:grid-cols-3 gap-4 mt-6">

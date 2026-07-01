@@ -60,6 +60,7 @@ def run_init_schema() -> None:
         _migrate_sessions_user_id(connection)
         _migrate_interactive_interview_sessions(connection)
         _migrate_learning_path_plans(connection)
+        _migrate_jd_cache(connection)
     finally:
         connection.close()
 
@@ -143,6 +144,41 @@ def _migrate_learning_path_plans(connection) -> None:
         print("[INFO] learning_path_plans 表已就绪。")
     except pymysql.Error as e:
         print(f"[WARN] learning_path_plans 迁移失败: {e}")
+
+
+def _migrate_jd_cache(connection) -> None:
+    """为已有库补充 jd_cache 表（幂等）。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    sql = f"""
+        CREATE TABLE IF NOT EXISTS `{db_name}`.`jd_cache` (
+            id                    VARCHAR(64)      PRIMARY KEY,
+            job_title             VARCHAR(256)     NOT NULL DEFAULT '',
+            job_title_normalized  VARCHAR(256)     DEFAULT NULL COMMENT '归一化岗位名，用于相似岗位匹配',
+            jd_text               LONGTEXT         NOT NULL,
+            jd_text_hash          VARCHAR(64)      NOT NULL,
+            title                 VARCHAR(256)     NOT NULL DEFAULT '',
+            source                ENUM('generated', 'uploaded') NOT NULL DEFAULT 'generated',
+            industry              VARCHAR(128)     NOT NULL DEFAULT '',
+            employer_type         VARCHAR(32)      NOT NULL DEFAULT '',
+            experience_level      VARCHAR(128)     NOT NULL DEFAULT '',
+            params_key            VARCHAR(64)      DEFAULT NULL COMMENT '行业+单位性质+经验等级哈希',
+            parsed_job            JSON             DEFAULT NULL COMMENT 'jd_agent 解析结果',
+            hit_count             INT              NOT NULL DEFAULT 0,
+            created_at            DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at            DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_jd_cache_title (job_title_normalized),
+            UNIQUE KEY uk_jd_cache_hash (jd_text_hash),
+            UNIQUE KEY uk_jd_cache_params (params_key),
+            INDEX idx_jd_cache_updated (updated_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+        print("[INFO] jd_cache 表已就绪。")
+    except pymysql.Error as e:
+        print(f"[WARN] jd_cache 迁移失败: {e}")
 
 
 def _is_comment_only(sql: str) -> bool:

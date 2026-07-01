@@ -36,6 +36,11 @@
     return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${map[status] || map.active}">${label}</span>`;
   }
 
+  function friendlyBadge(job) {
+    if (!job.vulnerable_group_friendly) return '';
+    return '<span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">弱势群体友好</span>';
+  }
+
   function subTitle(job) {
     if (job.source === 'external') {
       return job.company_name || '外部岗位 · 广东省残疾人就业服务网';
@@ -50,16 +55,28 @@
     }
 
     const view = `<a href="#" data-action="view" data-id="${job.id}" class="text-green-600 hover:text-green-900 mr-3">View</a>`;
+    const applicants = job.source === 'internal'
+      ? `<a href="#" data-action="applicants" data-id="${job.id}" class="text-purple-600 hover:text-purple-900 mr-3">Applicants</a>`
+      : '';
     if (job.status === 'closed') {
       return (
-        view +
+        view + applicants +
+        `<a href="#" data-action="reopen" data-id="${job.id}" class="text-emerald-600 hover:text-emerald-900 mr-3">Reopen</a>` +
         `<a href="#" data-action="clone" data-id="${job.id}" class="text-blue-600 hover:text-blue-900 mr-3">Clone</a>` +
         `<a href="#" data-action="delete" data-id="${job.id}" class="text-red-600 hover:text-red-900">Delete</a>`
       );
     }
+    if (job.status === 'interviewing') {
+      return (
+        view + applicants +
+        `<a href="#" data-action="edit" data-id="${job.id}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>` +
+        `<a href="#" data-action="close" data-id="${job.id}" class="text-red-600 hover:text-red-900">Close</a>`
+      );
+    }
     return (
-      view +
+      view + applicants +
       `<a href="#" data-action="edit" data-id="${job.id}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>` +
+      `<a href="#" data-action="interviewing" data-id="${job.id}" class="text-yellow-600 hover:text-yellow-900 mr-3">Interviewing</a>` +
       `<a href="#" data-action="close" data-id="${job.id}" class="text-red-600 hover:text-red-900">Close</a>`
     );
   }
@@ -74,7 +91,7 @@
         (job) => `
       <tr data-source="${job.source}">
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm font-medium text-gray-900">${escapeHtml(job.title)}</div>
+          <div class="text-sm font-medium text-gray-900">${escapeHtml(job.title)}${friendlyBadge(job)}</div>
           <div class="text-sm text-gray-500">${escapeHtml(subTitle(job))}</div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${escapeHtml(job.location || '-')}</div></td>
@@ -139,6 +156,8 @@
         pageSize: PAGE_SIZE,
         status: state.status,
         search: state.search,
+        mine: 'true',
+        source: 'internal',
       });
       const { items, pagination } = res.data;
       state.allItems = items;
@@ -151,6 +170,7 @@
         ? { page: 1, totalPages: 1, total: filtered.length }
         : pagination;
       renderPagination(paginationData);
+      if (typeof window.loadCorporateStats === 'function') window.loadCorporateStats();
     } catch (err) {
       els.tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-600">Failed to load jobs: ${escapeHtml(err.message)}. Is the API server running on port 3000?</td></tr>`;
     } finally {
@@ -180,6 +200,10 @@
       <p><strong>Salary:</strong> ${escapeHtml(job.salary || '-')}</p>
       <p><strong>Education:</strong> ${escapeHtml(job.education || '-')}</p>
       <p><strong>Experience:</strong> ${escapeHtml(job.work_experience || '-')}</p>
+      <p><strong>弱势群体友好:</strong> ${job.vulnerable_group_friendly ? '是' : '否'}</p>
+      <p><strong>Derived Tags:</strong> ${escapeHtml((job.target_group_types || []).join(', ') || '-')}</p>
+      <p><strong>Target Criteria:</strong> ${escapeHtml(job.target_criteria ? JSON.stringify(job.target_criteria) : '-')}</p>
+      <p><strong>Skills:</strong> ${escapeHtml((job.skills || []).join(', ') || '-')}</p>
       <p><strong>Disability Type:</strong> ${escapeHtml(job.disability_type || '-')}</p>
       <p class="mt-3 whitespace-pre-wrap">${escapeHtml(job.description || 'No description.')}</p>
     `;
@@ -190,24 +214,84 @@
     els.modal.classList.add('hidden');
   }
 
+  async function showApplicantsModal(id) {
+    try {
+      const res = await CorporateAPI.JobsAPI.listApplications(id);
+      const apps = res.data.applications || [];
+      const friendly = res.data.vulnerable_group_friendly;
+      els.modalTitle.textContent = friendly
+        ? 'Applicants (弱势群体优先 · then match score)'
+        : 'Applicants (sorted by match score)';
+      if (!apps.length) {
+        els.modalBody.innerHTML = '<p class="text-gray-500">No applications yet. Scores appear after candidates apply.</p>';
+      } else {
+        if (friendly && res.data.sort_note) {
+          els.modalBody.innerHTML = '<p class="text-xs text-emerald-700 mb-3 font-medium">' + escapeHtml(res.data.sort_note) + '</p>';
+        } else {
+          els.modalBody.innerHTML = '';
+        }
+        els.modalBody.innerHTML += '<div class="space-y-3">' + apps.map(function (a) {
+          const isVulnerable = (a.applicant_group_types || []).length > 0;
+          const vBadge = isVulnerable
+            ? '<span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-800">弱势群体</span>'
+            : '';
+          const reasons = (a.match_reasons || []).map(function (r) { return '<li>' + escapeHtml(r) + '</li>'; }).join('');
+          const statusOpts = ['pending', 'reviewing', 'accepted', 'rejected'].map(function (st) {
+            return '<option value="' + st + '"' + (a.status === st ? ' selected' : '') + '>' + st + '</option>';
+          }).join('');
+          return '<div class="border rounded-xl p-4 bg-gray-50" data-app-id="' + a.id + '">' +
+            '<div class="flex justify-between items-start gap-3">' +
+            '<div><p class="font-semibold text-gray-900">' + escapeHtml(a.applicant_name || 'Candidate') + vBadge + '</p>' +
+            '<p class="text-sm text-gray-500">' + escapeHtml(a.applicant_email || '') + '</p>' +
+            '<p class="text-xs text-gray-400 mt-1">Groups: ' + escapeHtml((a.applicant_group_types || []).join(', ') || '-') + '</p></div>' +
+            '<span class="text-lg font-bold text-green-700">' + (a.match_score || 0) + '</span></div>' +
+            (reasons ? '<ul class="text-sm text-gray-600 mt-2 list-disc pl-5">' + reasons + '</ul>' : '') +
+            (a.cover_message ? '<p class="text-sm text-gray-600 mt-2 italic">' + escapeHtml(a.cover_message) + '</p>' : '') +
+            '<div class="mt-3 flex items-center gap-2">' +
+            '<label class="text-xs text-gray-500">Status:</label>' +
+            '<select data-app-status="' + a.id + '" class="text-sm border rounded-lg px-2 py-1">' + statusOpts + '</select>' +
+            '</div></div>';
+        }).join('') + '</div>';
+        els.modalBody.querySelectorAll('[data-app-status]').forEach(function (sel) {
+          sel.addEventListener('change', async function () {
+            try {
+              await CorporateAPI.JobsAPI.updateApplicationStatus(this.dataset.appStatus, this.value);
+            } catch (err) {
+              alert(err.message || 'Failed to update status');
+            }
+          });
+        });
+      }
+      els.modal.classList.remove('hidden');
+    } catch (err) {
+      alert(err.message || 'Failed to load applicants');
+    }
+  }
+
   async function handleAction(action, id) {
     try {
       if (action === 'view') {
         await showJobModal(id);
         return;
       }
+      if (action === 'applicants') {
+        await showApplicantsModal(id);
+        return;
+      }
       if (action === 'close') {
         if (!confirm('Close this job posting?')) return;
         await CorporateAPI.JobsAPI.updateStatus(id, 'closed');
+      } else if (action === 'reopen') {
+        await CorporateAPI.JobsAPI.updateStatus(id, 'active');
+      } else if (action === 'interviewing') {
+        await CorporateAPI.JobsAPI.updateStatus(id, 'interviewing');
       } else if (action === 'delete') {
         if (!confirm('Delete this job posting?')) return;
         await CorporateAPI.JobsAPI.remove(id);
       } else if (action === 'clone') {
         await CorporateAPI.JobsAPI.clone(id);
       } else if (action === 'edit') {
-        const title = prompt('Job title');
-        if (!title) return;
-        await CorporateAPI.JobsAPI.update(id, { title });
+        window.location.href = 'post-job.html?id=' + encodeURIComponent(id);
       }
       loadJobs();
     } catch (err) {
@@ -246,19 +330,6 @@
     els.modalClose.addEventListener('click', hideModal);
     els.modal.addEventListener('click', (e) => {
       if (e.target === els.modal) hideModal();
-    });
-
-    els.postBtn.addEventListener('click', async () => {
-      const title = prompt('Job title');
-      if (!title) return;
-      const department = prompt('Department') || '';
-      const location = prompt('Location') || '';
-      try {
-        await CorporateAPI.JobsAPI.create({ title, department, location, status: 'active' });
-        loadJobs();
-      } catch (err) {
-        alert(err.message || 'Please login as a corporate account to post jobs.');
-      }
     });
   }
 

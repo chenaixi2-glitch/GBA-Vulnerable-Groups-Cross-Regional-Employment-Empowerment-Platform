@@ -13,6 +13,7 @@ llm:
   api_key_env: "SILICONFLOW_API_KEY"
   temperature: 0.3
   max_tokens: 8192
+  timeout: 180   # per-call; observed ~60–90s on SiliconFlow
 
 # LLM-as-judge: second model for rubric scoring (relevance, groundedness, actionability)
 judge:
@@ -22,6 +23,7 @@ judge:
   api_key_env: "SILICONFLOW_API_KEY"
   temperature: 0.1
   max_tokens: 2048
+  timeout: 180
 
 embedding:
   provider: "dashscope"
@@ -56,6 +58,14 @@ langsmith:
   project: "ai-career-copilot"
   api_key_env: "LANGCHAIN_API_KEY"
   endpoint: "https://api.smith.langchain.com"
+
+# LLM 并发排队（Redis）；2GB 生产环境建议 max_concurrent: 2
+llm_queue:
+  enabled: true
+  max_concurrent: 2
+  avg_job_seconds: 90
+  poll_interval_seconds: 1
+  session_lock_ttl_seconds: 600
 
 fastapi:
   host: "0.0.0.0"

@@ -1,0 +1,21 @@
+{
+  "generateResumeMessage": "Please generate a customized resume for the target AI Application Development role at a private technology enterprise. Highlight transferable skills from finance/data background relevant to AI application development. Keep all content within one A4 page.",
+  "optimizeMessage": "Optimize my resume for the private enterprise AI Application Development Engineer role. Shorten wording and spacing so the entire resume fits on one A4 page without losing key achievements.",
+  "resumeFiles": [
+    {
+      "label": "DOCX-金融合规(中文)",
+      "path": "D:\\简历\\金融&数分商分\\陈艾希-香港大学-金融合规.docx",
+      "expected_lang": "zh"
+    },
+    {
+      "label": "PDF-Financial_Analyst(英文)",
+      "path": "D:\\简历\\金融&数分商分\\Chen_Aixi__Financial_Analyst.pdf",
+      "expected_lang": "en"
+    },
+    {
+      "label": "PDF-经济学数据(中文)",
+      "path": "D:\\简历\\陈艾希_中山大学_经济学_25届_数据.pdf",
+      "expected_lang": "zh"
+    }
+  ]
+}

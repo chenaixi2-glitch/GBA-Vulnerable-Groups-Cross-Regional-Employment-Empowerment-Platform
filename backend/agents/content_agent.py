@@ -19,6 +19,7 @@ from tools.resume_layout import (
     normalize_language,
     opposite_language,
 )
+from tools.target_job_context import build_enriched_job_json
 from workflow.state import (
     CopilotState, ResumeContent, ResumeProfile, ResumeContentMeta,
     SectionItem, Education,
@@ -37,6 +38,38 @@ def _resolve_target_language(state: CopilotState) -> str:
     if state.resume_content_json and state.resume_content_json.meta.language:
         return normalize_language(state.resume_content_json.meta.language)
     return "zh"
+
+
+def _merge_profile_extras_from_candidate(
+    resume_content: ResumeContent,
+    state: CopilotState,
+) -> ResumeContent:
+    """Preserve user-uploaded extras (e.g. photo) from draft / prior resume."""
+    cand_extras: dict[str, str] = {}
+    if state.candidate_profile and state.candidate_profile.profile_basic:
+        cand_extras = dict(state.candidate_profile.profile_basic.extras or {})
+
+    prev_extras: dict[str, str] = {}
+    if state.resume_content_json and state.resume_content_json.profile:
+        prev_extras = dict(state.resume_content_json.profile.extras or {})
+
+    merged = {**prev_extras, **{k: v for k, v in cand_extras.items() if v}}
+    lang = normalize_language(resume_content.meta.language)
+
+    if lang == "zh":
+        photo = merged.get("photo_url") or merged.get("photo_data")
+        if photo:
+            resume_content.profile.extras["photo_url"] = photo
+            resume_content.profile.extras["has_photo"] = "true"
+        for key in ("age", "gender", "native_place", "political_status"):
+            if merged.get(key) and not resume_content.profile.extras.get(key):
+                resume_content.profile.extras[key] = merged[key]
+    else:
+        resume_content.profile.extras.pop("photo_url", None)
+        resume_content.profile.extras.pop("photo_data", None)
+        resume_content.profile.extras["has_photo"] = "false"
+
+    return resume_content
 
 
 def _build_resume_from_parsed(
@@ -140,7 +173,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             target_language_label=language_label(target_lang),
             target_language=target_lang,
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
-            job_json=state.job.model_dump_json(indent=2) if state.job else "{}",
+            job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
             RESUME_A4_ONE_PAGE_CONSTRAINTS=RESUME_A4_ONE_PAGE_CONSTRAINTS,
         )
     elif intent == "content_edit" and state.resume_content_json:
@@ -149,12 +182,12 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             RESUME_A4_ONE_PAGE_CONSTRAINTS=RESUME_A4_ONE_PAGE_CONSTRAINTS,
             target_language_label=language_label(lang),
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
-            job_json=state.job.model_dump_json(indent=2) if state.job else "{}",
+            job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
             edit_instruction=state.user_message,
         )
     else:
         lang = _resolve_target_language(state)
-        job_json = state.job.model_dump_json(indent=2) if state.job else "{}"
+        job_json = build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}"
         profile_json = state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}"
 
         edit_instruction = ""
@@ -191,6 +224,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
         or (state.resume_content_json.meta.language if state.resume_content_json else "zh")
     )
     resume_content = _build_resume_from_parsed(parsed, state, language=target_lang)
+    resume_content = _merge_profile_extras_from_candidate(resume_content, state)
 
     logger.info("Resume content generated v%d, hash=%s, lang=%s",
                 resume_content.meta.version, resume_content.meta.content_hash, resume_content.meta.language)

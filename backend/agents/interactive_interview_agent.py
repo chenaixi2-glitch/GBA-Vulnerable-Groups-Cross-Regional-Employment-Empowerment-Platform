@@ -16,6 +16,7 @@ from prompts.interactive_interview import (
     INTERACTIVE_INTERVIEW_START_PROMPT,
     INTERACTIVE_INTERVIEW_TURN_PROMPT,
 )
+from tools.target_job_context import build_enriched_job_json
 from workflow.state import (
     CopilotState,
     InteractiveInterviewDebrief,
@@ -48,15 +49,19 @@ def _format_conversation(turns: list[InteractiveInterviewTurn]) -> str:
 
 
 def _context_json(state: CopilotState) -> tuple[str, str, str]:
-    job_json = state.job.model_dump_json(indent=2) if state.job else "{}"
+    job_json = build_enriched_job_json(state)
     resume_json = state.resume_content_json.model_dump_json(indent=2) if state.resume_content_json else "{}"
     profile_json = state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}"
     return job_json, resume_json, profile_json
 
 
+def _has_job_context(state: CopilotState) -> bool:
+    return state.job is not None or bool((state.meta.target_jd_text or "").strip())
+
+
 def _prerequisites_ok(state: CopilotState) -> bool:
     return (
-        state.job is not None
+        _has_job_context(state)
         and state.candidate_profile is not None
         and state.resume_content_json is not None
     )

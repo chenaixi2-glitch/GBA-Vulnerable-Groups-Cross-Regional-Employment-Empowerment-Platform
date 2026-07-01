@@ -9,8 +9,8 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 {RESUME_A4_ONE_PAGE_CONSTRAINTS}
 
 语言与格式要求：
-- 中文简历（zh）：章节用中文标题；日期 YYYY.MM；教育信息放在 profile.education
-- 英文简历（en）：章节用英文标题语义；日期 Mon YYYY；动词开头 bullet；Skills 紧凑列表；不写年龄性别等无关信息
+- 中文简历（zh）：章节用中文标题；日期 YYYY.MM；教育信息放在 profile.education；若候选人画像 profile_basic.extras 含 photo_url，须在 profile.extras 中原样保留
+- 英文简历（en）：章节用英文标题语义；日期 Mon YYYY；动词开头 bullet；Skills 紧凑列表；不写年龄性别等无关信息；不得包含照片
 
 目标岗位信息：
 {job_json}

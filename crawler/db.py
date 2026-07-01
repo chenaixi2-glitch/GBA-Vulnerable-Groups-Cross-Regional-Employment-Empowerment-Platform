@@ -56,11 +56,13 @@ def upsert_external_job(job):
         INSERT INTO job_postings (
             external_id, source, source_url, title, department, company_name,
             location, post_date, status, description, salary, education,
-            work_experience, disability_type, raw_data, is_active_on_source
+            work_experience, disability_type, raw_data, is_active_on_source,
+            vulnerable_group_friendly, target_group_types
         ) VALUES (
             %(external_id)s, 'external', %(source_url)s, %(title)s, %(department)s, %(company_name)s,
             %(location)s, %(post_date)s, %(status)s, %(description)s, %(salary)s, %(education)s,
-            %(work_experience)s, %(disability_type)s, %(raw_data)s, %(is_active_on_source)s
+            %(work_experience)s, %(disability_type)s, %(raw_data)s, %(is_active_on_source)s,
+            1, %(target_group_types)s
         )
         ON DUPLICATE KEY UPDATE
             title = VALUES(title),
@@ -76,6 +78,8 @@ def upsert_external_job(job):
             disability_type = VALUES(disability_type),
             raw_data = VALUES(raw_data),
             is_active_on_source = VALUES(is_active_on_source),
+            vulnerable_group_friendly = 1,
+            target_group_types = VALUES(target_group_types),
             updated_at = CURRENT_TIMESTAMP
     """
 
@@ -95,6 +99,7 @@ def upsert_external_job(job):
         "disability_type": job.get("disabilityType"),
         "raw_data": json.dumps(job, ensure_ascii=False),
         "is_active_on_source": 1 if status == "active" else 0,
+        "target_group_types": json.dumps(["disability"]),
     }
 
     with get_connection() as conn:

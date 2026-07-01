@@ -19,8 +19,8 @@ logger = get_logger("agent")
 
 # Intent → 执行链路
 _INTENT_PLAN: dict[str, list[str]] = {
-    "upload_jd": ["jd_agent", "gap_agent", "content_agent", "render_agent", "interview_agent"],
-    "upload_profile": ["profile_agent", "content_agent", "render_agent", "interview_agent"],
+    "upload_jd": ["jd_agent", "gap_agent"],
+    "upload_profile": ["profile_agent"],
     "gap_analysis": ["gap_agent"],
     "learning_path": ["learning_path_agent"],
     "content_edit": ["content_agent", "render_agent"],

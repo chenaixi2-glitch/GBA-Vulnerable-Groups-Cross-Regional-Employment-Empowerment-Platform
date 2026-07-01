@@ -50,7 +50,7 @@
                     <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
                         <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold mb-3">3</div>
                         <h3 class="font-semibold mb-1">Submit</h3>
-                        <p class="text-sm text-slate-600">Save the application locally and continue preparation.</p>
+                        <p class="text-sm text-slate-600">Submit to the platform; enterprises can review match scores.</p>
                     </div>
                 </div>
 
@@ -71,7 +71,7 @@
                     </label>
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">Short motivation</span>
-                        <textarea rows="5" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Share why this role fits your work preferences, skills and schedule."></textarea>
+                        <textarea id="cover_message" rows="5" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Share why this role fits your work preferences, skills and schedule."></textarea>
                     </label>
                     <div class="flex flex-wrap gap-3">
                         <label class="inline-flex items-center gap-2 rounded-full bg-orange-50 text-orange-700 px-4 py-2 text-sm">
@@ -104,51 +104,100 @@
                 <div class="bg-slate-900 text-white rounded-3xl shadow p-6">
                     <h2 class="text-xl font-bold mb-3">What happens next?</h2>
                     <ol class="space-y-3 text-sm text-slate-300">
-                        <li><span class="font-semibold text-white">1.</span> Your application is stored in this browser for presentation use.</li>
-                        <li><span class="font-semibold text-white">2.</span> You can refine your resume or practice interview questions immediately.</li>
-                        <li><span class="font-semibold text-white">3.</span> In a full launch, employers would receive an anonymized skills profile first.</li>
+                        <li><span class="font-semibold text-white">1.</span> 系统将计算您与岗位的匹配分并通知企业。</li>
+                        <li><span class="font-semibold text-white">2.</span> 企业端在收到投递后可查看匹配评分。</li>
+                        <li><span class="font-semibold text-white">3.</span> 您可继续优化简历或进行模拟面试准备。</li>
                     </ol>
                 </div>
             </aside>
         </section>
     </main>
 
+    <script src="assets/js/platform-api.js"></script>
     <script>
-        const roles = {
-            'digital-marketing-specialist': {
-                title: 'Digital Marketing Specialist',
-                summary: 'A remote-friendly cross-border marketing role focused on campaign operations, content coordination and bilingual customer insights.',
-                tags: ['92% Match', 'Hong Kong', 'Remote', '¥25K-35K'],
-                checks: ['Campaign coordination and reporting', 'Chinese-English content awareness', 'Accessible remote work options', 'Good path for return-to-work candidates']
-            },
-            'financial-analyst': {
-                title: 'Financial Analyst',
-                summary: 'A Shenzhen-based role for candidates with data discipline, spreadsheet confidence and interest in GBA finance operations.',
-                tags: ['88% Match', 'Shenzhen', 'Full-time', '¥30K-40K'],
-                checks: ['Spreadsheet and data quality skills', 'Structured onboarding available', 'Policy support for cross-border work', 'Interview preparation recommended']
-            },
-            'customer-service-representative': {
-                title: 'Customer Service Representative',
-                summary: 'A Macau-facing customer service role suitable for patient communicators and flexible remote support schedules.',
-                tags: ['95% Match', 'Macau', 'Remote', '¥18K-25K'],
-                checks: ['Customer empathy and complaint handling', 'Cantonese / Mandarin / English helpful', 'Accessible work mode supported', 'Clear training pathway']
-            }
-        };
-
         const params = new URLSearchParams(location.search);
-        const role = roles[params.get('role')] || roles['customer-service-representative'];
-        document.getElementById('role-title').textContent = 'Apply: ' + role.title;
-        document.getElementById('role-summary').textContent = role.summary;
-        document.getElementById('role-tags').innerHTML = role.tags.map(tag => '<span class="px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-sm font-medium">' + tag + '</span>').join('');
-        document.getElementById('role-checks').innerHTML = role.checks.map(item => '<li class="flex gap-2"><i class="fas fa-check text-emerald-500 mt-0.5"></i><span>' + item + '</span></li>').join('');
+        const jobId = params.get('jobId');
+        let currentJob = null;
 
-        document.getElementById('application-form').addEventListener('submit', function (event) {
+        async function loadJob() {
+            if (!jobId) {
+                document.getElementById('role-title').textContent = '请选择岗位';
+                document.getElementById('role-summary').textContent = '请从岗位匹配页选择要投递的岗位。';
+                return;
+            }
+            try {
+                const res = await PlatformAPI.JobsAPI.get(jobId);
+                const job = res.data.job;
+                currentJob = job;
+
+                if (job.source === 'external') {
+                    document.getElementById('role-title').textContent = '外部岗位：' + job.title;
+                    document.getElementById('role-summary').textContent = '该岗位来自爬虫同步，请在源站完成投递。';
+                    document.getElementById('application-form').classList.add('hidden');
+                    const msg = document.getElementById('application-msg');
+                    msg.className = 'text-blue-700 font-medium';
+                    msg.classList.remove('hidden');
+                    const href = job.source_url || 'https://www.jyfw.org.cn/';
+                    msg.innerHTML = '此为爬虫同步岗位，<a href="' + href + '" target="_blank" rel="noopener" class="underline font-semibold" id="external-link">点击前往源站投递</a>。';
+                    document.getElementById('external-link').addEventListener('click', async function () {
+                        try {
+                            if (PlatformAPI.getToken()) {
+                                await PlatformAPI.JobsAPI.trackExternalInterest(jobId);
+                            }
+                        } catch (e) { /* ignore */ }
+                    });
+                    return;
+                }
+
+                document.getElementById('role-title').textContent = '投递：' + job.title;
+                document.getElementById('role-summary').textContent = (job.company_name || job.department || '') + ' · ' + (job.location || '') +
+                    (job.vulnerable_group_friendly ? ' · 弱势群体友好岗位' : '');
+                const tags = [job.location, job.salary].filter(Boolean);
+                document.getElementById('role-tags').innerHTML = tags.map(function (t) {
+                    return '<span class="px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-sm font-medium">' + t + '</span>';
+                }).join('');
+                document.getElementById('role-checks').innerHTML = (job.skills || []).slice(0, 6).map(function (s) {
+                    return '<li class="flex gap-2"><i class="fas fa-check text-emerald-500 mt-0.5"></i><span>' + s + '</span></li>';
+                }).join('') || '<li>查看岗位详情了解要求</li>';
+            } catch (e) {
+                document.getElementById('role-summary').textContent = e.message || '无法加载岗位';
+            }
+        }
+
+        document.getElementById('application-form').addEventListener('submit', async function (event) {
             event.preventDefault();
-            localStorage.setItem('gba_latest_application', JSON.stringify({ role: role.title, at: new Date().toISOString() }));
             const msg = document.getElementById('application-msg');
-            msg.textContent = 'Application submitted. You can continue with resume optimization or interview preparation.';
-            msg.classList.remove('hidden');
+            if (!jobId) {
+                msg.textContent = '缺少岗位 ID，请从岗位列表进入。';
+                msg.className = 'text-red-600 font-medium';
+                msg.classList.remove('hidden');
+                return;
+            }
+            try {
+                const res = await PlatformAPI.JobsAPI.apply(jobId, {
+                    cover_message: document.getElementById('cover_message').value.trim(),
+                });
+                const score = res.data.application.match_score;
+                msg.textContent = '投递成功！匹配分：' + score + '。可在「我的投递」中查看或撤销。';
+                msg.className = 'text-emerald-700 font-medium';
+                msg.classList.remove('hidden');
+                var link = document.createElement('a');
+                link.href = 'my-applications.html';
+                link.className = 'block mt-2 text-emerald-800 underline text-sm';
+                link.textContent = '前往我的投递';
+                msg.appendChild(link);
+            } catch (e) {
+                if (e.data && e.data.details && e.data.details.source_url) {
+                    msg.innerHTML = (e.message || '请前往源站投递') + ' — <a href="' + e.data.details.source_url + '" target="_blank" rel="noopener" class="underline">打开源站</a>';
+                } else {
+                    msg.textContent = e.message || '投递失败，请先登录个人账号并保存简历。';
+                }
+                msg.className = 'text-red-600 font-medium';
+                msg.classList.remove('hidden');
+            }
         });
+
+        loadJob();
     </script>
     <script src="../assets/site-enhancements.js"></script>
 </body>

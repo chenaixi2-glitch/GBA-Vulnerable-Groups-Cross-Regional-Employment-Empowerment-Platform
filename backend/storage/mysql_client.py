@@ -347,3 +347,101 @@ class MySQLStore:
                     event["status"],
                 ))
             await conn.commit()
+
+    # ---- jd cache ----
+    async def get_jd_cache_by_hash(self, jd_hash: str) -> dict[str, Any] | None:
+        sql = """
+            SELECT id, job_title, job_title_normalized, jd_text, jd_text_hash, title, source,
+                   industry, employer_type, experience_level, params_key, parsed_job, hit_count
+            FROM jd_cache
+            WHERE jd_text_hash = %s
+            LIMIT 1
+        """
+        return await self._fetch_jd_cache_row(sql, (jd_hash,))
+
+    async def get_jd_cache_by_title(self, job_title_normalized: str) -> dict[str, Any] | None:
+        sql = """
+            SELECT id, job_title, job_title_normalized, jd_text, jd_text_hash, title, source,
+                   industry, employer_type, experience_level, params_key, parsed_job, hit_count
+            FROM jd_cache
+            WHERE job_title_normalized = %s
+            LIMIT 1
+        """
+        return await self._fetch_jd_cache_row(sql, (job_title_normalized,))
+
+    async def get_jd_cache_by_params(self, params_key: str) -> dict[str, Any] | None:
+        sql = """
+            SELECT id, job_title, job_title_normalized, jd_text, jd_text_hash, title, source,
+                   industry, employer_type, experience_level, params_key, parsed_job, hit_count
+            FROM jd_cache
+            WHERE params_key = %s
+            LIMIT 1
+        """
+        return await self._fetch_jd_cache_row(sql, (params_key,))
+
+    async def increment_jd_cache_hit(self, row_id: str) -> None:
+        sql = "UPDATE jd_cache SET hit_count = hit_count + 1 WHERE id = %s"
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (row_id,))
+            await conn.commit()
+
+    async def upsert_jd_cache(self, payload: dict[str, Any]) -> None:
+        parsed_job = payload.get("parsed_job")
+        parsed_json = json.dumps(parsed_job, ensure_ascii=False) if parsed_job else None
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+        sql = """
+            INSERT INTO jd_cache
+                (id, job_title, job_title_normalized, jd_text, jd_text_hash, title, source,
+                 industry, employer_type, experience_level, params_key, parsed_job, hit_count,
+                 created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                job_title = VALUES(job_title),
+                jd_text = VALUES(jd_text),
+                title = VALUES(title),
+                source = VALUES(source),
+                industry = IF(VALUES(industry) != '', VALUES(industry), industry),
+                employer_type = IF(VALUES(employer_type) != '', VALUES(employer_type), employer_type),
+                experience_level = IF(VALUES(experience_level) != '', VALUES(experience_level), experience_level),
+                params_key = COALESCE(VALUES(params_key), params_key),
+                parsed_job = COALESCE(VALUES(parsed_job), parsed_job),
+                updated_at = VALUES(updated_at)
+        """
+        vals = (
+            payload["id"],
+            payload.get("job_title") or "",
+            payload.get("job_title_normalized"),
+            payload["jd_text"],
+            payload["jd_text_hash"],
+            payload.get("title") or "",
+            payload.get("source") or "generated",
+            payload.get("industry") or "",
+            payload.get("employer_type") or "",
+            payload.get("experience_level") or "",
+            payload.get("params_key"),
+            parsed_json,
+            now,
+            now,
+        )
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, vals)
+            await conn.commit()
+
+    async def _fetch_jd_cache_row(self, sql: str, params: tuple) -> dict[str, Any] | None:
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, params)
+                row = await cur.fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        parsed = result.get("parsed_job")
+        if isinstance(parsed, str):
+            try:
+                result["parsed_job"] = json.loads(parsed)
+            except json.JSONDecodeError:
+                result["parsed_job"] = None
+        return result

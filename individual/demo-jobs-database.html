@@ -1,82 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBA Job & Knowledge Bank — GBA Platform</title>
+    <title>岗位匹配 — GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'); body{font-family:'Inter',sans-serif;}</style>
 </head>
 <body class="bg-slate-100 min-h-screen">
-    <header class="bg-white border-b px-4 py-3 text-sm"><a href="portal.html#ai-features" class="text-blue-700 font-semibold">Interactive tools</a> · Job discovery & drills</header>
-
-    <div class="max-w-6xl mx-auto px-4 py-8 grid lg:grid-cols-5 gap-6">
-        <div class="lg:col-span-2 bg-white rounded-2xl border shadow p-4 max-h-[32rem] overflow-y-auto">
-            <h2 class="font-bold text-slate-800 mb-4">Open clusters</h2>
-            <div id="job-list" class="space-y-2 text-sm"></div>
+    <header class="bg-white border-b px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-3">
+            <a href="portal.html#dashboard" class="text-blue-700 font-semibold">个人门户</a>
+            <a href="my-applications.html" class="text-emerald-700 hover:underline">我的投递</a>
         </div>
-        <div class="lg:col-span-3 space-y-4">
-            <div id="detail" class="bg-white rounded-2xl border p-6 shadow text-sm text-slate-600">Select an opening from the curated list powered by <code class="bg-slate-100 px-1 rounded">API.matchJobs</code>.</div>
-            <div id="quiz" class="hidden bg-teal-900 text-teal-50 rounded-2xl p-6 border border-teal-700">
-                <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fas fa-brain"></i> Knowledge pulse (3 prompts)</h3>
-                <div id="quiz-body" class="space-y-4"></div>
-                <button type="button" id="check-quiz" class="mt-4 bg-teal-500 hover:bg-teal-400 text-teal-950 font-semibold px-5 py-2 rounded-lg">Check answers</button>
-                <p id="quiz-score" class="mt-4 text-teal-200 font-semibold hidden"></p>
+        <span id="match-status" class="text-slate-500 text-xs"></span>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button type="button" data-source="internal" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-teal-600 text-white">企业发布岗位</button>
+            <button type="button" data-source="external" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50">爬虫岗位（源站投递）</button>
+            <button type="button" data-source="all" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50">全部岗位</button>
+        </div>
+
+        <div class="grid lg:grid-cols-5 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-2xl border shadow p-4 max-h-[32rem] overflow-y-auto">
+                <h2 class="font-bold text-slate-800 mb-1">推荐岗位</h2>
+                <p id="source-hint" class="text-xs text-slate-500 mb-4">企业端发布的岗位，可在平台内直接投递</p>
+                <div id="job-list" class="space-y-2 text-sm"></div>
+            </div>
+            <div class="lg:col-span-3 space-y-4">
+                <div id="detail" class="bg-white rounded-2xl border p-6 shadow text-sm text-slate-600">请从左侧选择岗位查看详情。</div>
+                <div id="login-hint" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
+                    请先 <a href="../index.html" class="underline font-semibold">登录个人账号</a> 并完善简历，以查看匹配岗位。
+                </div>
             </div>
         </div>
     </div>
 
     <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-slate-600 border-t border-slate-200">
-        <a href="../index.html" class="hover:text-blue-700">Welcome</a>
+        <a href="../index.html" class="hover:text-blue-700">首页</a>
         ·
-        <a href="portal.html#feedback" class="text-emerald-700 hover:underline font-medium">User feedback</a>
+        <a href="portal.html" class="text-emerald-700 hover:underline font-medium">个人门户</a>
     </footer>
 
+    <script src="../test-data/browser-bundle.js"></script>
     <script src="../mock-api.js"></script>
+    <script src="assets/js/platform-api.js"></script>
     <script>
         var jobs = [];
-        var bankById = {
-            1: [
-                { q: 'Mandatory accessible hiring disclosure appears on which artefacts first?', opts: ['Only annual report', 'Job advert + onboarding pack', 'Only HRIS notes'], ans: 1 },
-                { q: 'Fair cross-border recruiting starts with?', opts: ['Local compensation parity review', 'Random CV shredding', 'Withholding passports'], ans: 0 },
-                { q: 'Assistive tooling budget line should sit?', opts: ['Hidden in miscellaneous', 'Under explicit Inclusion OKR', 'With marketing swag'], ans: 1 }
-            ],
-            2: [
-                { q: 'Annotation consensus is measured chiefly via?', opts: ['Inter-annotator agreement', 'Likes on Slack', 'Manager mood'], ans: 0 },
-                { q: 'PII fences should be?', opts: ['Defined before labelling sprint', 'Optional', 'Delegated to interns only'], ans: 0 },
-                { q: 'Gold sets are?', opts: ['Disposable after training', 'Versioned artefacts', 'Posters'], ans: 1 }
-            ],
-            default: [
-                { q: 'GBA mobility programmes foreground?', opts: ['Equitable skills evidence', 'Wealth pedigree', 'Postal code luck'], ans: 0 },
-                { q: 'Accessibility hiring quota tracking needs?', opts: ['Quarterly attestations', 'Verbal guesses', 'No data'], ans: 0 },
-                { q: 'Cross-border taxation advice belongs to?', opts: ['Qualified advisors', 'This platform page', 'Random forums'], ans: 0 }
-            ]
+        var selectedJob = null;
+        var currentSource = 'internal';
+
+        var sourceHints = {
+            internal: '企业端发布的岗位，可在平台内直接投递',
+            external: '爬虫同步的外部岗位，请前往广东省残疾人就业服务网投递',
+            all: '包含企业发布与爬虫同步岗位，投递方式因来源而异',
         };
-
-        API.matchJobs({}, {}).then(function (r) {
-            if (!r.success) return;
-            jobs = r.data.jobs || [];
-            var list = document.getElementById('job-list');
-            jobs.forEach(function (j, idx) {
-                var b = document.createElement('button');
-                b.type = 'button';
-                b.className = 'w-full text-left px-4 py-3 rounded-xl border hover:border-teal-500 hover:bg-teal-50 transition-colors flex flex-col gap-1';
-                b.innerHTML = '<span class="font-semibold text-slate-900">' + j.title + '</span><span class="text-xs opacity-75">' + j.company + ' · ' + j.location + '</span><span class="text-xs text-teal-700 font-medium">Fit score: ' + j.matchScore + '</span>';
-                b.onclick = function () { renderDetail(j); buildQuiz(j.id); };
-                list.appendChild(b);
-            });
-        });
-
-        function renderDetail(j) {
-            document.getElementById('detail').innerHTML =
-                '<div class="flex justify-between gap-4 flex-wrap mb-4"><div><p class="text-xs uppercase tracking-wide text-slate-400">Role</p><h3 class="text-xl font-bold text-slate-900">' + escape(j.title) + '</h3><p class="text-sm text-teal-700 font-medium">' + escape(j.company) + '</p></div><span class="self-start px-3 py-1 bg-slate-100 rounded-full text-xs">' + escape(j.type) + '</span></div>' +
-                '<p class="mb-3">' + escape(j.description) + '</p>' +
-                '<div class="flex flex-wrap gap-2">' +
-                j.skills.map(function (s) { return '<span class="bg-slate-100 px-2 py-1 rounded-full text-xs">' + escape(s) + '</span>'; }).join('') +
-                '</div>' +
-                '<p class="mt-4 text-xs text-slate-500">Underlying vector search / employer CRM sync runs server-side.</p>';
-        }
 
         function escape(s) {
             var d = document.createElement('div');
@@ -84,35 +65,137 @@
             return d.innerHTML;
         }
 
-        function buildQuiz(jobId) {
-            var qs = bankById[jobId] || bankById.default;
-            var box = document.getElementById('quiz-body');
-            box.innerHTML = '';
-            document.getElementById('quiz').classList.remove('hidden');
-            document.getElementById('quiz-score').classList.add('hidden');
-            qs.forEach(function (item, idx) {
-                var wrap = document.createElement('div');
-                wrap.className = 'border border-teal-700 rounded-xl p-3';
-                var head = '<p class="font-semibold mb-2">' + (idx + 1) + '. ' + escape(item.q) + '</p>';
-                wrap.innerHTML = head + '<div class="space-y-1 qs-' + idx + '">' +
-                    item.opts.map(function (o, oi) {
-                        return '<label class="flex items-center gap-2 text-xs"><input type="radio" name="q_' + idx + '" value="' + oi + '"> ' + escape(o) + '</label>';
-                    }).join('') + '</div>';
-                box.appendChild(wrap);
-            });
+        function sourceBadge(source) {
+            if (source === 'external') {
+                return '<span class="text-blue-700 text-xs font-medium ml-1">爬虫</span>';
+            }
+            return '<span class="text-teal-700 text-xs font-medium ml-1">企业</span>';
+        }
 
-            window._quizRef = qs;
-            document.getElementById('check-quiz').onclick = function () {
-                var ok = 0;
-                qs.forEach(function (_, idx) {
-                    var sel = document.querySelector('input[name="q_' + idx + '"]:checked');
-                    if (sel && +sel.value === qs[idx].ans) ok++;
-                });
-                document.getElementById('quiz-score').textContent = 'Score: ' + ok + ' / ' + qs.length + ' — revise weak topics in the Workspace learning hub.';
-                document.getElementById('quiz-score').classList.remove('hidden');
+        function mapJob(j) {
+            return {
+                id: j.id,
+                title: j.title,
+                company: j.company_name || j.department || (j.source === 'external' ? '外部岗位' : '企业岗位'),
+                location: j.location || '',
+                salary: j.salary || '',
+                skills: j.skills || [],
+                description: j.description || '',
+                matchScore: j.matchScore,
+                matchReasons: j.matchReasons || [],
+                vulnerable_group_friendly: j.vulnerable_group_friendly,
+                target_group_types: j.target_group_types || [],
+                source: j.source || 'internal',
+                source_url: j.source_url || '',
             };
         }
+
+        async function loadJobs() {
+            var list = document.getElementById('job-list');
+            var status = document.getElementById('match-status');
+            list.innerHTML = '<p class="text-slate-400 py-4"><i class="fas fa-spinner fa-spin"></i> 加载中…</p>';
+            document.getElementById('source-hint').textContent = sourceHints[currentSource] || '';
+
+            jobs = [];
+            try {
+                if (typeof PlatformAPI !== 'undefined' && PlatformAPI.getToken()) {
+                    var res = await PlatformAPI.JobsAPI.matched(currentSource);
+                    if (res.success) {
+                        jobs = (res.data.jobs || []).map(mapJob);
+                        status.textContent = (res.data.user_group_types && res.data.user_group_types.length)
+                            ? '人群类型：' + res.data.user_group_types.join('、') + (res.data.has_resume ? ' · 已关联简历' : ' · 建议完善简历')
+                            : '暂未匹配到弱势群体类型' + (res.data.has_resume ? ' · 已关联简历' : ' · 建议完善简历');
+                    }
+                }
+                if (!jobs.length && typeof API !== 'undefined' && currentSource === 'internal') {
+                    var mock = await API.matchJobs({}, {});
+                    if (mock.success) jobs = (mock.data.jobs || []).map(function (j) {
+                        j.source = 'internal';
+                        return j;
+                    });
+                    document.getElementById('login-hint').classList.remove('hidden');
+                }
+            } catch (e) {
+                list.innerHTML = '<p class="text-red-600">' + escape(e.message) + '</p>';
+                return;
+            }
+
+            list.innerHTML = '';
+            if (!jobs.length) {
+                list.innerHTML = '<p class="text-slate-500 py-4">暂无符合您人群类型的岗位，请稍后再来或切换来源。</p>';
+                return;
+            }
+
+            jobs.forEach(function (j) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'w-full text-left px-4 py-3 rounded-xl border hover:border-teal-500 hover:bg-teal-50 transition-colors flex flex-col gap-1';
+                b.innerHTML = '<span class="font-semibold text-slate-900">' + escape(j.title) + sourceBadge(j.source) +
+                    (j.vulnerable_group_friendly ? ' <span class="text-emerald-700 text-xs font-medium">弱势群体友好</span>' : '') + '</span>' +
+                    '<span class="text-xs opacity-75">' + escape(j.company) + ' · ' + escape(j.location) + '</span>' +
+                    '<span class="text-xs text-teal-700 font-medium">匹配分: ' + (j.matchScore || '-') + '</span>';
+                b.onclick = function () { renderDetail(j); };
+                list.appendChild(b);
+            });
+        }
+
+        function renderDetail(j) {
+            selectedJob = j;
+            var reasons = (j.matchReasons || []).map(function (r) {
+                return '<li class="text-sm text-slate-600">' + escape(r) + '</li>';
+            }).join('');
+
+            var actionBtn = '';
+            if (j.source === 'external') {
+                var href = j.source_url || 'https://www.jyfw.org.cn/';
+                actionBtn = '<button type="button" id="external-apply-btn" class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700">' +
+                    '<i class="fas fa-external-link-alt"></i> 前往源站投递</button>' +
+                    '<p class="text-xs text-slate-500 mt-2">外部岗位需在广东省残疾人就业服务网完成投递，平台将记录您的跳转意向。</p>';
+            } else {
+                actionBtn = '<a href="apply.html?jobId=' + encodeURIComponent(j.id) + '" class="inline-flex items-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-orange-700">' +
+                    '<i class="fas fa-paper-plane"></i> 平台内投递</a>';
+            }
+
+            document.getElementById('detail').innerHTML =
+                '<div class="flex justify-between gap-4 flex-wrap mb-4">' +
+                '<div><p class="text-xs uppercase tracking-wide text-slate-400">岗位 · ' + (j.source === 'external' ? '爬虫同步' : '企业发布') + '</p>' +
+                '<h3 class="text-xl font-bold text-slate-900">' + escape(j.title) +
+                (j.vulnerable_group_friendly ? ' <span class="text-emerald-700 text-sm font-medium">弱势群体友好</span>' : '') + '</h3>' +
+                '<p class="text-sm text-teal-700 font-medium">' + escape(j.company) + '</p></div>' +
+                '<span class="self-start px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-bold">' + (j.matchScore || '-') + ' 分</span></div>' +
+                '<p class="mb-3 whitespace-pre-wrap">' + escape(j.description) + '</p>' +
+                '<div class="flex flex-wrap gap-2 mb-4">' +
+                (j.skills || []).map(function (s) { return '<span class="bg-slate-100 px-2 py-1 rounded-full text-xs">' + escape(s) + '</span>'; }).join('') +
+                '</div>' +
+                (reasons ? '<ul class="list-disc pl-5 mb-4">' + reasons + '</ul>' : '') +
+                actionBtn;
+
+            var extBtn = document.getElementById('external-apply-btn');
+            if (extBtn) {
+                extBtn.addEventListener('click', async function () {
+                    var href = j.source_url || 'https://www.jyfw.org.cn/';
+                    try {
+                        if (PlatformAPI.getToken()) {
+                            await PlatformAPI.JobsAPI.trackExternalInterest(j.id);
+                        }
+                    } catch (e) { /* ignore */ }
+                    window.open(href, '_blank', 'noopener');
+                });
+            }
+        }
+
+        document.querySelectorAll('.source-tab').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                currentSource = this.dataset.source;
+                document.querySelectorAll('.source-tab').forEach(function (b) {
+                    b.className = 'source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50';
+                });
+                this.className = 'source-tab px-4 py-2 rounded-xl text-sm font-medium bg-teal-600 text-white';
+                loadJobs();
+            });
+        });
+
+        loadJobs();
     </script>
-    <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

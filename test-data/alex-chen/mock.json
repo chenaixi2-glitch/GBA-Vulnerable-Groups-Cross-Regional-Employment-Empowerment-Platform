@@ -1,0 +1,330 @@
+{
+  "candidateProfile": {
+    "profile_basic": {
+      "name": "Alex Chen",
+      "email": "alex.chen@example.com",
+      "phone": "+852 9123 4567",
+      "city": "Hong Kong"
+    },
+    "materials": [],
+    "facts": [
+      {
+        "id": "fact_edu_1",
+        "type": "education",
+        "content": "{\"school\":\"City University of Hong Kong\",\"major\":\"Business Administration\",\"degree\":\"Bachelor\",\"start_date\":\"2017-09\",\"end_date\":\"2021-06\"}",
+        "source_refs": [],
+        "updated_at": ""
+      },
+      {
+        "id": "fact_skill_1",
+        "type": "skill",
+        "content": "Customer Service",
+        "source_refs": [],
+        "updated_at": ""
+      },
+      {
+        "id": "fact_skill_2",
+        "type": "skill",
+        "content": "English",
+        "source_refs": [],
+        "updated_at": ""
+      },
+      {
+        "id": "fact_skill_3",
+        "type": "skill",
+        "content": "Cantonese",
+        "source_refs": [],
+        "updated_at": ""
+      },
+      {
+        "id": "fact_skill_4",
+        "type": "skill",
+        "content": "E-commerce",
+        "source_refs": [],
+        "updated_at": ""
+      },
+      {
+        "id": "fact_intern_1",
+        "type": "internship",
+        "content": "{\"title\":\"Customer Service Specialist\",\"company\":\"Global E-Trade Co.\",\"start_date\":\"2021-01\",\"end_date\":\"Present\",\"achievements\":\"Handled 80+ daily inquiries; improved first-response resolution by 18%.\"}",
+        "source_refs": [],
+        "updated_at": ""
+      },
+      {
+        "id": "fact_project_1",
+        "type": "project",
+        "content": "{\"title\":\"Knowledge Base Refresh\",\"role\":\"Lead\",\"achievements\":\"Updated CS FAQ articles for cross-border orders.\"}",
+        "source_refs": [],
+        "updated_at": ""
+      }
+    ]
+  },
+  "profilePayload": {
+    "meta": {
+      "version": 1,
+      "content_hash": "mock_profile_v1"
+    },
+    "basics": {
+      "name": "Alex Chen",
+      "email": "alex.chen@example.com",
+      "phone": "+852 9123 4567",
+      "location": "Hong Kong"
+    },
+    "summary": "Experienced customer service professional seeking GBA cross-border roles.",
+    "skills": [
+      "Customer Service",
+      "English",
+      "Cantonese",
+      "E-commerce",
+      "CRM"
+    ],
+    "experience": [
+      {
+        "company": "Global E-Trade Co.",
+        "title": "Customer Service Specialist",
+        "start_date": "2021-01",
+        "end_date": "Present",
+        "highlights": [
+          "Resolved cross-border order issues",
+          "Maintained 95% CSAT"
+        ]
+      }
+    ]
+  },
+  "gaps": [
+    {
+      "type": "missing_skill",
+      "description": "Advanced Excel / data reporting",
+      "severity": "medium",
+      "suggestion": "Complete a short Excel for business course"
+    },
+    {
+      "type": "missing_skill",
+      "description": "Cross-border payment workflows",
+      "severity": "high",
+      "suggestion": "Study marketplace settlement and refund policies"
+    },
+    {
+      "type": "experience_gap",
+      "description": "Live chat SLA metrics",
+      "severity": "low",
+      "suggestion": "Practice timed response drills"
+    }
+  ],
+  "interviewSets": {
+    "professional": [
+      {
+        "id": "q_1",
+        "question": "Describe your customer service experience in cross-border e-commerce.",
+        "category": "Behavioral",
+        "answer": "Use STAR: situation, task, action, result with metrics."
+      },
+      {
+        "id": "q_2",
+        "question": "How would you handle an angry customer whose order is delayed overseas?",
+        "category": "Situational",
+        "answer": "Acknowledge, empathize, investigate, propose solution, follow up."
+      },
+      {
+        "id": "q_3",
+        "question": "What CRM tools have you used and how did they improve your workflow?",
+        "category": "Technical",
+        "answer": "Name tools, describe ticket tagging, macros, and reporting."
+      }
+    ],
+    "friendly": [
+      {
+        "id": "q_1",
+        "question": "Tell me a bit about yourself and what excites you about this role.",
+        "category": "Behavioral",
+        "answer": "Keep it concise and role-relevant."
+      },
+      {
+        "id": "q_2",
+        "question": "What kind of team environment helps you do your best work?",
+        "category": "Culture",
+        "answer": "Collaboration, clear goals, supportive feedback."
+      }
+    ],
+    "cold": [
+      {
+        "id": "q_1",
+        "question": "Why should we hire you over other candidates?",
+        "category": "Pressure",
+        "answer": "Lead with proven outcomes and role fit."
+      },
+      {
+        "id": "q_2",
+        "question": "Describe a time you made a serious mistake. What happened?",
+        "category": "Behavioral",
+        "answer": "Own it, explain fix, show learning."
+      }
+    ]
+  },
+  "interactiveFollowUps": [
+    {
+      "brief_feedback": "回答结构清晰，但缺少具体数据和成果量化。",
+      "follow_up_type": "follow_up",
+      "interviewer_message": "你刚才提到的项目中，你个人的核心贡献是什么？有没有可以量化的结果？",
+      "category": "项目实操与问题解决"
+    },
+    {
+      "brief_feedback": "案例选择恰当，体现了岗位相关能力。",
+      "follow_up_type": "new_topic",
+      "interviewer_message": "你为什么选择申请这个岗位？对我们公司和这个职位有什么了解？",
+      "category": "岗位认知与求职动机"
+    },
+    {
+      "brief_feedback": "动机表达真诚，可再补充对业务的理解。",
+      "follow_up_type": "new_topic",
+      "interviewer_message": "请描述一次你在高压环境下处理紧急问题的经历。",
+      "category": "压力应变与短板复盘"
+    }
+  ],
+  "interactiveInterviewHistory": [
+    {
+      "id": "iis_mock_1",
+      "session_id": "mock_sess",
+      "job_title": "Customer Service Specialist",
+      "industry": "ecommerce",
+      "tone": "professional",
+      "overall_score": 76,
+      "round_count": 4,
+      "saved_at": "2026-07-01T09:58:40.244Z"
+    }
+  ],
+  "learningPathHistory": [
+    {
+      "id": "lpp_mock_1",
+      "session_id": "mock_sess",
+      "target_job": "Software Engineer",
+      "industry": "tech",
+      "estimated_total_hours": 120,
+      "daily_hours": 2,
+      "estimated_weeks": 9,
+      "phase_count": 3,
+      "saved_at": "2026-07-01T09:58:40.585Z"
+    }
+  ],
+  "languageChecklists": {
+    "en": {
+      "language": "en",
+      "language_label": "English Resume",
+      "missing_count": 2,
+      "missing_items": [
+        {
+          "id": "en_linkedin",
+          "category": "contact",
+          "label": "LinkedIn",
+          "severity": "recommended",
+          "message": "English resume strongly recommends LinkedIn URL",
+          "suggestion": "Add https://linkedin.com/in/yourname",
+          "missing": true
+        },
+        {
+          "id": "en_summary",
+          "category": "content",
+          "label": "Professional Summary",
+          "severity": "required",
+          "message": "3-4 line Professional Summary required",
+          "suggestion": "Replace long 自我评价 with concise summary",
+          "missing": true
+        }
+      ],
+      "items": [
+        {
+          "id": "en_linkedin",
+          "category": "contact",
+          "label": "LinkedIn",
+          "severity": "recommended",
+          "message": "English resume strongly recommends LinkedIn URL",
+          "suggestion": "Add https://linkedin.com/in/yourname",
+          "missing": true
+        },
+        {
+          "id": "en_summary",
+          "category": "content",
+          "label": "Professional Summary",
+          "severity": "required",
+          "message": "3-4 line Professional Summary required",
+          "suggestion": "Replace long 自我评价 with concise summary",
+          "missing": true
+        },
+        {
+          "id": "en_no_photo",
+          "category": "forbidden",
+          "label": "No photo",
+          "severity": "ok",
+          "message": "Complies with US/UK/EU no-photo rule",
+          "suggestion": "",
+          "missing": false
+        }
+      ],
+      "summary": "English resume reminders: 2 recommended item(s) to add."
+    },
+    "zh": {
+      "language": "zh",
+      "language_label": "中文简历",
+      "missing_count": 3,
+      "missing_items": [
+        {
+          "id": "zh_photo",
+          "category": "photo",
+          "label": "证件照",
+          "severity": "recommended",
+          "message": "中文简历（国企/体制内）建议附正装证件照",
+          "suggestion": "白底/浅蓝底一寸照，放右上角",
+          "missing": true
+        },
+        {
+          "id": "zh_age",
+          "category": "contact",
+          "label": "年龄",
+          "severity": "recommended",
+          "message": "国内常规简历建议注明年龄",
+          "suggestion": "在个人信息中补充",
+          "missing": true
+        },
+        {
+          "id": "zh_summary",
+          "category": "content",
+          "label": "自我评价",
+          "severity": "recommended",
+          "message": "中文简历通常有自我评价",
+          "suggestion": "2-4句突出优势",
+          "missing": true
+        }
+      ],
+      "items": [
+        {
+          "id": "zh_photo",
+          "category": "photo",
+          "label": "证件照",
+          "severity": "recommended",
+          "message": "中文简历（国企/体制内）建议附正装证件照",
+          "suggestion": "白底/浅蓝底一寸照，放右上角",
+          "missing": true
+        },
+        {
+          "id": "zh_age",
+          "category": "contact",
+          "label": "年龄",
+          "severity": "recommended",
+          "message": "国内常规简历建议注明年龄",
+          "suggestion": "在个人信息中补充",
+          "missing": true
+        },
+        {
+          "id": "zh_summary",
+          "category": "content",
+          "label": "自我评价",
+          "severity": "recommended",
+          "message": "中文简历通常有自我评价",
+          "suggestion": "2-4句突出优势",
+          "missing": true
+        }
+      ],
+      "summary": "中文简历待补充提醒：建议补充 3 项。"
+    }
+  }
+}

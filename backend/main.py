@@ -14,6 +14,7 @@ from api.resume import router as resume_router
 from api.export import router as export_router
 from api.interview import router as interview_router
 from api.learning_path import router as learning_path_router
+from api.queue import router as queue_router
 from storage.mysql_client import get_mysql_pool
 from storage.redis_client import get_redis_client
 
@@ -43,6 +44,7 @@ app.include_router(resume_router)
 app.include_router(export_router)
 app.include_router(interview_router)
 app.include_router(learning_path_router)
+app.include_router(queue_router)
 
 
 @app.get("/health")

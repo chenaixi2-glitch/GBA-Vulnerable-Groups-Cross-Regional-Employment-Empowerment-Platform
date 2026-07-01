@@ -126,6 +126,9 @@ async function onEmployerTypeSelected(employerType) {
 async function onResumeLanguageSelected(language) {
     currentResumeLanguage = language.startsWith('en') ? 'en' : 'zh';
     updateResumeLanguageBadge(currentResumeLanguage);
+    if (typeof ProfileEditor !== 'undefined' && ProfileEditor.updatePhotoVisibility) {
+        ProfileEditor.updatePhotoVisibility(currentResumeLanguage);
+    }
 
     document.querySelectorAll('[data-resume-lang]').forEach((btn) => {
         const isActive = btn.dataset.resumeLang === currentResumeLanguage;
@@ -135,6 +138,9 @@ async function onResumeLanguageSelected(language) {
     });
 
     try {
+        if (typeof syncDraftBeforeGenerate === 'function') {
+            await syncDraftBeforeGenerate();
+        }
         const result = await apiClient.setResumeLanguage(currentResumeLanguage);
         renderLanguageChecklistPanel(result.language_checklist);
         const count = result.language_checklist?.missing_count || 0;

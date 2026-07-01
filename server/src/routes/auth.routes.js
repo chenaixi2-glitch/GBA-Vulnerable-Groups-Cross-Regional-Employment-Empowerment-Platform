@@ -9,6 +9,17 @@ const authController = require('../controllers/auth.controller');
 
 const router = express.Router();
 
+const profileFieldRules = [
+  body('age').optional().isInt({ min: 16, max: 100 }).withMessage('年龄需在 16-100 之间'),
+  body('gender').optional().isIn(['male', 'female', 'other', 'prefer_not_say']).withMessage('性别不合法'),
+  body('disability_type')
+    .optional()
+    .isIn(['none', 'physical', 'visual', 'hearing', 'intellectual', 'mental', 'other'])
+    .withMessage('残疾类型不合法'),
+  body('career_gap_years').optional().isFloat({ min: 0, max: 50 }).withMessage('职业空窗年限需在 0-50 之间'),
+  body('current_income').optional().isFloat({ min: 0 }).withMessage('当前月收入不合法'),
+];
+
 const registerRules = [
   body('username')
     .trim()
@@ -21,6 +32,7 @@ const registerRules = [
   body('role').optional().isIn(['individual', 'corporate', 'admin']).withMessage('角色不合法'),
   body('full_name').optional().isLength({ max: 100 }),
   body('phone').optional().isLength({ max: 30 }),
+  ...profileFieldRules,
 ];
 
 const loginRules = [
@@ -28,8 +40,22 @@ const loginRules = [
   body('password').notEmpty().withMessage('请输入密码'),
 ];
 
+const profileRules = [
+  body('full_name').optional().isLength({ max: 100 }),
+  body('phone').optional().isLength({ max: 30 }),
+  ...profileFieldRules,
+];
+
+const changePasswordRules = [
+  body('current_password').notEmpty().withMessage('请输入当前密码'),
+  body('new_password').isLength({ min: 6, max: 64 }).withMessage('新密码长度需在 6-64 位之间'),
+];
+
+router.get('/group-types', asyncHandler(authController.listGroupTypes));
 router.post('/register', registerRules, validate, asyncHandler(authController.register));
 router.post('/login', loginRules, validate, asyncHandler(authController.login));
+router.post('/change-password', authenticate, changePasswordRules, validate, asyncHandler(authController.changePassword));
 router.get('/me', authenticate, asyncHandler(authController.me));
+router.patch('/profile', authenticate, profileRules, validate, asyncHandler(authController.updateProfile));
 
 module.exports = router;

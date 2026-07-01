@@ -19,6 +19,7 @@ from auth.jwt import get_optional_user
 from auth.session_access import bind_session_owner, ensure_session_access, extract_user_id
 from storage.redis_client import get_redis_client, RedisSessionStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
+from services.llm_queue import SessionBusyError, llm_queue_slot
 from workflow.state import CopilotState
 from log import get_logger
 
@@ -126,13 +127,16 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
         raise HTTPException(status_code=400, detail="已有进行中的模拟面试，请先结束或完成当前会话")
 
     try:
-        session = await start_interactive_interview(
-            state,
-            tone=req.tone,
-            job_title=req.job_title,
-            industry=req.industry,
-            max_rounds=max(3, min(req.max_rounds, 20)),
-        )
+        async with llm_queue_slot(session_id):
+            session = await start_interactive_interview(
+                state,
+                tone=req.tone,
+                job_title=req.job_title,
+                industry=req.industry,
+                max_rounds=max(3, min(req.max_rounds, 20)),
+            )
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -160,7 +164,10 @@ async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> Int
         raise HTTPException(status_code=400, detail="没有进行中的模拟面试")
 
     try:
-        session = await process_interactive_turn(state, req.answer)
+        async with llm_queue_slot(req.session_id):
+            session = await process_interactive_turn(state, req.answer)
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -194,10 +201,13 @@ async def interactive_end(req: InteractiveEndRequest, request: Request) -> Inter
 
     try:
         if req.generate_debrief:
-            session = await generate_interactive_debrief(state)
+            async with llm_queue_slot(req.session_id):
+                session = await generate_interactive_debrief(state)
         else:
             session.status = "completed"
             session.ended_at = session.ended_at or ""
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:

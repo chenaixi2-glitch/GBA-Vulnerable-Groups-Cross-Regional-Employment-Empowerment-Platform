@@ -1,0 +1,15 @@
+Job Title: AI Application Development Engineer（民企 AI 应用开发工程师）
+Company Type: Private Technology Enterprise（民营科技企业）
+
+Responsibilities:
+- Design and develop AI-powered business applications using LLM APIs and agent workflows
+- Integrate AI capabilities into internal products (RAG, prompt engineering, tool calling)
+- Collaborate with product and engineering teams to translate business needs into AI features
+- Monitor application performance, reliability, and cost of AI services
+
+Requirements:
+- Bachelor's degree or above (Economics, Finance, Data Science, CS or related)
+- Proficiency in Python or JavaScript; experience with REST APIs
+- Strong interest or hands-on experience in LLM/AI application development
+- Data analysis background and ability to connect business problems with AI solutions
+- Good communication in Chinese and English

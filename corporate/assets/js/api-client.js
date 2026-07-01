@@ -42,6 +42,9 @@
       });
       return request(`/jobs?${qs.toString()}`);
     },
+    matched() {
+      return request('/jobs/matched?source=internal');
+    },
     get(id) {
       return request(`/jobs/${id}`);
     },
@@ -60,7 +63,106 @@
     remove(id) {
       return request(`/jobs/${id}`, { method: 'DELETE' });
     },
+    apply(id, body) {
+      return request(`/jobs/${id}/apply`, { method: 'POST', body: JSON.stringify(body || {}) });
+    },
+    listApplications(id) {
+      return request(`/jobs/${id}/applications`);
+    },
+    updateApplicationStatus(applicationId, status) {
+      return request(`/jobs/applications/${applicationId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+    },
   };
 
-  global.CorporateAPI = { JobsAPI, API_BASE, getToken };
+  const StatsAPI = {
+    corporate() {
+      return request('/stats/corporate');
+    },
+    team() {
+      return request('/stats/corporate/team');
+    },
+  };
+
+  const CompanyAPI = {
+    getProfile() {
+      return request('/company/profile');
+    },
+    saveProfile(body) {
+      return request('/company/profile', { method: 'PUT', body: JSON.stringify(body) });
+    },
+    getTeam() {
+      return request('/company/team');
+    },
+  };
+
+  const ResumesAPI = {
+    getMine() {
+      return request('/resumes/me');
+    },
+    saveMine(body) {
+      return request('/resumes/me', { method: 'PUT', body: JSON.stringify(body) });
+    },
+  };
+
+  global.CorporateAPI = {
+    JobsAPI,
+    CompanyAPI,
+    ResumesAPI,
+    StatsAPI,
+    AuthAPI: global.AuthAPI,
+    DonationsAPI: {
+      getStats() {
+        return request('/donations/stats');
+      },
+      getLegalServices() {
+        return request('/donations/legal-services');
+      },
+      getAccess() {
+        return request('/donations/access');
+      },
+      listMine() {
+        return request('/donations/me');
+      },
+      create(body) {
+        return request('/donations', { method: 'POST', body: JSON.stringify(body || {}) });
+      },
+    },
+    LegalAidAPI: {
+      getMeta() {
+        return request('/legal-aid/meta');
+      },
+      createRequest(body) {
+        return request('/legal-aid/requests', { method: 'POST', body: JSON.stringify(body || {}) });
+      },
+      listMine() {
+        return request('/legal-aid/requests/mine');
+      },
+      listMineCompleted() {
+        return request('/legal-aid/requests/mine/completed');
+      },
+      listOpen() {
+        return request('/legal-aid/requests/open');
+      },
+      listAssigned() {
+        return request('/legal-aid/requests/assigned');
+      },
+      getOne(id) {
+        return request(`/legal-aid/requests/${id}`);
+      },
+      acceptRequest(id, body) {
+        return request(`/legal-aid/requests/${id}/accept`, { method: 'POST', body: JSON.stringify(body || {}) });
+      },
+      requestPlatformAssist(id, body) {
+        return request(`/legal-aid/requests/${id}/platform-assist`, { method: 'POST', body: JSON.stringify(body || {}) });
+      },
+      updateStatus(id, status) {
+        return request(`/legal-aid/requests/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+      },
+    },
+    API_BASE,
+    getToken,
+  };
 })(window);

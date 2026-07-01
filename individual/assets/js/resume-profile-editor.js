@@ -6,6 +6,7 @@
 const ProfileEditor = {
     draft: null,
     saveTimer: null,
+    maxPhotoBytes: 2 * 1024 * 1024,
 
     SECTION_ORDER: ['education', 'skill', 'internship', 'project', 'award', 'paper', 'custom'],
 
@@ -21,6 +22,7 @@ const ProfileEditor = {
 
     init() {
         this.bindEvents();
+        this.updatePhotoVisibility(typeof currentResumeLanguage !== 'undefined' ? currentResumeLanguage : 'zh');
     },
 
     bindEvents() {
@@ -54,6 +56,131 @@ const ProfileEditor = {
         ['profile-name', 'profile-email', 'profile-phone', 'profile-city'].forEach((id) => {
             document.getElementById(id)?.addEventListener('input', () => this.scheduleSave());
         });
+
+        document.getElementById('profile-photo-upload-btn')?.addEventListener('click', () => {
+            document.getElementById('profile-photo-input')?.click();
+        });
+        document.getElementById('profile-photo-input')?.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) this.handlePhotoSelect(file);
+            e.target.value = '';
+        });
+        document.getElementById('profile-photo-remove-btn')?.addEventListener('click', () => this.removePhoto());
+    },
+
+    ensureExtras() {
+        if (!this.draft) this.draft = { profile_basic: {}, education: [], modules: [] };
+        if (!this.draft.profile_basic) this.draft.profile_basic = {};
+        if (!this.draft.profile_basic.extras) this.draft.profile_basic.extras = {};
+        return this.draft.profile_basic.extras;
+    },
+
+    getPhotoUrl() {
+        return (this.draft?.profile_basic?.extras?.photo_url || '').trim();
+    },
+
+    updatePhotoVisibility(language) {
+        const section = document.getElementById('profile-photo-section');
+        if (!section) return;
+        const isZh = !language || !String(language).toLowerCase().startsWith('en');
+        section.classList.toggle('hidden', !isZh);
+    },
+
+    renderPhotoPreview() {
+        const photoUrl = this.getPhotoUrl();
+        const img = document.getElementById('profile-photo-img');
+        const placeholder = document.getElementById('profile-photo-placeholder');
+        const removeBtn = document.getElementById('profile-photo-remove-btn');
+        const status = document.getElementById('profile-photo-status');
+
+        if (img && placeholder && removeBtn) {
+            if (photoUrl) {
+                img.src = photoUrl;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                removeBtn.classList.remove('hidden');
+                if (status) status.textContent = '已上传';
+            } else {
+                img.src = '';
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                removeBtn.classList.add('hidden');
+                if (status) status.textContent = '';
+            }
+        }
+    },
+
+    compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error('无法读取图片'));
+            reader.onload = () => {
+                const image = new Image();
+                image.onerror = () => reject(new Error('图片格式无效'));
+                image.onload = () => {
+                    const maxW = 400;
+                    const maxH = 520;
+                    let { width, height } = image;
+                    const ratio = Math.min(maxW / width, maxH / height, 1);
+                    width = Math.round(width * ratio);
+                    height = Math.round(height * ratio);
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(image, 0, 0, width, height);
+
+                    let quality = 0.88;
+                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    while (dataUrl.length > this.maxPhotoBytes * 1.37 && quality > 0.5) {
+                        quality -= 0.08;
+                        dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    }
+                    resolve(dataUrl);
+                };
+                image.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    },
+
+    async handlePhotoSelect(file) {
+        if (!file.type.startsWith('image/')) {
+            Utils.showToast('请上传 JPG、PNG 或 WebP 图片');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            Utils.showToast('图片不能超过 5MB');
+            return;
+        }
+
+        try {
+            const dataUrl = await this.compressImage(file);
+            const extras = this.ensureExtras();
+            extras.photo_url = dataUrl;
+            extras.has_photo = 'true';
+            this.renderPhotoPreview();
+            await this.persistDraft();
+            if (typeof refreshLanguageChecklist === 'function' && (typeof currentResumeLanguage === 'undefined' || currentResumeLanguage === 'zh')) {
+                await refreshLanguageChecklist('zh');
+            }
+            Utils.showToast('证件照已上传');
+        } catch (error) {
+            Utils.showToast('照片上传失败：' + (error.message || '请重试'));
+        }
+    },
+
+    async removePhoto() {
+        const extras = this.ensureExtras();
+        delete extras.photo_url;
+        extras.has_photo = 'false';
+        this.renderPhotoPreview();
+        await this.persistDraft();
+        if (typeof refreshLanguageChecklist === 'function' && (typeof currentResumeLanguage === 'undefined' || currentResumeLanguage === 'zh')) {
+            await refreshLanguageChecklist('zh');
+        }
+        Utils.showToast('已移除证件照');
     },
 
     newId(prefix) {
@@ -209,11 +336,13 @@ const ProfileEditor = {
     },
 
     collectDraftFromForm() {
+        const extras = { ...(this.draft?.profile_basic?.extras || {}) };
         const basic = {
             name: document.getElementById('profile-name')?.value.trim() || '',
             email: document.getElementById('profile-email')?.value.trim() || '',
             phone: document.getElementById('profile-phone')?.value.trim() || '',
             city: document.getElementById('profile-city')?.value.trim() || '',
+            extras,
         };
 
         const education = [];
@@ -367,6 +496,7 @@ const ProfileEditor = {
         document.getElementById('profile-email').value = basic.email || '';
         document.getElementById('profile-phone').value = basic.phone || '';
         document.getElementById('profile-city').value = basic.city || '';
+        this.renderPhotoPreview();
 
         const body = document.getElementById('profile-editor-body');
         if (!body) return;
@@ -399,6 +529,8 @@ const ProfileEditor = {
 
     ensureDraftShape(draft) {
         if (!draft) return { profile_basic: {}, education: [], modules: [] };
+        if (!draft.profile_basic) draft.profile_basic = {};
+        if (!draft.profile_basic.extras) draft.profile_basic.extras = {};
         if (!draft.education) {
             draft.education = draft.profile_basic?.school
                 ? [{ id: this.newId('edu'), school: draft.profile_basic.school, major: '', degree: '', start_date: '', end_date: '', is_custom: false }]

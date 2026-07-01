@@ -9,6 +9,7 @@ from typing import Any
 from agents.json_contracts import GapAnalysisOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.gap_analysis import GAP_ANALYSIS_PROMPT
+from tools.target_job_context import build_enriched_job_json
 from workflow.state import CopilotState, Gap, Question
 from workflow.trace import append_trace
 from log import get_logger
@@ -50,7 +51,8 @@ async def gap_node_async(state: CopilotState) -> dict[str, Any]:
     """Gap Analysis Agent 异步节点函数。"""
     logger.info("Gap Analysis Agent started for session %s", state.session_id)
 
-    if state.job is None or state.candidate_profile is None:
+    has_job_context = state.job is not None or bool((state.meta.target_jd_text or "").strip())
+    if not has_job_context or state.candidate_profile is None:
         logger.warning("Gap Analysis skipped due to missing job or profile")
         return {
             "gaps": [],
@@ -63,13 +65,14 @@ async def gap_node_async(state: CopilotState) -> dict[str, Any]:
                 output_summary="缺少岗位或候选人画像，暂时无法完成缺失信息分析。",
                 artifacts={
                     "has_job": state.job is not None,
+                    "has_target_jd": bool((state.meta.target_jd_text or "").strip()),
                     "has_candidate_profile": state.candidate_profile is not None,
                 },
             ),
         }
 
     prompt = GAP_ANALYSIS_PROMPT.format(
-        job_json=state.job.model_dump_json(indent=2),
+        job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
     )
     llm = get_llm()

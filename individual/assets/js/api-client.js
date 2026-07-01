@@ -5,26 +5,32 @@
 
 const API_CONFIG = {
     BASE_URL: (typeof window !== 'undefined' && window.GBA_API_BASE_URL) || 'http://localhost:8000/api',
-    TIMEOUT: 120000,
+    // SiliconFlow DeepSeek: single LLM call ~60–90s; multi-agent workflows may take 2–3 min
+    TIMEOUT: 300000,
     MOCK_MODE_KEY: 'gba_api_mock_mode',
 };
 
-const MOCK_SAMPLE_RESUME_HTML = `
-<div style="font-family: Inter, Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px;">
-  <h1 style="margin-bottom: 4px;">Alex Chen</h1>
-  <p style="color: #555;">alex.chen@example.com | +852 9123 4567 | Hong Kong</p>
-  <h2 style="margin-top: 24px; border-bottom: 1px solid #ddd;">Professional Summary</h2>
-  <p>Customer-focused professional with cross-border e-commerce experience and strong communication skills, ready for GBA opportunities.</p>
-  <h2 style="margin-top: 24px; border-bottom: 1px solid #ddd;">Experience</h2>
-  <p><strong>Customer Service Specialist</strong> — Global E-Trade Co. (2021–Present)</p>
-  <ul>
-    <li>Handled 80+ daily inquiries across English and Cantonese channels</li>
-    <li>Improved first-response resolution rate by 18% through knowledge-base updates</li>
-    <li>Coordinated with logistics teams on cross-border order issues</li>
-  </ul>
-  <h2 style="margin-top: 24px; border-bottom: 1px solid #ddd;">Skills</h2>
-  <p>Customer service, Cross-border e-commerce, English/Cantonese, CRM tools, Problem solving</p>
-</div>`;
+/** Canonical mock fixtures live in test-data/ (loaded via browser-bundle.js). */
+function alexChenFixtures() {
+    const td = (typeof window !== 'undefined' && window.GBA_TEST_DATA)
+        || (typeof globalThis !== 'undefined' && globalThis.GBA_TEST_DATA);
+    if (!td || !td.alexChen) {
+        throw new Error('Load test-data/browser-bundle.js before api-client.js');
+    }
+    return td.alexChen;
+}
+
+function mockResumeEnHtml() {
+    return alexChenFixtures().resumeEnHtml;
+}
+
+function mockResumeZhHtml() {
+    return alexChenFixtures().resumeZhHtml;
+}
+
+function alexChenMock() {
+    return alexChenFixtures().mock;
+}
 
 class MockAPIService {
     constructor() {
@@ -58,24 +64,7 @@ class MockAPIService {
     }
 
     candidateProfilePayload() {
-        return {
-            profile_basic: {
-                name: 'Alex Chen',
-                email: 'alex.chen@example.com',
-                phone: '+852 9123 4567',
-                city: 'Hong Kong',
-            },
-            materials: [],
-            facts: [
-                { id: 'fact_edu_1', type: 'education', content: '{"school":"City University of Hong Kong","major":"Business Administration","degree":"Bachelor","start_date":"2017-09","end_date":"2021-06"}', source_refs: [], updated_at: '' },
-                { id: 'fact_skill_1', type: 'skill', content: 'Customer Service', source_refs: [], updated_at: '' },
-                { id: 'fact_skill_2', type: 'skill', content: 'English', source_refs: [], updated_at: '' },
-                { id: 'fact_skill_3', type: 'skill', content: 'Cantonese', source_refs: [], updated_at: '' },
-                { id: 'fact_skill_4', type: 'skill', content: 'E-commerce', source_refs: [], updated_at: '' },
-                { id: 'fact_intern_1', type: 'internship', content: '{"title":"Customer Service Specialist","company":"Global E-Trade Co.","start_date":"2021-01","end_date":"Present","achievements":"Handled 80+ daily inquiries; improved first-response resolution by 18%."}', source_refs: [], updated_at: '' },
-                { id: 'fact_project_1', type: 'project', content: '{"title":"Knowledge Base Refresh","role":"Lead","achievements":"Updated CS FAQ articles for cross-border orders."}', source_refs: [], updated_at: '' },
-            ],
-        };
+        return alexChenMock().candidateProfile;
     }
 
     _draftKey(sessionId) {
@@ -150,20 +139,7 @@ class MockAPIService {
 
     async getInteractiveInterviewHistory(limit = 20) {
         await this.delay(300);
-        return {
-            records: [
-                {
-                    id: 'iis_mock_1',
-                    session_id: 'mock_sess',
-                    job_title: 'Customer Service Specialist',
-                    industry: 'ecommerce',
-                    tone: 'professional',
-                    overall_score: 76,
-                    round_count: 4,
-                    saved_at: new Date().toISOString(),
-                },
-            ],
-        };
+        return { records: alexChenMock().interactiveInterviewHistory.slice(0, limit) };
     }
 
     async updateLearningPathTimeline(sessionId, timeline) {
@@ -192,92 +168,24 @@ class MockAPIService {
 
     async getLearningPathHistory(limit = 20) {
         await this.delay(300);
-        return {
-            records: [
-                {
-                    id: 'lpp_mock_1',
-                    session_id: 'mock_sess',
-                    target_job: 'Software Engineer',
-                    industry: 'tech',
-                    estimated_total_hours: 120,
-                    daily_hours: 2,
-                    estimated_weeks: 9,
-                    phase_count: 3,
-                    saved_at: new Date().toISOString(),
-                },
-            ],
-        };
+        return { records: alexChenMock().learningPathHistory.slice(0, limit) };
     }
 
     profilePayload() {
-        return {
-            meta: { version: 1, content_hash: 'mock_profile_v1' },
-            basics: {
-                name: 'Alex Chen',
-                email: 'alex.chen@example.com',
-                phone: '+852 9123 4567',
-                location: 'Hong Kong',
-            },
-            summary: 'Experienced customer service professional seeking GBA cross-border roles.',
-            skills: ['Customer Service', 'English', 'Cantonese', 'E-commerce', 'CRM'],
-            experience: [{
-                company: 'Global E-Trade Co.',
-                title: 'Customer Service Specialist',
-                start_date: '2021-01',
-                end_date: 'Present',
-                highlights: ['Resolved cross-border order issues', 'Maintained 95% CSAT'],
-            }],
-        };
+        return alexChenMock().profilePayload;
     }
 
     gapPayload() {
-        return [
-            { type: 'missing_skill', description: 'Advanced Excel / data reporting', severity: 'medium', suggestion: 'Complete a short Excel for business course' },
-            { type: 'missing_skill', description: 'Cross-border payment workflows', severity: 'high', suggestion: 'Study marketplace settlement and refund policies' },
-            { type: 'experience_gap', description: 'Live chat SLA metrics', severity: 'low', suggestion: 'Practice timed response drills' },
-        ];
+        return alexChenMock().gaps;
     }
 
     interviewPayload(tone = 'professional') {
-        const sets = {
-            professional: [
-                { id: 'q_1', question: 'Describe your customer service experience in cross-border e-commerce.', category: 'Behavioral', answer: 'Use STAR: situation, task, action, result with metrics.' },
-                { id: 'q_2', question: 'How would you handle an angry customer whose order is delayed overseas?', category: 'Situational', answer: 'Acknowledge, empathize, investigate, propose solution, follow up.' },
-                { id: 'q_3', question: 'What CRM tools have you used and how did they improve your workflow?', category: 'Technical', answer: 'Name tools, describe ticket tagging, macros, and reporting.' },
-            ],
-            friendly: [
-                { id: 'q_1', question: 'Tell me a bit about yourself and what excites you about this role.', category: 'Behavioral', answer: 'Keep it concise and role-relevant.' },
-                { id: 'q_2', question: 'What kind of team environment helps you do your best work?', category: 'Culture', answer: 'Collaboration, clear goals, supportive feedback.' },
-            ],
-            cold: [
-                { id: 'q_1', question: 'Why should we hire you over other candidates?', category: 'Pressure', answer: 'Lead with proven outcomes and role fit.' },
-                { id: 'q_2', question: 'Describe a time you made a serious mistake. What happened?', category: 'Behavioral', answer: 'Own it, explain fix, show learning.' },
-            ],
-        };
+        const sets = alexChenMock().interviewSets;
         return sets[tone] || sets.professional;
     }
 
     _mockInteractiveFollowUps() {
-        return [
-            {
-                brief_feedback: '回答结构清晰，但缺少具体数据和成果量化。',
-                follow_up_type: 'follow_up',
-                interviewer_message: '你刚才提到的项目中，你个人的核心贡献是什么？有没有可以量化的结果？',
-                category: '项目实操与问题解决',
-            },
-            {
-                brief_feedback: '案例选择恰当，体现了岗位相关能力。',
-                follow_up_type: 'new_topic',
-                interviewer_message: '你为什么选择申请这个岗位？对我们公司和这个职位有什么了解？',
-                category: '岗位认知与求职动机',
-            },
-            {
-                brief_feedback: '动机表达真诚，可再补充对业务的理解。',
-                follow_up_type: 'new_topic',
-                interviewer_message: '请描述一次你在高压环境下处理紧急问题的经历。',
-                category: '压力应变与短板复盘',
-            },
-        ];
+        return alexChenMock().interactiveFollowUps;
     }
 
     async startInteractiveInterview(sessionId, tone, jobTitle, industry, maxRounds) {
@@ -500,7 +408,7 @@ class MockAPIService {
             this.state.hasResume = true;
             response.triggered_agents = ['content_agent', 'render_agent'];
             response.resume_content_json = this.profilePayload();
-            response.resume_html = { html: MOCK_SAMPLE_RESUME_HTML, version: 1 };
+            response.resume_html = { html: mockResumeEnHtml(), version: 1 };
             response.reply_message = 'Customized resume generated (demo mode).';
             return response;
         }
@@ -508,18 +416,7 @@ class MockAPIService {
         if (msg.includes('translate') || msg.includes('convert to chinese') || msg.includes('convert to english') || msg.includes('中文') || msg.includes('英文')) {
             this.state.hasResume = true;
             const isEn = /english|英文|en/i.test(message);
-            const html = isEn ? MOCK_SAMPLE_RESUME_HTML : `
-<div style="font-family: 'Source Han Sans', sans-serif; max-width: 720px; margin: 0 auto; padding: 20px; font-size: 13px; line-height: 1.35;">
-  <h1 style="margin-bottom: 4px;">陈晓 Alex Chen</h1>
-  <p style="color: #555;">alex.chen@example.com | +852 9123 4567 | 香港</p>
-  <h2 style="margin-top: 16px; border-bottom: 1px solid #ddd; font-size: 15px;">个人总结</h2>
-  <p>具备跨境电商客服经验，擅长中英文沟通，熟悉大湾区就业场景。</p>
-  <h2 style="margin-top: 16px; border-bottom: 1px solid #ddd; font-size: 15px;">实习经历</h2>
-  <p><strong>环球电商 — 客服专员</strong>（2021.01 - 至今）</p>
-  <ul><li>日均处理 80+ 跨境咨询，首响解决率提升 18%</li></ul>
-  <h2 style="margin-top: 16px; border-bottom: 1px solid #ddd; font-size: 15px;">专业技能</h2>
-  <p>客户服务、跨境电商、英语/粤语、CRM 工具</p>
-</div>`;
+            const html = isEn ? mockResumeEnHtml() : mockResumeZhHtml();
             response.triggered_agents = ['content_agent', 'render_agent'];
             response.resume_content_json = this.profilePayload();
             response.resume_html = { html, version: 2 };
@@ -544,7 +441,7 @@ class MockAPIService {
 
     async getResumeHtml(sessionId) {
         await this.delay(300);
-        return { resume_html: { html: MOCK_SAMPLE_RESUME_HTML, version: 1 } };
+        return { resume_html: { html: mockResumeEnHtml(), version: 1 } };
     }
 
     async translateResume(sessionId, targetLanguage) {
@@ -557,29 +454,8 @@ class MockAPIService {
     }
 
     buildMockChecklist(language) {
-        const isEn = language === 'en';
-        const items = isEn
-            ? [
-                { id: 'en_linkedin', category: 'contact', label: 'LinkedIn', severity: 'recommended', message: 'English resume strongly recommends LinkedIn URL', suggestion: 'Add https://linkedin.com/in/yourname', missing: true },
-                { id: 'en_summary', category: 'content', label: 'Professional Summary', severity: 'required', message: '3-4 line Professional Summary required', suggestion: 'Replace long 自我评价 with concise summary', missing: true },
-                { id: 'en_no_photo', category: 'forbidden', label: 'No photo', severity: 'ok', message: 'Complies with US/UK/EU no-photo rule', suggestion: '', missing: false },
-            ]
-            : [
-                { id: 'zh_photo', category: 'photo', label: '证件照', severity: 'recommended', message: '中文简历（国企/体制内）建议附正装证件照', suggestion: '白底/浅蓝底一寸照，放右上角', missing: true },
-                { id: 'zh_age', category: 'contact', label: '年龄', severity: 'recommended', message: '国内常规简历建议注明年龄', suggestion: '在个人信息中补充', missing: true },
-                { id: 'zh_summary', category: 'content', label: '自我评价', severity: 'recommended', message: '中文简历通常有自我评价', suggestion: '2-4句突出优势', missing: true },
-            ];
-        const missing = items.filter((i) => i.missing);
-        return {
-            language,
-            language_label: isEn ? 'English Resume' : '中文简历',
-            missing_count: missing.length,
-            missing_items: missing,
-            items,
-            summary: isEn
-                ? `English resume reminders: ${missing.length} recommended item(s) to add.`
-                : `中文简历待补充提醒：建议补充 ${missing.length} 项。`,
-        };
+        const key = String(language).startsWith('en') ? 'en' : 'zh';
+        return alexChenMock().languageChecklists[key];
     }
 
     async getLanguageChecklist(sessionId, language) {
@@ -824,11 +700,56 @@ class APIClient {
     }
 
     /**
+     * Resolve target job context from explicit object or page form fields.
+     */
+    _resolveTargetJobContext(context, jdTextOverride = '') {
+        if (context) return context;
+        if (typeof collectTargetJobContext === 'function') {
+            return collectTargetJobContext({ jdTextOverride });
+        }
+        return null;
+    }
+
+    /**
+     * Sync JD textarea + industry / employer type / experience level to session.
+     */
+    async syncTargetJobContext(context = null, jdTextOverride = '') {
+        const ctx = this._resolveTargetJobContext(context, jdTextOverride);
+        if (!ctx || !this.sessionId) return null;
+
+        if (this.useMockMode) {
+            return { ok: true, target_context: ctx };
+        }
+
+        await this.ensureBackendAvailable();
+        const response = await this.client.put('/resume/target-context', {
+            session_id: this.sessionId,
+            jd_text: ctx.jd_text || '',
+            industry: ctx.industryLabel || ctx.industry || '',
+            employer_type: ctx.employer_type || '',
+            experience_level: ctx.experienceLevelLabel || ctx.experience_level || '',
+        });
+        return response.data;
+    }
+
+    _appendTargetContextToInstruction(instruction, context) {
+        const ctx = context || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
+        const block = typeof buildTargetJobContextBlock === 'function' ? buildTargetJobContextBlock(ctx) : '';
+        if (!block) return instruction;
+        return `${instruction}\n\nTarget job context:\n${block}`;
+    }
+
+    /**
      * Submit job description and trigger jd_agent
      */
-    async submitJobDescription(jdText) {
+    async submitJobDescription(jdText, targetContext = null) {
         try {
-            const response = await this.chat(jdText, []);
+            const ctx = this._resolveTargetJobContext(targetContext, jdText);
+            await this.syncTargetJobContext(ctx, jdText);
+            const message = typeof buildJdSubmissionText === 'function'
+                ? buildJdSubmissionText(jdText, ctx)
+                : jdText;
+            const response = await this.chat(message, []);
             return response;
         } catch (error) {
             console.error('JD submission error:', error);
@@ -1004,6 +925,48 @@ class APIClient {
     }
 
     /**
+     * Generate profile-aware JD from job title only (user must confirm before optimize)
+     */
+    async generateJdFromTitle(jobTitle, targetContext = null) {
+        try {
+            if (!this.sessionId) {
+                throw new Error('No active session');
+            }
+            const ctx = this._resolveTargetJobContext(targetContext, jobTitle);
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return this.mockService.buildMockJd(ctx.industry || 'tech', ctx.experience_level || 'mid', ctx.employer_type || 'private');
+            }
+            const response = await this.client.post('/resume/generate-jd-from-title', {
+                session_id: this.sessionId,
+                job_title: jobTitle,
+                industry: ctx.industryLabel || ctx.industry || '',
+                employer_type: ctx.employer_type || '',
+                experience_level: ctx.experienceLevelLabel || ctx.experience_level || '',
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Generate JD from title error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * Submit user answers from optimization dialog to enrich candidate profile
+     */
+    async submitOptimizationClarifications(answers) {
+        if (!answers || !answers.length) return null;
+        const lines = answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
+        const message = [
+            'Please incorporate the following clarifications into my candidate profile for resume optimization.',
+            'These answers clarify my primary tech stack, project details, or role fit:',
+            '',
+            lines,
+        ].join('\n');
+        return this.submitProfileText(message);
+    }
+
+    /**
      * Submit candidate profile text — triggers profile_agent
      */
     async submitProfileText(profileText) {
@@ -1035,9 +998,11 @@ class APIClient {
     /**
      * Generate customized resume - triggers content_agent + render_agent
      */
-    async generateResume(instruction = 'Please generate a customized resume based on my experience and target position. Keep all content within one A4 page.') {
+    async generateResume(instruction = 'Please generate a customized resume based on my experience and target position. Keep all content within one A4 page.', targetContext = null) {
         try {
-            const response = await this.chat(instruction, []);
+            await this.syncTargetJobContext(targetContext);
+            const fullInstruction = this._appendTargetContextToInstruction(instruction, targetContext);
+            const response = await this.chat(fullInstruction, []);
             return response;
         } catch (error) {
             console.error('Resume generation error:', error);
@@ -1180,9 +1145,11 @@ class APIClient {
     /**
      * Optimize resume content via chat (A4 one-page constraint)
      */
-    async optimizeResume(instruction = 'Optimize my resume for the target job. Shorten content to fit one A4 page while keeping key achievements.') {
+    async optimizeResume(instruction = 'Optimize my resume for the target job. Shorten content to fit one A4 page while keeping key achievements.', targetContext = null) {
         try {
-            const response = await this.chat(instruction, []);
+            await this.syncTargetJobContext(targetContext);
+            const fullInstruction = this._appendTargetContextToInstruction(instruction, targetContext);
+            const response = await this.chat(fullInstruction, []);
             return response;
         } catch (error) {
             console.error('Resume optimization error:', error);
@@ -1258,12 +1225,16 @@ class APIClient {
     /**
      * Start interview session - triggers interview_agent (requires job, profile, resume in session)
      */
-    async startInterviewSession(jobTitle, industry = '', tone = 'professional') {
+    async startInterviewSession(jobTitle, industry = '', tone = 'professional', targetContext = null) {
         try {
+            const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
+            await this.syncTargetJobContext(ctx);
             const message = [
                 'Please generate interview questions based on my job description, candidate profile, and resume content.',
-                `Target role: ${jobTitle}.`,
-                industry ? `Industry: ${industry}.` : '',
+                `Target role: ${jobTitle || ctx?.jd_text?.split('\n')[0] || 'target position'}.`,
+                (ctx?.industryLabel || industry) ? `Industry: ${ctx?.industryLabel || industry}.` : '',
+                ctx?.employerTypeLabel ? `Employer type: ${ctx.employerTypeLabel}.` : '',
+                ctx?.experienceLevelLabel ? `Experience level: ${ctx.experienceLevelLabel}.` : '',
                 `Interview tone: ${tone}.`,
             ].filter(Boolean).join(' ');
             const response = await this.chat(message, []);
@@ -1291,11 +1262,13 @@ class APIClient {
     /**
      * Start interactive multi-turn mock interview
      */
-    async startInteractiveInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 10 } = {}) {
+    async startInteractiveInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 10, targetContext = null } = {}) {
         try {
             if (!this.sessionId) {
                 this.generateSessionId();
             }
+            const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
+            await this.syncTargetJobContext(ctx);
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
                 return await this.mockService.startInteractiveInterview(this.sessionId, tone, jobTitle, industry, maxRounds);
@@ -1304,7 +1277,7 @@ class APIClient {
                 session_id: this.sessionId,
                 tone,
                 job_title: jobTitle,
-                industry,
+                industry: ctx?.industryLabel || industry,
                 max_rounds: maxRounds,
             });
             if (response.data.session_id) {
@@ -1418,13 +1391,37 @@ class APIClient {
     /**
      * Step 1: Analyze skill gaps and recommend resources (no timeline yet).
      */
-    async generateLearningPathAnalysis({ targetJob, currentRole = '', industry = '', currentSkills = [], profileText = '', jdText = '' }) {
+    async generateLearningPathAnalysis({
+        targetJob,
+        currentRole = '',
+        industry = '',
+        employerType = '',
+        experienceLevel = '',
+        currentSkills = [],
+        profileText = '',
+        jdText = '',
+        targetContext = null,
+    }) {
         await this.ensureBackendAvailable();
         if (this.useMockMode) {
             throw new Error('Learning path requires a connected backend. Demo mode is not supported for this feature.');
         }
 
         try {
+            const ctx = targetContext || (typeof collectTargetJobContext === 'function'
+                ? collectTargetJobContext({ jdTextOverride: jdText })
+                : {
+                    jd_text: jdText,
+                    industry,
+                    industryLabel: industry,
+                    employer_type: employerType,
+                    experienceLevelLabel: experienceLevel,
+                });
+            if (targetJob && !ctx.jd_text) {
+                ctx.jd_text = ctx.jd_text || targetJob;
+            }
+            await this.syncTargetJobContext(ctx, jdText);
+
             const skillsLine = currentSkills.length ? currentSkills.join(', ') : 'Not specified';
             const profileMessage = profileText || [
                 'Here is my candidate profile for gap analysis.',
@@ -1435,9 +1432,11 @@ class APIClient {
 
             await this.submitProfileText(profileMessage);
 
-            const jobMessage = jdText || [
+            const jobMessage = jdText || ctx.jd_text || [
                 `Job Title: ${targetJob}`,
-                industry ? `Industry: ${industry}` : '',
+                ctx.industryLabel ? `Industry: ${ctx.industryLabel}` : (industry ? `Industry: ${industry}` : ''),
+                ctx.employerTypeLabel ? `Employer type: ${ctx.employerTypeLabel}` : '',
+                ctx.experienceLevelLabel ? `Experience level: ${ctx.experienceLevelLabel}` : '',
                 '',
                 'Requirements:',
                 '- Relevant technical and soft skills for this role',
@@ -1445,7 +1444,7 @@ class APIClient {
                 '- Problem-solving and communication abilities',
             ].filter(Boolean).join('\n');
 
-            await this.submitJobDescription(jobMessage);
+            await this.submitJobDescription(jobMessage, ctx);
 
             const response = await this.chat(
                 'Please analyze my skill gaps against the target job and recommend learning resources with estimated study hours. Do not generate a timeline yet.',
@@ -1461,13 +1460,14 @@ class APIClient {
     /**
      * Step 2: Generate timeline after user selects daily study hours.
      */
-    async generateLearningPathTimeline(dailyHours) {
+    async generateLearningPathTimeline(dailyHours, targetContext = null) {
         await this.ensureBackendAvailable();
         if (this.useMockMode) {
             throw new Error('Learning path requires a connected backend. Demo mode is not supported for this feature.');
         }
 
         try {
+            await this.syncTargetJobContext(targetContext);
             const response = await this.chat(
                 `Generate my learning timeline with ${dailyHours} hours per day based on the analyzed gaps and resources.`,
                 []
@@ -1480,8 +1480,8 @@ class APIClient {
     }
 
     /** @deprecated Use generateLearningPathAnalysis + generateLearningPathTimeline */
-    async generateLearningPath({ targetJob, currentRole = '', industry = '', currentSkills = [], profileText = '', jdText = '' }) {
-        return this.generateLearningPathAnalysis({ targetJob, currentRole, industry, currentSkills, profileText, jdText });
+    async generateLearningPath({ targetJob, currentRole = '', industry = '', employerType = '', experienceLevel = '', currentSkills = [], profileText = '', jdText = '' }) {
+        return this.generateLearningPathAnalysis({ targetJob, currentRole, industry, employerType, experienceLevel, currentSkills, profileText, jdText });
     }
 
     /**
@@ -1722,5 +1722,5 @@ const Utils = {
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { APIClient, Utils, apiClient };
+    module.exports = { APIClient, Utils, apiClient, MockAPIService };
 }

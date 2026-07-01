@@ -428,8 +428,9 @@
                     <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="nav-features">Features</a>
                     <a href="#how-it-works" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap">How It Works</a>
                     <a href="#benefits" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="section-benefits-title">Benefits</a>
-                    <a href="#success-stories" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="nav-stories">Success Stories</a>
                     <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="nav-faq">FAQ</a>
+                    <a href="individual/demo-jobs-database.html?friendly=1" class="text-emerald-700 hover:text-emerald-900 transition-colors whitespace-nowrap font-medium">友好岗位</a>
+                    <a href="individual/friendly-employers.html" class="text-emerald-700 hover:text-emerald-900 transition-colors whitespace-nowrap font-medium">友好企业</a>
                 </div>
                 
                 <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
@@ -473,8 +474,10 @@
                 <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-features">Features</a>
                 <a href="#how-it-works" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">How It Works</a>
                 <a href="#benefits" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Benefits</a>
-                <a href="#success-stories" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-stories">Success Stories</a>
                 <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
+                <a href="individual/demo-jobs-database.html?friendly=1" class="block py-2 text-emerald-700 font-medium">友好岗位</a>
+                <a href="individual/friendly-employers.html" class="block py-2 text-emerald-700 font-medium">友好企业</a>
+                <a href="individual/my-applications.html" class="block py-2 text-orange-700 font-medium">我的投递</a>
                 <div class="py-3 border-t border-gray-100 mt-2 space-y-2">
                     <div id="nav-mobile-auth-guest">
                         <button type="button" class="nav-mobile-login w-full text-left py-2 text-gray-600 hover:text-blue-600 font-medium">Log in</button>
@@ -529,16 +532,28 @@
         <canvas id="hero-bg-canvas"></canvas>
         <div class="container mx-auto px-4 z-10 text-center hero-inner relative">
             <h1 class="block w-full text-center text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight md:leading-[1.08] tracking-tight max-w-5xl mx-auto" data-i18n="hero-title">GBA Cross-Regional Employment Empowerment</h1>
-            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="hero-subtitle">Empowering vulnerable groups through AI technology, breaking barriers, and connecting employment opportunities in the Guangdong-Hong Kong-Macao Greater Bay Area</p>
+            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="hero-subtitle">Live job matching, applications, and employer workflows across the GBA — deployed on Alibaba Cloud with Node.js, MySQL, and Python AI services.</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="individual/index.html" class="btn-hero">
+                <a href="individual/index.html" class="btn-hero" data-portal-target="individual">
                     <i class="fas fa-user"></i>
                     <span data-i18n="hero-individual">Individual Access</span>
                 </a>
-                <a href="corporate/index.html" class="btn-hero" style="background-color: rgba(255,255,255,0.9);">
+                <a href="corporate/index.html" class="btn-hero" style="background-color: rgba(255,255,255,0.9);" data-portal-target="corporate">
                     <i class="fas fa-building"></i>
                     <span data-i18n="hero-corporate">Corporate Access</span>
+                </a>
+            </div>
+
+            <div class="mt-6 flex flex-wrap justify-center gap-3 text-sm" data-portal-target="individual">
+                <a href="individual/demo-jobs-database.html?friendly=1" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/90 hover:bg-emerald-500 text-white font-semibold shadow">
+                    <i class="fas fa-heart"></i> 弱势群体友好岗位
+                </a>
+                <a href="individual/friendly-employers.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 hover:bg-white text-emerald-800 font-semibold shadow">
+                    <i class="fas fa-building-circle-check"></i> 友好企业
+                </a>
+                <a href="individual/my-applications.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-orange-800 font-semibold shadow">
+                    <i class="fas fa-paper-plane"></i> 我的投递
                 </a>
             </div>
 
@@ -546,24 +561,24 @@
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
                     <i class="fas fa-users text-2xl text-white mr-3"></i>
                     <div class="text-left">
-                        <div class="text-white font-bold">10,000+</div>
-                        <div class="text-white text-sm">Active Users</div>
+                        <div class="text-white font-bold" id="hero-stat-users">—</div>
+                        <div class="text-white text-sm">Registered Job Seekers</div>
                     </div>
                 </div>
                 
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
                     <i class="fas fa-building text-2xl text-white mr-3"></i>
                     <div class="text-left">
-                        <div class="text-white font-bold">500+</div>
-                        <div class="text-white text-sm">Partner Companies</div>
+                        <div class="text-white font-bold" id="hero-stat-companies">—</div>
+                        <div class="text-white text-sm">Registered Companies</div>
                     </div>
                 </div>
                 
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
-                    <i class="fas fa-handshake text-2xl text-white mr-3"></i>
+                    <i class="fas fa-briefcase text-2xl text-white mr-3"></i>
                     <div class="text-left">
-                        <div class="text-white font-bold">85%</div>
-                        <div class="text-white text-sm">Matching Success Rate</div>
+                        <div class="text-white font-bold" id="hero-stat-jobs">—</div>
+                        <div class="text-white text-sm">Active Job Openings</div>
                     </div>
                 </div>
             </div>
@@ -576,15 +591,15 @@
     <section id="features" class="py-20 bg-white">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-features-title">Platform Features</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto" data-i18n="section-features-lead">Advanced AI-powered features for job seekers and employers. Open the <a href="individual/index.html" class="text-blue-600 hover:underline">Individual Portal</a> for resume generation, interview practice, and personalized learning paths.</p>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto" data-i18n="section-features-lead">Individuals browse matched jobs (internal + external), apply online, and use Python AI demos. Companies post roles with target criteria, manage profiles, and review scored applicants — all on the live Alibaba Cloud stack.</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="individual">
                     <div class="ai-feature-icon">
                         <i class="fas fa-file-alt"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3">Smart Resume Generator</h3>
-                    <p class="text-gray-600 mb-4">Upload your resume and target job description. AI analyzes skill gaps and generates a customized resume for GBA opportunities.</p>
+                    <p class="text-gray-600 mb-4">Store resumes via the Node API and use the Python AI backend demos to refine skills and presentation before applying to matched jobs.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="individual/demo-resume-generator.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span>Learn more</span>
@@ -593,12 +608,12 @@
                     </div>
                 </div>
                 
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="individual">
                     <div class="ai-feature-icon">
                         <i class="fas fa-graduation-cap"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3">Personalized Learning Path</h3>
-                    <p class="text-gray-600 mb-4">Get customized learning recommendations to bridge skill gaps and advance your career in the cross-border job market.</p>
+                    <p class="text-gray-600 mb-4">Interactive learning-path demos (Python AI backend) help you plan skill upgrades alongside real job matching and applications.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="individual/demo-learning-path.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span>Learn more</span>
@@ -607,15 +622,57 @@
                     </div>
                 </div>
                 
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="individual">
                     <div class="ai-feature-icon">
                         <i class="fas fa-comments"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3">Interview Preparation</h3>
-                    <p class="text-gray-600 mb-4">Practice with AI-generated interview questions tailored to your target role, with real-time feedback and session reports.</p>
+                    <p class="text-gray-600 mb-4">Practice with AI interview demos powered by the Python backend, with session feedback alongside your real application workflow.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="individual/demo-interview.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span>Learn more</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="corporate">
+                    <div class="ai-feature-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Job Posting & Applicant Scoring</h3>
+                    <p class="text-gray-600 mb-4">Publish internal roles with target criteria for vulnerable groups, then review applicants ranked by match score and reasons.</p>
+                    <div class="flex items-center text-blue-600 font-medium">
+                        <a href="corporate/post-job.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Post a job</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="corporate">
+                    <div class="ai-feature-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Company Profile</h3>
+                    <p class="text-gray-600 mb-4">Maintain your company profile and inclusivity information; friendly employers are highlighted when posting vulnerable-group roles.</p>
+                    <div class="flex items-center text-blue-600 font-medium">
+                        <a href="corporate/company-profile.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Manage profile</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="individual">
+                    <div class="ai-feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Skills-Based Job Matching</h3>
+                    <p class="text-gray-600 mb-4">After registration, the platform infers your group type from profile data and surfaces matched jobs with scores and application tracking.</p>
+                    <div class="flex items-center text-blue-600 font-medium">
+                        <a href="individual/demo-jobs-database.html" class="flex items-center hover:text-blue-800 transition-colors">
+                            <span>Browse jobs</span>
                             <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -634,7 +691,7 @@
                         <i class="fas fa-shield-alt"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3">Data Security & Compliance</h3>
-                    <p class="text-gray-600 mb-4">Strict adherence to cross-border data localization principles with hierarchical privacy storage and automatic sensitive information anonymization.</p>
+                    <p class="text-gray-600 mb-4">Authentication, resumes, applications, and job data are stored in a MySQL backend with JWT-protected API access and role-based permissions.</p>
                 </div>
                 
                 <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
@@ -642,7 +699,7 @@
                         <i class="fas fa-universal-access"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3">Accessibility</h3>
-                    <p class="text-gray-600 mb-4">WCAG 2.2 compliant design with screen reader compatibility, keyboard navigation, high contrast mode, and voice assistant for users with disabilities.</p>
+                    <p class="text-gray-600 mb-4">Built-in accessibility widget with high-contrast mode, larger text, keyboard-friendly navigation, and screen-reader hints — plus multi-language UI support.</p>
                 </div>
             </div>
         </div>
@@ -663,7 +720,7 @@
                             </div>
                             <div class="ml-6">
                                 <h3 class="text-xl font-bold mb-2">Create Your Profile</h3>
-                                <p class="text-gray-600">Register as an individual or corporate user, complete your profile with relevant information, skills, and requirements.</p>
+                                <p class="text-gray-600">Register as an individual (with age, gender, income, and career-gap profile) or as a corporate account, then complete your resume or company profile.</p>
                             </div>
                         </div>
                         
@@ -674,7 +731,7 @@
                             </div>
                             <div class="ml-6">
                                 <h3 class="text-xl font-bold mb-2">AI Matching Process</h3>
-                                <p class="text-gray-600">Our AI algorithm analyzes your profile and matches you with the most suitable opportunities or candidates based on skills and requirements.</p>
+                                <p class="text-gray-600">The matching service scores jobs against your resume and profile, considering skills, group types, and employer target criteria.</p>
                             </div>
                         </div>
                         
@@ -685,7 +742,7 @@
                             </div>
                             <div class="ml-6">
                                 <h3 class="text-xl font-bold mb-2">Review & Connect</h3>
-                                <p class="text-gray-600">Review match results, communicate with potential employers or candidates, and proceed with the application or recruitment process.</p>
+                                <p class="text-gray-600">Individuals apply to jobs and track applications; employers review ranked applicants and manage posting status from the corporate portal.</p>
                             </div>
                         </div>
                         
@@ -696,7 +753,7 @@
                             </div>
                             <div class="ml-6">
                                 <h3 class="text-xl font-bold mb-2">Support Throughout</h3>
-                                <p class="text-gray-600">Access AI-powered tools for interview preparation, policy guidance, and ongoing support throughout your employment journey.</p>
+                                <p class="text-gray-600">Use AI demos (resume, interview, learning path, policy navigator) from the individual or corporate portals, plus donations and legal-aid workflows where available.</p>
                             </div>
                         </div>
                     </div>
@@ -713,7 +770,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">For Individuals</h4>
-                                    <p class="text-gray-600">Access to cross-border job opportunities, AI resume optimization, interview coaching, and personalized learning paths.</p>
+                                    <p class="text-gray-600">Browse matched internal and external jobs, apply with scored applications, and use AI demos for resume, interview, and learning support.</p>
                                 </div>
                             </div>
                             
@@ -723,7 +780,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">For Companies</h4>
-                                    <p class="text-gray-600">Access to diverse talent pools, AI-powered candidate screening, policy compliance tools, and recruitment analytics.</p>
+                                    <p class="text-gray-600">Post roles with target criteria, review ranked applicants, manage company profiles, and access recruitment stats from the corporate dashboard.</p>
                                 </div>
                             </div>
                             
@@ -733,7 +790,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">Data Security</h4>
-                                    <p class="text-gray-600">Cross-border data localization, automatic anonymization, and compliance with regional data protection regulations.</p>
+                                    <p class="text-gray-600">JWT-authenticated APIs, bcrypt password hashing, role-based access, and persistent data in Alibaba Cloud RDS MySQL.</p>
                                 </div>
                             </div>
                             
@@ -762,9 +819,9 @@
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-benefits-title">Key Benefits</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12" id="benefits-grid">
                 <!-- Individual Benefits -->
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8" data-portal-target="individual">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
                             <i class="fas fa-user text-white text-xl"></i>
@@ -777,19 +834,19 @@
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">AI resume optimization to highlight your skills and experiences</span>
+                            <span class="text-gray-700">Resume storage plus Python AI demos for résumé, interview, and learning-path practice</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Skills-first job matching with "blind screening" to eliminate bias</span>
+                            <span class="text-gray-700">Matched job listings (internal + external sources) with scores and match reasons</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">AI interview coaching with real-time feedback</span>
+                            <span class="text-gray-700">One-click apply with resume snapshot and application status tracking</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
@@ -801,7 +858,13 @@
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">AI policy consultation for cross-border employment</span>
+                            <span class="text-gray-700">Vulnerable-group friendly job filter and friendly-employer directory</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                                <i class="fas fa-check text-blue-600 text-sm"></i>
+                            </div>
+                            <span class="text-gray-700">Donation and legal-aid entry points for community support</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
@@ -811,15 +874,15 @@
                         </li>
                     </ul>
                     
-                    <p class="text-sm text-gray-600 mt-6">Live flows (résumé, jobs, interview, policy, <strong>AI learning path</strong>, Olivia): open <strong>Individual Portal</strong> → Interactive Workspace, or jump straight to the learning-path tool from AI Features.</p>
-                    <a href="individual/index.html" class="btn-primary mt-8 w-full justify-center">
+                    <p class="text-sm text-gray-600 mt-6">Live flows: job matching, applications, resume tools, interview practice, and learning-path demos in the <strong>Individual Portal</strong>.</p>
+                    <a href="individual/index.html" class="btn-primary mt-8 w-full justify-center" data-portal-target="individual">
                         <i class="fas fa-user"></i>
                         <span>Individual Access</span>
                     </a>
                 </div>
                 
                 <!-- Corporate Benefits -->
-                <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-8">
+                <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-8" data-portal-target="corporate">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
                             <i class="fas fa-building text-white text-xl"></i>
@@ -832,42 +895,42 @@
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">AI-powered talent pool search with skills-based matching</span>
+                            <span class="text-gray-700">Post jobs with target criteria (age, gender, disability, career gap) and vulnerable-group tags</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Cross-border employment cost calculation and compliance</span>
+                            <span class="text-gray-700">View applicants ranked by match score with resume snapshots</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">AI interview question generation and candidate evaluation</span>
+                            <span class="text-gray-700">Manage job status (active, interviewing, closed) and clone postings</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Diversity metrics and analytics dashboard</span>
+                            <span class="text-gray-700">Company profile with inclusivity information and friendly-employer flag</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Automated compliance risk assessment</span>
+                            <span class="text-gray-700">Optional blind-screening settings when publishing roles</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Streamlined recruitment process management</span>
+                            <span class="text-gray-700">Recruitment dashboard with live stats (applications, match scores, diversity breakdown)</span>
                         </li>
                     </ul>
                     
-                    <p class="text-sm text-gray-600 mt-6">Policy, interview, and role tools use the <strong>same workflows</strong> as applicants. Open them from <a href="corporate/portal.html#ai-features" class="text-green-700 font-medium hover:underline">HR interactive tools</a> or the cards on this portal after Corporate Access.</p>
-                    <a href="corporate/index.html" class="btn-primary mt-8 w-full justify-center" style="background-color: #10b981;">
+                    <p class="text-sm text-gray-600 mt-6">Post jobs, review applicants, and manage your company profile from the <strong>Corporate Portal</strong> or <a href="corporate/portal.html#ai-features" class="text-green-700 font-medium hover:underline">HR interactive tools</a>.</p>
+                    <a href="corporate/index.html" class="btn-primary mt-8 w-full justify-center" style="background-color: #10b981;" data-portal-target="corporate">
                         <i class="fas fa-building"></i>
                         <span>Corporate Access</span>
                     </a>
@@ -876,11 +939,11 @@
         </div>
     </section>
     
-    <!-- Success Stories Section -->
-    <section id="success-stories" class="py-20 bg-gray-50">
+    <!-- Success Stories Section (hidden until real testimonials are available) -->
+    <section id="success-stories" class="py-20 bg-gray-50 hidden" hidden aria-hidden="true">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-stories-title">Success Stories</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Real stories from our users who have found success through the platform</p>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Illustrative scenarios showing how matching, applications, employer workflows, and AI demos work together — not live user testimonials.</p>
             
             <div class="stories-marquee">
             <div class="stories-track">
@@ -909,7 +972,7 @@
                             <p class="text-gray-600 text-sm">Hong Kong Company</p>
                         </div>
                     </div>
-                    <p class="text-gray-600 mb-4">"We needed to expand our team with diverse talent. The platform helped us find qualified candidates from mainland China and Macau, and the policy calculator made cross-border hiring seamless."</p>
+                    <p class="text-gray-600 mb-4">"We needed diverse GBA talent. Posting with target criteria and reviewing applicants by match score helped us hire five cross-border team members efficiently."</p>
                     <div class="flex items-center text-sm text-gray-500">
                         <i class="fas fa-users mr-2"></i>
                         <span>Hired 5 cross-border employees</span>
@@ -957,7 +1020,7 @@
                             <p class="text-gray-600 text-sm">Inclusive Partner Employer</p>
                         </div>
                     </div>
-                    <p class="text-gray-600 mb-4">"The policy navigator clarified social security handoffs and incentive filings before we launched a remote customer-care team across Zhuhai and Macau."</p>
+                    <p class="text-gray-600 mb-4">"After completing our company profile and posting inclusive roles, we built a remote customer-care team across Zhuhai and Macau with clear match scoring for every applicant."</p>
                     <div class="flex items-center text-sm text-gray-500">
                         <i class="fas fa-briefcase mr-2"></i>
                         <span>Created 18 flexible service roles</span>
@@ -992,7 +1055,7 @@
                         <img src="https://ui-avatars.com/api/?name=Tech+Solutions+Ltd&background=10b981&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
                         <div><h4 class="font-semibold text-gray-800">Tech Solutions Ltd</h4><p class="text-gray-600 text-sm">Hong Kong Company</p></div>
                     </div>
-                    <p class="text-gray-600 mb-4">"The platform helped us find qualified candidates from mainland China and Macau."</p>
+                    <p class="text-gray-600 mb-4">"Posting with target criteria and reviewing applicants by match score helped us hire across the GBA."</p>
                     <div class="flex items-center text-sm text-gray-500"><i class="fas fa-users mr-2"></i><span>Hired 5 cross-border employees</span></div>
                 </div>
                 <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
@@ -1016,7 +1079,7 @@
                         <img src="https://ui-avatars.com/api/?name=Hengqin+Commerce&background=0ea5e9&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
                         <div><h4 class="font-semibold text-gray-800">Hengqin Commerce</h4><p class="text-gray-600 text-sm">Inclusive Partner Employer</p></div>
                     </div>
-                    <p class="text-gray-600 mb-4">"The policy navigator clarified social security handoffs and incentive filings."</p>
+                    <p class="text-gray-600 mb-4">"After posting inclusive roles, we built a remote team with clear match scoring for every applicant."</p>
                     <div class="flex items-center text-sm text-gray-500"><i class="fas fa-briefcase mr-2"></i><span>Created 18 flexible service roles</span></div>
                 </div>
                 <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
@@ -1045,7 +1108,7 @@
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">The GBA Cross-Border Employment Empowerment Platform is an AI-powered recruitment platform designed to connect vulnerable groups with employment opportunities across the Guangdong-Hong Kong-Macao Greater Bay Area. It uses advanced technology to eliminate employment discrimination, ensure fair matching, and provide comprehensive support throughout the employment process.</p>
+                        <p class="text-gray-600">The GBA Cross-Border Employment Empowerment Platform connects vulnerable groups with inclusive employers across the Greater Bay Area. It runs on Alibaba Cloud with a static front-end, Node.js API (auth, jobs, applications, company profiles), Python AI services (resume/interview/learning demos), and RDS MySQL — including JWT login, scored matching, and online applications.</p>
                     </div>
                 </div>
                 
@@ -1056,7 +1119,7 @@
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">The "blind screening" feature automatically anonymizes candidates' personal information that could potentially lead to bias, such as age, gender, disability status, and photos. Employers see only skills, experience, and qualifications, helping to ensure fair and objective evaluation based purely on merit.</p>
+                        <p class="text-gray-600">When posting a job, employers can enable blind screening so personal identifiers are de-emphasised in hiring workflows. On the applicant side, profiles are matched primarily on skills, resume content, and declared target criteria (age range, disability openness, career gap). Corporate users review applicants with match scores rather than browsing raw demographic fields first.</p>
                     </div>
                 </div>
                 
@@ -1067,7 +1130,7 @@
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Yes, the platform is designed to be fully accessible. It complies with WCAG 2.2 standards and includes features such as screen reader compatibility, keyboard navigation, high contrast mode, text size adjustment, and a voice assistant for hands-free operation.</p>
+                        <p class="text-gray-600">Yes. The site includes an accessibility widget with high-contrast mode, larger text, keyboard-friendly navigation, and screen-reader hints. Multi-language UI labels are also supported. Full WCAG certification has not been formally audited, but inclusive design is a core goal.</p>
                     </div>
                 </div>
                 
@@ -1078,7 +1141,7 @@
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">We strictly adhere to the principle of cross-border data localization and implement hierarchical privacy storage. The platform provides a blind screening mode to automatically hide users' sensitive information. All data transmission uses encryption technology, and privacy impact assessments are conducted regularly to ensure user data security.</p>
+                        <p class="text-gray-600">Accounts, resumes, job postings, and applications are stored in a MySQL database and accessed through authenticated REST APIs. Passwords are hashed server-side; JWT tokens are used for session access. Role-based rules ensure individuals can apply to jobs while corporate accounts can only manage their own postings and applicants.</p>
                     </div>
                 </div>
                 
@@ -1089,40 +1152,51 @@
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Simply choose whether you're an individual user or a corporate user, create your account, and complete your profile. For individuals, this includes your skills, experience, and career goals. For companies, this includes your company information and hiring needs. Once your profile is complete, you can start using our AI-powered features to find opportunities or candidates.</p>
+                        <p class="text-gray-600">Sign up from this page as an individual or corporate user. Individuals must provide age, gender, and monthly income so the system can infer group types and run matching. After login, use <strong>My portal</strong> to enter your dedicated workspace — job seekers browse matched roles and apply; employers post jobs, manage company profiles, and review scored applicants.</p>
                     </div>
                 </div>
                 
                 <!-- Question 6 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">Which groups are prioritized on the platform?</span>
+                        <span class="font-medium text-gray-800">How does group-type matching work?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">The platform uses respectful naming and focuses on accessible workers, silver-haired professionals, skill-growing workers, health-compatible workers, and other GBA job seekers who face information, policy, or skill-expression barriers.</p>
+                        <p class="text-gray-600">The system automatically tags individuals into groups such as disability, 45+ workers, career returners, and low-income youth based on registration profile data. Jobs can declare matching target criteria, and both sides receive a match score (0–100) with human-readable reasons when applying or reviewing candidates.</p>
                     </div>
                 </div>
                 
                 <!-- Question 7 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">Can this front-end site run on GitHub Pages?</span>
+                        <span class="font-medium text-gray-800">Does the home page show live platform data?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Yes. The site uses static HTML, CSS, CDN assets, and browser-side data only. Authentication, feedback, and language preference are stored locally, so no backend server is required for GitHub Pages deployment.</p>
+                        <p class="text-gray-600">Yes. Statistics are loaded from <code>/api/stats/home</code>: registered job seekers (<code>users</code> with role individual), registered companies (<code>company_profiles</code> rows), active job openings, and strong match rate (applications with score ≥ 50). If the API is offline, placeholders are shown.</p>
                     </div>
                 </div>
                 
                 <!-- Question 8 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">What does the Remote & Inclusive Flex-Hub cover?</span>
+                        <span class="font-medium text-gray-800">How is the platform deployed?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">It showcases flexible e-commerce roles such as remote customer service, data annotation, live-commerce support, content moderation, and assistive-tool guidance. The design emphasizes equal pay, clear assessment criteria, accessible interfaces, and post-employment follow-up.</p>
+                        <p class="text-gray-600">The production stack runs on Alibaba Cloud: static front-end pages, Node.js API on port 3000, Python AI backend on port 8000, Redis for AI session cache, and RDS MySQL (<code>gba_website</code> for accounts/jobs/applications, <code>ai_career_copilot</code> for AI demo sessions). GitHub Pages alone cannot host this full stack.</p>
+                    </div>
+                </div>
+                
+                <!-- Question 9 -->
+                <div class="mb-4">
+                    <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <span class="font-medium text-gray-800">What are vulnerable-group friendly jobs and friendly employers?</span>
+                        <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
+                    </button>
+                    <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
+                        <p class="text-gray-600">Jobs tagged <code>vulnerable_group_friendly</code> appear in the friendly-jobs filter. Employers with inclusivity profiles or friendly postings are listed on the friendly-employers page. Individuals can also access donation and legal-aid workflows from the portal for additional community support.</p>
                     </div>
                 </div>
             </div>
@@ -1133,14 +1207,14 @@
     <section class="py-20 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div class="container mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold mb-6" data-i18n="section-cta-title">Join the GBA Employment Revolution</h2>
-            <p class="text-xl mb-8 max-w-3xl mx-auto">Experience the power of AI technology in breaking down barriers and connecting talent with opportunities across the Greater Bay Area.</p>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">Register on the cloud-hosted platform to access live job matching, applications, employer tools, and AI-powered career demos across the Greater Bay Area.</p>
             
-            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-                <button type="button" class="btn-hero auth-cta-register cursor-pointer border-0" style="background-color: white; color: #2563eb;" data-auth-portal="individual">
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12" id="cta-signup-row">
+                <button type="button" class="btn-hero auth-cta-register cursor-pointer border-0" style="background-color: white; color: #2563eb;" data-auth-portal="individual" data-portal-target="individual">
                     <i class="fas fa-user"></i>
                     <span>Individual Sign Up</span>
                 </button>
-                <button type="button" class="btn-hero auth-cta-register cursor-pointer border-0" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white !important;" data-auth-portal="corporate">
+                <button type="button" class="btn-hero auth-cta-register cursor-pointer border-0" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white !important;" data-auth-portal="corporate" data-portal-target="corporate">
                     <i class="fas fa-building"></i>
                     <span>Corporate Sign Up</span>
                 </button>
@@ -1148,20 +1222,20 @@
             
             <div class="flex flex-wrap justify-center gap-8">
                 <div class="text-center">
-                    <div class="text-3xl font-bold mb-2">10,000+</div>
-                    <div class="text-blue-100">Active Users</div>
+                    <div class="text-3xl font-bold mb-2" id="cta-stat-users">—</div>
+                    <div class="text-blue-100">Registered Job Seekers</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold mb-2">500+</div>
-                    <div class="text-blue-100">Partner Companies</div>
+                    <div class="text-3xl font-bold mb-2" id="cta-stat-companies">—</div>
+                    <div class="text-blue-100">Registered Companies</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold mb-2">85%</div>
-                    <div class="text-blue-100">Success Rate</div>
+                    <div class="text-3xl font-bold mb-2" id="cta-stat-jobs">—</div>
+                    <div class="text-blue-100">Active Job Openings</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold mb-2">4</div>
-                    <div class="text-blue-100">Languages Supported</div>
+                    <div class="text-3xl font-bold mb-2" id="cta-stat-match">—</div>
+                    <div class="text-blue-100">Strong Match Rate</div>
                 </div>
             </div>
         </div>
@@ -1173,7 +1247,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <h3 class="text-xl font-bold mb-4">GBA Platform</h3>
-                    <p class="text-gray-400 mb-4">Empowering vulnerable groups through AI technology for cross-border employment in the Greater Bay Area.</p>
+                    <p class="text-gray-400 mb-4">Cloud-hosted GBA employment platform with live job matching, applications, employer workflows, and AI career demos for vulnerable groups.</p>
                     <div class="flex space-x-4">
                         <a href="https://www.facebook.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-facebook-f"></i>
@@ -1196,7 +1270,6 @@
                         <li><a href="#features" class="text-gray-400 hover:text-white transition-colors">Features</a></li>
                         <li><a href="#how-it-works" class="text-gray-400 hover:text-white transition-colors">How It Works</a></li>
                         <li><a href="#benefits" class="text-gray-400 hover:text-white transition-colors">Benefits</a></li>
-                        <li><a href="#success-stories" class="text-gray-400 hover:text-white transition-colors">Success Stories</a></li>
                         <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
                     </ul>
                 </div>
@@ -1204,12 +1277,11 @@
                 <div>
                     <h3 class="text-lg font-semibold mb-4">User Access</h3>
                     <ul class="space-y-2">
-                        <li><a href="individual/index.html" class="text-gray-400 hover:text-white transition-colors">Individual Portal</a></li>
-                        <li><a href="corporate/index.html" class="text-gray-400 hover:text-white transition-colors">Corporate Portal</a></li>
-                        <li><a href="corporate/portal.html#ai-features" class="text-gray-400 hover:text-white transition-colors">HR interactive tools</a></li>
+                        <li><a href="individual/index.html" class="text-gray-400 hover:text-white transition-colors" data-portal-target="individual">Individual Portal</a></li>
+                        <li><a href="corporate/index.html" class="text-gray-400 hover:text-white transition-colors" data-portal-target="corporate">Corporate Portal</a></li>
+                        <li><a href="corporate/portal.html#ai-features" class="text-gray-400 hover:text-white transition-colors" data-portal-target="corporate">HR interactive tools</a></li>
                         <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="login">Log in</button></li>
                         <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="register">Sign up</button></li>
-                        <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="forgot">Forgot password</button></li>
                     </ul>
                 </div>
                 
@@ -1249,7 +1321,7 @@
                 <button type="button" class="auth-tab" data-auth-tab="register">Sign up</button>
             </div>
             <div class="p-6">
-                <p class="text-sm text-gray-500 mb-4" id="auth-demo-hint">Use any email and a password of 6 or more characters. Data is saved only in this browser.</p>
+                <p class="text-sm text-gray-500 mb-4" id="auth-demo-hint">连接平台后端完成注册与登录；个人注册需填写弱势群体画像用于岗位匹配。</p>
                 
                 <div id="auth-panel-login" class="auth-panel space-y-4">
                     <fieldset class="space-y-2 border-0 p-0 m-0">
@@ -1267,7 +1339,6 @@
                     </div>
                     <p id="auth-login-error" class="text-red-600 text-sm hidden"></p>
                     <button type="button" id="auth-login-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm">Log in</button>
-                    <button type="button" id="auth-forgot-link" class="w-full text-sm text-blue-600 hover:underline font-medium">Forgot password?</button>
                 </div>
                 
                 <div id="auth-panel-register" class="auth-panel space-y-4" hidden>
@@ -1292,25 +1363,58 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password2">Confirm password</label>
                         <input type="password" id="auth-register-password2" autocomplete="new-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
+                    <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>Password recovery is not available. Please choose a password you will remember.
+                    </p>
+                    <div id="auth-register-profile-wrap" class="space-y-3">
+                        <p class="text-sm font-medium text-gray-700">Profile for group matching <span class="text-red-500">*</span></p>
+                        <p class="text-xs text-gray-500 -mt-2">We infer your vulnerable group types from age, disability, gender, career gap and income.</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-age">Age</label>
+                                <input type="number" id="auth-register-age" min="16" max="100" placeholder="e.g. 28" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-gender">Gender</label>
+                                <select id="auth-register-gender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer_not_say">Prefer not to say</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-disability">Disability type</label>
+                                <select id="auth-register-disability" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="none">None</option>
+                                    <option value="physical">Physical</option>
+                                    <option value="visual">Visual</option>
+                                    <option value="hearing">Hearing</option>
+                                    <option value="intellectual">Intellectual</option>
+                                    <option value="mental">Mental</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-gap">Career gap (years)</label>
+                                <input type="number" id="auth-register-gap" min="0" max="50" step="0.5" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-income">Monthly income (CNY)</label>
+                                <input type="number" id="auth-register-income" min="0" step="100" placeholder="e.g. 6000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                            </div>
+                        </div>
+                    </div>
                     <p id="auth-register-error" class="text-red-600 text-sm hidden"></p>
                     <button type="button" id="auth-register-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm">Create account</button>
-                </div>
-                
-                <div id="auth-panel-forgot" class="auth-panel space-y-4" hidden>
-                    <button type="button" id="auth-back-login" class="text-sm text-blue-600 hover:underline font-medium flex items-center gap-1">
-                        <i class="fas fa-arrow-left text-xs"></i> Back to log in
-                    </button>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-forgot-email">Email</label>
-                        <input type="email" id="auth-forgot-email" autocomplete="email" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                    </div>
-                    <p id="auth-forgot-msg" class="text-sm text-gray-600 min-h-[1.25rem]"></p>
-                    <button type="button" id="auth-forgot-submit" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 rounded-lg transition-colors">Send reset link</button>
                 </div>
             </div>
         </div>
     </div>
     
+    <script src="assets/js/auth-api.js"></script>
+    <script src="test-data/browser-bundle.js"></script>
     <script src="mock-api.js"></script>
     <script>
         // Execute after page loads
@@ -1325,7 +1429,87 @@
             bindAuthCtas();
             initSmoothScroll();
             refreshNavAuth();
+            applyHomePortalVisibility();
+            loadHomeStats();
         });
+
+        function getLoggedInPortalRole() {
+            if (typeof API === 'undefined' || !API.getAuthSession) return null;
+            var session = API.getAuthSession();
+            if (!session || !session.email) return null;
+            return API.normalizePortalRole(session.role || session.portal);
+        }
+
+        function applyHomePortalVisibility() {
+            var role = getLoggedInPortalRole();
+            document.querySelectorAll('[data-portal-target]').forEach(function (el) {
+                var target = el.getAttribute('data-portal-target');
+                if (!role) {
+                    el.classList.remove('hidden');
+                    el.removeAttribute('hidden');
+                    el.style.display = '';
+                    return;
+                }
+                var hide = role === 'individual' ? target === 'corporate' : target === 'individual';
+                if (hide) {
+                    el.classList.add('hidden');
+                    el.setAttribute('hidden', '');
+                } else {
+                    el.classList.remove('hidden');
+                    el.removeAttribute('hidden');
+                    el.style.display = '';
+                }
+            });
+
+            var benefitsGrid = document.getElementById('benefits-grid');
+            if (benefitsGrid && role) {
+                benefitsGrid.classList.toggle('md:grid-cols-1', true);
+                benefitsGrid.classList.toggle('md:grid-cols-2', false);
+            } else if (benefitsGrid) {
+                benefitsGrid.classList.add('md:grid-cols-2');
+                benefitsGrid.classList.remove('md:grid-cols-1');
+            }
+
+            var ctaSignup = document.getElementById('cta-signup-row');
+            if (ctaSignup) ctaSignup.classList.toggle('hidden', !!role);
+        }
+
+        function formatStatCount(value) {
+            var n = Number(value);
+            if (!Number.isFinite(n) || n < 0) return '—';
+            if (n === 0) return '0';
+            if (n >= 10000) return Math.floor(n / 1000) + 'k+';
+            return String(n);
+        }
+
+        function formatStatPercent(value) {
+            var n = Number(value);
+            if (!Number.isFinite(n) || n < 0) return '—';
+            return n + '%';
+        }
+
+        function setStatText(id, text) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        async function loadHomeStats() {
+            if (typeof API === 'undefined' || !API.fetchHomeStats) return;
+            var res = await API.fetchHomeStats();
+            var d = (res && res.data) || {};
+            var users = formatStatCount(d.individual_users);
+            var companies = formatStatCount(d.companies);
+            var jobs = formatStatCount(d.active_jobs);
+            var matchRate = formatStatPercent(d.match_success_rate);
+
+            setStatText('hero-stat-users', users);
+            setStatText('hero-stat-companies', companies);
+            setStatText('hero-stat-jobs', jobs);
+            setStatText('cta-stat-users', users);
+            setStatText('cta-stat-companies', companies);
+            setStatText('cta-stat-jobs', jobs);
+            setStatText('cta-stat-match', matchRate);
+        }
 
         function showToast(message) {
             var toast = document.getElementById('page-toast');
@@ -1354,6 +1538,13 @@
             document.querySelectorAll('input[name="auth-portal-register"]').forEach(function (r) {
                 r.checked = r.value === p;
             });
+            toggleRegisterProfileField();
+        }
+
+        function toggleRegisterProfileField() {
+            var wrap = document.getElementById('auth-register-profile-wrap');
+            var portal = (document.querySelector('input[name="auth-portal-register"]:checked') || {}).value;
+            if (wrap) wrap.style.display = portal === 'corporate' ? 'none' : 'block';
         }
 
         function refreshNavAuth() {
@@ -1388,6 +1579,7 @@
             if (mobPortal && session) mobPortal.href = API.portalEntryHref(session.portal);
             if (mobPortal) mobPortal.classList.toggle('hidden', !logged);
             if (mobLogout) mobLogout.classList.toggle('hidden', !logged);
+            applyHomePortalVisibility();
         }
 
         function initLanguageMenu() {
@@ -1446,24 +1638,12 @@
         function showAuthPanels(view) {
             var loginPanel = document.getElementById('auth-panel-login');
             var regPanel = document.getElementById('auth-panel-register');
-            var forgotPanel = document.getElementById('auth-panel-forgot');
             var tabsRow = document.getElementById('auth-tabs-row');
             var hint = document.getElementById('auth-demo-hint');
             var heading = document.getElementById('auth-heading');
 
-            if (view === 'forgot') {
-                if (tabsRow) tabsRow.hidden = true;
-                if (hint) hint.hidden = true;
-                if (loginPanel) loginPanel.hidden = true;
-                if (regPanel) regPanel.hidden = true;
-                if (forgotPanel) forgotPanel.hidden = false;
-                if (heading) heading.textContent = 'Reset password';
-                return;
-            }
-
             if (tabsRow) tabsRow.hidden = false;
             if (hint) hint.hidden = false;
-            if (forgotPanel) forgotPanel.hidden = true;
             if (heading)
                 heading.textContent = view === 'register' ? 'Create account' : 'Sign in';
 
@@ -1494,25 +1674,14 @@
                 getPortalFromHero();
             setPortalRadios(presetPortal);
 
-            if (mode === 'forgot') {
-                showAuthPanels('forgot');
-                var fm = document.getElementById('auth-forgot-msg');
-                if (fm) fm.textContent = '';
-            } else {
-                showAuthPanels(mode === 'register' ? 'register' : 'login');
-            }
+            showAuthPanels(mode === 'register' ? 'register' : 'login');
 
             overlay.classList.add('is-open');
             overlay.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
 
             setTimeout(function () {
-                var focusId =
-                    mode === 'forgot'
-                        ? 'auth-forgot-email'
-                        : mode === 'register'
-                          ? 'auth-register-email'
-                          : 'auth-login-email';
+                var focusId = mode === 'register' ? 'auth-register-email' : 'auth-login-email';
                 var el = document.getElementById(focusId);
                 if (el) el.focus();
             }, 100);
@@ -1546,19 +1715,10 @@
                 });
             });
 
-            document.getElementById('auth-forgot-link') &&
-                document
-                    .getElementById('auth-forgot-link')
-                    .addEventListener('click', function () {
-                        showAuthPanels('forgot');
-                    });
-
-            document.getElementById('auth-back-login') &&
-                document
-                    .getElementById('auth-back-login')
-                    .addEventListener('click', function () {
-                        showAuthPanels('login');
-                    });
+            document.querySelectorAll('input[name="auth-portal-register"]').forEach(function (r) {
+                r.addEventListener('change', toggleRegisterProfileField);
+            });
+            toggleRegisterProfileField();
 
             document.getElementById('nav-login-btn') &&
                 document
@@ -1596,6 +1756,7 @@
                     .addEventListener('click', function () {
                         API.logout();
                         refreshNavAuth();
+                        applyHomePortalVisibility();
                         showToast('Signed out.');
                     });
 
@@ -1605,6 +1766,7 @@
                     .addEventListener('click', function () {
                         API.logout();
                         refreshNavAuth();
+                        applyHomePortalVisibility();
                         showToast('Signed out.');
                     });
 
@@ -1630,7 +1792,9 @@
                 API.persistPortal(portal === 'corporate' ? 'company' : 'person');
                 closeAuthModal();
                 refreshNavAuth();
+                applyHomePortalVisibility();
                 showToast('Welcome back, ' + res.data.displayName + '!');
+                window.location.href = portal === 'corporate' ? 'corporate/portal.html' : 'individual/portal.html';
             });
 
             document
@@ -1652,7 +1816,28 @@
                         return;
                     }
 
-                    var res = await API.register(email, pw, portal, name);
+                    var profile = null;
+                    if (portal === 'individual') {
+                        var age = document.getElementById('auth-register-age').value;
+                        var gender = document.getElementById('auth-register-gender').value;
+                        var disability = document.getElementById('auth-register-disability').value;
+                        var gap = document.getElementById('auth-register-gap').value;
+                        var income = document.getElementById('auth-register-income').value;
+                        if (!age || !gender || income === '') {
+                            errEl.textContent = 'Please complete age, gender and monthly income.';
+                            errEl.classList.remove('hidden');
+                            return;
+                        }
+                        profile = {
+                            age: parseInt(age, 10),
+                            gender: gender,
+                            disability_type: disability || 'none',
+                            career_gap_years: parseFloat(gap) || 0,
+                            current_income: parseFloat(income),
+                        };
+                    }
+
+                    var res = await API.register(email, pw, portal, name, profile);
                     if (!res.success) {
                         errEl.textContent = res.message || 'Registration failed';
                         errEl.classList.remove('hidden');
@@ -1661,16 +1846,14 @@
                     API.persistPortal(portal === 'corporate' ? 'company' : 'person');
                     closeAuthModal();
                     refreshNavAuth();
+                    applyHomePortalVisibility();
+                    if (portal === 'corporate') {
+                        showToast('Account created. Complete your company profile.');
+                        window.location.href = 'corporate/company-profile.html?onboard=1';
+                        return;
+                    }
                     showToast('Account created. Explore your portal!');
-                });
-
-            document
-                .getElementById('auth-forgot-submit')
-                .addEventListener('click', async function () {
-                    var email = document.getElementById('auth-forgot-email').value;
-                    var msg = document.getElementById('auth-forgot-msg');
-                    var res = await API.requestPasswordReset(email);
-                    msg.textContent = res.success ? res.message : res.message || 'Request failed.';
+                    window.location.href = 'individual/portal.html';
                 });
 
             document.addEventListener('keydown', function (e) {
@@ -1836,8 +2019,8 @@
             if (typeof API === 'undefined' || !API.portalEntryHref) return;
             document
                 .querySelectorAll(
-                    'a.btn-hero[href*="individual"], a.btn-hero[href*="corporate"], ' +
-                        'a.btn-primary[href*="individual"], a.btn-primary[href*="corporate"]'
+                    'a.btn-hero[href*="individual/index"], a.btn-hero[href*="corporate/index"], ' +
+                        'a.btn-primary[href*="individual/index"], a.btn-primary[href*="corporate/index"]'
                 )
                 .forEach(function (a) {
                     var hrefAttr = (a.getAttribute('href') || '').toLowerCase();

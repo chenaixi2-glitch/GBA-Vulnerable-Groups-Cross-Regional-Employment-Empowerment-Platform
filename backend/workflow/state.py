@@ -17,6 +17,7 @@ class ProfileBasic(BaseModel):
     phone: str = ""
     city: str = ""
     school: str = ""
+    extras: dict[str, str] = Field(default_factory=dict)  # photo_url, has_photo, etc.
 
 
 class Material(BaseModel):
@@ -268,6 +269,9 @@ class Meta(BaseModel):
     last_user_message_id: str = ""
     last_successful_pipeline: str = ""
     employer_type: str = ""  # soe | public | foreign | private | npo | hmt | other
+    target_jd_text: str = ""  # 用户填写的目标 JD 原文
+    target_industry: str = ""  # 目标行业（下拉框）
+    target_experience_level: str = ""  # 目标经验等级（下拉框）
     dirty_flags: DirtyFlags = Field(default_factory=DirtyFlags)
 
 

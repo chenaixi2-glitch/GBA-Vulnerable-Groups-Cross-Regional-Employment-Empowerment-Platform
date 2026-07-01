@@ -1,13 +1,28 @@
 """
 Test script for GBA Platform Backend API
-Tests resume upload, optimization, and interview simulation workflows
+Tests resume upload, optimization, and interview simulation workflows.
+
+测试数据说明（统一存放于 test-data/）：
+- Senior Full Stack Developer 场景：test-data/senior-fullstack/
+- Alex Chen Mock 场景：test-data/alex-chen/
 """
 
 import requests
 import json
 import time
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from tests.fixtures.test_samples import (
+    SAMPLE_PROFILE_TEXT,
+    SAMPLE_JD_TEXT,
+    GENERATE_RESUME_MESSAGE,
+    INTERVIEW_START_MESSAGE,
+)
 
 BASE_URL = "http://localhost:8000"
+REQUEST_TIMEOUT = 300  # LLM workflows: single call ~60–90s, full pipeline up to ~3 min
 
 def print_section(title):
     """Print a section header"""
@@ -40,24 +55,7 @@ def test_resume_workflow():
     try:
         payload = {
             "session_id": "",
-            "message": """
-John Doe
-Email: john.doe@example.com
-Phone: +86 138-0000-0000
-
-EXPERIENCE:
-Senior Software Engineer at Tech Corp (2020-Present)
-- Led development of microservices architecture
-- Implemented CI/CD pipelines using Docker and Kubernetes
-- Mentored junior developers and conducted code reviews
-
-SKILLS:
-Python, JavaScript, React, Node.js, Docker, Kubernetes, AWS, Git
-
-EDUCATION:
-Bachelor of Science in Computer Science
-University of Technology, 2019
-            """,
+            "message": SAMPLE_PROFILE_TEXT,
             "attachments": []
         }
         
@@ -65,7 +63,7 @@ University of Technology, 2019
             f"{BASE_URL}/api/chat",
             json=payload,
             headers={"Content-Type": "application/json"},
-            timeout=30
+            timeout=REQUEST_TIMEOUT
         )
         
         if response.status_code == 200:
@@ -76,13 +74,16 @@ University of Technology, 2019
             print(f"✓ Reply Message: {data.get('reply_message', '')[:100]}...")
             
             # Check if profile was extracted
-            if data.get("resume_content_json"):
+            if data.get("candidate_profile"):
                 print("✓ Profile extracted successfully")
-                profile = data["resume_content_json"]
-                print(f"  - Name: {profile.get('basic', {}).get('name', 'N/A')}")
-                print(f"  - Skills: {len(profile.get('skills', []))} skills found")
+                profile = data["candidate_profile"]
+                basic = profile.get("profile_basic") or {}
+                print(f"  - Name: {basic.get('name', 'N/A')}")
+                print(f"  - Facts: {len(profile.get('facts', []))} items")
+            elif data.get("resume_content_json"):
+                print("✓ Profile/resume content in response")
             else:
-                print("⚠ Warning: No resume content in response")
+                print("⚠ Warning: No profile data in response")
         else:
             print(f"✗ Failed with status {response.status_code}")
             print(f"  Response: {response.text}")
@@ -101,24 +102,7 @@ University of Technology, 2019
     try:
         jd_payload = {
             "session_id": session_id,
-            "message": """
-Job Title: Senior Full Stack Developer
-
-Requirements:
-- 5+ years of experience in web development
-- Strong proficiency in Python and JavaScript
-- Experience with React and Node.js
-- Knowledge of containerization (Docker, Kubernetes)
-- Cloud platform experience (AWS/Azure/GCP)
-- Excellent problem-solving skills
-- Team leadership experience
-
-Responsibilities:
-- Design and implement scalable web applications
-- Lead technical architecture decisions
-- Mentor junior developers
-- Collaborate with cross-functional teams
-            """,
+            "message": SAMPLE_JD_TEXT,
             "attachments": []
         }
         
@@ -126,7 +110,7 @@ Responsibilities:
             f"{BASE_URL}/api/chat",
             json=jd_payload,
             headers={"Content-Type": "application/json"},
-            timeout=30
+            timeout=REQUEST_TIMEOUT
         )
         
         if response.status_code == 200:
@@ -155,7 +139,7 @@ Responsibilities:
     try:
         generate_payload = {
             "session_id": session_id,
-            "message": "Please generate an optimized resume tailored for this Senior Full Stack Developer position",
+            "message": GENERATE_RESUME_MESSAGE,
             "attachments": []
         }
         
@@ -163,7 +147,7 @@ Responsibilities:
             f"{BASE_URL}/api/chat",
             json=generate_payload,
             headers={"Content-Type": "application/json"},
-            timeout=45
+            timeout=REQUEST_TIMEOUT
         )
         
         if response.status_code == 200:
@@ -210,7 +194,7 @@ def test_interview_workflow():
     try:
         payload = {
             "session_id": "",
-            "message": "Generate interview questions for a Senior Software Engineer position in the technology industry. Use a professional tone.",
+            "message": INTERVIEW_START_MESSAGE,
             "attachments": []
         }
         
@@ -218,7 +202,7 @@ def test_interview_workflow():
             f"{BASE_URL}/api/chat",
             json=payload,
             headers={"Content-Type": "application/json"},
-            timeout=30
+            timeout=REQUEST_TIMEOUT
         )
         
         if response.status_code == 200:
@@ -263,7 +247,7 @@ def test_interview_workflow():
             f"{BASE_URL}/api/chat",
             json=answer_payload,
             headers={"Content-Type": "application/json"},
-            timeout=30
+            timeout=REQUEST_TIMEOUT
         )
         
         if response.status_code == 200:

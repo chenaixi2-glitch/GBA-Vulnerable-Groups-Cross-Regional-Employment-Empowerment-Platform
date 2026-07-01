@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>爱心捐款箱 · 弱势群体法律服务 - 企业端</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-emerald-50 to-white min-h-screen" data-page="corporate">
+    <header class="bg-white/90 backdrop-blur border-b sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="portal.html" class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-green-600 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold">GBA</div>
+                <div>
+                    <div class="font-bold text-gray-900">粤港澳大湾区就业赋能平台</div>
+                    <div class="text-xs text-gray-500">企业端 · 爱心捐款箱</div>
+                </div>
+            </a>
+            <a href="portal.html" class="text-sm text-green-600 hover:underline"><i class="fas fa-arrow-left mr-1"></i>返回门户</a>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-10">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">企业爱心捐款箱</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                招聘发布、岗位匹配与法律帮助<strong class="text-green-700">免费使用</strong>。
+                面试模拟、HR 绩效统计等高级功能需向捐款箱捐款（<strong class="text-amber-700">金额不限</strong>）。
+                募集到的资金将<strong class="text-amber-700">全额</strong>用于为弱势求职者提供<strong class="text-blue-700">免费法律服务</strong>。
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8 mb-12">
+            <section class="bg-white rounded-2xl shadow-lg border p-6 md:p-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-building text-green-600"></i> 企业捐款
+                </h2>
+                <div id="donation-box-root"></div>
+            </section>
+
+            <section class="bg-white rounded-2xl shadow-lg border p-6 md:p-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <i class="fas fa-scale-balanced text-blue-600"></i> 弱势群体法律服务
+                </h2>
+                <p id="legal-subtitle" class="text-sm text-gray-600 mb-6"></p>
+                <div id="legal-contact" class="mb-6 p-4 bg-blue-50 rounded-xl text-sm text-blue-900 hidden"></div>
+                <div id="legal-services-grid" class="grid sm:grid-cols-2 gap-4"></div>
+            </section>
+        </div>
+
+        <section class="bg-white rounded-2xl border shadow-lg p-6 md:p-8 mb-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <i class="fas fa-gavel text-green-600"></i> 法律服务诉求 · 接单帮助
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">查看弱势用户提交的法律诉求并<strong>提供帮助</strong>。提供后诉求不会下架，将展示帮助者与帮助内容；申请人确认完成后诉求移至「已完成诉求」。</p>
+            <div id="legal-aid-root"></div>
+        </section>
+
+        <section class="bg-white rounded-2xl border p-6 md:p-8">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">企业收费说明</h2>
+            <div class="grid md:grid-cols-2 gap-6 text-sm text-gray-700">
+                <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                    <h3 class="font-semibold text-green-800 mb-2"><i class="fas fa-unlock mr-1"></i> 免费使用</h3>
+                    <ul class="space-y-1 list-disc list-inside text-green-900/80">
+                        <li>发布与管理招聘岗位</li>
+                        <li>AI 候选人匹配与投递管理</li>
+                        <li>在「待接单」中为弱势用户接单提供法律帮助</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                    <h3 class="font-semibold text-amber-800 mb-2"><i class="fas fa-coins mr-1"></i> 捐款后解锁</h3>
+                    <ul class="space-y-1 list-disc list-inside text-amber-900/80">
+                        <li>面试模拟与面试准备工具</li>
+                        <li>HR 团队绩效统计与对比</li>
+                        <li>捐款 100% 用于弱势群体法律服务</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="../test-data/browser-bundle.js"></script>
+    <script src="assets/js/api-client.js"></script>
+    <script src="../assets/js/platform-access.js"></script>
+    <script src="../assets/js/donation-box.js"></script>
+    <script src="../assets/js/legal-aid.js"></script>
+    <script src="../assets/floating-widget.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            DonationBox.renderDonationBox(document.getElementById('donation-box-root'), { portal: 'corporate' });
+            LegalAidUI.init(document.getElementById('legal-aid-root'), { portal: 'corporate', allowSubmit: false });
+
+            try {
+                const res = await CorporateAPI.DonationsAPI.getLegalServices();
+                const data = res.data || {};
+                document.getElementById('legal-subtitle').textContent = data.subtitle || '';
+                DonationBox.renderLegalServices(document.getElementById('legal-services-grid'), data.services || []);
+                if (data.contact) {
+                    const el = document.getElementById('legal-contact');
+                    el.classList.remove('hidden');
+                    el.innerHTML = `
+                        <div><i class="fas fa-phone mr-2"></i>热线：${data.contact.hotline}</div>
+                        <div><i class="fas fa-envelope mr-2"></i>邮箱：${data.contact.email}</div>
+                        <div><i class="fas fa-clock mr-2"></i>${data.contact.hours}</div>
+                        <div class="mt-2 text-xs opacity-80">${data.fund_promise || ''}</div>`;
+                }
+            } catch (e) {
+                document.getElementById('legal-subtitle').textContent = '加载法律服务信息失败，请确认后端服务已启动。';
+            }
+        });
+    </script>
+</body>
+</html>

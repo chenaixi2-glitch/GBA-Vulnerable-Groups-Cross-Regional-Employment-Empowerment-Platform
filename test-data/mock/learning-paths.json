@@ -1,0 +1,524 @@
+{
+  "E-commerce Customer Service": {
+    "beginner": {
+      "modules": [
+        {
+          "title": "E-commerce fundamentals",
+          "courses": [
+            "Marketplace landscape (Taobao, JD, Amazon, etc.)",
+            "CS representative scope and duties",
+            "Key retail and CS vocabulary"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Video lessons",
+            "Drills",
+            "Knowledge base"
+          ]
+        },
+        {
+          "title": "Communication skills",
+          "courses": [
+            "Principles of concise support communication",
+            "Active listening frameworks",
+            "Empathy and clarity under stress"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Role plays",
+            "Scripts",
+            "Peer review"
+          ]
+        },
+        {
+          "title": "Customer service delivery",
+          "courses": [
+            "Diagnosing shopper intent",
+            "Escalation paths and issue ownership",
+            "Returns, refunds, and SLA basics"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Simulators",
+            "Coach feedback",
+            "QA scorecards"
+          ]
+        },
+        {
+          "title": "Operations tooling",
+          "courses": [
+            "Order lifecycle in OMS/CRM",
+            "Coordinating fulfilment and logistics views",
+            "Internal documentation hygiene"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Screen recordings",
+            "Checklists",
+            "Assessments"
+          ]
+        }
+      ],
+      "certificate": "E-commerce CS Foundations",
+      "jobOpportunities": [
+        "Junior CS agent",
+        "Omni-channel associate",
+        "Aftercare specialist"
+      ]
+    },
+    "intermediate": {
+      "modules": [
+        {
+          "title": "Advanced communication",
+          "courses": [
+            "High-stakes callers",
+            "Stress regulation",
+            "Cross-cultural nuance"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Case labs",
+            "Facilitator clinics"
+          ]
+        },
+        {
+          "title": "Product depth",
+          "courses": [
+            "Feature storytelling",
+            "Competitive positioning",
+            "Quarterly trend briefs"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "PM office hours",
+            "Analyst memos"
+          ]
+        },
+        {
+          "title": "Commercial acumen",
+          "courses": [
+            "Healthy upsell cues",
+            "Basket recovery",
+            "Retention signals"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Playbooks",
+            "KPI dashboards"
+          ]
+        },
+        {
+          "title": "Analytics for CS",
+          "courses": [
+            "Tickets-to-insight loops",
+            "CSAT/DSAT drivers",
+            "Process mining intro"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Spreadsheet labs",
+            "BI sandboxes"
+          ]
+        }
+      ],
+      "certificate": "E-commerce CS Practitioner",
+      "jobOpportunities": [
+        "Senior agent",
+        "Team lead",
+        "Voice-of-customer analyst"
+      ]
+    },
+    "advanced": {
+      "modules": [
+        {
+          "title": "Leading teams",
+          "courses": [
+            "Rostering fairness",
+            "Coaching rhythms",
+            "Quality programmes"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Toolkit library",
+            "Mentorship circles"
+          ]
+        },
+        {
+          "title": "Journey optimisation",
+          "courses": [
+            "Journey maps",
+            "Automation guardrails",
+            "CX experimentation"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Design sprints",
+            "Experiment logs"
+          ]
+        },
+        {
+          "title": "Executive presence",
+          "courses": [
+            "Board-ready metrics",
+            "Crisis comms rehearsal",
+            "Vendor governance"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Briefing templates",
+            "Scenario drills"
+          ]
+        }
+      ],
+      "certificate": "E-commerce CS Leader",
+      "jobOpportunities": [
+        "CX manager",
+        "Head of Digital Care",
+        "Contact centre director"
+      ]
+    }
+  },
+  "Data Annotator": {
+    "beginner": {
+      "modules": [
+        {
+          "title": "Annotation essentials",
+          "courses": [
+            "Purpose of labelled data",
+            "Common modalities overview",
+            "Tooling hygiene"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Videos",
+            "Guided drills",
+            "Handbook"
+          ]
+        },
+        {
+          "title": "Vision tasks",
+          "courses": [
+            "Classification vs detection vs segmentation",
+            "Edge cases",
+            "Pixel QA"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Workbench tasks",
+            "Pair audits"
+          ]
+        },
+        {
+          "title": "Language tasks",
+          "courses": [
+            "Sentiment and NER tagging",
+            "Intent tagging",
+            "Inter-annotator agreement"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Consensus sessions",
+            "Rubric drills"
+          ]
+        },
+        {
+          "title": "QA discipline",
+          "courses": [
+            "Rubric fidelity",
+            "Error taxonomies",
+            "Self-review habits"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Calibration sets",
+            "Coaching loops"
+          ]
+        }
+      ],
+      "certificate": "Annotation Foundations",
+      "jobOpportunities": [
+        "Junior annotator",
+        "CV labeler",
+        "NLP labeler"
+      ]
+    },
+    "intermediate": {
+      "modules": [
+        {
+          "title": "Advanced annotation",
+          "courses": [
+            "3D point clouds",
+            "Video temporality",
+            "Multimodal fusion"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Specialist workshops",
+            "Tool extensions"
+          ]
+        },
+        {
+          "title": "Domain nuance",
+          "courses": [
+            "Autonomous driving rubrics",
+            "Clinical imaging etiquette",
+            "Financial redaction"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Compliance primers",
+            "Field SMEs"
+          ]
+        },
+        {
+          "title": "Throughput",
+          "courses": [
+            "Hotkeys & batching",
+            "Automation assists",
+            "Capacity planning"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Throughput labs",
+            "Efficiency KPIs"
+          ]
+        },
+        {
+          "title": "Review leadership",
+          "courses": [
+            "Gold-set maintenance",
+            "Disagreement arbitration",
+            "Coaching cues"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Calibration war rooms"
+          ]
+        }
+      ],
+      "certificate": "Senior Annotator Track",
+      "jobOpportunities": [
+        "Senior labeler",
+        "QA reviewer",
+        "Project coordinator"
+      ]
+    },
+    "advanced": {
+      "modules": [
+        {
+          "title": "Programme management",
+          "courses": [
+            "Milestone modelling",
+            "Resource buffers",
+            "ISO-style QA systems"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Governance decks",
+            "Retrospectives"
+          ]
+        },
+        {
+          "title": "Platform design",
+          "courses": [
+            "Spec gathering",
+            "Custom templates",
+            "Workflow automation hooks"
+          ],
+          "duration": "3 weeks",
+          "resources": [
+            "Hack weeks",
+            "Engineering buddies"
+          ]
+        },
+        {
+          "title": "Training data science",
+          "courses": [
+            "Dataset budgeting",
+            "Slice-based evaluation",
+            "Augmentation pitfalls"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Notebook challenges",
+            "Model PM shadowing"
+          ]
+        }
+      ],
+      "certificate": "ML Data Steward",
+      "jobOpportunities": [
+        "Labelling programme manager",
+        "Data quality chief",
+        "ML operations partner"
+      ]
+    }
+  },
+  "Live Stream Assistant": {
+    "beginner": {
+      "modules": [
+        {
+          "title": "Live fundamentals",
+          "courses": [
+            "Platform roles",
+            "Run-of-show etiquette",
+            "Basic AV hygiene"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Tutorial packs",
+            "Hardware walkthrough"
+          ]
+        },
+        {
+          "title": "Show prep",
+          "courses": [
+            "Product fact sheets",
+            "Script beats",
+            "Engagement gimmicks"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Brief templates",
+            "Creative prompts"
+          ]
+        },
+        {
+          "title": "Control-room support",
+          "courses": [
+            "Chat moderation",
+            "Link drops",
+            "Incident triage"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Shadow shifts",
+            "Runbooks"
+          ]
+        },
+        {
+          "title": "Metrics literacy",
+          "courses": [
+            "Funnel KPIs",
+            "Audience heatmaps",
+            "GMV sensitivities"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Reporting clinic"
+          ]
+        }
+      ],
+      "certificate": "Live Ops Associate",
+      "jobOpportunities": [
+        "Junior live assistant",
+        "Studio runner",
+        "Shoppertainment liaison"
+      ]
+    },
+    "intermediate": {
+      "modules": [
+        {
+          "title": "Programming shows",
+          "courses": [
+            "Narrative arcs",
+            "Pacing choreography",
+            "Promo choreography"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Director shadowing"
+          ]
+        },
+        {
+          "title": "Community vibes",
+          "courses": [
+            "Fan psychology",
+            "Chat tactics",
+            "Lightweight CRM"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Psych primer",
+            "Engagement KPIs"
+          ]
+        },
+        {
+          "title": "Production polish",
+          "courses": [
+            "Lighting/audio sweet spots",
+            "Multi-cam choreography",
+            "Encoder tuning"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Hands-on rigs"
+          ]
+        },
+        {
+          "title": "Optimisation labs",
+          "courses": [
+            "Cohort benchmarking",
+            "Competitive tear-downs",
+            "Experiment design"
+          ],
+          "duration": "1 week",
+          "resources": [
+            "Insights war room"
+          ]
+        }
+      ],
+      "certificate": "Live Commerce Specialist",
+      "jobOpportunities": [
+        "Senior assistant",
+        "Show producer",
+        "Ops analyst"
+      ]
+    },
+    "advanced": {
+      "modules": [
+        {
+          "title": "Team orchestration",
+          "courses": [
+            "Crew charters",
+            "Incentive schemes",
+            "Hand-off rituals"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Cadence tooling"
+          ]
+        },
+        {
+          "title": "Innovation arcs",
+          "courses": [
+            "Format invention",
+            "IP partnerships",
+            "Short-form synergy"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Innovation incubator"
+          ]
+        },
+        {
+          "title": "Commercial rigour",
+          "courses": [
+            "Sponsor negotiation helpers",
+            "Sponsorship math",
+            "ROI storytelling"
+          ],
+          "duration": "2 weeks",
+          "resources": [
+            "Finance clinics"
+          ]
+        }
+      ],
+      "certificate": "Head of Live Revenue",
+      "jobOpportunities": [
+        "Studio manager",
+        "Content director",
+        "Live-commerce GM"
+      ]
+    }
+  }
+}

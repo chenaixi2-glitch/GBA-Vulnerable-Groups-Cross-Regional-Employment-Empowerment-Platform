@@ -59,6 +59,12 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
 
     # Profile section
     profile = content.profile
+    extras = getattr(profile, "extras", None) or {}
+    photo_url = (extras.get("photo_url") or extras.get("photo_data") or "").strip()
+    photo_html = ""
+    if lang == "zh" and photo_url:
+        photo_html = f'<img class="profile-photo" src="{photo_url}" alt="证件照" />'
+
     edu_html = ""
     for edu in profile.education:
         edu_html += f'<div class="edu-item"><span class="edu-school">{edu.school}</span>'
@@ -83,13 +89,18 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
         "profile": f"""
             <section class="section section-profile">
                 <h2>{labels["profile"]}</h2>
-                <div class="profile-info">
-                    <span class="name">{profile.name}</span>
-                    <span class="contact">{profile.email} | {profile.phone} | {profile.city}</span>
-                    {'<span class="linkedin">' + profile.linkedin + '</span>' if getattr(profile, 'linkedin', '') else ''}
-                    {'<span class="github">' + profile.github + '</span>' if profile.github else ''}
+                <div class="profile-header">
+                    <div class="profile-main">
+                        <div class="profile-info">
+                            <span class="name">{profile.name}</span>
+                            <span class="contact">{profile.email} | {profile.phone} | {profile.city}</span>
+                            {'<span class="linkedin">' + profile.linkedin + '</span>' if getattr(profile, 'linkedin', '') else ''}
+                            {'<span class="github">' + profile.github + '</span>' if profile.github else ''}
+                        </div>
+                        <div class="education">{edu_html}</div>
+                    </div>
+                    {photo_html}
                 </div>
-                <div class="education">{edu_html}</div>
             </section>
         """,
         "summary": f"""

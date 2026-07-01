@@ -330,11 +330,11 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Salary Range (Monthly, CNY)</label>
+                                <label class="form-label">Salary Range (Monthly, CNY) <span class="required">*</span></label>
                                 <div class="flex items-center gap-2">
-                                    <input type="number" id="salary-min" class="form-input" placeholder="Min e.g. 10000">
+                                    <input type="number" id="salary-min" class="form-input" placeholder="Min e.g. 10000" required min="1">
                                     <span class="text-gray-400 shrink-0">—</span>
-                                    <input type="number" id="salary-max" class="form-input" placeholder="Max e.g. 25000">
+                                    <input type="number" id="salary-max" class="form-input" placeholder="Max e.g. 25000" required min="1">
                                 </div>
                             </div>
                             <div>
@@ -435,31 +435,69 @@
                         </div>
                     </div>
 
-                    <!-- DEI Section -->
+                    <!-- Inclusive targeting -->
                     <div class="form-card">
                         <div class="section-title">
                             <span class="icon"><i class="fas fa-heart"></i></span>
-                            Diversity &amp; Inclusion
+                            Inclusive Targeting
                         </div>
-                        <p class="text-sm text-gray-500 mb-4">Help us match inclusive talent. This information is used for DEI reporting only and does not restrict applications.</p>
-                        <div class="space-y-3">
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" id="dei-disability" class="w-4 h-4 accent-emerald-600 cursor-pointer">
-                                <span class="text-sm text-gray-700 group-hover:text-gray-900">Open to candidates with disabilities</span>
-                            </label>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" id="dei-elderly" class="w-4 h-4 accent-emerald-600 cursor-pointer">
-                                <span class="text-sm text-gray-700 group-hover:text-gray-900">Open to mature workers (45+)</span>
-                            </label>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" id="dei-returning" class="w-4 h-4 accent-emerald-600 cursor-pointer">
-                                <span class="text-sm text-gray-700 group-hover:text-gray-900">Open to career returners (women returning to work)</span>
-                            </label>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" id="dei-youth" class="w-4 h-4 accent-emerald-600 cursor-pointer">
-                                <span class="text-sm text-gray-700 group-hover:text-gray-900">Youth-friendly (first-job candidates welcome)</span>
-                            </label>
+                        <p class="text-sm text-gray-500 mb-4">硬性匹配：<strong>所有</strong>非「不限」条件须同时满足（AND）。勾选「优先推荐弱势群体」后岗位对全员可见，企业查看应聘者时弱势群体排序靠前。</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label" for="target-age-range">Age range</label>
+                                <select id="target-age-range" class="form-input">
+                                    <option value="any">Any age</option>
+                                    <option value="45_plus">45 years and above</option>
+                                    <option value="30_below">30 years and below</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="target-gender">Gender</label>
+                                <select id="target-gender" class="form-input">
+                                    <option value="any">Any gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="target-disability">Disability acceptance</label>
+                                <select id="target-disability" class="form-input">
+                                    <option value="any">Any disability status</option>
+                                    <option value="open">Open to candidates with disabilities</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="target-career-gap">Career gap</label>
+                                <select id="target-career-gap" class="form-input">
+                                    <option value="any">Any career gap</option>
+                                    <option value="yes">Welcomes career gap</option>
+                                    <option value="no">No career gap required</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2" id="target-disability-types-wrap" style="display:none;">
+                                <label class="form-label" for="target-disability-types">Accepted disability types (optional)</label>
+                                <select id="target-disability-types" class="form-input" multiple size="4">
+                                    <option value="physical">Physical</option>
+                                    <option value="visual">Visual</option>
+                                    <option value="hearing">Hearing</option>
+                                    <option value="intellectual">Intellectual</option>
+                                    <option value="mental">Mental</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Leave empty to accept all disability types.</p>
+                            </div>
+                            <div class="md:col-span-2 hidden rounded-xl border border-emerald-100 bg-emerald-50/60 p-4" id="prioritize-vulnerable-wrap">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" id="prioritize-vulnerable" class="w-4 h-4 mt-1 accent-emerald-600">
+                                    <span>
+                                        <span class="text-sm font-medium text-gray-800 block">优先向弱势群体推荐此岗位</span>
+                                        <span class="text-xs text-gray-500">岗位仍对所有人可见；查看应聘者时，已识别弱势群体将排在前面。</span>
+                                    </span>
+                                </label>
+                            </div>
                         </div>
+                        <p id="target-preview" class="text-xs text-emerald-700 mt-3 font-medium"></p>
                     </div>
                 </div>
 
@@ -682,8 +720,124 @@
                     showToast('Please fill in all required fields before continuing.', 'error');
                     return false;
                 }
+                const salMin = document.getElementById('salary-min').value;
+                const salMax = document.getElementById('salary-max').value;
+                if (!salMin || !salMax || Number(salMin) <= 0 || Number(salMax) <= 0) {
+                    showToast('Please enter salary range (min and max monthly CNY).', 'error');
+                    return false;
+                }
+                if (Number(salMin) > Number(salMax)) {
+                    showToast('Salary minimum cannot exceed maximum.', 'error');
+                    return false;
+                }
+            }
+            if (step === 2) {
+                return true;
             }
             return true;
+        }
+
+        function collectTargetCriteria() {
+            const disability = document.getElementById('target-disability').value;
+            const typesEl = document.getElementById('target-disability-types');
+            const disabilityTypes = disability === 'open' && typesEl
+                ? Array.from(typesEl.selectedOptions).map(function (o) { return o.value; })
+                : [];
+            return {
+                age_range: document.getElementById('target-age-range').value,
+                gender: document.getElementById('target-gender').value,
+                disability: disability,
+                disability_types: disabilityTypes,
+                career_gap: document.getElementById('target-career-gap').value,
+                prioritize_vulnerable: !!document.getElementById('prioritize-vulnerable').checked,
+            };
+        }
+
+        function hasTargetRestrictions(criteria) {
+            return criteria.age_range !== 'any' ||
+                criteria.gender !== 'any' ||
+                criteria.disability !== 'any' ||
+                criteria.career_gap !== 'any';
+        }
+
+        function previewDerivedGroupTypes(criteria) {
+            const types = [];
+            if (criteria.disability === 'open') types.push('disability');
+            if (criteria.age_range === '45_plus') types.push('elderly_45plus');
+            if (criteria.age_range === '30_below') types.push('youth');
+            if (criteria.gender === 'female' && criteria.career_gap === 'yes') types.push('career_returner');
+            return types;
+        }
+
+        function updateTargetPreview() {
+            const criteria = collectTargetCriteria();
+            const types = previewDerivedGroupTypes(criteria);
+            const preview = document.getElementById('target-preview');
+            const disabilityWrap = document.getElementById('target-disability-types-wrap');
+            const prioritizeWrap = document.getElementById('prioritize-vulnerable-wrap');
+            if (disabilityWrap) disabilityWrap.style.display = criteria.disability === 'open' ? 'block' : 'none';
+            const allOpen = !hasTargetRestrictions(criteria);
+            if (prioritizeWrap) prioritizeWrap.classList.toggle('hidden', !allOpen);
+            if (!preview) return;
+            if (types.length) {
+                preview.textContent = '弱势群体友好 · Tags: ' + types.join(', ');
+                preview.className = 'text-xs text-emerald-700 mt-3 font-medium';
+                return;
+            }
+            if (allOpen && criteria.prioritize_vulnerable) {
+                preview.textContent = '弱势群体友好 · 全员可见，企业端应聘者列表弱势群体优先排序';
+                preview.className = 'text-xs text-emerald-700 mt-3 font-medium';
+                return;
+            }
+            preview.textContent = allOpen
+                ? '开放岗位：不勾选优先推荐则不显示弱势群体友好标签'
+                : '当前条件未推导弱势群体类型标签';
+            preview.className = 'text-xs text-amber-600 mt-3 font-medium';
+        }
+
+        ['target-age-range', 'target-gender', 'target-disability', 'target-career-gap', 'target-disability-types', 'prioritize-vulnerable']
+            .forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', updateTargetPreview);
+            });
+        updateTargetPreview();
+
+        function getTagsFromWrap(wrapId) {
+            const wrap = document.getElementById(wrapId);
+            if (!wrap) return [];
+            return Array.from(wrap.querySelectorAll('.tag-chip'))
+                .map(function (chip) {
+                    return chip.textContent.replace('×', '').trim();
+                })
+                .filter(Boolean);
+        }
+
+        function buildJobPayload() {
+            const salMin = document.getElementById('salary-min').value;
+            const salMax = document.getElementById('salary-max').value;
+            const salary = salMin && salMax
+                ? '¥' + Number(salMin).toLocaleString() + ' – ¥' + Number(salMax).toLocaleString()
+                : null;
+            const summary = document.getElementById('job-summary').value.trim();
+            const resp = document.getElementById('responsibilities').value.trim();
+            const additional = document.getElementById('additional-req').value.trim();
+            let description = summary + '\n\nKey Responsibilities:\n' + resp;
+            if (additional) description += '\n\nAdditional Requirements:\n' + additional;
+
+            return {
+                title: document.getElementById('job-title').value.trim(),
+                department: document.getElementById('department').value,
+                location: document.getElementById('work-location').value,
+                description: description,
+                salary: salary,
+                salary_min: salMin ? Number(salMin) : null,
+                salary_max: salMax ? Number(salMax) : null,
+                education: document.getElementById('education').value,
+                work_experience: document.getElementById('experience').value,
+                target_criteria: collectTargetCriteria(),
+                skills: getTagsFromWrap('skills-wrap'),
+                post_date: new Date().toISOString().slice(0, 10),
+            };
         }
 
         // ── Tag input ──────────────────────────────────────────────────────────
@@ -761,22 +915,84 @@
             ).join('');
         }
 
+        const editJobId = new URLSearchParams(location.search).get('id');
+        let isEditMode = false;
+
+        async function loadJobForEdit() {
+            if (!editJobId || typeof CorporateAPI === 'undefined') return;
+            try {
+                const res = await CorporateAPI.JobsAPI.get(editJobId);
+                const job = res.data.job;
+                if (!job || job.source !== 'internal') return;
+                isEditMode = true;
+                document.getElementById('job-title').value = job.title || '';
+                document.getElementById('department').value = job.department || '';
+                document.getElementById('work-location').value = job.location || '';
+                document.getElementById('job-summary').value = job.description || '';
+                document.getElementById('education').value = job.education || '';
+                document.getElementById('experience').value = job.work_experience || '';
+                if (job.salary) {
+                    const sm = String(job.salary).match(/(\d[\d,]*)\s*[–-]\s*(\d[\d,]*)/);
+                    if (sm) {
+                        document.getElementById('salary-min').value = sm[1].replace(/,/g, '');
+                        document.getElementById('salary-max').value = sm[2].replace(/,/g, '');
+                    }
+                }
+                const c = job.target_criteria || {};
+                document.getElementById('target-age-range').value = c.age_range || 'any';
+                document.getElementById('target-gender').value = c.gender || 'any';
+                document.getElementById('target-disability').value = c.disability || 'any';
+                document.getElementById('target-career-gap').value = c.career_gap || 'any';
+                document.getElementById('prioritize-vulnerable').checked = !!c.prioritize_vulnerable;
+                if (Array.isArray(c.disability_types) && c.disability_types.length) {
+                    const sel = document.getElementById('target-disability-types');
+                    Array.from(sel.options).forEach(function (opt) {
+                        opt.selected = c.disability_types.includes(opt.value);
+                    });
+                }
+                updateTargetPreview();
+                const btn = document.getElementById('btn-submit');
+                if (btn) btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                document.title = 'Edit Job — GBA Platform';
+            } catch (e) {
+                showToast(e.message || 'Failed to load job for editing', 'error');
+            }
+        }
+
         // ── Form submit ────────────────────────────────────────────────────────
-        document.getElementById('post-job-form').addEventListener('submit', function (e) {
+        document.getElementById('post-job-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const btn = document.getElementById('btn-submit');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Publishing…';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> ' + (isEditMode ? 'Saving…' : 'Publishing…');
             btn.disabled = true;
 
-            // Simulate API call
-            setTimeout(function () {
-                const jobId = 'GBA-2026-' + String(Math.floor(Math.random() * 9000) + 1000);
-                document.getElementById('success-job-id').textContent = jobId;
+            try {
+                if (typeof CorporateAPI === 'undefined') {
+                    throw new Error('API client not loaded. Please log in as a corporate user.');
+                }
+                const payload = buildJobPayload();
+                const res = isEditMode
+                    ? await CorporateAPI.JobsAPI.update(editJobId, payload)
+                    : await CorporateAPI.JobsAPI.create(payload);
+                const job = res.data.job;
+                if (isEditMode) {
+                    showToast('岗位已更新', 'success');
+                    setTimeout(function () { window.location.href = 'my-jobs.html'; }, 800);
+                    return;
+                }
+                document.getElementById('success-job-id').textContent = 'GBA-' + job.id;
                 document.getElementById('success-modal').classList.remove('hidden');
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Job';
+            } catch (err) {
+                showToast(err.message || 'Failed to save job. Are you logged in as corporate?', 'error');
+            } finally {
+                btn.innerHTML = isEditMode
+                    ? '<i class="fas fa-save"></i> Save Changes'
+                    : '<i class="fas fa-paper-plane"></i> Publish Job';
                 btn.disabled = false;
-            }, 1400);
+            }
         });
+
+        window.loadJobForEdit = loadJobForEdit;
 
         function resetForm() {
             document.getElementById('success-modal').classList.add('hidden');
@@ -818,6 +1034,18 @@
             }
         };
     </script>
+    <script src="../assets/js/auth-api.js"></script>
+    <script src="../assets/js/portal-auth.js"></script>
+    <script src="../test-data/browser-bundle.js"></script>
+    <script src="assets/js/api-client.js"></script>
+    <script src="../assets/js/platform-access.js"></script>
     <script src="../assets/floating-widget.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await PortalAuth.guardPortalAuth({ portal: 'corporate', authPage: 'auth.html' });
+            PlatformAccess.guardCurrentPage({ showModal: true, skipOnDonationPage: true });
+            if (typeof window.loadJobForEdit === 'function') window.loadJobForEdit();
+        });
+    </script>
 </body>
 </html>

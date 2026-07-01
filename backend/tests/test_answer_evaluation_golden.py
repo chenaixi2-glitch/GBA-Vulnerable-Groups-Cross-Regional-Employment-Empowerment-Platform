@@ -16,7 +16,7 @@ from tests.evaluation_utils import (
     validate_golden_case,
 )
 
-GOLDEN_PATH = Path(__file__).resolve().parent / "golden" / "answer_evaluation_golden.json"
+GOLDEN_PATH = Path(__file__).resolve().parents[2] / "test-data" / "golden" / "answer_evaluation_golden.json"
 
 
 def _load_golden_cases() -> list[dict]:

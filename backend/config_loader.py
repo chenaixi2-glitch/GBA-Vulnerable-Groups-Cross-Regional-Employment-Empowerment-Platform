@@ -191,6 +191,23 @@ def get_jwt_config() -> dict:
     }
 
 
+def get_llm_queue_config() -> dict:
+    """Return LLM queue settings (concurrency limit, polling, ETA)."""
+    cfg = get_config().get("llm_queue", {})
+    return {
+        "enabled": _resolve_env_override("LLM_QUEUE_ENABLED", str(cfg.get("enabled", True))).lower()
+        in {"1", "true", "yes", "on"},
+        "max_concurrent": _resolve_int_override("LLM_QUEUE_MAX_CONCURRENT", int(cfg.get("max_concurrent", 2))),
+        "avg_job_seconds": _resolve_int_override("LLM_QUEUE_AVG_JOB_SECONDS", int(cfg.get("avg_job_seconds", 90))),
+        "poll_interval_seconds": _resolve_int_override(
+            "LLM_QUEUE_POLL_INTERVAL", int(cfg.get("poll_interval_seconds", 1))
+        ),
+        "session_lock_ttl_seconds": _resolve_int_override(
+            "LLM_QUEUE_SESSION_LOCK_TTL", int(cfg.get("session_lock_ttl_seconds", 600))
+        ),
+    }
+
+
 def get_fastapi_config() -> dict:
     """返回 FastAPI 配置（host, port, debug）。"""
     cfg = get_config().get("fastapi", {})

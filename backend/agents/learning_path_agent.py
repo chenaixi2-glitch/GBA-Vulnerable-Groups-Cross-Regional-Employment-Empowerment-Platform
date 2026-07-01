@@ -11,6 +11,7 @@ from typing import Any
 from agents.json_contracts import LearningPathAnalysisOutput, LearningPathTimelineOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.learning_path import LEARNING_PATH_ANALYSIS_PROMPT, LEARNING_PATH_TIMELINE_PROMPT
+from tools.target_job_context import build_enriched_job_json
 from workflow.state import CopilotState, Gap, LearningPathPhase, LearningPathResource, Question
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
@@ -128,7 +129,7 @@ def _infer_total_hours(parsed: LearningPathAnalysisOutput) -> int:
 
 async def _run_analysis_phase(state: CopilotState) -> dict[str, Any]:
     prompt = LEARNING_PATH_ANALYSIS_PROMPT.format(
-        job_json=state.job.model_dump_json(indent=2),
+        job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
     )
     llm = get_llm()
@@ -180,7 +181,7 @@ async def _run_timeline_phase(state: CopilotState, daily_hours: float) -> dict[s
     resources_payload = [r.model_dump() for r in state.learning_path_resources]
 
     prompt = LEARNING_PATH_TIMELINE_PROMPT.format(
-        job_json=state.job.model_dump_json(indent=2),
+        job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
         gaps_json=json.dumps(gaps_payload, ensure_ascii=False, indent=2),
         resources_json=json.dumps(resources_payload, ensure_ascii=False, indent=2),
@@ -233,7 +234,8 @@ async def learning_path_node_async(state: CopilotState) -> dict[str, Any]:
     """Analyze gaps/resources first; generate timeline after user picks daily hours."""
     logger.info("Learning Path Agent started for session %s", state.session_id)
 
-    if state.job is None or state.candidate_profile is None:
+    has_job_context = state.job is not None or bool((state.meta.target_jd_text or "").strip())
+    if not has_job_context or state.candidate_profile is None:
         return {
             "gaps": [],
             "learning_path_timeline": [],
@@ -248,6 +250,7 @@ async def learning_path_node_async(state: CopilotState) -> dict[str, Any]:
                 output_summary="缺少岗位或候选人画像，请先提交 JD 和个人材料。",
                 artifacts={
                     "has_job": state.job is not None,
+                    "has_target_jd": bool((state.meta.target_jd_text or "").strip()),
                     "has_candidate_profile": state.candidate_profile is not None,
                 },
             ),

@@ -84,6 +84,7 @@
 
     <script>
         const API_BASE_URL = 'http://localhost:8000/api';
+        const LLM_REQUEST_TIMEOUT = 300000; // SiliconFlow DeepSeek: ~60–90s per call, multi-agent up to ~3 min
         let currentSessionId = '';
 
         function updateStatus(status, color = 'gray') {
@@ -174,7 +175,7 @@ University of Technology, 2019`,
                     attachments: []
                 };
 
-                const uploadResponse = await axios.post(`${API_BASE_URL}/chat`, uploadPayload, { timeout: 30000 });
+                const uploadResponse = await axios.post(`${API_BASE_URL}/chat`, uploadPayload, { timeout: LLM_REQUEST_TIMEOUT });
                 currentSessionId = uploadResponse.data.session_id;
                 document.getElementById('session-display').textContent = currentSessionId.substr(-8);
                 
@@ -202,7 +203,7 @@ Requirements:
                     attachments: []
                 };
 
-                const jdResponse = await axios.post(`${API_BASE_URL}/chat`, jdPayload, { timeout: 30000 });
+                const jdResponse = await axios.post(`${API_BASE_URL}/chat`, jdPayload, { timeout: LLM_REQUEST_TIMEOUT });
                 console.log('[Test] JD response:', jdResponse.data);
                 
                 const gaps = jdResponse.data.gaps || [];
@@ -218,7 +219,7 @@ Requirements:
                     attachments: []
                 };
 
-                const generateResponse = await axios.post(`${API_BASE_URL}/chat`, generatePayload, { timeout: 45000 });
+                const generateResponse = await axios.post(`${API_BASE_URL}/chat`, generatePayload, { timeout: LLM_REQUEST_TIMEOUT });
                 console.log('[Test] Generate response:', generateResponse.data);
                 
                 const hasHtml = generateResponse.data.resume_html && generateResponse.data.resume_html.html;
@@ -255,7 +256,7 @@ Requirements:
                     attachments: []
                 };
 
-                const startResponse = await axios.post(`${API_BASE_URL}/chat`, startPayload, { timeout: 30000 });
+                const startResponse = await axios.post(`${API_BASE_URL}/chat`, startPayload, { timeout: LLM_REQUEST_TIMEOUT });
                 const sessionId = startResponse.data.session_id;
                 const questions = startResponse.data.interview_qa || [];
                 
@@ -274,7 +275,7 @@ Requirements:
                         attachments: []
                     };
 
-                    const answerResponse = await axios.post(`${API_BASE_URL}/chat`, answerPayload, { timeout: 30000 });
+                    const answerResponse = await axios.post(`${API_BASE_URL}/chat`, answerPayload, { timeout: LLM_REQUEST_TIMEOUT });
                     console.log('[Test] Answer response:', answerResponse.data);
                     
                     addResult('Test 3b: Answer Evaluation', 'pass',
