@@ -25,3 +25,6 @@ INTERVIEW_START_MESSAGE = _messages["interviewStart"]
 
 # Alex Chen — mock / HTML rendering tests
 SAMPLE_RESUME_HTML = read_text("alex-chen", "resume-en.html")
+
+# Aixi Chen — resume E2E fixtures
+AIXI_PROFILE_PHOTO = ROOT / "aixi" / "profile-photo.jpg"

@@ -744,21 +744,22 @@ async function downloadResume(format = 'html') {
 }
 
 /**
- * Export resume as PDF
+ * Export resume as PDF / DOCX / JSON / Markdown
  */
 async function exportResume(format = 'pdf') {
+    const filenames = {
+        pdf: 'resume.pdf',
+        docx: 'resume.docx',
+        json: 'resume.json',
+        markdown: 'resume.md',
+        md: 'resume.md',
+    };
+    const normalized = String(format || 'pdf').toLowerCase();
+
     try {
         Utils.showLoading('Exporting resume...');
-
-        let blob;
-        if (format === 'pdf') {
-            blob = await apiClient.exportResumePDF();
-            Utils.downloadFile(blob, 'resume.pdf');
-        } else if (format === 'docx') {
-            blob = await apiClient.exportResumeDOCX();
-            Utils.downloadFile(blob, 'resume.docx');
-        }
-
+        const blob = await apiClient.exportResumeFormat(normalized);
+        Utils.downloadFile(blob, filenames[normalized] || `resume.${normalized}`);
         Utils.hideLoading();
         Utils.showToast('Resume exported successfully');
     } catch (error) {

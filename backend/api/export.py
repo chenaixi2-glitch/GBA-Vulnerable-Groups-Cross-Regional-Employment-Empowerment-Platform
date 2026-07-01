@@ -24,12 +24,38 @@ class ExportRequest(BaseModel):
     target: str = "resume"  # resume / job / gaps / interview
 
 
+class SessionExportRequest(BaseModel):
+    session_id: str
+
+
 def _build_response(content: str, media_type: str, filename: str) -> Response:
     return Response(
         content=content,
         media_type=media_type,
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+def _build_binary_response(content: bytes, media_type: str, filename: str) -> Response:
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+async def _load_session_state(session_id: str, request: Request) -> CopilotState:
+    from api.chat import _aload_state
+
+    user = get_optional_user(request)
+    await ensure_session_access(session_id, user)
+
+    client = await get_redis_client()
+    store = RedisSessionStore(session_id, client)
+    saved = await _aload_state(store)
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return CopilotState.model_validate(saved)
 
 
 def _export_job_json(job: Job) -> str:
@@ -314,17 +340,46 @@ def _export_target(state: CopilotState, target: str, export_format: str) -> tupl
 @router.post("/export")
 async def export_resume(req: ExportRequest, request: Request):
     """导出简历、岗位解析、缺失信息或面试问答。"""
-    from api.chat import _aload_state
-
-    user = get_optional_user(request)
-    await ensure_session_access(req.session_id, user)
-
-    client = await get_redis_client()
-    store = RedisSessionStore(req.session_id, client)
-    saved = await _aload_state(store)
-    if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
-
-    state = CopilotState.model_validate(saved)
+    state = await _load_session_state(req.session_id, request)
     content, media_type, filename = _export_target(state, req.target, req.format)
     return _build_response(content, media_type, filename)
+
+
+@router.post("/export/pdf")
+async def export_resume_pdf(req: SessionExportRequest, request: Request):
+    """导出简历 PDF（由 HTML 渲染）。"""
+    from tools.resume_export import html_to_pdf_bytes
+
+    state = await _load_session_state(req.session_id, request)
+    if not state.resume_html.html:
+        raise HTTPException(status_code=404, detail="简历 HTML 尚未生成")
+
+    try:
+        pdf_bytes = html_to_pdf_bytes(state.resume_html.html)
+    except Exception as exc:
+        logger.error("PDF export failed for session %s: %s", req.session_id, exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="PDF 导出失败，请稍后重试") from exc
+
+    return _build_binary_response(pdf_bytes, "application/pdf", "resume.pdf")
+
+
+@router.post("/export/docx")
+async def export_resume_docx(req: SessionExportRequest, request: Request):
+    """导出简历 DOCX（由结构化 JSON 生成）。"""
+    from tools.resume_export import resume_content_to_docx_bytes
+
+    state = await _load_session_state(req.session_id, request)
+    if state.resume_content_json is None:
+        raise HTTPException(status_code=404, detail="简历内容尚未生成")
+
+    try:
+        docx_bytes = resume_content_to_docx_bytes(state.resume_content_json)
+    except Exception as exc:
+        logger.error("DOCX export failed for session %s: %s", req.session_id, exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="DOCX 导出失败，请稍后重试") from exc
+
+    return _build_binary_response(
+        docx_bytes,
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "resume.docx",
+    )

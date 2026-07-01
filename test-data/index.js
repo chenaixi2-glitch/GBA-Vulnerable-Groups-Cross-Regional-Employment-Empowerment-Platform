@@ -43,5 +43,6 @@ module.exports = {
     targetConfig: () => readJson('aixi', 'target-config.json'),
     targetJd: () => readText('aixi', 'target-jd.txt'),
     resumeManifest: () => readJson('aixi', 'resume-manifest.json'),
+    profilePhotoPath: () => path.join(ROOT, 'aixi', 'profile-photo.jpg'),
   },
 };

@@ -189,14 +189,26 @@ class LearningPathResource(BaseModel):
     rating: float = 0.0
 
 
+class InterviewStageProgress(BaseModel):
+    """结构化面试程序中的单个阶段进度。"""
+    stage_id: str = ""
+    name: str = ""
+    subtitle: str = ""
+    max_turns: int = 0
+    turn_count: int = 0
+    status: str = "pending"  # pending | active | completed
+
+
 class InteractiveInterviewTurn(BaseModel):
     """交互式模拟面试单轮对话记录。"""
     id: str = ""
     role: str = "interviewer"  # interviewer | candidate
     content: str = ""
-    turn_type: str = "question"  # question | follow_up | answer | brief_feedback | opening
+    turn_type: str = "question"  # question | follow_up | answer | brief_feedback | opening | stage_transition | end
     category: str = ""
     round: int = 0
+    stage_index: int = 0
+    stage_name: str = ""
     created_at: str = ""
 
 
@@ -218,6 +230,7 @@ class InteractiveInterviewDebrief(BaseModel):
     key_moments: list[InteractiveInterviewKeyMoment] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     category_scores: dict[str, int] = Field(default_factory=dict)
+    stage_scores: dict[str, int] = Field(default_factory=dict)
     generated_at: str = ""
 
 
@@ -227,6 +240,11 @@ class InteractiveInterviewSession(BaseModel):
     tone: str = "professional"  # professional | friendly | pressure
     job_title: str = ""
     industry: str = ""
+    program_version: str = "quick"  # quick | full | specialized
+    specialized_focus: str = ""  # technical | final_negotiation | resume_deep_dive
+    job_track: str = "general"  # tech | business | functional | general
+    current_stage_index: int = 0
+    stages: list[InterviewStageProgress] = Field(default_factory=list)
     max_rounds: int = 10
     round_count: int = 0
     turns: list[InteractiveInterviewTurn] = Field(default_factory=list)

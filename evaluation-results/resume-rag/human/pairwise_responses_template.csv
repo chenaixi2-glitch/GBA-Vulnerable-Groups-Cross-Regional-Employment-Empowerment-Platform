@@ -1,0 +1,7 @@
+rater_id,case_id,preferred,preference_strength,reason,hallucination_risk_a,hallucination_risk_b,completed_at
+R01,alex_chen_cross_border_cs,A,2,A has quantified CSAT and cross-border keywords; B is too vague.,none,none,2026-07-01
+R01,aixi_ai_application_dev,B,2,B connects Python and RAG to the JD; A reads like generic finance.,none,mild,2026-07-01
+R02,alex_chen_cross_border_cs,A,2,Clearer CRM and dispute resolution evidence.,none,none,2026-07-01
+R02,aixi_ai_application_dev,B,1,Better AI application framing while still plausible.,mild,none,2026-07-01
+R03,alex_chen_cross_border_cs,A,1,More professional summary and metrics.,none,none,2026-07-01
+R03,aixi_ai_application_dev,B,2,Stronger alignment with LLM/RAG role requirements.,none,mild,2026-07-01

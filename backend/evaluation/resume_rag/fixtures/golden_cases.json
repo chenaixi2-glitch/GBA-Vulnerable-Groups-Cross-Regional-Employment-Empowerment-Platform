@@ -1,0 +1,324 @@
+[
+  {
+    "id": "alex_chen_cross_border_cs",
+    "description": "Customer service resume — vague before vs quantified STAR after",
+    "language": "en",
+    "employer_type": "foreign",
+    "jd_text": "Job Title: Cross-border Customer Service Specialist\nRequirements: English, Cantonese, CRM, cross-border e-commerce experience, dispute resolution, CSAT metrics",
+    "jd_keywords": [
+      "customer service",
+      "cross-border",
+      "e-commerce",
+      "crm",
+      "english",
+      "cantonese",
+      "csat",
+      "resolution",
+      "inquiries"
+    ],
+    "job": {
+      "title": "Cross-border Customer Service Specialist",
+      "description": "Handle cross-border e-commerce customer inquiries in English and Cantonese. CRM experience required.",
+      "skills": ["Customer Service", "CRM", "English", "Cantonese", "E-commerce", "cross-border"],
+      "education": "Bachelor",
+      "work_experience": "1-3 years"
+    },
+    "candidate_profile": {
+      "profile_basic": {
+        "name": "Alex Chen",
+        "email": "alex.chen@example.com",
+        "phone": "+852 9123 4567",
+        "city": "Hong Kong",
+        "school": "City University of Hong Kong"
+      },
+      "materials": [],
+      "facts": [
+        {
+          "id": "fact_edu_1",
+          "type": "education",
+          "content": "City University of Hong Kong, Business Administration, Bachelor, 2017-2021"
+        },
+        {
+          "id": "fact_skill_1",
+          "type": "skill",
+          "content": "Customer Service"
+        },
+        {
+          "id": "fact_skill_2",
+          "type": "skill",
+          "content": "English"
+        },
+        {
+          "id": "fact_skill_3",
+          "type": "skill",
+          "content": "Cantonese"
+        },
+        {
+          "id": "fact_skill_4",
+          "type": "skill",
+          "content": "E-commerce"
+        },
+        {
+          "id": "fact_intern_1",
+          "type": "internship",
+          "content": "Global E-Trade Co., Customer Service Specialist, 2021-Present, handled 80+ daily inquiries, improved first-response resolution by 18%, maintained 95% CSAT"
+        },
+        {
+          "id": "fact_project_1",
+          "type": "project",
+          "content": "Knowledge Base Refresh, led FAQ update for cross-border orders"
+        }
+      ]
+    },
+    "resume_before": {
+      "profile": {
+        "name": "Alex Chen",
+        "email": "alex.chen@example.com",
+        "phone": "+852 9123 4567",
+        "city": "Hong Kong",
+        "education": [
+          {
+            "id": "edu_1",
+            "school": "City University of Hong Kong",
+            "major": "Business Administration",
+            "degree": "Bachelor",
+            "start_date": "2017-09",
+            "end_date": "2021-06"
+          }
+        ]
+      },
+      "summary": "Hardworking team player with customer service experience.",
+      "skills": [
+        {
+          "id": "skill_1",
+          "title": "Skills",
+          "content": "Customer service, communication"
+        }
+      ],
+      "internships": [
+        {
+          "id": "intern_1",
+          "title": "Global E-Trade",
+          "content": "Helped customers with order questions."
+        }
+      ],
+      "projects": [],
+      "awards": [],
+      "papers": [],
+      "meta": { "language": "en", "target_role": "Customer Service" }
+    },
+    "resume_after": {
+      "profile": {
+        "name": "Alex Chen",
+        "email": "alex.chen@example.com",
+        "phone": "+852 9123 4567",
+        "city": "Hong Kong",
+        "linkedin": "https://linkedin.com/in/alexchen",
+        "education": [
+          {
+            "id": "edu_1",
+            "school": "City University of Hong Kong",
+            "major": "Business Administration",
+            "degree": "Bachelor",
+            "start_date": "Sep 2017",
+            "end_date": "Jun 2021"
+          }
+        ]
+      },
+      "summary": "Customer service specialist with 4+ years in cross-border e-commerce, fluent in English and Cantonese. Experienced in CRM workflows, dispute resolution, and maintaining high CSAT on international orders.",
+      "skills": [
+        {
+          "id": "skill_1",
+          "title": "Core Skills",
+          "content": "Customer Service, CRM, English, Cantonese, E-commerce, cross-border operations"
+        }
+      ],
+      "internships": [
+        {
+          "id": "intern_1",
+          "title": "Global E-Trade Co. — Customer Service Specialist (Jan 2021–Present)",
+          "content": "Handled 80+ daily cross-border customer inquiries; improved first-response resolution by 18%; maintained 95% CSAT on order disputes and refund cases."
+        }
+      ],
+      "projects": [
+        {
+          "id": "proj_1",
+          "title": "Knowledge Base Refresh",
+          "content": "Led FAQ update for cross-border orders, reducing repeat inquiries on refund policies."
+        }
+      ],
+      "awards": [],
+      "papers": [],
+      "meta": { "language": "en", "target_role": "Cross-border Customer Service Specialist" }
+    },
+    "expect": {
+      "min_jd_keyword_coverage_delta": 0.2,
+      "min_match_score_delta": 5,
+      "min_checklist_pass_rate_delta": 0.0,
+      "max_groundedness_drop": 0.05
+    }
+  },
+  {
+    "id": "aixi_ai_application_dev",
+    "description": "Finance/data background resume reframed for private-sector AI application role",
+    "language": "en",
+    "employer_type": "private",
+    "jd_text": "AI Application Development Engineer at a private technology enterprise. Python, LLM APIs, RAG, prompt engineering, data analysis, REST APIs, business problem solving.",
+    "jd_keywords": [
+      "python",
+      "llm",
+      "rag",
+      "prompt",
+      "api",
+      "data analysis",
+      "ai application",
+      "rest"
+    ],
+    "job": {
+      "title": "AI Application Development Engineer",
+      "description": "Develop AI-powered business applications using LLM APIs, RAG, and agent workflows. Python required.",
+      "skills": ["Python", "LLM", "RAG", "REST API", "data analysis", "prompt engineering"],
+      "education": "Bachelor",
+      "work_experience": "0-2 years"
+    },
+    "candidate_profile": {
+      "profile_basic": {
+        "name": "Chen Aixi",
+        "email": "aixi.chen@example.com",
+        "phone": "13800001111",
+        "city": "Shenzhen",
+        "school": "Sun Yat-sen University"
+      },
+      "materials": [],
+      "facts": [
+        {
+          "id": "fact_edu_1",
+          "type": "education",
+          "content": "Sun Yat-sen University, Economics, Bachelor, data analysis coursework"
+        },
+        {
+          "id": "fact_edu_2",
+          "type": "education",
+          "content": "University of Hong Kong, Finance compliance coursework"
+        },
+        {
+          "id": "fact_skill_1",
+          "type": "skill",
+          "content": "Python"
+        },
+        {
+          "id": "fact_skill_2",
+          "type": "skill",
+          "content": "SQL"
+        },
+        {
+          "id": "fact_skill_3",
+          "type": "skill",
+          "content": "data analysis"
+        },
+        {
+          "id": "fact_project_1",
+          "type": "project",
+          "content": "Built internal FAQ chatbot prototype using Python and REST APIs for compliance Q&A"
+        },
+        {
+          "id": "fact_intern_1",
+          "type": "internship",
+          "content": "Financial data analyst intern, automated Excel reporting with Python, reduced manual work by 30%"
+        }
+      ]
+    },
+    "resume_before": {
+      "profile": {
+        "name": "Chen Aixi",
+        "email": "aixi.chen@example.com",
+        "phone": "13800001111",
+        "city": "Shenzhen",
+        "education": [
+          {
+            "id": "edu_1",
+            "school": "Sun Yat-sen University",
+            "major": "Economics",
+            "degree": "Bachelor",
+            "start_date": "2021-09",
+            "end_date": "2025-06"
+          }
+        ]
+      },
+      "summary": "Economics graduate interested in finance and data roles.",
+      "skills": [
+        {
+          "id": "skill_1",
+          "title": "Skills",
+          "content": "Excel, finance basics"
+        }
+      ],
+      "internships": [
+        {
+          "id": "intern_1",
+          "title": "Financial Data Analyst Intern",
+          "content": "Supported reporting tasks."
+        }
+      ],
+      "projects": [
+        {
+          "id": "proj_1",
+          "title": "Course Project",
+          "content": "Econometrics assignment on market data."
+        }
+      ],
+      "awards": [],
+      "papers": [],
+      "meta": { "language": "en", "target_role": "Analyst" }
+    },
+    "resume_after": {
+      "profile": {
+        "name": "Chen Aixi",
+        "email": "aixi.chen@example.com",
+        "phone": "13800001111",
+        "city": "Shenzhen",
+        "education": [
+          {
+            "id": "edu_1",
+            "school": "Sun Yat-sen University",
+            "major": "Economics",
+            "degree": "Bachelor",
+            "start_date": "Sep 2021",
+            "end_date": "Jun 2025"
+          }
+        ]
+      },
+      "summary": "Economics graduate with Python and data analysis experience, building toward AI application development. Combines business problem framing with hands-on prototyping using REST APIs.",
+      "skills": [
+        {
+          "id": "skill_1",
+          "title": "Technical",
+          "content": "Python, SQL, REST APIs, data analysis, prompt engineering basics"
+        }
+      ],
+      "internships": [
+        {
+          "id": "intern_1",
+          "title": "Financial Data Analyst Intern",
+          "content": "Automated Excel reporting with Python scripts, reducing manual reporting effort by 30%."
+        }
+      ],
+      "projects": [
+        {
+          "id": "proj_1",
+          "title": "Compliance FAQ Chatbot Prototype",
+          "content": "Built internal FAQ assistant using Python and REST APIs to answer compliance questions; explored RAG-style retrieval over policy documents."
+        }
+      ],
+      "awards": [],
+      "papers": [],
+      "meta": { "language": "en", "target_role": "AI Application Development Engineer" }
+    },
+    "expect": {
+      "min_jd_keyword_coverage_delta": 0.25,
+      "min_match_score_delta": 8,
+      "min_checklist_pass_rate_delta": 0.0,
+      "max_groundedness_drop": 0.05
+    }
+  }
+]

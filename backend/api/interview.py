@@ -92,7 +92,9 @@ class InteractiveStartRequest(BaseModel):
     tone: str = "professional"
     job_title: str = ""
     industry: str = ""
-    max_rounds: int = 10
+    max_rounds: int = 0  # 0 = auto from program config
+    program_version: str = "quick"  # quick | full | specialized
+    specialized_focus: str = ""  # technical | final_negotiation | resume_deep_dive
 
 
 class InteractiveTurnRequest(BaseModel):
@@ -128,12 +130,15 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
 
     try:
         async with llm_queue_slot(session_id):
+            max_rounds = req.max_rounds if req.max_rounds > 0 else None
             session = await start_interactive_interview(
                 state,
                 tone=req.tone,
                 job_title=req.job_title,
                 industry=req.industry,
-                max_rounds=max(3, min(req.max_rounds, 20)),
+                max_rounds=max_rounds,
+                program_version=req.program_version,
+                specialized_focus=req.specialized_focus,
             )
     except SessionBusyError:
         raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
@@ -237,6 +242,16 @@ async def interactive_status(session_id: str, request: Request) -> dict[str, Any
         "status": session.status,
         "round_count": session.round_count,
         "max_rounds": session.max_rounds,
+        "program_version": session.program_version,
+        "program_label": {
+            "quick": "极速版 (~30分钟)",
+            "full": "完整版 (~60分钟)",
+            "specialized": "专项版",
+        }.get(session.program_version, session.program_version),
+        "current_stage_index": session.current_stage_index,
+        "current_stage": session.stages[session.current_stage_index].model_dump()
+        if session.stages and 0 <= session.current_stage_index < len(session.stages) else None,
+        "stages": [s.model_dump() for s in session.stages],
         "has_debrief": session.debrief is not None,
     }
 

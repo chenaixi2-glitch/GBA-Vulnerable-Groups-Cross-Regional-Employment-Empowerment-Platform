@@ -8,6 +8,9 @@ output/
 
 data/
 
+# Local-only Aixi test fixtures (resume files, profile photo, personal paths)
+test-data/aixi/
+
 .env
 .env.*
 !.env.docker.example

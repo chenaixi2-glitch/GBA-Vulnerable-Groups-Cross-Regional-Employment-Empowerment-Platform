@@ -17,10 +17,40 @@ let interactiveSession = {
     status: 'idle',
     roundCount: 0,
     maxRounds: 10,
+    programVersion: 'quick',
+    specializedFocus: '',
+    programLabel: '',
+    jobTrack: '',
+    currentStageIndex: 0,
+    stages: [],
     turns: [],
     debrief: null,
     savedRecordId: null,
     savePromptDismissed: false,
+};
+
+/** 面试程序版本配置（与后端 interview_program.py 对齐） */
+const INTERVIEW_PROGRAM_PREVIEWS = {
+    quick: {
+        label: '极速版 (~30分钟)',
+        stages: [
+            '综合面·初筛+终面 (5轮)',
+            '专业/技术面 (8轮)',
+        ],
+    },
+    full: {
+        label: '完整版 (~60分钟)',
+        stages: [
+            '第一轮·初筛面试 (5轮)',
+            '第二轮·专业/技术面 (8轮)',
+            '第三轮·总监/HR终面 (4轮)',
+        ],
+    },
+    specialized: {
+        technical: { label: '专项·技术/专业面 (10轮)' },
+        final_negotiation: { label: '专项·终面谈判 (6轮)' },
+        resume_deep_dive: { label: '专项·简历深挖 (8轮)' },
+    },
 };
 
 let interviewMode = 'question_bank'; // question_bank | interactive
@@ -36,6 +66,7 @@ let interviewResumeFile = null;
 document.addEventListener('DOMContentLoaded', () => {
     initializeInterviewPrep();
     setupInteractiveSaveModal();
+    selectProgramVersion('quick');
 });
 
 function initializeInterviewPrep() {
@@ -228,20 +259,71 @@ function selectInterviewMode(mode) {
     const isInteractive = mode === 'interactive';
     document.getElementById('question-bank-panel').classList.toggle('hidden', isInteractive);
     document.getElementById('interactive-panel').classList.toggle('hidden', !isInteractive);
+    document.getElementById('program-version-section').classList.toggle('hidden', !isInteractive);
     document.getElementById('sidebar-progress-title').textContent = isInteractive
-        ? 'Interactive Progress'
+        ? 'Interview Progress'
         : 'Session Progress';
 
     const startBtn = document.getElementById('btn-load-questions');
     if (startBtn) {
         startBtn.innerHTML = isInteractive
-            ? '<i class="fas fa-comments mr-2"></i> Start Interactive Mock'
+            ? '<i class="fas fa-comments mr-2"></i> Start Mock Interview'
             : '<i class="fas fa-play mr-2"></i> Start Interview Session';
+    }
+
+    if (isInteractive) {
+        updateProgramPreview();
     }
 
     if (isInteractive && interactiveSession.active) {
         renderInteractiveChat();
+        renderStageBanner();
     }
+}
+
+function selectProgramVersion(version) {
+    interactiveSession.programVersion = version;
+
+    document.querySelectorAll('.program-version-option').forEach(el => {
+        const selected = el.dataset.version === version;
+        el.classList.toggle('selected', selected);
+        el.classList.toggle('border-purple-500', selected);
+        el.classList.toggle('bg-purple-50', selected);
+        el.classList.toggle('border-gray-200', !selected);
+    });
+
+    const focusSection = document.getElementById('specialized-focus-section');
+    if (focusSection) {
+        focusSection.classList.toggle('hidden', version !== 'specialized');
+    }
+
+    updateProgramPreview();
+}
+
+function updateSpecializedFocus() {
+    const select = document.getElementById('specialized-focus');
+    interactiveSession.specializedFocus = select ? select.value : 'technical';
+    updateProgramPreview();
+}
+
+function updateProgramPreview() {
+    const preview = document.getElementById('program-stages-preview');
+    if (!preview) return;
+
+    const version = interactiveSession.programVersion || 'quick';
+    let html = '';
+
+    if (version === 'specialized') {
+        const focus = document.getElementById('specialized-focus')?.value || 'technical';
+        const cfg = INTERVIEW_PROGRAM_PREVIEWS.specialized[focus];
+        html = `<div class="font-medium text-gray-800">${cfg?.label || '专项版'}</div>`;
+    } else {
+        const cfg = INTERVIEW_PROGRAM_PREVIEWS[version];
+        html = `<div class="font-medium text-gray-800 mb-1">${cfg.label}</div>`;
+        html += cfg.stages.map((s, i) => `<div>${i + 1}. ${s}</div>`).join('');
+    }
+
+    preview.innerHTML = html;
 }
 
 async function loadInterviewQuestions() {
@@ -329,11 +411,17 @@ async function startInteractiveInterview() {
             },
         }) : null;
 
+        const programVersion = interactiveSession.programVersion || 'quick';
+        const specializedFocus = programVersion === 'specialized'
+            ? (document.getElementById('specialized-focus')?.value || 'technical')
+            : '';
+
         const response = await apiClient.startInteractiveInterview({
             tone: interviewSession.tone,
             jobTitle,
             industry,
-            maxRounds: 10,
+            programVersion,
+            specializedFocus,
             targetContext,
         });
 
@@ -343,6 +431,12 @@ async function startInteractiveInterview() {
             status: session.status,
             roundCount: session.round_count,
             maxRounds: session.max_rounds,
+            programVersion: session.program_version || programVersion,
+            specializedFocus: session.specialized_focus || specializedFocus,
+            programLabel: session.program_label || '',
+            jobTrack: session.job_track || '',
+            currentStageIndex: session.current_stage_index || 0,
+            stages: session.stages || [],
             turns: session.turns || [],
             debrief: null,
             savedRecordId: null,
@@ -356,6 +450,7 @@ async function startInteractiveInterview() {
 
         showInteractiveInterface();
         renderInteractiveChat();
+        renderStageBanner();
         updateInteractiveProgress();
 
         console.log('Interactive interview started:', session);
@@ -370,6 +465,39 @@ function showInteractiveInterface() {
     document.getElementById('empty-state').classList.add('hidden');
     document.getElementById('interactive-panel').classList.remove('hidden');
     document.getElementById('interactive-debrief-section').classList.add('hidden');
+    document.getElementById('interactive-stage-banner')?.classList.remove('hidden');
+}
+
+function renderStageBanner() {
+    const banner = document.getElementById('interactive-stage-banner');
+    if (!banner || !interactiveSession.stages?.length) return;
+
+    const stage = interactiveSession.stages[interactiveSession.currentStageIndex];
+    const nameEl = document.getElementById('interactive-stage-name');
+    const subEl = document.getElementById('interactive-stage-subtitle');
+    const badgeEl = document.getElementById('interactive-program-badge');
+    const trackEl = document.getElementById('interactive-stages-track');
+
+    if (stage && nameEl) nameEl.textContent = stage.name || '';
+    if (stage && subEl) subEl.textContent = stage.subtitle || '';
+    if (badgeEl) {
+        badgeEl.textContent = interactiveSession.programLabel
+            || INTERVIEW_PROGRAM_PREVIEWS[interactiveSession.programVersion]?.label
+            || '';
+    }
+
+    if (trackEl) {
+        trackEl.innerHTML = interactiveSession.stages.map((s, i) => {
+            const isActive = i === interactiveSession.currentStageIndex;
+            const isDone = s.status === 'completed';
+            const bg = isDone ? 'bg-green-400' : isActive ? 'bg-white' : 'bg-white/30';
+            const text = isActive ? 'text-purple-700 font-medium' : isDone ? 'text-white' : 'text-white/70';
+            return `<div class="flex-1 min-w-0">
+                <div class="h-1.5 rounded-full ${bg} mb-1"></div>
+                <div class="text-[10px] truncate ${text}">${s.name?.replace(/^第.*?·/, '') || `Stage ${i + 1}`}</div>
+            </div>`;
+        }).join('');
+    }
 }
 
 function renderInteractiveChat() {
@@ -396,6 +524,17 @@ function renderInteractiveChat() {
             return;
         }
 
+        const isStageTransition = turn.turn_type === 'stage_transition';
+        if (isStageTransition) {
+            html += `
+                <div class="my-4 py-3 px-4 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
+                    <div class="text-xs text-indigo-600 font-medium mb-1"><i class="fas fa-arrow-right mr-1"></i>Stage Transition · ${turn.stage_name || ''}</div>
+                    ${turn.content}
+                </div>
+            `;
+            return;
+        }
+
         html += `
             <div class="flex gap-3 mb-4 ${isInterviewer ? '' : 'flex-row-reverse'}">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isInterviewer ? 'bg-purple-100' : 'bg-blue-100'}">
@@ -404,6 +543,7 @@ function renderInteractiveChat() {
                 <div class="flex-1 max-w-[85%] ${isInterviewer ? '' : 'text-right'}">
                     <div class="text-xs text-gray-500 mb-1">
                         ${isInterviewer ? 'Interviewer' : 'You'}
+                        ${turn.stage_name ? ` · ${turn.stage_name}` : ''}
                         ${turn.category ? ` · ${turn.category}` : ''}
                     </div>
                     <div class="rounded-lg p-3 text-sm ${isInterviewer ? 'bg-purple-50 border border-purple-100 text-gray-800' : 'bg-blue-50 border border-blue-100 text-gray-800'}">
@@ -441,6 +581,8 @@ async function submitInteractiveAnswer() {
 
         interactiveSession.status = session.status;
         interactiveSession.roundCount = session.round_count;
+        interactiveSession.currentStageIndex = session.current_stage_index ?? interactiveSession.currentStageIndex;
+        interactiveSession.stages = session.stages || interactiveSession.stages;
         interactiveSession.turns = session.turns || [];
         interactiveSession.active = session.status === 'active';
 
@@ -449,6 +591,7 @@ async function submitInteractiveAnswer() {
 
         Utils.hideLoading();
         renderInteractiveChat();
+        renderStageBanner();
         updateInteractiveProgress();
 
         if (session.status === 'completed') {
@@ -549,8 +692,26 @@ function renderInteractiveDebrief(debrief) {
     const content = document.getElementById('interactive-debrief-content');
 
     let categoryHtml = '';
+    const stageScores = debrief.stage_scores || {};
+    if (Object.keys(stageScores).length) {
+        categoryHtml += '<h4 class="font-semibold mt-4 mb-2">Stage Scores</h4><div class="grid sm:grid-cols-2 gap-2">';
+        Object.entries(stageScores).forEach(([stage, score]) => {
+            categoryHtml += `
+                <div class="bg-white/10 rounded-lg p-3 text-sm">
+                    <div class="flex justify-between mb-1">
+                        <span class="opacity-80">${stage}</span>
+                        <span class="font-bold">${score}</span>
+                    </div>
+                    <div class="bg-white/20 rounded-full h-1.5">
+                        <div class="bg-blue-400 h-1.5 rounded-full" style="width: ${score}%"></div>
+                    </div>
+                </div>
+            `;
+        });
+        categoryHtml += '</div>';
+    }
     if (debrief.category_scores) {
-        categoryHtml = '<div class="grid sm:grid-cols-2 gap-2 mt-4">';
+        categoryHtml += '<h4 class="font-semibold mt-4 mb-2">Category Scores</h4><div class="grid sm:grid-cols-2 gap-2">';
         Object.entries(debrief.category_scores).forEach(([cat, score]) => {
             categoryHtml += `
                 <div class="bg-white/10 rounded-lg p-3 text-sm">
@@ -591,7 +752,7 @@ function renderInteractiveDebrief(debrief) {
                 <div class="text-sm opacity-80">Overall Score</div>
             </div>
             <div class="text-right text-sm opacity-80">
-                ${interactiveSession.roundCount} rounds completed
+                ${interactiveSession.programLabel || ''} · ${interactiveSession.roundCount} rounds
             </div>
         </div>
 
@@ -702,9 +863,13 @@ function updateInteractiveProgress() {
 
     document.getElementById('progress-text').textContent = `${current} / ${total}`;
     document.getElementById('progress-fill').style.width = `${percentage}%`;
-    document.getElementById('current-q-num').textContent = interactiveSession.status === 'completed'
-        ? 'Done'
-        : `Round ${current}`;
+
+    const stage = interactiveSession.stages?.[interactiveSession.currentStageIndex];
+    let stageLabel = interactiveSession.status === 'completed' ? 'Done' : `Round ${current}`;
+    if (stage && interactiveSession.status !== 'completed') {
+        stageLabel = `${stage.name} · ${stage.turn_count || 0}/${stage.max_turns}`;
+    }
+    document.getElementById('current-q-num').textContent = stageLabel;
 }
 
 function downloadInteractiveDebrief() {
@@ -1001,6 +1166,12 @@ function restartSession() {
             status: 'idle',
             roundCount: 0,
             maxRounds: 10,
+            programVersion: 'quick',
+            specializedFocus: '',
+            programLabel: '',
+            jobTrack: '',
+            currentStageIndex: 0,
+            stages: [],
             turns: [],
             debrief: null,
             savedRecordId: null,

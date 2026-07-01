@@ -1,0 +1,3 @@
+case_id,job_title_short,resume_a_variant,resume_b_variant,notes
+alex_chen_cross_border_cs,Cross-border Customer Service Specialist,after,before,示例盲法：A=优化版 B=原版（发放前请随机打乱各 case 的 A/B）
+aixi_ai_application_dev,AI Application Development Engineer,before,after,示例盲法：A=原版 B=优化版

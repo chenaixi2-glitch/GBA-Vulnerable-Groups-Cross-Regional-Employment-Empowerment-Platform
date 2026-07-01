@@ -144,6 +144,7 @@ cd backend
 cp env.production.example .env
 # 编辑 .env：填入 RDS 密码、AI API Keys
 pip install -r requirements.txt   # 如有 requirements.txt
+sudo bash ../scripts/install-weasyprint-linux.sh   # PDF 导出依赖（Pango/Cairo/中文字体）
 python sql/init_db.py             # 首次部署建表
 python main.py                    # 或 systemd / PM2 / Docker
 ```
@@ -185,6 +186,48 @@ FASTAPI_WORKERS=1
    python sql/init_db.py
    python main.py
    ```
+
+### PDF 导出（WeasyPrint）
+
+简历 **PDF 导出** 依赖 WeasyPrint 及其系统库（Pango/Cairo）。`pip install -r requirements.txt` 只安装 Python 包，**还必须安装系统依赖**。
+
+#### 云服务器（Ubuntu/Debian，推荐）
+
+在项目根目录执行（需 root）：
+
+```bash
+sudo bash scripts/install-weasyprint-linux.sh
+```
+
+脚本会安装 Pango/Cairo/GDK 与中文字体（`fonts-noto-cjk`），并运行一次 PDF 自检。
+
+#### 本地 Windows
+
+1. Python 包（已完成可跳过）：
+   ```powershell
+   python -m pip install weasyprint==63.1
+   ```
+2. 系统库（MSYS2 + Pango）— 在项目根目录 PowerShell 执行：
+   ```powershell
+   .\scripts\install-weasyprint-windows.ps1
+   ```
+   若 MSYS2 未安装，脚本会通过 winget 安装；完成后将 `WEASYPRINT_DLL_DIRECTORIES=C:\msys64\mingw64\bin` 写入用户环境变量（或每次启动后端前 `$env:WEASYPRINT_DLL_DIRECTORIES='C:\msys64\mingw64\bin'`）。
+
+3. 验证：
+   ```powershell
+   cd backend
+   python scripts/verify_weasyprint.py
+   ```
+
+也可使用 **WSL**，按 Linux 步骤安装。
+
+#### Docker
+
+`docker/backend/Dockerfile` 已包含 WeasyPrint 系统依赖与中文字体，重建镜像即可：
+
+```bash
+docker compose build backend
+```
 
 ## 四、配置加载机制（给朋友看的代码位置）
 

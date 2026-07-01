@@ -1,0 +1,107 @@
+{
+  "generated_at": "2026-07-01T10:39:29.246534+00:00",
+  "embedding_enabled": false,
+  "fixtures_path": "backend/evaluation/resume_rag/fixtures/golden_cases.json",
+  "summary": {
+    "total_cases": 2,
+    "improved_cases": 2,
+    "improvement_rate": 1.0,
+    "avg_jd_keyword_coverage_delta": 0.8195,
+    "avg_profile_groundedness_delta": 0.1666,
+    "avg_match_score_delta": 35.0,
+    "avg_checklist_pass_rate_delta": 0.0384
+  },
+  "cases": [
+    {
+      "case_id": "alex_chen_cross_border_cs",
+      "before": {
+        "case_id": "alex_chen_cross_border_cs",
+        "variant": "before",
+        "jd_keyword_coverage": 0.1111,
+        "jd_embedding_similarity": null,
+        "profile_groundedness": 0.2922,
+        "unsupported_bullet_count": 0,
+        "bullet_count": 3,
+        "profile_embedding_groundedness": null,
+        "checklist_pass_rate": 0.8462,
+        "checklist_missing_count": 2,
+        "checklist_warning_count": 0,
+        "checklist_required_missing_count": 0,
+        "match_score": 49
+      },
+      "after": {
+        "case_id": "alex_chen_cross_border_cs",
+        "variant": "after",
+        "jd_keyword_coverage": 1.0,
+        "jd_embedding_similarity": null,
+        "profile_groundedness": 0.4152,
+        "unsupported_bullet_count": 0,
+        "bullet_count": 4,
+        "profile_embedding_groundedness": null,
+        "checklist_pass_rate": 0.9231,
+        "checklist_missing_count": 1,
+        "checklist_warning_count": 0,
+        "checklist_required_missing_count": 0,
+        "match_score": 83
+      },
+      "deltas": {
+        "jd_keyword_coverage": 0.8889,
+        "profile_groundedness": 0.123,
+        "match_score": 34,
+        "checklist_pass_rate": 0.0769
+      },
+      "improved": true,
+      "improvement_reasons": [
+        "JD keyword coverage +88.89%",
+        "match score +34",
+        "checklist pass rate +7.69%"
+      ],
+      "regression_flags": []
+    },
+    {
+      "case_id": "aixi_ai_application_dev",
+      "before": {
+        "case_id": "aixi_ai_application_dev",
+        "variant": "before",
+        "jd_keyword_coverage": 0.125,
+        "jd_embedding_similarity": null,
+        "profile_groundedness": 0.1729,
+        "unsupported_bullet_count": 0,
+        "bullet_count": 4,
+        "profile_embedding_groundedness": null,
+        "checklist_pass_rate": 0.8462,
+        "checklist_missing_count": 2,
+        "checklist_warning_count": 0,
+        "checklist_required_missing_count": 0,
+        "match_score": 37
+      },
+      "after": {
+        "case_id": "aixi_ai_application_dev",
+        "variant": "after",
+        "jd_keyword_coverage": 0.875,
+        "jd_embedding_similarity": null,
+        "profile_groundedness": 0.3831,
+        "unsupported_bullet_count": 0,
+        "bullet_count": 4,
+        "profile_embedding_groundedness": null,
+        "checklist_pass_rate": 0.8462,
+        "checklist_missing_count": 2,
+        "checklist_warning_count": 0,
+        "checklist_required_missing_count": 0,
+        "match_score": 73
+      },
+      "deltas": {
+        "jd_keyword_coverage": 0.75,
+        "profile_groundedness": 0.2102,
+        "match_score": 36,
+        "checklist_pass_rate": 0.0
+      },
+      "improved": true,
+      "improvement_reasons": [
+        "JD keyword coverage +75.00%",
+        "match score +36"
+      ],
+      "regression_flags": []
+    }
+  ]
+}

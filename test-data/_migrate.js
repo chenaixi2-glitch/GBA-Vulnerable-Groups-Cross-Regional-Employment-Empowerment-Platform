@@ -232,6 +232,11 @@ Requirements:
       'Please generate a customized resume for the target AI Application Development role at a private technology enterprise. Highlight transferable skills from finance/data background relevant to AI application development. Keep all content within one A4 page.',
     optimizeMessage:
       'Optimize my resume for the private enterprise AI Application Development Engineer role. Shorten wording and spacing so the entire resume fits on one A4 page without losing key achievements.',
+    profilePhoto: {
+      label: '证件照(小也)',
+      path: 'profile-photo.jpg',
+      source: 'D:\\简历\\照片_小.jpg',
+    },
     resumeFiles: [
       {
         label: 'DOCX-金融合规(中文)',

@@ -188,21 +188,56 @@ class MockAPIService {
         return alexChenMock().interactiveFollowUps;
     }
 
-    async startInteractiveInterview(sessionId, tone, jobTitle, industry, maxRounds) {
+    async startInteractiveInterview(sessionId, tone, jobTitle, industry, maxRounds, programVersion = 'quick', specializedFocus = '') {
         await this.delay(1200);
+
+        const programLabels = {
+            quick: '极速版 (~30分钟)',
+            full: '完整版 (~60分钟)',
+            specialized: '专项版',
+        };
+        const stageSets = {
+            quick: [
+                { stage_id: 'screening_final', name: '综合面·初筛+终面', subtitle: '15分钟 · HR+综合评估', max_turns: 5, turn_count: 1, status: 'active' },
+                { stage_id: 'professional', name: '第二轮·专业/技术面', subtitle: '20-30分钟 · 部门主管', max_turns: 8, turn_count: 0, status: 'pending' },
+            ],
+            full: [
+                { stage_id: 'screening', name: '第一轮·初筛面试', subtitle: '10-15分钟 · HR', max_turns: 5, turn_count: 1, status: 'active' },
+                { stage_id: 'professional', name: '第二轮·专业/技术面', subtitle: '20-30分钟 · 主管', max_turns: 8, turn_count: 0, status: 'pending' },
+                { stage_id: 'final', name: '第三轮·总监/HR终面', subtitle: '10-15分钟 · 总监/HRD', max_turns: 4, turn_count: 0, status: 'pending' },
+            ],
+            specialized: [{
+                stage_id: `specialized_${specializedFocus || 'technical'}`,
+                name: { technical: '专项·技术/专业面', final_negotiation: '专项·终面谈判', resume_deep_dive: '专项·简历深挖' }[specializedFocus || 'technical'],
+                subtitle: '专项练习',
+                max_turns: 8,
+                turn_count: 1,
+                status: 'active',
+            }],
+        };
+
+        const stages = stageSets[programVersion] || stageSets.quick;
+        const totalRounds = maxRounds || stages.reduce((sum, s) => sum + s.max_turns, 0);
+
         const opening = tone === 'pressure'
-            ? '你好，我是今天的面试官。时间有限，我们直接开始——请用两分钟做一个自我介绍，突出与岗位最相关的经历。'
+            ? '你好，我是今天的面试官。我们采用结构化面试流程，时间有限——请用两分钟做一个结构化自我介绍（个人背景+核心经历+匹配岗位优势+求职意向）。'
             : tone === 'friendly'
-                ? '你好！很高兴今天能和你交流。先轻松介绍一下自己吧，说说你的背景和为什么对这个岗位感兴趣。'
-                : '你好，欢迎参加本次模拟面试。请先做一个简短的自我介绍，重点介绍与目标岗位相关的经历与能力。';
+                ? '你好！很高兴今天能和你交流。我们按企业标准流程进行模拟，先轻松介绍一下自己吧——背景、经历和为什么对这个岗位感兴趣。'
+                : '你好，欢迎参加本次结构化模拟面试。请先做一个结构化自我介绍：个人背景、核心经历、匹配岗位的优势，以及你的求职意向。';
 
         const session = {
             status: 'active',
             tone,
             job_title: jobTitle,
             industry,
-            max_rounds: maxRounds,
+            program_version: programVersion,
+            specialized_focus: specializedFocus || '',
+            job_track: 'general',
+            current_stage_index: 0,
+            stages,
+            max_rounds: totalRounds,
             round_count: 1,
+            program_label: programLabels[programVersion] || programVersion,
             turns: [{
                 id: 'turn_open',
                 role: 'interviewer',
@@ -210,6 +245,8 @@ class MockAPIService {
                 turn_type: 'opening',
                 category: '简历深挖与个人经历',
                 round: 1,
+                stage_index: 0,
+                stage_name: stages[0].name,
                 created_at: new Date().toISOString(),
             }],
             debrief: null,
@@ -217,6 +254,7 @@ class MockAPIService {
             ended_at: '',
             latest_interviewer_message: opening,
             latest_brief_feedback: '',
+            current_stage: stages[0],
         };
         this.interactiveSessions[sessionId] = { session, followUpIndex: 0 };
         return {
@@ -442,6 +480,58 @@ class MockAPIService {
     async getResumeHtml(sessionId) {
         await this.delay(300);
         return { resume_html: { html: mockResumeEnHtml(), version: 1 } };
+    }
+
+    _resumeContentToMarkdown(content) {
+        const profile = content.profile || {};
+        const lines = [
+            '# 简历内容',
+            '',
+            '## 基本信息',
+            `- 姓名: ${profile.name || '-'}`,
+            `- 邮箱: ${profile.email || '-'}`,
+            `- 电话: ${profile.phone || '-'}`,
+            `- 城市: ${profile.city || '-'}`,
+            `- GitHub: ${profile.github || '-'}`,
+            '',
+            '## 个人总结',
+            content.summary || '-',
+        ];
+        const sections = [
+            ['技能', content.skills],
+            ['项目', content.projects],
+            ['实习', content.internships],
+            ['奖项', content.awards],
+            ['论文', content.papers],
+        ];
+        for (const [title, items] of sections) {
+            lines.push('', `## ${title}`);
+            if (!items || !items.length) {
+                lines.push('- -');
+                continue;
+            }
+            for (const item of items) {
+                lines.push(`- ${item.title}`, `  ${item.content || ''}`);
+            }
+        }
+        return lines.join('\n');
+    }
+
+    async exportResume(sessionId, format) {
+        await this.delay(400);
+        const normalized = String(format || 'pdf').toLowerCase();
+        const content = this.profilePayload();
+
+        if (normalized === 'json') {
+            return new Blob([JSON.stringify(content, null, 2)], { type: 'application/json' });
+        }
+        if (normalized === 'markdown' || normalized === 'md') {
+            return new Blob([this._resumeContentToMarkdown(content)], { type: 'text/markdown' });
+        }
+        if (normalized === 'pdf' || normalized === 'docx') {
+            throw new Error('PDF/DOCX export requires a connected backend');
+        }
+        throw new Error(`Unsupported export format: ${format}`);
     }
 
     async translateResume(sessionId, targetLanguage) {
@@ -1179,47 +1269,64 @@ class APIClient {
     }
 
     /**
-     * Export resume as PDF
+     * Export resume in PDF / DOCX / JSON / Markdown
      */
-    async exportResumePDF() {
+    async exportResumeFormat(format = 'pdf') {
         try {
             if (!this.sessionId) {
                 throw new Error('No active session');
             }
 
-            const response = await this.client.post('/export/pdf', {
-                session_id: this.sessionId,
-            }, {
-                responseType: 'blob',
-            });
+            await this.ensureBackendAvailable();
+            const normalized = String(format || 'pdf').toLowerCase();
 
+            if (this.useMockMode) {
+                return this.mockService.exportResume(this.sessionId, normalized);
+            }
+
+            if (normalized === 'pdf') {
+                const response = await this.client.post('/export/pdf', {
+                    session_id: this.sessionId,
+                }, { responseType: 'blob' });
+                return response.data;
+            }
+
+            if (normalized === 'docx') {
+                const response = await this.client.post('/export/docx', {
+                    session_id: this.sessionId,
+                }, { responseType: 'blob' });
+                return response.data;
+            }
+
+            const exportFormat = normalized === 'md' ? 'markdown' : normalized;
+            const response = await this.client.post('/export', {
+                session_id: this.sessionId,
+                format: exportFormat,
+                target: 'resume',
+            }, { responseType: 'blob' });
             return response.data;
         } catch (error) {
-            console.error('Export PDF error:', error);
+            console.error('Export resume error:', error);
+            if (!error.response && !this.useMockMode) {
+                this.enableMockMode();
+                return this.mockService.exportResume(this.sessionId, format);
+            }
             throw error;
         }
+    }
+
+    /**
+     * Export resume as PDF
+     */
+    async exportResumePDF() {
+        return this.exportResumeFormat('pdf');
     }
 
     /**
      * Export resume as DOCX
      */
     async exportResumeDOCX() {
-        try {
-            if (!this.sessionId) {
-                throw new Error('No active session');
-            }
-
-            const response = await this.client.post('/export/docx', {
-                session_id: this.sessionId,
-            }, {
-                responseType: 'blob',
-            });
-
-            return response.data;
-        } catch (error) {
-            console.error('Export DOCX error:', error);
-            throw error;
-        }
+        return this.exportResumeFormat('docx');
     }
 
     /**
@@ -1262,7 +1369,7 @@ class APIClient {
     /**
      * Start interactive multi-turn mock interview
      */
-    async startInteractiveInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 10, targetContext = null } = {}) {
+    async startInteractiveInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 0, programVersion = 'quick', specializedFocus = '', targetContext = null } = {}) {
         try {
             if (!this.sessionId) {
                 this.generateSessionId();
@@ -1271,7 +1378,9 @@ class APIClient {
             await this.syncTargetJobContext(ctx);
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
-                return await this.mockService.startInteractiveInterview(this.sessionId, tone, jobTitle, industry, maxRounds);
+                return await this.mockService.startInteractiveInterview(
+                    this.sessionId, tone, jobTitle, industry, maxRounds, programVersion, specializedFocus
+                );
             }
             const response = await this.client.post('/interview/interactive/start', {
                 session_id: this.sessionId,
@@ -1279,6 +1388,8 @@ class APIClient {
                 job_title: jobTitle,
                 industry: ctx?.industryLabel || industry,
                 max_rounds: maxRounds,
+                program_version: programVersion,
+                specialized_focus: specializedFocus,
             });
             if (response.data.session_id) {
                 this.saveSessionId(response.data.session_id);

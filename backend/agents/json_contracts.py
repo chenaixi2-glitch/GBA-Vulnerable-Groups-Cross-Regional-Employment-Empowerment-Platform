@@ -185,6 +185,7 @@ class InteractiveInterviewDebriefOutput(BaseModel):
     key_moments: list[InteractiveInterviewKeyMomentOutput] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     category_scores: dict[str, int] = Field(default_factory=dict)
+    stage_scores: dict[str, int] = Field(default_factory=dict)
 
 
 class LLMJudgeRubricOutput(BaseModel):
