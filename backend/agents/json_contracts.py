@@ -246,6 +246,17 @@ class LearningPathAnalysisOutput(BaseModel):
     questions_to_ask: list[QuestionOutput] = Field(default_factory=list)
 
 
+class GapHourEstimateOutput(BaseModel):
+    id: str = ""
+    estimated_hours: int = 0
+
+
+class LearningPathResourcesOutput(BaseModel):
+    resources: list[LearningPathResourceOutput] = Field(default_factory=list)
+    estimated_total_hours: int = 0
+    gap_hours: list[GapHourEstimateOutput] = Field(default_factory=list)
+
+
 class LearningPathTimelineOutput(BaseModel):
     timeline: list[LearningPathPhaseOutput] = Field(default_factory=list)
 

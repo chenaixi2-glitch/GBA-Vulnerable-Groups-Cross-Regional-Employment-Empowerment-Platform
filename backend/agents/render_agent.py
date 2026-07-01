@@ -1,4 +1,4 @@
-"""Resume Render Agent — 渲染配置更新 + HTML 生成。"""
+"""Resume Render Agent — 渲染配置更新 + HTML 生成 + PDF 页数检测与压缩。"""
 
 from __future__ import annotations
 
@@ -7,16 +7,26 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Any
 
+from agents.content_agent import compress_resume_for_page_limit_async
 from agents.json_contracts import RenderInstructionOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.render_instruction import RENDER_INSTRUCTION_PROMPT
+from tools.resume_export import count_pdf_pages_from_html
 from tools.template_renderer import render_resume_html
-from tools.resume_layout import apply_a4_compact_render_config, normalize_language
+from tools.resume_page_policy import (
+    apply_render_config_for_experience,
+    page_limit_label,
+    resolve_experience_level,
+    resolve_page_limit,
+)
+from tools.resume_layout import normalize_language
 from workflow.state import CopilotState, RenderConfig, ResumeHtml, PageMargin
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
 
 logger = get_logger("agent")
+
+_MAX_PAGE_FIT_ATTEMPTS = 2
 
 
 async def _update_render_config_from_llm_async(state: CopilotState) -> RenderConfig:
@@ -29,6 +39,7 @@ async def _update_render_config_from_llm_async(state: CopilotState) -> RenderCon
     parsed = await ainvoke_json_with_schema(llm, prompt, RenderInstructionOutput, logger, "Resume Render Agent")
 
     margin_data = parsed.page_margin
+    page_limit = state.render_config.page_limit or resolve_page_limit(state)
     new_config = RenderConfig(
         template_id=parsed.template_id or state.render_config.template_id,
         theme=parsed.theme or state.render_config.theme,
@@ -48,10 +59,50 @@ async def _update_render_config_from_llm_async(state: CopilotState) -> RenderCon
         visibility_map=parsed.visibility_map or state.render_config.visibility_map,
         layout_mode=parsed.layout_mode or state.render_config.layout_mode,
         spacing_scale=parsed.spacing_scale or state.render_config.spacing_scale,
+        page_limit=page_limit,
         version=state.render_config.version + 1,
         last_render_reason=parsed.last_render_reason or state.user_message,
     )
     return new_config
+
+
+async def _fit_resume_to_page_limit_async(
+    state: CopilotState,
+    resume_content,
+    render_config: RenderConfig,
+) -> tuple[Any, str, int | None, int]:
+    """Render HTML and compress content if PDF exceeds page_limit."""
+    page_limit = render_config.page_limit or resolve_page_limit(state)
+    html_str = render_resume_html(resume_content, render_config)
+    page_count = count_pdf_pages_from_html(html_str)
+    compress_attempts = 0
+
+    while (
+        page_count is not None
+        and page_count > page_limit
+        and compress_attempts < _MAX_PAGE_FIT_ATTEMPTS
+    ):
+        compress_attempts += 1
+        logger.info(
+            "Resume PDF is %d pages (limit %d), compress attempt %d",
+            page_count,
+            page_limit,
+            compress_attempts,
+        )
+        try:
+            resume_content = await compress_resume_for_page_limit_async(
+                state,
+                resume_content,
+                current_pages=page_count,
+                page_limit=page_limit,
+            )
+        except RuntimeError as exc:
+            logger.warning("Page-limit compression failed: %s", exc)
+            break
+        html_str = render_resume_html(resume_content, render_config)
+        page_count = count_pdf_pages_from_html(html_str)
+
+    return resume_content, html_str, page_count, compress_attempts
 
 
 async def render_node_async(state: CopilotState) -> dict[str, Any]:
@@ -61,7 +112,6 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
     intent = state.current_intent
     render_config = state.render_config
 
-    # 渲染指令 → 先更新 render_config
     if intent == "render_edit":
         try:
             render_config = await _update_render_config_from_llm_async(state)
@@ -79,21 +129,21 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
             }
         logger.info("Render config updated to v%d", render_config.version)
     else:
-        # 内容更新触发；若 content_agent 已应用 A4 紧凑配置则直接沿用
         lang = normalize_language(
             (state.resume_content_json.meta.language if state.resume_content_json else None)
             or state.render_config.language
         )
-        if state.render_config.dense_mode and state.render_config.spacing_scale == "compact":
-            render_config = state.render_config
-        else:
-            render_config = apply_a4_compact_render_config(state.render_config, lang)
+        render_config = apply_render_config_for_experience(
+            state.render_config,
+            lang,
+            resolve_experience_level(state),
+        )
         if intent in ("language_convert", "content_edit") or state.current_intent == "upload_jd":
+            layout_label = page_limit_label(render_config.page_limit, lang)
             render_config = render_config.model_copy(update={
-                "last_render_reason": "内容更新触发渲染（A4 单页）",
+                "last_render_reason": f"内容更新触发渲染（{layout_label}）",
             })
 
-    # 生成 HTML
     resume_content = state.resume_content_json
     if resume_content is None:
         return {
@@ -108,7 +158,11 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    html_str = render_resume_html(resume_content, render_config)
+    resume_content, html_str, page_count, compress_attempts = await _fit_resume_to_page_limit_async(
+        state,
+        resume_content,
+        render_config,
+    )
     checksum = hashlib.sha256(html_str.encode()).hexdigest()[:16]
 
     resume_html = ResumeHtml(
@@ -120,7 +174,13 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
         checksum=checksum,
     )
 
-    logger.info("HTML rendered v%d (checksum=%s)", resume_html.version, checksum)
+    logger.info(
+        "HTML rendered v%d (checksum=%s, pdf_pages=%s, compress_attempts=%d)",
+        resume_html.version,
+        checksum,
+        page_count,
+        compress_attempts,
+    )
 
     meta = state.meta.model_copy(update={
         "active_render_version": render_config.version,
@@ -128,14 +188,24 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
         "dirty_flags": state.meta.dirty_flags.model_copy(update={
             "render_dirty": False,
             "export_dirty": True,
-        })
+            "content_dirty": compress_attempts > 0,
+        }),
     })
 
+    page_limit = render_config.page_limit or resolve_page_limit(state)
+    layout_label = page_limit_label(page_limit, render_config.language)
     msg = "简历已渲染。"
+    if compress_attempts > 0:
+        if page_count is not None and page_count <= page_limit:
+            msg = f"简历已渲染并自动压缩至 {page_count} 页（上限 {page_limit} 页，{layout_label}）。"
+        else:
+            msg = f"简历已渲染；PDF 仍为 {page_count or '?'} 页，超出 {page_limit} 页上限，建议手动优化。"
+    elif page_count is not None:
+        msg = f"简历已渲染（PDF {page_count} 页，{layout_label}）。"
     if intent == "render_edit":
-        msg = f"渲染配置已更新，简历已重新渲染（v{resume_html.version}）。"
+        msg = f"渲染配置已更新，{msg}"
 
-    return {
+    result: dict[str, Any] = {
         "render_config": render_config,
         "resume_html": resume_html,
         "meta": meta,
@@ -150,10 +220,16 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
                 "derived_from_content_version": resume_html.derived_from_content_version,
                 "layout_mode": render_config.layout_mode,
                 "template_id": render_config.template_id,
+                "page_limit": page_limit,
+                "pdf_page_count": page_count,
+                "page_compress_attempts": compress_attempts,
                 "checksum": resume_html.checksum,
             },
         ),
     }
+    if compress_attempts > 0:
+        result["resume_content_json"] = resume_content
+    return result
 
 
 def render_node(state: CopilotState) -> dict[str, Any]:

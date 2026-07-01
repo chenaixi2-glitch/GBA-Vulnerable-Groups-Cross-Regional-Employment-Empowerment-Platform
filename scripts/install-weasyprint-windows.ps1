@@ -8,19 +8,23 @@ $MingwBin = "$MsysRoot\mingw64\bin"
 Write-Host "[weasyprint] Installing Python package..."
 python -m pip install --upgrade "weasyprint==63.1"
 
-if (-not (Test-Path $MsysRoot)) {
-    Write-Host "[weasyprint] MSYS2 not found. Installing via winget..."
-    winget install MSYS2.MSYS2 --accept-package-agreements --accept-source-agreements
-}
+$bash = Join-Path $MsysRoot "usr\bin\bash.exe"
 
-if (-not (Test-Path $MsysRoot)) {
-    throw "MSYS2 installation failed. Install manually from https://www.msys2.org/ and re-run this script."
+if (-not (Test-Path $bash)) {
+    Write-Host "[weasyprint] MSYS2 not found or incomplete. Installing via winget..."
+    if ((Test-Path $MsysRoot) -and -not (Test-Path $bash)) {
+        Write-Host "[weasyprint] Removing incomplete MSYS2 folder at $MsysRoot ..."
+        Remove-Item -LiteralPath $MsysRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    winget install MSYS2.MSYS2 --accept-package-agreements --accept-source-agreements
+    if (-not (Test-Path $bash)) {
+        throw "MSYS2 installation failed. Install manually from https://www.msys2.org/ and re-run this script."
+    }
 }
 
 $PangoDll = Join-Path $MingwBin "libpango-1.0-0.dll"
 if (-not (Test-Path $PangoDll)) {
     Write-Host "[weasyprint] Installing Pango via MSYS2 pacman (may take a few minutes)..."
-    $bash = Join-Path $MsysRoot "usr\bin\bash.exe"
     & $bash -lc "pacman -Sy --noconfirm mingw-w64-x86_64-pango"
 }
 

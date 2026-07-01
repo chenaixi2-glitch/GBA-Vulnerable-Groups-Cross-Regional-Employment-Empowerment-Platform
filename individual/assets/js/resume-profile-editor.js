@@ -82,8 +82,10 @@ const ProfileEditor = {
     updatePhotoVisibility(language) {
         const section = document.getElementById('profile-photo-section');
         if (!section) return;
-        const isZh = !language || !String(language).toLowerCase().startsWith('en');
-        section.classList.toggle('hidden', !isZh);
+        const isCjk = typeof isCjkResumeLang === 'function'
+            ? isCjkResumeLang(language)
+            : (!language || !String(language).toLowerCase().startsWith('en'));
+        section.classList.toggle('hidden', !isCjk);
     },
 
     renderPhotoPreview() {

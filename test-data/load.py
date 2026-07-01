@@ -22,6 +22,8 @@ SAMPLE_JD_TEXT = read_text("senior-fullstack", "jd.txt")
 _messages = read_json("senior-fullstack", "messages.json")
 GENERATE_RESUME_MESSAGE = _messages["generateResume"]
 INTERVIEW_START_MESSAGE = _messages["interviewStart"]
+LEARNING_PATH_GAP_MESSAGE = _messages["learningPathGapAnalysis"]
+LEARNING_PATH_TIMELINE_MESSAGE = _messages["learningPathTimeline"]
 
 # Alex Chen — mock / HTML rendering tests
 SAMPLE_RESUME_HTML = read_text("alex-chen", "resume-en.html")

@@ -5,15 +5,19 @@ INTENT_CLASSIFICATION_PROMPT = """你是一个意图分类器。根据用户的�
 可选意图：
 - upload_jd: 用户上传或输入了一段岗位描述（JD）
 - upload_profile: 用户上传或补充了个人材料（项目经历、实习经历、技能说明、获奖信息、基本信息等）
-- gap_analysis: 用户明确要求分析岗位匹配度、能力缺口、短板、缺失信息或需要补充的问题
+- gap_analysis: 用户明确要求分析岗位匹配度、能力缺口、短板、缺失信息或需要补充的问题（仅限简历优化场景；若同时要求推荐学习资源/课程/学时/学习路线，应选 learning_path）
 - content_edit: 用户要求修改简历的文字内容（如"把项目描述写得更突出"、"删除这段经历"、"优化简历"）
 - language_convert: 用户要求中英文简历互转（如"转成英文简历"、"转换为中文"、"translate resume"、"中英文互转"）
 - render_edit: 用户要求修改简历的显示样式（如"改大字号"、"行距变宽"、"换成双栏布局"）
 - export: 用户要求导出简历（如"导出PDF"、"下载简历"）
 - start_interview: 用户明确要求生成面试题或开始模拟面试（如"生成面试题"、"开始面试练习"）
 - evaluate_answer: 用户提交面试答案请求评估（如"Evaluate my answer to question q_1: ..."）
-- learning_path: 用户要求生成个性化学习路径——分析能力缺口与学习资源，或基于每日学习时长生成 timeline（如"generate learning path"、"2 hours per day timeline"）
+- learning_path: 用户要求生成个性化学习路径——分析能力缺口与学习资源，或基于每日学习时长生成 timeline（如"generate learning path"、"recommend learning resources"、"2 hours per day timeline"）
 - ask_question: 用户在基于当前会话状态提问或查询信息，但没有明确要求重新运行缺口分析（如"我现在的目标岗位是什么"、"简历里有哪些项目"、"刚才生成了哪些面试题"）
+
+判别规则：
+- 消息含 learning resources / courses / study hours / timeline / daily hours / 学习资源 / 学习路线 → 选 learning_path，不要选 gap_analysis
+- 仅分析缺口、追问补充信息、服务简历优化 → 选 gap_analysis
 
 当前系统状态：
 - JD 已加载：{has_job}

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import json
+import re
 import uuid
-from datetime import datetime, timezone
 from typing import Any
 
 from agents.json_contracts import IntentClassificationOutput
@@ -31,6 +30,52 @@ _INTENT_PLAN: dict[str, list[str]] = {
     "evaluate_answer": ["answer_evaluation_agent"],
     "ask_question": ["question_agent"],
 }
+
+_LEARNING_RESOURCE_PATTERN = re.compile(
+    r"(learning\s*resources?|recommend\s+(?:learning\s*)?(?:resources?|courses?)|"
+    r"study\s*hours?|estimated\s*(?:study\s*)?hours?|courses?\s*to\s*learn|"
+    r"学习资源|推荐.*课程|预估.*学时)",
+    re.IGNORECASE,
+)
+_LEARNING_PATH_PATTERN = re.compile(
+    r"(learning\s*path|learning\s*timeline|study\s*plan|learning\s*schedule|"
+    r"学习路线|学习路径|学习计划)",
+    re.IGNORECASE,
+)
+_TIMELINE_PATTERN = re.compile(
+    r"(timeline|learning\s*schedule|study\s*plan|generate\s*(?:my\s*)?(?:learning\s*)?timeline|"
+    r"学习时间表|时间线)",
+    re.IGNORECASE,
+)
+_DAILY_HOURS_PATTERN = re.compile(
+    r"(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\s*(?:per\s*day|daily|/day|each\s*day|a\s*day)|"
+    r"(?:daily|per\s*day|each\s*day)\s*(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)?|"
+    r"每日\s*\d+(?:\.\d+)?\s*小时",
+    re.IGNORECASE,
+)
+
+
+def resolve_intent(raw_intent: str, user_message: str) -> str:
+    """Apply deterministic routing rules after LLM intent classification."""
+    intent = (raw_intent or "ask_question").strip()
+    message = (user_message or "").strip()
+    if not message:
+        return intent
+
+    wants_learning_path = bool(
+        _LEARNING_RESOURCE_PATTERN.search(message)
+        or _LEARNING_PATH_PATTERN.search(message)
+        or (_TIMELINE_PATTERN.search(message) and _DAILY_HOURS_PATTERN.search(message))
+    )
+
+    if wants_learning_path and intent in {"gap_analysis", "ask_question"}:
+        logger.info(
+            "Intent override: %s -> learning_path (learning-path keywords detected)",
+            intent,
+        )
+        return "learning_path"
+
+    return intent
 
 
 async def _classify_intent_async(state: CopilotState) -> IntentClassificationOutput:
@@ -83,6 +128,7 @@ async def planner_node_async(state: CopilotState) -> dict[str, Any]:
         }
 
     intent = intent_result.intent or "ask_question"
+    intent = resolve_intent(intent, state.user_message)
 
     # 2. 构建执行计划
     plan = _build_execution_plan(intent, state)

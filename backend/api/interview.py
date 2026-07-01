@@ -14,6 +14,7 @@ from agents.interactive_interview_agent import (
     session_to_response,
     start_interactive_interview,
 )
+from agents.interview_agent import custom_interview_answers_async, parse_custom_questions
 from api.chat import _aload_state, _asave_state
 from auth.jwt import get_optional_user
 from auth.session_access import bind_session_owner, ensure_session_access, extract_user_id
@@ -111,6 +112,66 @@ class InteractiveResponse(BaseModel):
     session_id: str
     interactive_interview: dict[str, Any] = Field(default_factory=dict)
     message: str = ""
+
+
+class CustomInterviewAnswersRequest(BaseModel):
+    session_id: str = ""
+    questions: list[str] = Field(default_factory=list)
+    questions_text: str = ""
+
+
+class CustomInterviewAnswersResponse(BaseModel):
+    session_id: str
+    interview_qa: list[dict[str, Any]] = Field(default_factory=list)
+    message: str = ""
+
+
+@router.post("/custom/generate-answers", response_model=CustomInterviewAnswersResponse)
+async def generate_custom_interview_answers(
+    req: CustomInterviewAnswersRequest,
+    request: Request,
+) -> CustomInterviewAnswersResponse:
+    """为用户上传的自定义面试题生成基于画像与 JD 的参考答案。"""
+    session_id = req.session_id or f"sess_{uuid.uuid4().hex[:16]}"
+    user = get_optional_user(request)
+    await ensure_session_access(session_id, user)
+    if user:
+        await bind_session_owner(session_id, user)
+
+    questions = parse_custom_questions(req.questions if req.questions else req.questions_text)
+    if not questions:
+        raise HTTPException(status_code=400, detail="请至少提供一道面试题")
+
+    state = await _load_state(session_id)
+    state.session_id = session_id
+
+    try:
+        async with llm_queue_slot(session_id):
+            result = await custom_interview_answers_async(state, questions)
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+    except Exception as exc:
+        logger.error("Custom interview answers failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"生成参考答案失败: {exc}")
+
+    interview_qa = result.get("interview_qa") or []
+    if not interview_qa:
+        trace = result.get("workflow_trace") or []
+        detail = "未能生成参考答案"
+        if trace:
+            detail = trace[-1].get("output_summary") or detail
+        raise HTTPException(status_code=400, detail=detail)
+
+    state.interview_qa = interview_qa
+    if result.get("meta"):
+        state.meta = result["meta"]
+    await _save_state(session_id, state)
+
+    return CustomInterviewAnswersResponse(
+        session_id=session_id,
+        interview_qa=[qa.model_dump() for qa in interview_qa],
+        message=f"已为 {len(interview_qa)} 道自定义题目生成参考答案。",
+    )
 
 
 @router.post("/interactive/start", response_model=InteractiveResponse)

@@ -17,6 +17,15 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
         "awards": "获奖经历",
         "papers": "论文",
     },
+    "zh-TW": {
+        "profile": "基本資料",
+        "summary": "個人總結",
+        "skills": "專業技能",
+        "internships": "實習經歷",
+        "projects": "項目經歷",
+        "awards": "獲獎經歷",
+        "papers": "論文",
+    },
     "en": {
         "profile": "Contact",
         "summary": "Professional Summary",
@@ -26,16 +35,38 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
         "awards": "Honors & Awards",
         "papers": "Publications",
     },
+    "pt": {
+        "profile": "Contactos",
+        "summary": "Resumo Profissional",
+        "skills": "Competências",
+        "internships": "Experiência Profissional",
+        "projects": "Projectos",
+        "awards": "Prémios e Distinções",
+        "papers": "Publicações",
+    },
 }
 
 SECTION_ORDER_BY_LANGUAGE: dict[str, list[str]] = {
     "zh": ["profile", "summary", "skills", "projects", "internships", "awards"],
+    "zh-TW": ["profile", "summary", "skills", "projects", "internships", "awards"],
     "en": ["profile", "summary", "internships", "projects", "skills", "awards"],
+    "pt": ["profile", "summary", "internships", "projects", "skills", "awards"],
 }
 
 FONT_BY_LANGUAGE: dict[str, str] = {
     "zh": "Source Han Sans",
+    "zh-TW": "Source Han Sans",
     "en": "Inter",
+    "pt": "Inter",
+}
+
+VALID_RESUME_LANGUAGES: frozenset[str] = frozenset({"zh", "zh-TW", "en", "pt"})
+
+LANGUAGE_LABELS: dict[str, str] = {
+    "zh": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "pt": "Português (Macau)",
 }
 
 EMPLOYER_TYPE_LABELS: dict[str, str] = {
@@ -75,39 +106,54 @@ def employer_type_label(value: str | None) -> str:
 def normalize_language(language: str | None) -> str:
     if not language:
         return "zh"
-    lang = language.strip().lower()
-    if lang in ("en", "english", "英文", "英语"):
-        return "en"
-    return "zh"
+    raw = language.strip()
+    lang = raw.lower().replace("_", "-")
+    aliases = {
+        "en": "en",
+        "english": "en",
+        "英文": "en",
+        "英语": "en",
+        "zh": "zh",
+        "zh-cn": "zh",
+        "zh-hans": "zh",
+        "简体": "zh",
+        "中文": "zh",
+        "zh-tw": "zh-TW",
+        "zh-hant": "zh-TW",
+        "繁体": "zh-TW",
+        "繁體": "zh-TW",
+        "pt": "pt",
+        "pt-pt": "pt",
+        "pt-mo": "pt",
+        "portuguese": "pt",
+        "português": "pt",
+        "portugues": "pt",
+        "葡语": "pt",
+        "葡語": "pt",
+    }
+    mapped = aliases.get(lang, raw if raw in VALID_RESUME_LANGUAGES else "zh")
+    return mapped if mapped in VALID_RESUME_LANGUAGES else "zh"
+
+
+def is_cjk_resume_language(language: str) -> bool:
+    return normalize_language(language) in ("zh", "zh-TW")
 
 
 def opposite_language(language: str) -> str:
-    return "en" if normalize_language(language) == "zh" else "zh"
+    lang = normalize_language(language)
+    if lang == "en":
+        return "zh"
+    if lang == "pt":
+        return "en"
+    return "en"
 
 
 def language_label(language: str) -> str:
-    return "英文" if normalize_language(language) == "en" else "中文"
+    return LANGUAGE_LABELS.get(normalize_language(language), normalize_language(language))
 
 
 def apply_a4_compact_render_config(config: "RenderConfig", language: str) -> "RenderConfig":
-    """Apply single-page A4 compact defaults for a target language."""
-    lang = normalize_language(language)
-    margin = 18 if lang == "en" else 20
-    return config.model_copy(update={
-        "language": lang,
-        "font_family": FONT_BY_LANGUAGE.get(lang, config.font_family),
-        "font_size": 12 if lang == "en" else 13,
-        "line_height": 1.35,
-        "dense_mode": True,
-        "spacing_scale": "compact",
-        "layout_mode": "single-column",
-        "section_order": list(SECTION_ORDER_BY_LANGUAGE.get(lang, config.section_order)),
-        "page_margin": config.page_margin.model_copy(update={
-            "top": margin,
-            "right": margin,
-            "bottom": margin,
-            "left": margin,
-        }),
-        "version": config.version + 1,
-        "last_render_reason": f"A4 单页紧凑排版（{language_label(lang)}）",
-    })
+    """Apply entry-level single-page A4 defaults for a target language."""
+    from tools.resume_page_policy import apply_render_config_for_experience
+
+    return apply_render_config_for_experience(config, language, "entry")

@@ -19,6 +19,8 @@ from tests.fixtures.test_samples import (
     SAMPLE_JD_TEXT,
     GENERATE_RESUME_MESSAGE,
     INTERVIEW_START_MESSAGE,
+    LEARNING_PATH_GAP_MESSAGE,
+    LEARNING_PATH_TIMELINE_MESSAGE,
 )
 
 BASE_URL = "http://localhost:8000"
@@ -272,6 +274,104 @@ def test_interview_workflow():
     print("\n✓ Interview workflow test PASSED")
     return True
 
+def test_learning_path_workflow():
+    """Test 4: Learning path (gap analysis + timeline) workflow"""
+    print_section("TEST 4: Learning Path Workflow")
+
+    session_id = None
+
+    print("\n[Step 1] Uploading profile from test-data/senior-fullstack/profile.txt...")
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/chat",
+            json={"session_id": "", "message": SAMPLE_PROFILE_TEXT, "attachments": []},
+            headers={"Content-Type": "application/json"},
+            timeout=REQUEST_TIMEOUT,
+        )
+        if response.status_code != 200:
+            print(f"✗ Failed with status {response.status_code}: {response.text[:200]}")
+            return False
+        data = response.json()
+        session_id = data.get("session_id")
+        print(f"✓ Session ID: {session_id}")
+        print(f"✓ Triggered Agents: {data.get('triggered_agents', [])}")
+    except Exception as e:
+        print(f"✗ Error during profile upload: {e}")
+        return False
+
+    if not session_id:
+        print("✗ No session ID received")
+        return False
+
+    print("\n[Step 2] Submitting JD from test-data/senior-fullstack/jd.txt...")
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/chat",
+            json={"session_id": session_id, "message": SAMPLE_JD_TEXT, "attachments": []},
+            headers={"Content-Type": "application/json"},
+            timeout=REQUEST_TIMEOUT,
+        )
+        if response.status_code != 200:
+            print(f"✗ Failed with status {response.status_code}: {response.text[:200]}")
+            return False
+        data = response.json()
+        gaps = data.get("gaps", [])
+        print(f"✓ JD analysis completed; {len(gaps)} gap(s) identified")
+        for i, gap in enumerate(gaps[:3], 1):
+            print(f"  {i}. {gap.get('description', 'N/A')[:80]}")
+    except Exception as e:
+        print(f"✗ Error during JD analysis: {e}")
+        return False
+
+    print("\n[Step 3] Running skill gap analysis + resource recommendations...")
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/chat",
+            json={"session_id": session_id, "message": LEARNING_PATH_GAP_MESSAGE, "attachments": []},
+            headers={"Content-Type": "application/json"},
+            timeout=REQUEST_TIMEOUT,
+        )
+        if response.status_code != 200:
+            print(f"✗ Failed with status {response.status_code}: {response.text[:200]}")
+            return False
+        data = response.json()
+        resources = data.get("resources", [])
+        print(f"✓ Triggered Agents: {data.get('triggered_agents', [])}")
+        print(f"✓ Recommended {len(resources)} learning resource(s)")
+        print(f"✓ Estimated total hours: {data.get('estimated_total_hours', 0)}")
+        for i, res in enumerate(resources[:3], 1):
+            print(f"  {i}. {res.get('title', 'N/A')[:60]} ({res.get('platform', 'N/A')})")
+    except Exception as e:
+        print(f"✗ Error during gap analysis: {e}")
+        return False
+
+    print("\n[Step 4] Generating learning timeline (2 hours/day)...")
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/chat",
+            json={"session_id": session_id, "message": LEARNING_PATH_TIMELINE_MESSAGE, "attachments": []},
+            headers={"Content-Type": "application/json"},
+            timeout=REQUEST_TIMEOUT,
+        )
+        if response.status_code != 200:
+            print(f"✗ Failed with status {response.status_code}: {response.text[:200]}")
+            return False
+        data = response.json()
+        timeline = data.get("timeline", [])
+        print(f"✓ Triggered Agents: {data.get('triggered_agents', [])}")
+        print(f"✓ Generated {len(timeline)} timeline phase(s)")
+        print(f"✓ Daily hours: {data.get('daily_hours', 0)}")
+        for phase in timeline[:3]:
+            print(f"  Phase {phase.get('phase')}: {phase.get('title', 'N/A')} ({phase.get('weeks', 'N/A')})")
+        if not timeline:
+            print("⚠ Warning: No timeline phases generated")
+    except Exception as e:
+        print(f"✗ Error during timeline generation: {e}")
+        return False
+
+    print("\n✓ Learning path workflow test PASSED")
+    return True
+
 def main():
     """Run all tests"""
     print("\n" + "🚀"*30)
@@ -299,6 +399,11 @@ def main():
     
     # Test 3: Interview Workflow
     results["Interview Workflow"] = test_interview_workflow()
+
+    time.sleep(1)
+
+    # Test 4: Learning Path Workflow
+    results["Learning Path Workflow"] = test_learning_path_workflow()
     
     # Print summary
     print_section("TEST SUMMARY")

@@ -7,6 +7,7 @@ import pytest
 from tools.resume_export import (
     WeasyPrintUnavailableError,
     build_content_disposition,
+    count_pdf_pages_from_html,
     html_to_pdf_bytes,
     prepare_html_for_pdf,
     sanitize_export_filename,
@@ -73,6 +74,14 @@ class TestPdfGeneration:
         )
         pdf = html_to_pdf_bytes(html)
         assert pdf[:4] == b"%PDF"
+
+    def test_count_pdf_pages_short_html(self):
+        html = prepare_html_for_pdf(
+            '<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"></head>'
+            "<body><p>短内容</p></body></html>"
+        )
+        pages = count_pdf_pages_from_html(html)
+        assert pages == 1
 
 
 class TestWeasyPrintUnavailable:

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张伟 - Senior Full Stack Developer</title>
+    <style>
+        :root {
+            
+        --font-family: 'Source Han Sans', sans-serif;
+        --font-size: 13px;
+        --line-height: 1.35;
+        --margin-top: 20px;
+        --margin-right: 20px;
+        --margin-bottom: 20px;
+        --margin-left: 20px;
+        --spacing-scale: 0.75;
+    
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            color: #333;
+            background: #fff;
+        }
+
+        .resume-container {
+            width: 210mm;
+            min-height: 297mm;
+            max-height: 297mm;
+            margin: 0 auto;
+            padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
+            overflow: hidden;
+        }
+
+        .resume-container.dense .section {
+            margin-bottom: calc(10px * var(--spacing-scale));
+        }
+
+        .resume-container.dense .item {
+            margin-bottom: calc(4px * var(--spacing-scale));
+        }
+
+        .resume-container.dense .section h2 {
+            margin-bottom: calc(6px * var(--spacing-scale));
+            padding-bottom: 2px;
+        }
+
+        /* Sections */
+        .section {
+            margin-bottom: calc(14px * var(--spacing-scale));
+            page-break-inside: avoid;
+        }
+
+        .section h2 {
+            font-size: calc(var(--font-size) * 1.15);
+            color: #1a1a1a;
+            border-bottom: 2px solid #333;
+            padding-bottom: 3px;
+            margin-bottom: calc(8px * var(--spacing-scale));
+        }
+
+        /* Profile */
+        .section-profile .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .section-profile .profile-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .section-profile .profile-photo {
+            width: 96px;
+            height: 128px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .section-profile .profile-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .section-profile .name {
+            font-size: calc(var(--font-size) * 1.6);
+            font-weight: bold;
+        }
+
+        .section-profile .contact {
+            color: #555;
+            font-size: calc(var(--font-size) * 0.9);
+        }
+
+        .section-profile .github {
+            color: #0066cc;
+            font-size: calc(var(--font-size) * 0.9);
+        }
+
+        .education {
+            margin-top: 8px;
+        }
+
+        .edu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+
+        .edu-school {
+            font-weight: 600;
+        }
+
+        .edu-detail {
+            color: #555;
+            font-size: calc(var(--font-size) * 0.9);
+        }
+
+        /* Items */
+        .item {
+            margin-bottom: calc(12px * var(--spacing-scale));
+        }
+
+        .item-title {
+            font-size: calc(var(--font-size) * 1.05);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .item-content {
+            color: #444;
+            white-space: pre-wrap;
+        }
+
+        /* Double column layout */
+        .double-column .section-skills {
+            column-count: 2;
+            column-gap: 24px;
+        }
+
+        /* Dark theme */
+        html.dark body {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        html.dark .section h2 {
+            color: #fff;
+            border-bottom-color: #888;
+        }
+
+        html.dark .item-content {
+            color: #ccc;
+        }
+
+        /* Print */
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+            }
+            .resume-container {
+                width: 210mm;
+                max-height: 297mm;
+                overflow: hidden;
+                padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-container single-column dense">
+        
+            <section class="section section-profile">
+                <h2>基本信息</h2>
+                <div class="profile-header">
+                    <div class="profile-main">
+                        <div class="profile-info">
+                            <span class="name">张伟</span>
+                            <span class="contact">zhangwei@example.com | 13800138000 | 北京</span>
+                            
+                            <span class="github">https://github.com/zhangwei-tech</span>
+                        </div>
+                        <div class="education"><div class="edu-item"><span class="edu-school">北京大学</span><span class="edu-detail">计算机科学与技术 · 学士 · 2015.09 - 2019.06</span></div></div>
+                    </div>
+                    
+                </div>
+            </section>
+        
+
+            <section class="section section-summary">
+                <h2>个人总结</h2>
+                <p>资深全栈开发工程师，拥有8年Web开发经验，精通Python/JavaScript/React/Node.js。擅长设计和实现可扩展的Web应用，并具备容器化和云平台开发经验。</p>
+            </section>
+        
+
+            <section class="section section-skills">
+                <h2>专业技能</h2>
+                <div class="item skill-item"><h3 class="item-title">编程语言</h3><div class="item-content">Python, JavaScript, Java, Go</div></div>
+<div class="item skill-item"><h3 class="item-title">前端框架</h3><div class="item-content">React, Vue.js, Angular</div></div>
+<div class="item skill-item"><h3 class="item-title">后端框架</h3><div class="item-content">Django, Flask, Express, Spring Boot</div></div>
+<div class="item skill-item"><h3 class="item-title">容器化与云平台</h3><div class="item-content">Docker, Kubernetes, AWS, Azure, GCP</div></div>
+<div class="item skill-item"><h3 class="item-title">数据库</h3><div class="item-content">MySQL, PostgreSQL, MongoDB, Redis</div></div>
+<div class="item skill-item"><h3 class="item-title">开发工具</h3><div class="item-content">Git, Jenkins, Docker Compose, Terraform</div></div>
+            </section>
+        
+
+            <section class="section section-projects">
+                <h2>项目经历</h2>
+                <div class="item project-item"><h3 class="item-title">企业级微服务架构设计（2020.01-2020.05）</h3><div class="item-content">设计并实现了一个基于Spring Cloud的微服务架构系统，使用Docker容器化部署，Kubernetes进行编排，项目成功上线并支持了日均百万级的访问量。</div></div>
+            </section>
+        
+
+            <section class="section section-internships">
+                <h2>实习经历</h2>
+                <div class="item internship-item"><h3 class="item-title">字节跳动 — 前端开发实习生（2017.06-2017.09）</h3><div class="item-content">参与抖音国际版的前端性能优化项目，通过代码拆分和懒加载技术，将页面加载时间缩短40%。</div></div>
+<div class="item internship-item"><h3 class="item-title">阿里巴巴 — 后端开发工程师（2018.03-2018.06）</h3><div class="item-content">负责双11期间商品推荐系统的后端开发，使用Python和Django框架，优化了查询效率，提升了30%的响应速度。</div></div>
+            </section>
+        
+
+            <section class="section section-awards">
+                <h2>获奖经历</h2>
+                <div class="item award-item"><h3 class="item-title">2019年度最佳全栈开发者</h3><div class="item-content">在公司年度技术评选中获得该奖项，表彰在全栈开发领域的突出贡献。</div></div>
+            </section>
+        
+    </div>
+</body>
+</html>

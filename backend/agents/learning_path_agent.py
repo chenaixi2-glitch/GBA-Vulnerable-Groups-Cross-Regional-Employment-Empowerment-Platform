@@ -1,4 +1,4 @@
-"""Learning Path Agent — gaps + resources first, then timeline after daily hours."""
+"""Learning Path Agent — shared gap analysis, then resources + timeline."""
 
 from __future__ import annotations
 
@@ -8,11 +8,13 @@ import re
 import uuid
 from typing import Any
 
-from agents.json_contracts import LearningPathAnalysisOutput, LearningPathTimelineOutput
+from agents.gap_analysis_core import has_gap_analysis_context, run_gap_analysis
+from agents.json_contracts import LearningPathResourcesOutput, LearningPathTimelineOutput
 from models.llm import get_llm, ainvoke_json_with_schema
-from prompts.learning_path import LEARNING_PATH_ANALYSIS_PROMPT, LEARNING_PATH_TIMELINE_PROMPT
+from prompts.learning_path import LEARNING_PATH_TIMELINE_PROMPT
+from prompts.learning_path_resources import LEARNING_PATH_RESOURCES_PROMPT
 from tools.target_job_context import build_enriched_job_json
-from workflow.state import CopilotState, Gap, LearningPathPhase, LearningPathResource, Question
+from workflow.state import CopilotState, Gap, LearningPathPhase, LearningPathResource
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
 
@@ -32,7 +34,6 @@ def _extract_daily_hours(user_message: str) -> float | None:
     match = _DAILY_HOURS_PATTERN.search(user_message)
     if match:
         return float(match.group(1))
-    # "2 hours daily" / "daily 2 hours"
     alt = re.search(
         r"(?:daily|per\s*day|each\s*day)\s*(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)?",
         user_message,
@@ -57,37 +58,6 @@ def _compute_total_weeks(total_hours: int, daily_hours: float) -> int:
     return max(1, math.ceil(total_hours / (daily_hours * 7)))
 
 
-def _build_gaps_from_analysis(parsed: LearningPathAnalysisOutput) -> list[Gap]:
-    gaps: list[Gap] = []
-    for item in parsed.gaps:
-        gaps.append(Gap(
-            id=item.id or f"gap_{uuid.uuid4().hex[:12]}",
-            type=item.type,
-            severity=item.severity,
-            description=item.description,
-            estimated_hours=item.estimated_hours,
-            related_section_ids=item.related_section_ids,
-            resolved=item.resolved,
-            resolution_source=item.resolution_source or "learning_path",
-        ))
-    return gaps
-
-
-def _build_questions(parsed: LearningPathAnalysisOutput) -> list[Question]:
-    questions: list[Question] = []
-    for item in parsed.questions_to_ask:
-        questions.append(Question(
-            id=item.id or f"q_{uuid.uuid4().hex[:12]}",
-            question=item.question,
-            reason=item.reason,
-            target_field=item.target_field,
-            priority=item.priority,
-            status=item.status,
-            answer_ref=item.answer_ref,
-        ))
-    return questions
-
-
 def _build_timeline(parsed: LearningPathTimelineOutput) -> list[LearningPathPhase]:
     phases: list[LearningPathPhase] = []
     for item in parsed.timeline:
@@ -101,7 +71,7 @@ def _build_timeline(parsed: LearningPathTimelineOutput) -> list[LearningPathPhas
     return phases
 
 
-def _build_resources(parsed: LearningPathAnalysisOutput) -> list[LearningPathResource]:
+def _build_resources(parsed: LearningPathResourcesOutput) -> list[LearningPathResource]:
     resources: list[LearningPathResource] = []
     for item in parsed.resources:
         resources.append(LearningPathResource(
@@ -118,34 +88,61 @@ def _build_resources(parsed: LearningPathAnalysisOutput) -> list[LearningPathRes
     return resources
 
 
-def _infer_total_hours(parsed: LearningPathAnalysisOutput) -> int:
+def _apply_gap_hour_estimates(gaps: list[Gap], parsed: LearningPathResourcesOutput) -> list[Gap]:
+    if not parsed.gap_hours:
+        return gaps
+    hours_by_id = {item.id: item.estimated_hours for item in parsed.gap_hours if item.id}
+    if not hours_by_id:
+        return gaps
+    updated: list[Gap] = []
+    for gap in gaps:
+        hours = hours_by_id.get(gap.id)
+        if hours and hours > 0:
+            updated.append(gap.model_copy(update={"estimated_hours": hours}))
+        else:
+            updated.append(gap)
+    return updated
+
+
+def _infer_total_hours(gaps: list[Gap], parsed: LearningPathResourcesOutput) -> int:
     if parsed.estimated_total_hours > 0:
         return parsed.estimated_total_hours
-    gap_hours = sum(max(0, g.estimated_hours) for g in parsed.gaps)
+    gap_hours = sum(max(0, g.estimated_hours) for g in gaps)
     resource_hours = sum(max(0.0, r.duration_hours) for r in parsed.resources)
     total = int(gap_hours or resource_hours)
     return max(total, 1)
 
 
-async def _run_analysis_phase(state: CopilotState) -> dict[str, Any]:
-    prompt = LEARNING_PATH_ANALYSIS_PROMPT.format(
+async def _run_resources_phase(state: CopilotState, gaps: list[Gap]) -> tuple[list[Gap], list[LearningPathResource], int]:
+    gaps_payload = [g.model_dump() for g in gaps]
+    prompt = LEARNING_PATH_RESOURCES_PROMPT.format(
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
+        gaps_json=json.dumps(gaps_payload, ensure_ascii=False, indent=2),
     )
     llm = get_llm()
     parsed = await ainvoke_json_with_schema(
-        llm, prompt, LearningPathAnalysisOutput, logger, "Learning Path Agent (analysis)"
+        llm, prompt, LearningPathResourcesOutput, logger, "Learning Path Agent (resources)"
     )
-
-    gaps = _build_gaps_from_analysis(parsed)
-    questions = _build_questions(parsed)
+    gaps = _apply_gap_hour_estimates(gaps, parsed)
     resources = _build_resources(parsed)
-    estimated_hours = _infer_total_hours(parsed)
-
+    estimated_hours = _infer_total_hours(gaps, parsed)
     logger.info(
-        "Learning path analysis: %d gaps, %d resources, ~%d hours",
-        len(gaps), len(resources), estimated_hours,
+        "Learning path resources: %d resources, ~%d hours (from %d gaps)",
+        len(resources), estimated_hours, len(gaps),
     )
+    return gaps, resources, estimated_hours
+
+
+async def _run_analysis_phase(state: CopilotState) -> dict[str, Any]:
+    if state.gaps:
+        gaps = list(state.gaps)
+        questions = list(state.questions_to_ask)
+        logger.info("Learning path reusing %d existing gaps from session", len(gaps))
+    else:
+        gaps, questions = await run_gap_analysis(state, resolution_source="learning_path")
+
+    gaps, resources, estimated_hours = await _run_resources_phase(state, gaps)
 
     return {
         "gaps": gaps,
@@ -168,6 +165,7 @@ async def _run_analysis_phase(state: CopilotState) -> dict[str, Any]:
                 "gap_count": len(gaps),
                 "resource_count": len(resources),
                 "estimated_total_hours": estimated_hours,
+                "reused_gaps": bool(state.gaps),
             },
         ),
     }
@@ -227,15 +225,17 @@ def _infer_total_hours_from_state(state: CopilotState) -> int:
     resource_hours = sum(max(0.0, r.duration_hours) for r in state.learning_path_resources)
     if resource_hours > 0:
         return max(1, int(resource_hours))
+    gap_hours = sum(max(0, g.estimated_hours) for g in state.gaps)
+    if gap_hours > 0:
+        return gap_hours
     return max(1, len(state.gaps) * 20)
 
 
 async def learning_path_node_async(state: CopilotState) -> dict[str, Any]:
-    """Analyze gaps/resources first; generate timeline after user picks daily hours."""
+    """Shared gap analysis, then resources; timeline after daily hours."""
     logger.info("Learning Path Agent started for session %s", state.session_id)
 
-    has_job_context = state.job is not None or bool((state.meta.target_jd_text or "").strip())
-    if not has_job_context or state.candidate_profile is None:
+    if not has_gap_analysis_context(state):
         return {
             "gaps": [],
             "learning_path_timeline": [],

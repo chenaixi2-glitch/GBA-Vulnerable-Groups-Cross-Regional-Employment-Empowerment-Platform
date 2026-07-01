@@ -1,4 +1,6 @@
 {
   "generateResume": "Please generate an optimized resume tailored for this Senior Full Stack Developer position",
-  "interviewStart": "Generate interview questions for a Senior Software Engineer position in the technology industry. Use a professional tone."
+  "interviewStart": "Generate interview questions for a Senior Software Engineer position in the technology industry. Use a professional tone.",
+  "learningPathGapAnalysis": "Please analyze my skill gaps against the target job and recommend learning resources with estimated study hours. Do not generate a timeline yet.",
+  "learningPathTimeline": "Generate my learning timeline with 2 hours per day based on the analyzed gaps and resources."
 }

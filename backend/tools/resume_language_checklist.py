@@ -5,7 +5,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from tools.resume_layout import normalize_language, normalize_employer_type, employer_type_label
+from tools.resume_layout import normalize_language, normalize_employer_type, employer_type_label, language_label, VALID_RESUME_LANGUAGES, is_cjk_resume_language
+from tools.resume_page_policy import page_limit_for_tier, resolve_experience_tier
 from workflow.state import CandidateProfile, CopilotState, ResumeContent
 
 # ---- 检查项定义 ----
@@ -143,10 +144,11 @@ def check_resume_language_requirements(
     text = _text_blob(state, resume)
     items: list[CheckItem] = []
 
-    if lang == "zh":
+    if is_cjk_resume_language(lang):
         items.extend(_check_chinese_resume(state, resume, text))
     else:
-        items.extend(_check_english_resume(state, resume, text))
+        page_limit = page_limit_for_tier(resolve_experience_tier(state))
+        items.extend(_check_english_resume(state, resume, text, page_limit=page_limit))
 
     missing = [i for i in items if i.get("missing")]
     warnings = [i for i in items if i.get("severity") == "warning" and i.get("missing")]
@@ -155,7 +157,7 @@ def check_resume_language_requirements(
 
     return {
         "language": lang,
-        "language_label": "中文简历" if lang == "zh" else "English Resume",
+        "language_label": language_label(lang),
         "employer_type": _employer_type(state),
         "employer_type_label": employer_type_label(_employer_type(state)),
         "total_checks": len(items),
@@ -175,10 +177,11 @@ def _build_summary(
     recommended: list[CheckItem],
     warnings: list[CheckItem],
 ) -> str:
-    if lang == "zh":
+    if is_cjk_resume_language(lang):
+        label = "繁體中文" if lang == "zh-TW" else "中文"
         if not required and not recommended and not warnings:
-            return "中文简历核心内容已较完整，可继续优化措辞与排版。"
-        parts = ["中文简历待补充提醒："]
+            return f"{label}简历核心内容已较完整，可继续优化措辞与排版。"
+        parts = [f"{label}简历待补充提醒："]
         if required:
             parts.append(f"必填缺失 {len(required)} 项：" + "、".join(i["label"] for i in required[:5]))
         if recommended:
@@ -187,9 +190,10 @@ def _build_summary(
             parts.append(f"格式注意 {len(warnings)} 项")
         return " ".join(parts)
 
+    resume_kind = "Portuguese (Macau)" if lang == "pt" else "English"
     if not required and not recommended and not warnings:
-        return "English resume core sections look complete. Keep it to one page."
-    parts = ["English resume reminders:"]
+        return f"{resume_kind} resume core sections look complete. Keep it to one page."
+    parts = [f"{resume_kind} resume reminders:"]
     if required:
         parts.append(f"{len(required)} required: " + ", ".join(i["label"] for i in required[:5]))
     if recommended:
@@ -302,6 +306,8 @@ def _check_english_resume(
     state: CopilotState,
     resume: ResumeContent | None,
     text: str,
+    *,
+    page_limit: int = 1,
 ) -> list[CheckItem]:
     items: list[CheckItem] = []
     profile = resume.profile if resume else None
@@ -359,10 +365,10 @@ def _check_english_resume(
                       "英文 Resume 用 3-4 行 Professional Summary 替代中文大段自我评价",
                       "精简概括核心技能与成果，不用 'hardworking, outgoing' 等空泛形容词", has_summary))
 
-    if resume and resume.summary and len(resume.summary.strip()) > 400:
+    if resume and resume.summary and len(resume.summary.strip()) > (400 if page_limit <= 1 else 700):
         items.append(_warn_item("en_summary_long", "format", "summary", "Summary too long",
-                                "英文 Resume 的 Summary 应控制在 3-4 行",
-                                "删减至核心卖点，整份简历保持 1 页"))
+                                f"英文 Resume 的 Summary 建议控制在 {'3-4 行' if page_limit > 1 else '3-4 行（单页）'}",
+                                f"删减至核心卖点，整份简历保持 {page_limit} 页以内"))
 
     # Work Experience before Education
     has_work = bool(resume and resume.internships)
@@ -396,9 +402,14 @@ def _check_english_resume(
         items.append(_ok_item("en_lang_cert", "content", "language_certs", "English proficiency",
                               "已标注国际认可的语言能力"))
 
-    # 1 page reminder
-    items.append(_item("en_one_page", "format", "page_limit", "One page only", "required",
-                      "英文 Resume 一律 1 页封顶（10 年以下经验）", "删减次要内容，保持简洁", True))
+    page_label = "One page only" if page_limit <= 1 else f"Up to {page_limit} pages"
+    page_hint = (
+        f"英文 Resume 建议 {page_limit} 页以内（10 年以下经验）"
+        if page_limit <= 1
+        else f"英文 Resume 建议不超过 {page_limit} 页 A4（中级/资深候选人）"
+    )
+    items.append(_item("en_one_page", "format", "page_limit", page_label, "required", page_hint,
+                      "删减次要内容，保持简洁", True))
 
     # 禁止主观自我评价式写法
     if _has_pattern(text, [r"性格开朗|吃苦耐劳|认真负责|team player personality|hardworking and honest"]):

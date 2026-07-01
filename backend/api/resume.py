@@ -493,7 +493,7 @@ async def get_language_checklist(session_id: str, language: str = "zh", employer
     """根据目标语言检查简历缺失项与格式提醒。"""
     from api.chat import _aload_state
     from tools.resume_language_checklist import check_resume_language_requirements
-    from tools.resume_layout import normalize_language
+    from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
 
     user = get_optional_user(request) if request else None
     await ensure_session_access(session_id, user)
@@ -514,7 +514,7 @@ async def get_language_checklist(session_id: str, language: str = "zh", employer
 
 class SetResumeLanguageRequest(BaseModel):
     session_id: str
-    target_language: str = Field(description="Target language: zh or en")
+    target_language: str = Field(description="Target language: zh, zh-TW, en, or pt")
 
 
 @router.put("/language")
@@ -522,14 +522,14 @@ async def set_resume_language(req: SetResumeLanguageRequest, request: Request):
     """设置目标简历语言并返回格式检查清单（生成/互转前调用）。"""
     from api.chat import _aload_state, _asave_state
     from tools.resume_language_checklist import check_resume_language_requirements
-    from tools.resume_layout import normalize_language
+    from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
 
     target = normalize_language(req.target_language)
-    if target not in ("zh", "en"):
-        raise HTTPException(status_code=422, detail="target_language 必须为 zh 或 en")
+    if target not in VALID_RESUME_LANGUAGES:
+        raise HTTPException(status_code=422, detail="target_language 必须为 zh、zh-TW、en 或 pt")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
@@ -556,7 +556,7 @@ class RenderRequest(BaseModel):
 
 class TranslateResumeRequest(BaseModel):
     session_id: str
-    target_language: str = Field(description="Target language: zh or en")
+    target_language: str = Field(description="Target language: zh, zh-TW, en, or pt")
 
 
 @router.post("/translate")
@@ -573,8 +573,8 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
         await bind_session_owner(req.session_id, user)
 
     target = normalize_language(req.target_language)
-    if target not in ("zh", "en"):
-        raise HTTPException(status_code=422, detail="target_language 必须为 zh 或 en")
+    if target not in VALID_RESUME_LANGUAGES:
+        raise HTTPException(status_code=422, detail="target_language 必须为 zh、zh-TW、en 或 pt")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
@@ -586,7 +586,13 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
     if state.resume_content_json is None:
         raise HTTPException(status_code=400, detail="简历尚未生成，请先上传并生成简历")
 
-    state.user_message = f"将简历转换为{language_label(target)}版本，遵循{language_label(target)}简历格式，控制在一页 A4 内"
+    from tools.resume_page_policy import page_limit_label, resolve_page_limit
+
+    page_limit = resolve_page_limit(state)
+    layout_label = page_limit_label(page_limit, target)
+    state.user_message = (
+        f"将简历转换为{language_label(target)}版本，遵循{language_label(target)}简历格式，控制在{layout_label}内"
+    )
     state.resume_language_target = target
     state.current_intent = "language_convert"
     state.execution_plan = ["content_agent", "render_agent"]

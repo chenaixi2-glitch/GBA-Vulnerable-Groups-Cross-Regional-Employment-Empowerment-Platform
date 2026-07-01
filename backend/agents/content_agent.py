@@ -12,12 +12,18 @@ from agents.json_contracts import ResumeGenerationOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.resume_generation import RESUME_GENERATION_PROMPT, RESUME_SECTION_UPDATE_PROMPT
 from prompts.resume_language_convert import RESUME_LANGUAGE_CONVERT_PROMPT
-from prompts.resume_constraints import RESUME_A4_ONE_PAGE_CONSTRAINTS
+from prompts.resume_constraints import RESUME_PAGE_COMPRESS_PROMPT
+from tools.resume_page_policy import (
+    apply_render_config_for_experience,
+    page_limit_label,
+    resolve_experience_level,
+    resume_constraints_for_state,
+)
 from tools.resume_layout import (
-    apply_a4_compact_render_config,
     language_label,
     normalize_language,
     opposite_language,
+    is_cjk_resume_language,
 )
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import (
@@ -56,7 +62,7 @@ def _merge_profile_extras_from_candidate(
     merged = {**prev_extras, **{k: v for k, v in cand_extras.items() if v}}
     lang = normalize_language(resume_content.meta.language)
 
-    if lang == "zh":
+    if is_cjk_resume_language(lang):
         photo = merged.get("photo_url") or merged.get("photo_data")
         if photo:
             resume_content.profile.extras["photo_url"] = photo
@@ -174,12 +180,12 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             target_language=target_lang,
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
             job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
-            RESUME_A4_ONE_PAGE_CONSTRAINTS=RESUME_A4_ONE_PAGE_CONSTRAINTS,
+            RESUME_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
         )
     elif intent == "content_edit" and state.resume_content_json:
         lang = normalize_language(state.resume_content_json.meta.language)
         prompt = RESUME_SECTION_UPDATE_PROMPT.format(
-            RESUME_A4_ONE_PAGE_CONSTRAINTS=RESUME_A4_ONE_PAGE_CONSTRAINTS,
+            RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
             target_language_label=language_label(lang),
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
             job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
@@ -197,7 +203,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
         prompt = RESUME_GENERATION_PROMPT.format(
             target_language=lang,
             target_language_label=language_label(lang),
-            RESUME_A4_ONE_PAGE_CONSTRAINTS=RESUME_A4_ONE_PAGE_CONSTRAINTS,
+            RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
             job_json=job_json,
             profile_json=profile_json,
             edit_instruction=edit_instruction,
@@ -229,8 +235,13 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
     logger.info("Resume content generated v%d, hash=%s, lang=%s",
                 resume_content.meta.version, resume_content.meta.content_hash, resume_content.meta.language)
 
-    render_config = apply_a4_compact_render_config(state.render_config, resume_content.meta.language)
+    render_config = apply_render_config_for_experience(
+        state.render_config,
+        resume_content.meta.language,
+        resolve_experience_level(state),
+    )
 
+    layout_label = page_limit_label(render_config.page_limit, resume_content.meta.language)
     meta = state.meta.model_copy(update={
         "active_resume_content_version": resume_content.meta.version,
         "dirty_flags": state.meta.dirty_flags.model_copy(update={
@@ -241,11 +252,11 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
         })
     })
 
-    output_summary = f"简历内容已生成（v{resume_content.meta.version}，{language_label(resume_content.meta.language)}，A4 单页）。"
+    output_summary = f"简历内容已生成（v{resume_content.meta.version}，{language_label(resume_content.meta.language)}，{layout_label}）。"
     if intent == "language_convert":
         output_summary = (
             f"简历已转换为{language_label(resume_content.meta.language)}版本"
-            f"（v{resume_content.meta.version}，A4 单页）。"
+            f"（v{resume_content.meta.version}，{layout_label}）。"
         )
 
     return {
@@ -273,3 +284,27 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
 def content_node(state: CopilotState) -> dict[str, Any]:
     """Resume Content Agent 同步兼容入口。"""
     return asyncio.run(content_node_async(state))
+
+
+async def compress_resume_for_page_limit_async(
+    state: CopilotState,
+    resume_content: ResumeContent,
+    *,
+    current_pages: int,
+    page_limit: int,
+) -> ResumeContent:
+    """LLM-compress resume when PDF page count exceeds the allowed limit."""
+    from tools.target_job_context import build_enriched_job_json
+    from tools.resume_page_policy import resume_constraints_for_state
+
+    llm = get_llm()
+    prompt = RESUME_PAGE_COMPRESS_PROMPT.format(
+        current_pages=current_pages,
+        page_limit=page_limit,
+        resume_page_constraints=resume_constraints_for_state(state),
+        current_resume_json=resume_content.model_dump_json(indent=2),
+        job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
+    )
+    parsed = await ainvoke_json_with_schema(llm, prompt, ResumeGenerationOutput, logger, "Resume Page Compress")
+    compressed = _build_resume_from_parsed(parsed, state, language=resume_content.meta.language)
+    return _merge_profile_extras_from_candidate(compressed, state)

@@ -34,6 +34,6 @@ RENDER_INSTRUCTION_PROMPT = """你是简历渲染配置专家。请根据用户�
 
 注意：
 1. 只修改用户指令涉及的字段，其他保持不变
-2. 简历必须控制在一页 A4 内；内容过多时使用 compact 间距、dense_mode 和较小字号
+2. 简历页数须符合当前经验等级的 A4 上限（Junior 1 页，Mid/Senior 最多 2 页）；内容过多时使用 compact 间距、dense_mode 和较小字号
 3. 即使指令无效，也必须返回合法 JSON 对象
 """

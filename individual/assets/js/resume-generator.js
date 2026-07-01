@@ -559,73 +559,91 @@ function displayResume(htmlContent) {
  * Update language badge and toggle button states
  */
 function updateResumeLanguageBadge(language) {
-    currentResumeLanguage = (language || 'zh').toLowerCase().startsWith('en') ? 'en' : 'zh';
+    currentResumeLanguage = typeof normalizeResumeLang === 'function'
+        ? normalizeResumeLang(language)
+        : (String(language || 'zh').toLowerCase().startsWith('en') ? 'en' : 'zh');
     const badge = document.getElementById('resume-language-badge');
     const a4Badge = document.getElementById('resume-a4-badge');
-    const btnToEn = document.getElementById('btn-translate-en');
-    const btnToZh = document.getElementById('btn-translate-zh');
 
     if (badge) {
-        badge.textContent = currentResumeLanguage === 'en' ? 'English' : '中文';
-        badge.className = currentResumeLanguage === 'en'
+        badge.textContent = typeof resumeLangDisplayLabel === 'function'
+            ? resumeLangDisplayLabel(currentResumeLanguage)
+            : currentResumeLanguage;
+        const isWestern = currentResumeLanguage === 'en' || currentResumeLanguage === 'pt';
+        badge.className = isWestern
             ? 'px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800'
             : 'px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800';
     }
     if (a4Badge) {
         a4Badge.classList.remove('hidden');
     }
-    if (btnToEn) btnToEn.disabled = currentResumeLanguage === 'en';
-    if (btnToZh) btnToZh.disabled = currentResumeLanguage === 'zh';
+    if (typeof syncResumeLanguageButtons === 'function') {
+        syncResumeLanguageButtons();
+    }
 
     if (resumeGenerated) {
         refreshLanguageChecklist(currentResumeLanguage);
     }
 }
 
-/**
- * Convert resume to English
- */
-async function translateResumeToEnglish() {
+async function translateResumeToLanguage(targetLanguage) {
+    const lang = typeof normalizeResumeLang === 'function' ? normalizeResumeLang(targetLanguage) : targetLanguage;
     if (!resumeGenerated) {
-        await onResumeLanguageSelected('en');
+        await onResumeLanguageSelected(lang);
         return;
     }
-    await translateResume('en');
+    await translateResume(lang);
 }
 
-/**
- * Convert resume to Chinese
- */
+async function translateResumeToEnglish() {
+    await translateResumeToLanguage('en');
+}
+
 async function translateResumeToChinese() {
-    if (!resumeGenerated) {
-        await onResumeLanguageSelected('zh');
-        return;
-    }
-    await translateResume('zh');
+    await translateResumeToLanguage('zh');
+}
+
+async function translateResumeToTraditionalChinese() {
+    await translateResumeToLanguage('zh-TW');
+}
+
+async function translateResumeToPortuguese() {
+    await translateResumeToLanguage('pt');
 }
 
 /**
  * Shared translate handler
  */
 async function translateResume(targetLanguage) {
+    const lang = typeof normalizeResumeLang === 'function' ? normalizeResumeLang(targetLanguage) : targetLanguage;
+    const loadingMsgs = {
+        zh: '正在转换为简体中文简历...',
+        'zh-TW': '正在轉換為繁體中文履歷...',
+        en: 'Converting to English resume...',
+        pt: 'A converter para CV em português...',
+    };
     try {
-        Utils.showLoading(targetLanguage === 'en' ? 'Converting to English resume...' : '正在转换为中文简历...');
-        const response = await apiClient.translateResume(targetLanguage);
+        Utils.showLoading(loadingMsgs[lang] || loadingMsgs.en);
+        const response = await apiClient.translateResume(lang);
 
         if (response.resume_html && response.resume_html.html) {
             displayResume(response.resume_html.html);
         }
-        updateResumeLanguageBadge(response.language || targetLanguage);
+        updateResumeLanguageBadge(response.language || lang);
         if (response.language_checklist) {
             renderLanguageChecklistPanel(response.language_checklist);
         } else {
-            await refreshLanguageChecklist(targetLanguage);
+            await refreshLanguageChecklist(lang);
         }
         Utils.hideLoading();
         const missing = response.language_checklist?.missing_count || 0;
-        const baseMsg = targetLanguage === 'en'
-            ? 'Resume converted to English (A4 single page)'
-            : '已转换为中文简历（A4 单页）';
+        const baseMsgs = {
+            zh: '已转换为简体中文简历（A4 单页）',
+            'zh-TW': '已轉換為繁體中文履歷（A4 單頁）',
+            en: 'Resume converted to English (A4 single page)',
+            pt: 'CV convertido para português (A4)',
+        };
+        const baseMsg = baseMsgs[lang] || baseMsgs.en;
         Utils.showToast(missing > 0 ? `${baseMsg} — ${missing} item(s) to review below` : baseMsg);
     } catch (error) {
         Utils.hideLoading();

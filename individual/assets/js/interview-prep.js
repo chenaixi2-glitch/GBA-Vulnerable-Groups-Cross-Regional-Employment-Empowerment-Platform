@@ -56,7 +56,7 @@ const INTERVIEW_PROGRAM_PREVIEWS = {
     },
 };
 
-let interviewMode = 'question_bank'; // question_bank | interactive
+let interviewMode = 'question_bank'; // question_bank | custom | interactive
 
 let interviewPrerequisites = {
     profileReady: false,
@@ -260,17 +260,25 @@ function selectInterviewMode(mode) {
     });
 
     const isInteractive = mode === 'interactive';
-    document.getElementById('question-bank-panel').classList.toggle('hidden', isInteractive);
+    const isCustom = mode === 'custom';
+    const showQuestionBank = !isInteractive && (!isCustom || interviewSession.questions.length > 0);
+    document.getElementById('question-bank-panel').classList.toggle('hidden', !showQuestionBank);
+    document.getElementById('custom-questions-panel')?.classList.toggle('hidden', !isCustom || interviewSession.questions.length > 0);
     document.getElementById('interactive-panel').classList.toggle('hidden', !isInteractive);
+    document.getElementById('program-version-section')?.classList.toggle('hidden', isCustom);
     document.getElementById('sidebar-progress-title').textContent = isInteractive
         ? 'Interview Progress'
-        : 'Question Bank Progress';
+        : (isCustom ? 'Custom Questions Progress' : 'Question Bank Progress');
 
     const startBtn = document.getElementById('btn-load-questions');
     if (startBtn) {
-        startBtn.innerHTML = isInteractive
-            ? '<i class="fas fa-comments mr-2"></i> Start Mock Interview'
-            : '<i class="fas fa-play mr-2"></i> Generate Question Bank';
+        if (isInteractive) {
+            startBtn.innerHTML = '<i class="fas fa-comments mr-2"></i> Start Mock Interview';
+        } else if (isCustom) {
+            startBtn.innerHTML = '<i class="fas fa-magic mr-2"></i> Generate Reference Answers';
+        } else {
+            startBtn.innerHTML = '<i class="fas fa-play mr-2"></i> Generate Question Bank';
+        }
     }
 
     updateProgramPreview();
@@ -400,6 +408,9 @@ async function loadInterviewQuestions() {
     if (interviewMode === 'interactive') {
         return startInteractiveInterview();
     }
+    if (interviewMode === 'custom') {
+        return loadCustomInterviewQuestions();
+    }
     const jobTitle = document.getElementById('job-title').value.trim();
     const industry = document.getElementById('job-industry').value;
 
@@ -466,6 +477,111 @@ async function loadInterviewQuestions() {
         Utils.hideLoading();
         Utils.showToast('Failed to generate questions: ' + error.message);
         console.error('Interview session error:', error);
+    }
+}
+
+function parseCustomQuestionsText(text) {
+    return (text || '')
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.replace(/^(Q|问|Question)[:：]\s*/i, '').replace(/^\d+[.)、]\s*/, '').trim())
+        .filter(Boolean);
+}
+
+function handleCustomQuestionsFileSelect(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const textarea = document.getElementById('custom-questions-text');
+        if (textarea) {
+            textarea.value = e.target.result;
+        }
+        document.getElementById('custom-questions-file-name').textContent = file.name;
+        document.getElementById('btn-clear-custom-file')?.classList.remove('hidden');
+    };
+    reader.readAsText(file, 'UTF-8');
+}
+
+function clearCustomQuestionsFile() {
+    const fileInput = document.getElementById('custom-questions-file');
+    if (fileInput) fileInput.value = '';
+    document.getElementById('custom-questions-file-name').textContent = '';
+    document.getElementById('btn-clear-custom-file')?.classList.add('hidden');
+}
+
+async function loadCustomInterviewQuestions() {
+    const jobTitle = document.getElementById('job-title').value.trim();
+    const questionsText = document.getElementById('custom-questions-text')?.value.trim() || '';
+    const questions = parseCustomQuestionsText(questionsText);
+
+    if (!jobTitle) {
+        Utils.showToast('Please enter a job title');
+        return;
+    }
+
+    if (!questions.length) {
+        Utils.showToast('Please enter or upload at least one interview question');
+        return;
+    }
+
+    if (!interviewPrerequisites.profileReady || !interviewPrerequisites.jobReady || !interviewPrerequisites.resumeReady) {
+        Utils.showToast('Please complete all prerequisite steps first');
+        return;
+    }
+
+    try {
+        Utils.showLoading('Generating personalized reference answers...');
+        const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
+            fields: {
+                jdText: ['interview-jd-text'],
+                industry: ['job-industry'],
+                employerType: ['interview-employer-type'],
+                experienceLevel: ['interview-experience-level'],
+            },
+        }) : null;
+
+        const response = await apiClient.generateCustomInterviewAnswers(questions, targetContext);
+
+        if (response.interview_qa && response.interview_qa.length > 0) {
+            interviewSession.questions = response.interview_qa.map((qa, index) => ({
+                id: qa.id || `q_custom_${index}`,
+                question: qa.question,
+                category: qa.category || 'Custom',
+                answer: qa.answer || '',
+                stage_id: qa.stage_id || 'custom',
+                stage_name: qa.stage_name || 'Custom Questions',
+                stage_index: qa.stage_index ?? 0,
+            }));
+            interviewSession.stages = buildQuestionBankStages(interviewSession.questions);
+            interviewSession.programVersion = 'custom';
+            interviewSession.programLabel = 'Custom Questions';
+        } else {
+            throw new Error('No reference answers generated. Ensure profile, job description, and resume are complete.');
+        }
+
+        interviewSession.jobTitle = jobTitle;
+        interviewSession.currentQuestionIndex = 0;
+        interviewSession.answers = [];
+
+        Utils.hideLoading();
+        Utils.showToast(`Generated reference answers for ${interviewSession.questions.length} custom questions`);
+
+        showInterviewInterface();
+        document.getElementById('custom-questions-panel')?.classList.add('hidden');
+        document.getElementById('question-bank-panel')?.classList.remove('hidden');
+        renderQuestionBankStageBanner();
+        displayCurrentQuestion();
+        updateProgress();
+
+        console.log('Custom interview session started:', interviewSession);
+    } catch (error) {
+        Utils.hideLoading();
+        Utils.showToast('Failed to generate reference answers: ' + error.message);
+        console.error('Custom interview session error:', error);
     }
 }
 
@@ -996,6 +1112,33 @@ function showInterviewInterface() {
     document.getElementById('answer-section').classList.remove('hidden');
 }
 
+function toggleReferenceAnswer() {
+    const content = document.getElementById('reference-answer-content');
+    const btn = document.getElementById('btn-toggle-reference');
+    if (!content || !btn) return;
+
+    const isHidden = content.classList.contains('hidden');
+    content.classList.toggle('hidden', !isHidden);
+    btn.textContent = isHidden ? 'Hide' : 'Show';
+}
+
+function updateReferenceAnswerDisplay(question) {
+    const section = document.getElementById('reference-answer-section');
+    const content = document.getElementById('reference-answer-content');
+    const btn = document.getElementById('btn-toggle-reference');
+    if (!section || !content) return;
+
+    if (question?.answer?.trim()) {
+        section.classList.remove('hidden');
+        content.textContent = question.answer;
+        content.classList.add('hidden');
+        if (btn) btn.textContent = 'Show';
+    } else {
+        section.classList.add('hidden');
+        content.textContent = '';
+    }
+}
+
 function displayCurrentQuestion() {
     const question = interviewSession.questions[interviewSession.currentQuestionIndex];
 
@@ -1015,6 +1158,7 @@ function displayCurrentQuestion() {
         interviewSession.currentQuestionIndex === interviewSession.questions.length - 1;
 
     document.getElementById('feedback-section').classList.add('hidden');
+    updateReferenceAnswerDisplay(question);
     renderQuestionBankStageBanner();
 }
 
@@ -1314,6 +1458,7 @@ function restartSession() {
 
         document.getElementById('question-section').classList.add('hidden');
         document.getElementById('answer-section').classList.add('hidden');
+        document.getElementById('reference-answer-section')?.classList.add('hidden');
         document.getElementById('feedback-section').classList.add('hidden');
         document.getElementById('report-section').classList.add('hidden');
         document.getElementById('qb-stage-banner')?.classList.add('hidden');
@@ -1327,6 +1472,9 @@ function restartSession() {
         document.getElementById('job-title').value = '';
         document.getElementById('company-name').value = '';
         document.getElementById('job-industry').value = '';
+        const customText = document.getElementById('custom-questions-text');
+        if (customText) customText.value = '';
+        clearCustomQuestionsFile();
         document.getElementById('answer-input').value = '';
         document.getElementById('interview-profile-text').value = '';
         document.getElementById('interview-jd-text').value = '';
@@ -1337,6 +1485,7 @@ function restartSession() {
         selectTone('professional');
 
         document.getElementById('btn-load-questions').disabled = true;
+        selectInterviewMode(interviewMode);
         Utils.showToast('Session reset');
     }
 }

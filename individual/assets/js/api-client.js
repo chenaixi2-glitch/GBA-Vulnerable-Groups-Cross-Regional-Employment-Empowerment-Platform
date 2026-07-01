@@ -234,6 +234,21 @@ class MockAPIService {
         return result;
     }
 
+    customInterviewAnswersPayload(questions) {
+        return questions.map((question, index) => ({
+            id: `qa_custom_${index + 1}`,
+            stage_id: 'custom',
+            stage_name: 'Custom Questions',
+            stage_index: 0,
+            category: 'Custom',
+            question,
+            answer: `Based on your profile and the target JD, here is a tailored reference answer for: "${question}". `
+                + 'Use STAR structure, cite a concrete project from your resume, and link outcomes to the role requirements.',
+            source_refs: ['Demo resume project', 'Target JD keywords'],
+            version: 1,
+        }));
+    }
+
     _mockInteractiveFollowUps() {
         return alexChenMock().interactiveFollowUps;
     }
@@ -590,25 +605,41 @@ class MockAPIService {
         throw new Error(`Unsupported export format: ${format}`);
     }
 
-    async translateResume(sessionId, targetLanguage) {
-        await this.delay(1200);
-        const isEn = String(targetLanguage).toLowerCase().startsWith('en');
-        const message = isEn ? 'translate resume to english' : 'convert to chinese resume';
-        const response = await this.chat(sessionId, message, []);
-        response.language_checklist = this.buildMockChecklist(isEn ? 'en' : 'zh');
-        return response;
-    }
+    normalizeResumeLanguage(targetLanguage) {
+        const raw = String(targetLanguage || 'zh').trim().toLowerCase().replace('_', '-');
+        if (raw === 'en' || raw === 'english') return 'en';
+        if (raw === 'zh-tw' || raw === 'zh-hant') return 'zh-TW';
+        if (raw === 'pt' || raw === 'pt-pt' || raw === 'pt-mo') return 'pt';
+        return 'zh';
+    },
 
     buildMockChecklist(language) {
-        const key = String(language).startsWith('en') ? 'en' : 'zh';
-        return alexChenMock().languageChecklists[key];
+        const lang = this.normalizeResumeLanguage(language);
+        const key = lang === 'en' || lang === 'pt' ? 'en' : 'zh';
+        const checklist = alexChenMock().languageChecklists[key];
+        return { ...checklist, language: lang };
+    }
+
+    async translateResume(sessionId, targetLanguage) {
+        await this.delay(1200);
+        const lang = this.normalizeResumeLanguage(targetLanguage);
+        const messageMap = {
+            en: 'translate resume to english',
+            pt: 'translate resume to portuguese',
+            'zh-TW': 'convert to traditional chinese resume',
+            zh: 'convert to chinese resume',
+        };
+        const response = await this.chat(sessionId, messageMap[lang] || messageMap.zh, []);
+        response.language = lang;
+        response.language_checklist = this.buildMockChecklist(lang);
+        return response;
     }
 
     async getLanguageChecklist(sessionId, language) {
         await this.delay(400);
-        const checklist = this.buildMockChecklist(String(language).startsWith('en') ? 'en' : 'zh');
+        const checklist = this.buildMockChecklist(language);
         return { language: checklist.language, language_checklist: checklist };
-    }
+    },
 
     buildMockJd(industry, experienceLevel, employerType = 'private') {
         const industryLabels = {
@@ -1525,6 +1556,39 @@ class APIClient {
             return response;
         } catch (error) {
             console.error('Interview session error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate reference answers for user-uploaded custom interview questions
+     */
+    async generateCustomInterviewAnswers(questions, targetContext = null) {
+        try {
+            if (!this.sessionId) {
+                this.generateSessionId();
+            }
+            const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
+            await this.syncTargetJobContext(ctx);
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                await this.mockService.delay(1200);
+                return {
+                    session_id: this.sessionId,
+                    interview_qa: this.mockService.customInterviewAnswersPayload(questions),
+                    message: `Generated reference answers for ${questions.length} custom questions (demo mode).`,
+                };
+            }
+            const response = await this.client.post('/interview/custom/generate-answers', {
+                session_id: this.sessionId,
+                questions,
+            });
+            if (response.data.session_id) {
+                this.saveSessionId(response.data.session_id);
+            }
+            return response.data;
+        } catch (error) {
+            console.error('Custom interview answers error:', error);
             throw error;
         }
     }

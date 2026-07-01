@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="{{HTML_LANG}}" class="{{THEME_CLASS}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{NAME}} - {{TARGET_ROLE}}</title>
+    <style>
+        :root {
+            {{CSS_VARIABLES}}
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            color: #333;
+            background: #fff;
+        }
+
+        /* Multi-page: allow natural flow up to 2 A4 pages */
+        .resume-container {
+            width: 210mm;
+            min-height: 297mm;
+            max-height: none;
+            margin: 0 auto;
+            padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
+            overflow: visible;
+        }
+
+        .resume-container.dense .section {
+            margin-bottom: calc(10px * var(--spacing-scale));
+        }
+
+        .resume-container.dense .item {
+            margin-bottom: calc(4px * var(--spacing-scale));
+        }
+
+        .resume-container.dense .section h2 {
+            margin-bottom: calc(6px * var(--spacing-scale));
+            padding-bottom: 2px;
+        }
+
+        .section {
+            margin-bottom: calc(14px * var(--spacing-scale));
+            page-break-inside: avoid;
+        }
+
+        .section h2 {
+            font-size: calc(var(--font-size) * 1.15);
+            color: #1a1a1a;
+            border-bottom: 2px solid #333;
+            padding-bottom: 3px;
+            margin-bottom: calc(8px * var(--spacing-scale));
+        }
+
+        .section-profile .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .section-profile .profile-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .section-profile .profile-photo {
+            width: 96px;
+            height: 128px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .section-profile .profile-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .section-profile .name {
+            font-size: calc(var(--font-size) * 1.6);
+            font-weight: bold;
+        }
+
+        .section-profile .contact {
+            color: #555;
+            font-size: calc(var(--font-size) * 0.9);
+        }
+
+        .section-profile .github {
+            color: #0066cc;
+            font-size: calc(var(--font-size) * 0.9);
+        }
+
+        .education {
+            margin-top: 8px;
+        }
+
+        .edu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+
+        .edu-school {
+            font-weight: 600;
+        }
+
+        .edu-detail {
+            color: #555;
+            font-size: calc(var(--font-size) * 0.9);
+        }
+
+        .item {
+            margin-bottom: calc(12px * var(--spacing-scale));
+        }
+
+        .item-title {
+            font-size: calc(var(--font-size) * 1.05);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .item-content {
+            color: #444;
+            white-space: pre-wrap;
+        }
+
+        .double-column .section-skills {
+            column-count: 2;
+            column-gap: 24px;
+        }
+
+        html.dark body {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        html.dark .section h2 {
+            color: #fff;
+            border-bottom-color: #888;
+        }
+
+        html.dark .item-content {
+            color: #ccc;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+            }
+            .resume-container {
+                width: 210mm;
+                max-height: none;
+                overflow: visible;
+                padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-container {{LAYOUT_CLASS}} {{DENSE_CLASS}}">
+        {{SECTIONS_HTML}}
+    </div>
+</body>
+</html>

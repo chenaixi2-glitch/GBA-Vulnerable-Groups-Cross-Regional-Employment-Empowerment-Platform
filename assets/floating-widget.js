@@ -250,6 +250,9 @@
 
         <!-- Tab: Navigate -->
         <div class="gwa-pane active" id="gwa-pane-nav">
+            <button type="button" class="gwa-top-btn" id="gwa-site-guide-btn" style="margin-bottom:.65rem;">
+                <i class="fas fa-compass"></i>Site Guide
+            </button>
             ${navLinks.length
                 ? `<p class="gwa-section-title">On this page</p>${renderLinks(navLinks)}`
                 : `<p style="font-size:.82rem;color:#9ca3af;padding:.25rem 0;">No sections on this page.</p>`
@@ -420,5 +423,23 @@
     const btn2 = document.getElementById('gwa-back-top-2');
     if (btn1) btn1.addEventListener('click', backToTop);
     if (btn2) btn2.addEventListener('click', backToTop);
+
+    var guideBtn = document.getElementById('gwa-site-guide-btn');
+    if (guideBtn) {
+        guideBtn.addEventListener('click', function () {
+            closePanel();
+            if (window.GBAGuide && typeof window.GBAGuide.start === 'function') {
+                window.GBAGuide.start();
+            } else {
+                var portalPath = page === 'corporate'
+                    ? 'portal.html?guide=1'
+                    : page === 'individual'
+                        ? 'portal.html?guide=1'
+                        : '../index.html?guide=1';
+                if (page === 'home') portalPath = 'index.html?guide=1';
+                window.location.href = portalPath;
+            }
+        });
+    }
 
 })();

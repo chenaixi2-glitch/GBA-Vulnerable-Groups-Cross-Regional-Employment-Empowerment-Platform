@@ -9,6 +9,7 @@ from typing import Any
 
 from agents.json_contracts import InterviewGenerationOutput
 from models.llm import get_llm, ainvoke_json_with_schema
+from prompts.interview_custom_answer import CUSTOM_INTERVIEW_ANSWER_PROMPT
 from prompts.interview_generation import (
     INTERVIEW_GENERATION_PROMPT,
     STANDALONE_INTERVIEW_GENERATION_PROMPT,
@@ -28,6 +29,9 @@ logger = get_logger("agent")
 FIXED_SELF_INTRO_ID = "qa_self_intro"
 FIXED_SELF_INTRO_CATEGORY = "简历深挖与个人经历"
 FIXED_SELF_INTRO_QUESTION = "自我介绍"
+MAX_CUSTOM_QUESTIONS = 30
+CUSTOM_STAGE_ID = "custom"
+CUSTOM_STAGE_NAME = "自定义题目"
 
 
 def _is_self_intro_question(question: str) -> bool:
@@ -150,6 +154,176 @@ def _has_full_context(state: CopilotState) -> bool:
         and state.candidate_profile is not None
         and state.resume_content_json is not None
     )
+
+
+def parse_custom_questions(raw: str | list[str]) -> list[str]:
+    """Normalize user-provided interview questions from text or list."""
+    if isinstance(raw, list):
+        lines = [str(item).strip() for item in raw if str(item).strip()]
+    else:
+        text = (raw or "").replace("\r\n", "\n").replace("\r", "\n")
+        lines = []
+        for line in text.split("\n"):
+            cleaned = line.strip()
+            if not cleaned:
+                continue
+            if cleaned.startswith(("Q:", "Q：", "问:", "问：", "Question:", "Question：")):
+                cleaned = re.sub(r"^(Q|问|Question)[:：]\s*", "", cleaned, flags=re.I).strip()
+            cleaned = re.sub(r"^\d+[.)、]\s*", "", cleaned).strip()
+            if cleaned:
+                lines.append(cleaned)
+    seen: set[str] = set()
+    unique: list[str] = []
+    for q in lines:
+        key = q.lower()
+        if key not in seen:
+            seen.add(key)
+            unique.append(q)
+    return unique[:MAX_CUSTOM_QUESTIONS]
+
+
+def _assign_custom_stage(interview_qa: list[InterviewQA]) -> list[InterviewQA]:
+    return [
+        qa.model_copy(update={
+            "stage_id": CUSTOM_STAGE_ID,
+            "stage_name": CUSTOM_STAGE_NAME,
+            "stage_index": 0,
+        })
+        for qa in interview_qa
+    ]
+
+
+def _align_custom_questions(
+    user_questions: list[str],
+    interview_qa: list[InterviewQA],
+) -> list[InterviewQA]:
+    """Ensure output order and question text match user input."""
+    by_question = {item.question.strip(): item for item in interview_qa}
+    aligned: list[InterviewQA] = []
+    for index, question in enumerate(user_questions):
+        matched = by_question.get(question)
+        if matched is None:
+            for key, item in by_question.items():
+                if key.lower() == question.lower():
+                    matched = item
+                    break
+        if matched is None and index < len(interview_qa):
+            matched = interview_qa[index]
+        if matched is None:
+            matched = InterviewQA(
+                id=f"qa_custom_{uuid.uuid4().hex[:12]}",
+                category="用户自定义",
+                question=question,
+                answer="",
+            )
+        aligned.append(matched.model_copy(update={
+            "id": matched.id or f"qa_custom_{uuid.uuid4().hex[:12]}",
+            "question": question,
+            "category": matched.category or "用户自定义",
+        }))
+    return aligned
+
+
+async def custom_interview_answers_async(
+    state: CopilotState,
+    questions: list[str],
+) -> dict[str, Any]:
+    """Generate reference answers for user-provided interview questions."""
+    logger.info(
+        "Custom interview answers started for session %s (%d questions)",
+        state.session_id,
+        len(questions),
+    )
+
+    if not _has_full_context(state):
+        return {
+            "interview_qa": [],
+            "workflow_trace": append_trace(
+                state,
+                node="custom_interview_agent",
+                status="failed",
+                input_summary=f"用户上传 {len(questions)} 道自定义面试题。",
+                output_summary="请先完成候选人画像、岗位 JD 与简历内容后再生成参考答案。",
+            ),
+        }
+
+    if not questions:
+        return {
+            "interview_qa": [],
+            "workflow_trace": append_trace(
+                state,
+                node="custom_interview_agent",
+                status="failed",
+                input_summary="用户未提供有效面试题。",
+                output_summary="请至少输入一道面试题。",
+            ),
+        }
+
+    questions_list = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(questions))
+    prompt = CUSTOM_INTERVIEW_ANSWER_PROMPT.format(
+        question_count=len(questions),
+        questions_list=questions_list,
+        job_json=build_enriched_job_json(state),
+        profile_json=state.candidate_profile.model_dump_json(indent=2),
+        resume_json=state.resume_content_json.model_dump_json(indent=2),
+    )
+
+    try:
+        llm = get_llm()
+        parsed = await ainvoke_json_with_schema(
+            llm, prompt, InterviewGenerationOutput, logger, "Custom Interview Agent",
+        )
+    except RuntimeError as exc:
+        logger.error("Custom Interview Agent failed: %s", exc)
+        return {
+            "interview_qa": [],
+            "workflow_trace": append_trace(
+                state,
+                node="custom_interview_agent",
+                status="failed",
+                input_summary=f"用户上传 {len(questions)} 道自定义面试题。",
+                output_summary="参考答案生成失败：模型输出格式异常，请重试。",
+                error=str(exc),
+            ),
+        }
+
+    interview_qa = _align_custom_questions(questions, _build_interview_qa(parsed))
+    interview_qa = _assign_custom_stage(interview_qa)
+
+    if not any(qa.answer.strip() for qa in interview_qa):
+        return {
+            "interview_qa": [],
+            "workflow_trace": append_trace(
+                state,
+                node="custom_interview_agent",
+                status="failed",
+                input_summary=f"用户上传 {len(questions)} 道自定义面试题。",
+                output_summary="未能生成有效参考答案，请重试。",
+            ),
+        }
+
+    meta = state.meta.model_copy(update={
+        "dirty_flags": state.meta.dirty_flags.model_copy(update={
+            "interview_dirty": False,
+        })
+    })
+
+    logger.info("Custom Interview Agent generated %d reference answers", len(interview_qa))
+    return {
+        "interview_qa": interview_qa,
+        "meta": meta,
+        "workflow_trace": append_trace(
+            state,
+            node="custom_interview_agent",
+            input_summary=f"为用户上传的 {len(questions)} 道自定义面试题生成参考答案。",
+            output_summary=f"已生成 {len(interview_qa)} 条基于画像与 JD 的参考答案。",
+            artifacts={
+                "interview_qa_count": len(interview_qa),
+                "custom_questions": True,
+                "categories": sorted({item.category for item in interview_qa}),
+            },
+        ),
+    }
 
 
 async def interview_node_async(state: CopilotState) -> dict[str, Any]:

@@ -10,6 +10,9 @@ from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 from tools.resume_layout import SECTION_LABELS, normalize_language
+from log import get_logger
+
+logger = get_logger("app")
 
 if TYPE_CHECKING:
     from workflow.state import ResumeContent
@@ -152,6 +155,24 @@ def html_to_pdf_bytes(html: str) -> bytes:
         return HTML(string=prepared, base_url=str(_TEMPLATE_DIR)).write_pdf()
     except OSError as exc:
         raise WeasyPrintUnavailableError(exc) from exc
+
+
+def count_pdf_pages_from_html(html: str) -> int | None:
+    """Render HTML with WeasyPrint and return PDF page count, or None if unavailable."""
+    if not weasyprint_available():
+        return None
+    prepared = prepare_html_for_pdf(html)
+    _ensure_weasyprint_dll_path()
+    try:
+        from weasyprint import HTML
+    except OSError:
+        return None
+    try:
+        document = HTML(string=prepared, base_url=str(_TEMPLATE_DIR)).render()
+        return len(document.pages)
+    except OSError as exc:
+        logger.warning("PDF page count failed: %s", exc)
+        return None
 
 
 def resume_content_to_docx_bytes(content: "ResumeContent") -> bytes:

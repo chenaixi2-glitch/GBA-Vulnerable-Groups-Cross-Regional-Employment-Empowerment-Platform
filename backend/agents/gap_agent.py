@@ -3,56 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-import uuid
 from typing import Any
 
-from agents.json_contracts import GapAnalysisOutput
-from models.llm import get_llm, ainvoke_json_with_schema
-from prompts.gap_analysis import GAP_ANALYSIS_PROMPT
-from tools.target_job_context import build_enriched_job_json
-from workflow.state import CopilotState, Gap, Question
+from agents.gap_analysis_core import has_gap_analysis_context, run_gap_analysis
+from workflow.state import CopilotState
 from workflow.trace import append_trace
 from log import get_logger
 
 logger = get_logger("agent")
 
 
-def _build_gap_list(parsed: GapAnalysisOutput) -> list[Gap]:
-    gaps: list[Gap] = []
-    for item in parsed.gaps:
-        gaps.append(Gap(
-            id=item.id or f"gap_{uuid.uuid4().hex[:12]}",
-            type=item.type,
-            severity=item.severity,
-            description=item.description,
-            related_section_ids=item.related_section_ids,
-            resolved=item.resolved,
-            resolution_source=item.resolution_source,
-        ))
-    return gaps
-
-
-def _build_question_list(parsed: GapAnalysisOutput) -> list[Question]:
-    questions: list[Question] = []
-    for item in parsed.questions_to_ask:
-        questions.append(Question(
-            id=item.id or f"q_{uuid.uuid4().hex[:12]}",
-            question=item.question,
-            reason=item.reason,
-            target_field=item.target_field,
-            priority=item.priority,
-            status=item.status,
-            answer_ref=item.answer_ref,
-        ))
-    return questions
-
-
 async def gap_node_async(state: CopilotState) -> dict[str, Any]:
     """Gap Analysis Agent 异步节点函数。"""
     logger.info("Gap Analysis Agent started for session %s", state.session_id)
 
-    has_job_context = state.job is not None or bool((state.meta.target_jd_text or "").strip())
-    if not has_job_context or state.candidate_profile is None:
+    if not has_gap_analysis_context(state):
         logger.warning("Gap Analysis skipped due to missing job or profile")
         return {
             "gaps": [],
@@ -71,13 +36,8 @@ async def gap_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    prompt = GAP_ANALYSIS_PROMPT.format(
-        job_json=build_enriched_job_json(state),
-        profile_json=state.candidate_profile.model_dump_json(indent=2),
-    )
-    llm = get_llm()
     try:
-        parsed = await ainvoke_json_with_schema(llm, prompt, GapAnalysisOutput, logger, "Gap Analysis Agent")
+        gaps, questions = await run_gap_analysis(state, resolution_source="gap_analysis")
     except RuntimeError as exc:
         logger.error("Gap Analysis Agent failed: %s", exc)
         return {
@@ -92,9 +52,6 @@ async def gap_node_async(state: CopilotState) -> dict[str, Any]:
                 error=str(exc),
             ),
         }
-
-    gaps = _build_gap_list(parsed)
-    questions = _build_question_list(parsed)
 
     logger.info("Gap Analysis generated %d gaps and %d questions", len(gaps), len(questions))
 

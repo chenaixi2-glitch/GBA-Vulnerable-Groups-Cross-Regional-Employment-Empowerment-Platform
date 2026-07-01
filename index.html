@@ -1583,20 +1583,6 @@
         }
 
         function initLanguageMenu() {
-            var LANG_LABELS = {
-                en: 'English',
-                'zh-CN': 'Simplified Chinese',
-                'zh-TW': 'Traditional Chinese',
-                pt: 'Português'
-            };
-            var LANG_KEY = 'gba_ui_lang';
-
-            try {
-                var saved = localStorage.getItem(LANG_KEY);
-                var cur = document.getElementById('current-language');
-                if (saved && LANG_LABELS[saved] && cur) cur.textContent = LANG_LABELS[saved];
-            } catch (e) {}
-
             var selector = document.querySelector('.language-selector');
             var toggleBtn = document.getElementById('language-toggle-btn');
 
@@ -1612,20 +1598,6 @@
                     e.stopPropagation();
                 });
             }
-
-            document.querySelectorAll('[data-lang]').forEach(function (node) {
-                node.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    var code = node.getAttribute('data-lang');
-                    var curEl = document.getElementById('current-language');
-                    if (LANG_LABELS[code] && curEl) curEl.textContent = LANG_LABELS[code];
-                    try {
-                        localStorage.setItem(LANG_KEY, code);
-                    } catch (err) {}
-                    showToast('Language preference saved.');
-                    if (selector) selector.classList.remove('is-open');
-                });
-            });
 
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
@@ -2073,7 +2045,9 @@
             });
         }
     </script>
+    <script src="assets/i18n/i18n.js"></script>
     <script src="assets/site-enhancements.js"></script>
     <script src="assets/floating-widget.js"></script>
+    <script src="assets/site-guide.js"></script>
 </body>
 </html>

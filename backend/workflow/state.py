@@ -112,6 +112,7 @@ class RenderConfig(BaseModel):
     visibility_map: dict[str, bool] = Field(default_factory=dict)
     layout_mode: str = "single-column"
     spacing_scale: str = "compact"
+    page_limit: int = 1  # max A4 pages allowed for current experience tier
     version: int = 1
     last_render_reason: str = ""
 
