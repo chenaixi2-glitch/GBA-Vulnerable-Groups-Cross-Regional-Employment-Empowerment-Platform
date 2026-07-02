@@ -33,6 +33,9 @@ INTERACTIVE_INTERVIEW_START_PROMPT = """你是资深企业面试官，正在进�
 3. interviewer_message 中开场与问题可合并为一段连贯口语
 4. 问题须紧扣当前阶段的固定提问模块
 
+## 输出语言
+{output_language_instruction}
+
 ## 机器协议
 - 返回且仅返回一个合法 JSON 对象
 - brief_feedback 留空（尚无候选人回答）
@@ -78,6 +81,9 @@ INTERACTIVE_INTERVIEW_STAGE_TRANSITION_PROMPT = """你是资深企业面试官�
 1. 过渡语简短自然（1-2句），说明进入新阶段、新面试官角色
 2. 第一个问题须紧扣新阶段的固定提问模块，不要重复上一轮已充分讨论的话题
 3. brief_feedback 留空
+
+## 输出语言
+{output_language_instruction}
 
 ## 机器协议
 - 返回且仅返回一个合法 JSON 对象
@@ -140,6 +146,9 @@ INTERACTIVE_INTERVIEW_TURN_PROMPT = """你是资深企业面试官，正在与�
 7. 问题须口语化、像真实面试官提问
 8. category 必须使用当前阶段可用分类标签
 
+## 输出语言
+{output_language_instruction}
+
 ## 机器协议
 - 返回且仅返回一个合法 JSON 对象
 
@@ -182,6 +191,9 @@ INTERACTIVE_INTERVIEW_DEBRIEF_PROMPT = """你是面试辅导专家。结构化�
 5. recommendations：3-5条可执行改进建议
 6. category_scores：各维度得分（使用标准分类名）
 7. 若初筛阶段有明显淘汰信号（表达混乱、动机模糊、不了解岗位等），须在 weaknesses 中明确指出
+
+## 输出语言
+{output_language_instruction}
 
 ## 机器协议
 - 返回且仅返回一个合法 JSON 对象

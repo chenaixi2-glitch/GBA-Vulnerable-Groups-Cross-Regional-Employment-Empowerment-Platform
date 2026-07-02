@@ -35,6 +35,17 @@ const EXPERIENCE_LABELS = {
     executive: 'Executive / Leadership',
 };
 
+function uiT(key, fallback, vars) {
+    if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+    let s = fallback;
+    if (vars && s) {
+        Object.keys(vars).forEach((k) => {
+            s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+    }
+    return s;
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializeResumeGenerator();
@@ -74,13 +85,13 @@ function setupExportModal() {
     document.getElementById('btn-save-and-export')?.addEventListener('click', async () => {
         hideSaveModal();
         try {
-            Utils.showLoading('Saving to your account...');
+            Utils.showLoading(uiT('resume.toast.savingToAccount', 'Saving to your account...'));
             await apiClient.saveResumeToAccount();
             Utils.hideLoading();
-            Utils.showToast('Resume saved to your account');
+            Utils.showToast(uiT('resume.toast.savedToAccount', 'Resume saved to your account'));
         } catch (error) {
             Utils.hideLoading();
-            Utils.showToast('Save failed: ' + error.message);
+            Utils.showToast(uiT('resume.toast.saveFailed', 'Save failed: {msg}', { msg: error.message }));
             return;
         }
         await runPendingExport();
@@ -192,7 +203,7 @@ async function fillSuggestedJd(industry, experienceLevel, employerType, options 
     try {
         if (generateBtn) generateBtn.disabled = true;
         if (!silent) {
-            Utils.showLoading('Generating suggested job description...');
+            Utils.showLoading(uiT('resume.toast.generatingJd', 'Generating suggested job description...'));
         }
 
         const result = await apiClient.generateJobDescription(
@@ -208,14 +219,14 @@ async function fillSuggestedJd(industry, experienceLevel, employerType, options 
             document.getElementById('jd-generated-hint')?.classList.remove('hidden');
             if (!silent) {
                 const cacheMsg = result.from_cache
-                    ? 'Loaded suggested job description from cache — you can edit it before continuing'
-                    : 'Suggested job description generated — you can edit it before continuing';
+                    ? uiT('resume.toast.jdFromCache', 'Loaded suggested job description from cache — you can edit it before continuing')
+                    : uiT('resume.toast.jdGenerated', 'Suggested job description generated — you can edit it before continuing');
                 Utils.showToast(cacheMsg);
             }
         }
     } catch (error) {
         if (!silent) {
-            Utils.showToast('Failed to generate job description: ' + error.message);
+            Utils.showToast(uiT('resume.toast.jdGenerateFailed', 'Failed to generate job description: {msg}', { msg: error.message }));
         }
         console.error('JD generation error:', error);
     } finally {
@@ -232,7 +243,7 @@ async function generateSuggestedJd() {
     const employerType = document.getElementById('employer-type-select')?.value || '';
 
     if (!industry || !experienceLevel || !employerType) {
-        Utils.showToast('Please select industry, employer type, and experience level first');
+        Utils.showToast(uiT('resume.toast.selectIndustryFirst', 'Please select industry, employer type, and experience level first'));
         return;
     }
 
@@ -293,13 +304,13 @@ function handleFile(file) {
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     
     if (!validTypes.includes(fileExtension)) {
-        Utils.showToast('不支持的文件格式，请上传 PDF、DOCX、TXT 或 MD');
+        Utils.showToast(uiT('resume.toast.invalidFileType', 'Unsupported file format. Please upload PDF, DOCX, TXT, or MD'));
         return;
     }
 
     // Validate file size (10MB max)
     if (file.size > 10 * 1024 * 1024) {
-        Utils.showToast('File too large. Maximum size is 10MB');
+        Utils.showToast(uiT('resume.toast.fileTooLarge', 'File too large. Maximum size is 10MB'));
         return;
     }
 
@@ -313,7 +324,7 @@ function handleFile(file) {
     // Enable continue button
     document.getElementById('btn-upload-resume').disabled = false;
 
-    Utils.showToast('File uploaded successfully');
+    Utils.showToast(uiT('resume.toast.fileUploaded', 'File uploaded successfully'));
 }
 
 /**
@@ -333,12 +344,12 @@ async function uploadResume() {
     const resumeText = document.getElementById('resume-text').value.trim();
 
     if (!currentFile && !resumeText) {
-        Utils.showToast('Please upload a file or paste resume text');
+        Utils.showToast(uiT('resume.toast.uploadOrPaste', 'Please upload a file or paste resume text'));
         return;
     }
 
     try {
-        Utils.showLoading('Uploading resume...');
+        Utils.showLoading(uiT('resume.toast.uploadingResume', 'Uploading resume...'));
         updateStepIndicator(1, 'completed');
 
         let response;
@@ -352,7 +363,7 @@ async function uploadResume() {
         }
 
         Utils.hideLoading();
-        Utils.showToast('Resume analyzed successfully');
+        Utils.showToast(uiT('resume.toast.analyzed', 'Resume analyzed successfully'));
 
         await ProfileEditor.initFromUpload(response);
 
@@ -362,7 +373,7 @@ async function uploadResume() {
         console.log('Profile agent response:', response);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to upload resume: ' + error.message);
+        Utils.showToast(uiT('resume.toast.uploadFailed', 'Failed to upload resume: {msg}', { msg: error.message }));
         console.error('Upload error:', error);
     }
 }
@@ -378,13 +389,13 @@ async function generateResume() {
 
     if (!jdText) {
         if (!industry || !experienceLevel || !employerType) {
-            Utils.showToast('Paste a job description, or select industry, employer type, and experience level to generate one');
+            Utils.showToast(uiT('resume.toast.pasteOrSelectJd', 'Paste a job description, or select industry, employer type, and experience level to generate one'));
             return;
         }
         await fillSuggestedJd(industry, experienceLevel, employerType, { silent: false });
         jdText = document.getElementById('jd-text').value.trim();
         if (!jdText) {
-            Utils.showToast('Could not generate job description. Please try again or paste one manually');
+            Utils.showToast(uiT('resume.toast.jdGenerateRetry', 'Could not generate job description. Please try again or paste one manually'));
             return;
         }
     }
@@ -396,7 +407,7 @@ async function generateResume() {
         jdUserConfirmed,
     });
     if (!confirmResult?.confirmed) {
-        Utils.showToast('已取消，请确认岗位描述后再生成简历');
+        Utils.showToast(uiT('resume.toast.cancelledConfirmJd', 'Cancelled — please confirm the job description before generating the resume'));
         return;
     }
     jdText = confirmResult.jd_text || document.getElementById('jd-text').value.trim();
@@ -407,7 +418,7 @@ async function generateResume() {
     try {
         await syncDraftBeforeGenerate();
 
-        Utils.showLoading('Analyzing job description...');
+        Utils.showLoading(uiT('resume.toast.analyzingJd', 'Analyzing job description...'));
         document.getElementById('agent-status-panel').classList.remove('hidden');
         document.getElementById('empty-state').classList.add('hidden');
 
@@ -438,19 +449,19 @@ async function generateResume() {
             alignmentHint: jdAlignmentHint,
         });
         if (!optimizationResult?.proceed) {
-            Utils.showToast('已取消简历生成');
+            Utils.showToast(uiT('resume.toast.cancelledGenerate', 'Resume generation cancelled'));
             return;
         }
 
         const answered = (optimizationResult.answers || []).filter((a) => a.answer);
         if (answered.length) {
-            Utils.showLoading('Updating profile with your answers...');
+            Utils.showLoading(uiT('resume.toast.updatingProfile', 'Updating profile with your answers...'));
             await apiClient.submitOptimizationClarifications(answered);
             Utils.hideLoading();
         }
 
         updateAgentStatus('agent-content', 'running');
-        Utils.showLoading('Generating your customized resume...');
+        Utils.showLoading(uiT('resume.toast.generatingResume', 'Generating your customized resume...'));
 
         const resumeResponse = await apiClient.generateResume(
             'Please generate a customized resume based on my experience and target position. Keep all content within one A4 page.',
@@ -469,7 +480,7 @@ async function generateResume() {
                 displayResume(resumeData.resume_html.html);
                 updateResumeLanguageBadge('zh');
             } else {
-                throw new Error('Resume HTML not available');
+                throw new Error(uiT('errors.resumeHtmlUnavailable', 'Resume HTML not available'));
             }
         }
 
@@ -484,14 +495,14 @@ async function generateResume() {
 
         await refreshLanguageChecklist(currentResumeLanguage);
 
-        Utils.showToast('Resume generated successfully!');
+        Utils.showToast(uiT('resume.toast.generated', 'Resume generated successfully!'));
 
         document.getElementById('resume-preview-section').scrollIntoView({ behavior: 'smooth' });
 
         console.log('Resume generation complete:', resumeResponse);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to generate resume: ' + error.message);
+        Utils.showToast(uiT('resume.toast.generateFailed', 'Failed to generate resume: {msg}', { msg: error.message }));
         console.error('Generation error:', error);
 
         updateAgentStatus('agent-jd', 'failed');
@@ -508,7 +519,7 @@ function displayGapAnalysis(gaps) {
     const container = document.getElementById('gap-analysis-content');
     
     if (!gaps || gaps.length === 0) {
-        container.innerHTML = '<p class="text-gray-600">No significant skill gaps detected!</p>';
+        container.innerHTML = '<p class="text-gray-600">' + uiT('resume.toast.noGaps', 'No significant skill gaps detected!') + '</p>';
         return;
     }
 
@@ -517,10 +528,10 @@ function displayGapAnalysis(gaps) {
             <div class="flex items-start justify-between mb-2">
                 <div>
                     <h4 class="font-bold text-gray-900">${gap.skill || gap.description}</h4>
-                    <p class="text-sm text-gray-600 mt-1">${gap.suggestion || 'Consider developing this skill'}</p>
+                    <p class="text-sm text-gray-600 mt-1">${gap.suggestion || uiT('resume.toast.considerSkill', 'Consider developing this skill')}</p>
                 </div>
                 <span class="px-3 py-1 rounded-full text-xs font-medium ${getSeverityClass(gap.severity)}">
-                    ${gap.severity || 'Medium'} Priority
+                    ${gap.severity || 'Medium'} ${uiT('resume.toast.priority', 'Priority')}
                 </span>
             </div>
             ${gap.type ? `<div class="text-xs text-gray-500">Type: ${gap.type}</div>` : ''}
@@ -566,6 +577,7 @@ function updateResumeLanguageBadge(language) {
     const a4Badge = document.getElementById('resume-a4-badge');
 
     if (badge) {
+        badge.dataset.activeLang = currentResumeLanguage;
         badge.textContent = typeof resumeLangDisplayLabel === 'function'
             ? resumeLangDisplayLabel(currentResumeLanguage)
             : currentResumeLanguage;
@@ -617,10 +629,10 @@ async function translateResumeToPortuguese() {
 async function translateResume(targetLanguage) {
     const lang = typeof normalizeResumeLang === 'function' ? normalizeResumeLang(targetLanguage) : targetLanguage;
     const loadingMsgs = {
-        zh: '正在转换为简体中文简历...',
-        'zh-TW': '正在轉換為繁體中文履歷...',
-        en: 'Converting to English resume...',
-        pt: 'A converter para CV em português...',
+        zh: uiT('resume.toast.translatingZh', 'Converting to Simplified Chinese resume...'),
+        'zh-TW': uiT('resume.toast.translatingZhTw', 'Converting to Traditional Chinese resume...'),
+        en: uiT('resume.toast.translatingEn', 'Converting to English resume...'),
+        pt: uiT('resume.toast.translatingPt', 'Converting to Portuguese resume...'),
     };
     try {
         Utils.showLoading(loadingMsgs[lang] || loadingMsgs.en);
@@ -638,16 +650,18 @@ async function translateResume(targetLanguage) {
         Utils.hideLoading();
         const missing = response.language_checklist?.missing_count || 0;
         const baseMsgs = {
-            zh: '已转换为简体中文简历（A4 单页）',
-            'zh-TW': '已轉換為繁體中文履歷（A4 單頁）',
-            en: 'Resume converted to English (A4 single page)',
-            pt: 'CV convertido para português (A4)',
+            zh: uiT('resume.toast.convertedZh', 'Resume converted to Simplified Chinese (A4 single page)'),
+            'zh-TW': uiT('resume.toast.convertedZhTw', 'Resume converted to Traditional Chinese (A4 single page)'),
+            en: uiT('resume.toast.convertedEn', 'Resume converted to English (A4 single page)'),
+            pt: uiT('resume.toast.convertedPt', 'Resume converted to Portuguese (A4)'),
         };
         const baseMsg = baseMsgs[lang] || baseMsgs.en;
-        Utils.showToast(missing > 0 ? `${baseMsg} — ${missing} item(s) to review below` : baseMsg);
+        Utils.showToast(missing > 0
+            ? baseMsg + uiT('resume.toast.itemsToReview', ' — {count} item(s) to review below', { count: missing })
+            : baseMsg);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Translation failed: ' + error.message);
+        Utils.showToast(uiT('resume.toast.translationFailed', 'Translation failed: {msg}', { msg: error.message }));
         console.error('Translation error:', error);
     }
 }
@@ -657,12 +671,12 @@ async function translateResume(targetLanguage) {
  */
 async function optimizeResume() {
     if (!resumeGenerated) {
-        Utils.showToast('Please generate a resume first');
+        Utils.showToast(uiT('resume.toast.generateFirst', 'Please generate a resume first'));
         return;
     }
 
     try {
-        Utils.showLoading('Analyzing gaps for optimization...');
+        Utils.showLoading(uiT('resume.toast.analyzingGaps', 'Analyzing gaps for optimization...'));
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null;
         await apiClient.syncTargetJobContext(targetContext);
 
@@ -683,11 +697,11 @@ async function optimizeResume() {
 
         const answered = (optimizationResult.answers || []).filter((a) => a.answer);
         if (answered.length) {
-            Utils.showLoading('Applying your clarifications...');
+            Utils.showLoading(uiT('resume.toast.applyingClarifications', 'Applying your clarifications...'));
             await apiClient.submitOptimizationClarifications(answered);
         }
 
-        Utils.showLoading('Optimizing resume for one A4 page...');
+        Utils.showLoading(uiT('resume.toast.optimizingA4', 'Optimizing resume for one A4 page...'));
         const response = await apiClient.optimizeResume(
             'Optimize my resume for the target job. Shorten wording and spacing so the entire resume fits on one A4 page without losing key achievements.',
             targetContext
@@ -703,10 +717,10 @@ async function optimizeResume() {
         }
         updateResumeLanguageBadge(response.resume_content_json?.meta?.language || currentResumeLanguage);
         Utils.hideLoading();
-        Utils.showToast('Resume optimized for one A4 page');
+        Utils.showToast(uiT('resume.toast.optimizedA4', 'Resume optimized for one A4 page'));
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Optimization failed: ' + error.message);
+        Utils.showToast(uiT('resume.toast.optimizeFailed', 'Optimization failed: {msg}', { msg: error.message }));
         console.error('Optimization error:', error);
     }
 }
@@ -752,11 +766,11 @@ async function downloadResume(format = 'html') {
             if (resumeData.resume_html && resumeData.resume_html.html) {
                 const blob = new Blob([resumeData.resume_html.html], { type: 'text/html' });
                 Utils.downloadFile(blob, 'resume.html');
-                Utils.showToast('Resume downloaded');
+                Utils.showToast(uiT('resume.toast.downloaded', 'Resume downloaded'));
             }
         }
     } catch (error) {
-        Utils.showToast('Download failed: ' + error.message);
+        Utils.showToast(uiT('resume.toast.downloadFailed', 'Download failed: {msg}', { msg: error.message }));
         console.error('Download error:', error);
     }
 }
@@ -788,26 +802,26 @@ async function resolveExportFilename(format) {
 }
 
 async function tryBrowserPdfFallback() {
-    const confirmed = window.confirm(
-        '服务端 PDF 导出暂不可用。\n\n是否改用浏览器打印？\n请在打印对话框中选择「另存为 PDF」或「Microsoft Print to PDF」。'
-    );
+    const confirmed = window.confirm(uiT('resume.toast.pdfFallbackConfirm', 'Server PDF export is unavailable.\n\nUse browser print instead?\nChoose "Save as PDF" or "Microsoft Print to PDF" in the print dialog.'));
     if (!confirmed) return false;
 
     const resumeData = await apiClient.getResumeHtml();
     const html = resumeData?.resume_html?.html;
     if (!html) {
-        Utils.showToast('暂无简历 HTML，无法打印');
+        Utils.showToast(uiT('resume.toast.noHtmlForPrint', 'No resume HTML available for printing'));
         return false;
     }
 
     await apiClient.printResumeAsPdf(html);
-    Utils.showToast('请在打印对话框中选择「另存为 PDF」');
+    Utils.showToast(uiT('resume.toast.printSaveAsPdf', 'Choose "Save as PDF" in the print dialog'));
     return true;
 }
 
 async function exportResume(format = 'pdf') {
     const normalized = String(format || 'pdf').toLowerCase();
-    const loadingMsg = normalized === 'pdf' ? '正在导出 PDF...' : 'Exporting resume...';
+    const loadingMsg = normalized === 'pdf'
+        ? uiT('resume.toast.exportingPdf', 'Exporting PDF...')
+        : uiT('resume.toast.exporting', 'Exporting resume...');
 
     try {
         Utils.showLoading(loadingMsg);
@@ -815,25 +829,27 @@ async function exportResume(format = 'pdf') {
         const filename = await resolveExportFilename(normalized);
         Utils.downloadFile(blob, filename);
         Utils.hideLoading();
-        Utils.showToast(normalized === 'pdf' ? 'PDF 导出成功' : 'Resume exported successfully');
+        Utils.showToast(normalized === 'pdf'
+            ? uiT('resume.toast.pdfExported', 'PDF exported successfully')
+            : uiT('resume.toast.exported', 'Resume exported successfully'));
     } catch (error) {
         Utils.hideLoading();
         const canFallback = normalized === 'pdf'
             && (error.code === 'EXPORT_FALLBACK'
-                || /WeasyPrint|503|暂不可用|演示模式|PDF 导出/.test(error.message || ''));
+                || /WeasyPrint|503|暂不可用|演示模式|PDF 导出|unavailable|demo mode/i.test(error.message || ''));
 
         if (canFallback) {
             try {
                 const ok = await tryBrowserPdfFallback();
                 if (ok) return;
             } catch (fallbackErr) {
-                Utils.showToast('浏览器打印失败: ' + fallbackErr.message);
+                Utils.showToast(uiT('resume.toast.printFailed', 'Browser print failed: {msg}', { msg: fallbackErr.message }));
                 console.error('PDF fallback error:', fallbackErr);
                 return;
             }
         }
 
-        Utils.showToast('导出失败: ' + error.message);
+        Utils.showToast(uiT('resume.toast.exportFailed', 'Export failed: {msg}', { msg: error.message }));
         console.error('Export error:', error);
     }
 }

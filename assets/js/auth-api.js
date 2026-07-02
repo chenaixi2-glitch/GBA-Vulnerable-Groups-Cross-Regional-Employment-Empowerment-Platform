@@ -2,6 +2,19 @@
  * 平台统一认证 API（个人端 / 企业端 / 首页共用）
  */
 (function (global) {
+  function authT(key, fallback, vars) {
+    if (global.GBAI18n && global.GBAI18n.t) return global.GBAI18n.t(key, fallback, vars);
+    var s = fallback || key;
+    if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]); });
+    return s;
+  }
+
+  function mapApiMessage(msg) {
+    if (!msg) return msg;
+    if (global.GBAI18n && global.GBAI18n.tApiMessage) return global.GBAI18n.tApiMessage(String(msg));
+    return String(msg);
+  }
+
   const AUTH_SESSION_KEY = 'gba_auth_user';
   const AUTH_TOKEN_KEY = 'gba_auth_token';
 
@@ -84,12 +97,12 @@
   function portalMismatchMessage(expectedPortal, actualRole) {
     if (normalizePortalRole(expectedPortal) === 'corporate') {
       return actualRole === 'individual'
-        ? '该账号为个人账号，请前往个人端登录。'
-        : '请使用企业账号登录。';
+        ? authT('apiMessages.该账号为个人账号，请前往个人端登录。', 'This is an individual account. Please sign in via the individual portal.')
+        : authT('apiMessages.请使用企业账号登录。', 'Please sign in with a corporate account.');
     }
     return actualRole === 'corporate'
-      ? '该账号为企业账号，请前往企业端登录。'
-      : '请使用个人账号登录。';
+      ? authT('apiMessages.该账号为企业账号，请前往企业端登录。', 'This is a corporate account. Please sign in via the corporate portal.')
+      : authT('apiMessages.请使用个人账号登录。', 'Please sign in with an individual account.');
   }
 
   function assertPortalMatch(user, expectedPortal) {
@@ -108,21 +121,28 @@
       const token = getToken();
       if (token) headers.Authorization = `Bearer ${token}`;
     }
-    const res = await fetch(`${apiBase()}${path}`, Object.assign({}, options, { headers }));
-    const data = await res.json().catch(function () { return {}; });
-    if (!res.ok) {
-      return { success: false, message: data.message || `HTTP ${res.status}`, data: data };
+    try {
+      const res = await fetch(`${apiBase()}${path}`, Object.assign({}, options, { headers }));
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok) {
+        return { success: false, message: mapApiMessage(data.message) || `HTTP ${res.status}`, data: data };
+      }
+      return Object.assign({ success: true }, data);
+    } catch (e) {
+      return {
+        success: false,
+        message: authT('auth.errors.networkDetailed', 'Cannot reach auth service. Ensure the backend is running (npm start in server/).'),
+      };
     }
-    return Object.assign({ success: true }, data);
   }
 
   async function login(identifier, password, portalHint) {
     const id = String(identifier || '').trim();
     if (!id || !password) {
-      return { success: false, message: '请输入邮箱和密码。' };
+      return { success: false, message: authT('apiMessages.请输入邮箱和密码。', 'Please enter email and password.') };
     }
     if (String(password).length < 6) {
-      return { success: false, message: '密码至少 6 位。' };
+      return { success: false, message: authT('apiMessages.密码至少 6 位。', 'Password must be at least 6 characters.') };
     }
 
     const expectedPortal = normalizePortalRole(portalHint);
@@ -138,7 +158,7 @@
     }, true);
 
     if (!nodeRes.success || !nodeRes.data) {
-      return { success: false, message: nodeRes.message || '登录失败，请检查账号密码或后端服务是否已启动。' };
+      return { success: false, message: mapApiMessage(nodeRes.message) || authT('apiMessages.登录失败，请检查账号密码或后端服务是否已启动。', 'Login failed. Check credentials or ensure the backend is running.') };
     }
 
     const u = nodeRes.data.user;
@@ -153,10 +173,10 @@
   async function register(identifier, password, portalHint, displayNameOptional, profileOptional, corporateExtras) {
     const id = String(identifier || '').trim();
     if (!id || !password) {
-      return { success: false, message: '请填写邮箱和密码。' };
+      return { success: false, message: authT('apiMessages.请填写邮箱和密码。', 'Please enter email and password.') };
     }
     if (String(password).length < 6) {
-      return { success: false, message: '密码至少 6 位。' };
+      return { success: false, message: authT('apiMessages.密码至少 6 位。', 'Password must be at least 6 characters.') };
     }
 
     const portal = normalizePortalRole(portalHint);
@@ -172,7 +192,7 @@
 
     if (role === 'individual') {
       if (!profileOptional || profileOptional.age == null || !profileOptional.gender || profileOptional.current_income == null) {
-        return { success: false, message: '请填写年龄、性别和月收入。' };
+        return { success: false, message: authT('apiMessages.请填写年龄、性别和月收入。', 'Please complete age, gender, and monthly income.') };
       }
       body.age = profileOptional.age;
       body.gender = profileOptional.gender;
@@ -192,7 +212,7 @@
     }, true);
 
     if (!nodeRes.success || !nodeRes.data) {
-      return { success: false, message: nodeRes.message || '注册失败，请稍后重试。' };
+      return { success: false, message: mapApiMessage(nodeRes.message) || authT('auth.errors.registerFailed', 'Registration failed. Please try again.') };
     }
 
     const u = nodeRes.data.user;
@@ -204,12 +224,12 @@
   async function me() {
     const token = getToken();
     if (!token) {
-      return { success: false, message: '未登录' };
+      return { success: false, message: authT('auth.errors.notLoggedIn', 'Not signed in') };
     }
     const nodeRes = await request('/auth/me');
     if (!nodeRes.success || !nodeRes.data || !nodeRes.data.user) {
       clearSession();
-      return { success: false, message: nodeRes.message || '会话已失效' };
+      return { success: false, message: mapApiMessage(nodeRes.message) || authT('auth.errors.sessionExpired', 'Session expired') };
     }
     const prev = getSession() || {};
     const session = buildSession(nodeRes.data.user, prev.portal || nodeRes.data.user.role, token);
@@ -223,7 +243,7 @@
       body: JSON.stringify(body || {}),
     });
     if (!nodeRes.success) {
-      return { success: false, message: nodeRes.message || '更新失败' };
+      return { success: false, message: mapApiMessage(nodeRes.message) || authT('auth.errors.updateFailed', 'Update failed') };
     }
     const token = getToken();
     const session = buildSession(nodeRes.data.user, getSession() && getSession().portal, token);
@@ -238,17 +258,17 @@
   async function fetchUser() {
     const nodeRes = await request('/auth/me');
     if (!nodeRes.success || !nodeRes.data || !nodeRes.data.user) {
-      return { success: false, message: nodeRes.message || '获取资料失败' };
+      return { success: false, message: mapApiMessage(nodeRes.message) || authT('auth.errors.fetchFailed', 'Failed to load profile') };
     }
     return { success: true, data: { user: nodeRes.data.user } };
   }
 
   async function changePassword(currentPassword, newPassword) {
     if (!currentPassword || !newPassword) {
-      return { success: false, message: '请填写当前密码和新密码' };
+      return { success: false, message: authT('auth.errors.changePasswordRequired', 'Please enter current and new password') };
     }
     if (String(newPassword).length < 6) {
-      return { success: false, message: '新密码至少 6 位' };
+      return { success: false, message: authT('auth.errors.newPasswordMin', 'New password must be at least 6 characters') };
     }
     const nodeRes = await request('/auth/change-password', {
       method: 'POST',
@@ -258,9 +278,9 @@
       }),
     });
     if (!nodeRes.success) {
-      return { success: false, message: nodeRes.message || '修改失败' };
+      return { success: false, message: mapApiMessage(nodeRes.message) || authT('auth.errors.changeFailed', 'Change failed') };
     }
-    return { success: true, message: nodeRes.message || '密码已修改' };
+    return { success: true, message: mapApiMessage(nodeRes.message) || authT('apiMessages.密码已修改', 'Password updated') };
   }
 
   function logout() {
@@ -280,7 +300,7 @@
     const expected = normalizePortalRole(portalHint);
     const mismatch = assertPortalMatch({ role: session.role }, expected);
     if (mismatch) {
-      return { ok: false, reason: 'wrong_portal', message: mismatch.message };
+      return { ok: false, reason: 'wrong_portal', message: mapApiMessage(mismatch.message) };
     }
     return { ok: true, session: session };
   }

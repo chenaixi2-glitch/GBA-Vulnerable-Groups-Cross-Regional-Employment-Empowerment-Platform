@@ -10,6 +10,7 @@ from typing import Any
 from agents.json_contracts import JDAnalysisOutput, JDTitleGenerationOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.jd_analysis import JD_ANALYSIS_PROMPT
+from tools.output_language import prompt_language_kwargs
 from services.jd_title_service import generate_jd_from_title_for_profile
 from services.jd_cache_service import (
     lookup_jd_cache_by_hash,
@@ -103,7 +104,10 @@ def _job_result(
 
 
 async def _parse_jd_with_llm(jd_text: str) -> JDAnalysisOutput:
-    prompt = JD_ANALYSIS_PROMPT.format(jd_text=jd_text)
+    prompt = JD_ANALYSIS_PROMPT.format(
+        jd_text=jd_text,
+        **prompt_language_kwargs(state),
+    )
     llm = get_llm()
     return await ainvoke_json_with_schema(llm, prompt, JDAnalysisOutput, logger, "JD Agent")
 

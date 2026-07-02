@@ -35,7 +35,7 @@
             else if (action === 'applications') location.hash = 'dashboard';
             else if (action === 'apply') window.location.href = 'apply.html';
             else if (action === 'post-job' && window.openModal) window.openModal('job-optimization-modal');
-            else if (action === 'details' && window.showToast) window.showToast('Open the related workflow from the interactive tools section.');
+            else if (action === 'details' && window.showToast) window.showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.openWorkflow', 'Open the related workflow from the interactive tools section.') : 'Open the related workflow from the interactive tools section.'));
         });
     }
 
@@ -185,7 +185,7 @@
         if (refresh) {
             refresh.addEventListener('click', function () {
                 render();
-                if (window.showToast) window.showToast('Recommended jobs refreshed.');
+                if (window.showToast) window.showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.jobsRefreshed', 'Recommended jobs refreshed.') : 'Recommended jobs refreshed.'));
             });
         }
     }

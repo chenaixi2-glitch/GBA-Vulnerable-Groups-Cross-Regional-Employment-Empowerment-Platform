@@ -10,12 +10,33 @@ const API_CONFIG = {
     MOCK_MODE_KEY: 'gba_api_mock_mode',
 };
 
+function apiT(key, fallback, vars) {
+    if (typeof window !== 'undefined' && window.GBAI18n && window.GBAI18n.t) {
+        return window.GBAI18n.t(key, fallback, vars);
+    }
+    let s = fallback || key;
+    if (vars && s) {
+        Object.keys(vars).forEach((k) => {
+            s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+    }
+    return s;
+}
+
+function apiMsg(message) {
+    if (message == null) return '';
+    if (typeof window !== 'undefined' && window.GBAI18n && window.GBAI18n.tApiMessage) {
+        return window.GBAI18n.tApiMessage(String(message));
+    }
+    return String(message);
+}
+
 /** Canonical mock fixtures live in test-data/ (loaded via browser-bundle.js). */
 function alexChenFixtures() {
     const td = (typeof window !== 'undefined' && window.GBA_TEST_DATA)
         || (typeof globalThis !== 'undefined' && globalThis.GBA_TEST_DATA);
     if (!td || !td.alexChen) {
-        throw new Error('Load test-data/browser-bundle.js before api-client.js');
+        throw new Error(apiT('errors.loadTestDataFirst', 'Load test-data/browser-bundle.js before api-client.js'));
     }
     return td.alexChen;
 }
@@ -87,7 +108,7 @@ class MockAPIService {
             return { session_id: sessionId, draft: JSON.parse(raw), source: 'mock_session', restored: true };
         }
         if (!this.state.hasProfile) {
-            throw new Error('Resource not found. Please check your session ID.');
+            throw new Error(apiT('errors.notFound', 'Resource not found. Please check your session ID.'));
         }
         const draft = {
             profile_basic: this.candidateProfilePayload().profile_basic,
@@ -333,7 +354,7 @@ class MockAPIService {
         await this.delay(1000);
         const stored = this.interactiveSessions[sessionId];
         if (!stored || stored.session.status !== 'active') {
-            throw new Error('No active interactive interview');
+            throw new Error(apiT('errors.noActiveInterview', 'No active interactive interview'));
         }
         const { session } = stored;
         session.turns.push({
@@ -401,7 +422,7 @@ class MockAPIService {
         await this.delay(1500);
         const stored = this.interactiveSessions[sessionId];
         if (!stored) {
-            throw new Error('No interview session found');
+            throw new Error(apiT('errors.noInterviewSession', 'No interview session found'));
         }
         const session = stored.session;
         session.status = 'completed';
@@ -602,7 +623,7 @@ class MockAPIService {
             err.code = 'EXPORT_FALLBACK';
             throw err;
         }
-        throw new Error(`Unsupported export format: ${format}`);
+        throw new Error(apiT('errors.unsupportedExportFormat', 'Unsupported export format: {format}', { format }));
     }
 
     normalizeResumeLanguage(targetLanguage) {
@@ -704,7 +725,7 @@ class MockAPIService {
     async generateJobDescription(sessionId, industry, experienceLevel, employerType = 'private') {
         await this.delay(1200);
         if (!this.state.hasProfile) {
-            throw new Error('Please upload your resume first');
+            throw new Error(apiT('errors.uploadResumeFirst', 'Please upload your resume first'));
         }
         return this.buildMockJd(industry, experienceLevel, employerType);
     }
@@ -775,6 +796,16 @@ class APIClient {
     }
 
     /**
+     * Map site UI language (GBAI18n) to backend API language code.
+     */
+    getApiLanguage() {
+        if (typeof window !== 'undefined' && window.GBAI18n && typeof GBAI18n.uiLangToApiLang === 'function') {
+            return GBAI18n.uiLangToApiLang(GBAI18n.getLang());
+        }
+        return 'zh';
+    }
+
+    /**
      * Load JWT from localStorage (Node auth service)
      */
     getAuthToken() {
@@ -838,6 +869,7 @@ class APIClient {
                 session_id: this.sessionId,
                 message: message,
                 attachments: attachments,
+                language: this.getApiLanguage(),
             });
 
             return response.data;
@@ -940,10 +972,10 @@ class APIClient {
     async generateJobDescription(industry, experienceLevel, employerType = '') {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             if (!industry || !experienceLevel) {
-                throw new Error('Please select industry and experience level');
+                throw new Error(apiT('errors.selectIndustryLevel', 'Please select industry and experience level'));
             }
 
             await this.ensureBackendAvailable();
@@ -1030,7 +1062,7 @@ class APIClient {
             return response.data;
         } catch (error) {
             if (error.response && error.response.status === 404) {
-                throw new Error('404: Draft not found');
+                throw new Error(apiT('errors.draftNotFound', '404: Draft not found'));
             }
             if (!error.response && !this.useMockMode) {
                 this.enableMockMode();
@@ -1046,7 +1078,7 @@ class APIClient {
     async saveResumeDraft(draft) {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
             const payload = {
@@ -1080,10 +1112,10 @@ class APIClient {
     async saveResumeToAccount() {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             if (!this.isLoggedIn()) {
-                throw new Error('Please log in to save your resume to the website');
+                throw new Error(apiT('errors.loginToSaveResume', 'Please log in to save your resume to the website'));
             }
 
             await this.ensureBackendAvailable();
@@ -1107,7 +1139,7 @@ class APIClient {
     async generateJdFromTitle(jobTitle, targetContext = null) {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             const ctx = this._resolveTargetJobContext(targetContext, jobTitle);
             await this.ensureBackendAvailable();
@@ -1173,11 +1205,28 @@ class APIClient {
     }
 
     /**
+     * Sync session render language with current UI language (resume checklist / next generation).
+     */
+    async syncSessionLanguageFromUi() {
+        if (!this.sessionId || this.useMockMode) {
+            return null;
+        }
+        try {
+            await this.ensureBackendAvailable();
+            return await this.setResumeLanguage(this.getApiLanguage());
+        } catch (error) {
+            console.warn('Session language sync skipped:', error.message);
+            return null;
+        }
+    }
+
+    /**
      * Generate customized resume - triggers content_agent + render_agent
      */
     async generateResume(instruction = 'Please generate a customized resume based on my experience and target position. Keep all content within one A4 page.', targetContext = null) {
         try {
             await this.syncTargetJobContext(targetContext);
+            await this.syncSessionLanguageFromUi();
             const fullInstruction = this._appendTargetContextToInstruction(instruction, targetContext);
             const response = await this.chat(fullInstruction, []);
             return response;
@@ -1193,7 +1242,7 @@ class APIClient {
     async getResumeHtml() {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
             await this.ensureBackendAvailable();
@@ -1222,7 +1271,7 @@ class APIClient {
     async getResumeContent() {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
             await this.ensureBackendAvailable();
@@ -1286,7 +1335,7 @@ class APIClient {
     async getLanguageChecklist(language = 'zh', employerType = '') {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
             await this.ensureBackendAvailable();
@@ -1319,7 +1368,7 @@ class APIClient {
     async translateResume(targetLanguage) {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
             await this.ensureBackendAvailable();
@@ -1364,7 +1413,7 @@ class APIClient {
     async renderResume(renderInstruction) {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
             const response = await this.client.post('/resume/render', {
@@ -1425,21 +1474,21 @@ class APIClient {
      */
     async validateExportBlob(blob, format) {
         if (!(blob instanceof Blob)) {
-            throw new Error('导出响应无效');
+            throw new Error(apiT('errors.exportInvalidResponse', '导出响应无效'));
         }
         const normalized = String(format || '').toLowerCase();
         if (normalized === 'pdf' && blob.type === 'application/json') {
             const text = await blob.text();
             try {
                 const parsed = JSON.parse(text);
-                throw new Error(parsed.detail || 'PDF 导出失败');
+                throw new Error(apiMsg(parsed.detail) || apiT('errors.exportPdfFailed', 'PDF 导出失败'));
             } catch (err) {
                 if (err instanceof Error && err.message !== text) throw err;
-                throw new Error('PDF 导出失败');
+                throw new Error(apiT('errors.exportPdfFailed', 'PDF 导出失败'));
             }
         }
         if (blob.size === 0) {
-            throw new Error('导出文件为空');
+            throw new Error(apiT('errors.exportEmptyFile', '导出文件为空'));
         }
         return blob;
     }
@@ -1451,7 +1500,7 @@ class APIClient {
         return new Promise((resolve, reject) => {
             const win = window.open('', '_blank', 'noopener,noreferrer');
             if (!win) {
-                reject(new Error('请允许弹出窗口，以使用浏览器打印导出 PDF'));
+                reject(new Error(apiT('errors.popupBlocked', '请允许弹出窗口，以使用浏览器打印导出 PDF')));
                 return;
             }
             win.document.open();
@@ -1479,7 +1528,7 @@ class APIClient {
     async exportResumeFormat(format = 'pdf') {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
             await this.ensureBackendAvailable();
@@ -1582,6 +1631,7 @@ class APIClient {
             const response = await this.client.post('/interview/custom/generate-answers', {
                 session_id: this.sessionId,
                 questions,
+                language: this.getApiLanguage(),
             });
             if (response.data.session_id) {
                 this.saveSessionId(response.data.session_id);
@@ -1631,6 +1681,7 @@ class APIClient {
                 max_rounds: maxRounds,
                 program_version: programVersion,
                 specialized_focus: specializedFocus,
+                language: this.getApiLanguage(),
             });
             if (response.data.session_id) {
                 this.saveSessionId(response.data.session_id);
@@ -1648,7 +1699,7 @@ class APIClient {
     async submitInteractiveTurn(answer) {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
@@ -1657,6 +1708,7 @@ class APIClient {
             const response = await this.client.post('/interview/interactive/turn', {
                 session_id: this.sessionId,
                 answer,
+                language: this.getApiLanguage(),
             });
             return response.data;
         } catch (error) {
@@ -1671,7 +1723,7 @@ class APIClient {
     async endInteractiveInterview(generateDebrief = true) {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
@@ -1680,6 +1732,7 @@ class APIClient {
             const response = await this.client.post('/interview/interactive/end', {
                 session_id: this.sessionId,
                 generate_debrief: generateDebrief,
+                language: this.getApiLanguage(),
             });
             return response.data;
         } catch (error) {
@@ -1694,10 +1747,10 @@ class APIClient {
     async saveInteractiveInterview(recordId = '') {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             if (!this.isLoggedIn()) {
-                throw new Error('Please log in to save your mock interview to the website');
+                throw new Error(apiT('errors.loginToSaveInterview', 'Please log in to save your mock interview to the website'));
             }
 
             await this.ensureBackendAvailable();
@@ -1722,7 +1775,7 @@ class APIClient {
     async getInteractiveInterviewHistory(limit = 20) {
         try {
             if (!this.isLoggedIn()) {
-                throw new Error('Please log in to view saved mock interviews');
+                throw new Error(apiT('errors.loginToViewInterviews', 'Please log in to view saved mock interviews'));
             }
 
             await this.ensureBackendAvailable();
@@ -1756,7 +1809,7 @@ class APIClient {
     }) {
         await this.ensureBackendAvailable();
         if (this.useMockMode) {
-            throw new Error('Learning path requires a connected backend. Demo mode is not supported for this feature.');
+            throw new Error(apiT('errors.learningPathRequiresBackend', 'Learning path requires a connected backend. Demo mode is not supported for this feature.'));
         }
 
         try {
@@ -1815,7 +1868,7 @@ class APIClient {
     async generateLearningPathTimeline(dailyHours, targetContext = null) {
         await this.ensureBackendAvailable();
         if (this.useMockMode) {
-            throw new Error('Learning path requires a connected backend. Demo mode is not supported for this feature.');
+            throw new Error(apiT('errors.learningPathRequiresBackend', 'Learning path requires a connected backend. Demo mode is not supported for this feature.'));
         }
 
         try {
@@ -1842,7 +1895,7 @@ class APIClient {
     async updateLearningPathTimeline(timeline) {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
             await this.ensureBackendAvailable();
@@ -1867,10 +1920,10 @@ class APIClient {
     async saveLearningPathToAccount(recordId = '') {
         try {
             if (!this.sessionId) {
-                throw new Error('No active session');
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             if (!this.isLoggedIn()) {
-                throw new Error('Please log in to save your learning path to the website');
+                throw new Error(apiT('errors.loginToSaveLearningPath', 'Please log in to save your learning path to the website'));
             }
 
             await this.ensureBackendAvailable();
@@ -1895,7 +1948,7 @@ class APIClient {
     async getLearningPathHistory(limit = 20) {
         try {
             if (!this.isLoggedIn()) {
-                throw new Error('Please log in to view saved learning paths');
+                throw new Error(apiT('errors.loginToViewLearningPaths', 'Please log in to view saved learning paths'));
             }
 
             await this.ensureBackendAvailable();
@@ -1946,26 +1999,24 @@ class APIClient {
      */
     handleError(error) {
         if (error.response) {
-            // Server responded with error status
             const status = error.response.status;
-            const message = error.response.data?.detail || error.response.statusText;
+            const detail = error.response.data?.detail || error.response.statusText;
+            const mappedDetail = apiMsg(typeof detail === 'string' ? detail : JSON.stringify(detail));
 
             switch (status) {
                 case 404:
-                    return new Error('Resource not found. Please check your session ID.');
+                    return new Error(apiT('errors.notFound', 'Resource not found. Please check your session ID.'));
                 case 500:
-                    return new Error('Server error. Please try again later.');
+                    return new Error(apiT('errors.serverError', 'Server error. Please try again later.'));
                 case 422:
-                    return new Error('Invalid request. Please check your input.');
+                    return new Error(apiT('errors.invalidRequest', 'Invalid request. Please check your input.'));
                 default:
-                    return new Error(`API error: ${message}`);
+                    return new Error(apiT('errors.apiError', 'API error: {detail}', { detail: mappedDetail }));
             }
         } else if (error.request) {
-            // Request was made but no response
-            return new Error('Network error. Please check your connection and ensure the backend is running.');
+            return new Error(apiT('errors.networkError', 'Network error. Please check your connection and ensure the backend is running.'));
         } else {
-            // Something else happened
-            return new Error(error.message || 'An unexpected error occurred.');
+            return new Error(apiMsg(error.message) || apiT('errors.unexpected', 'An unexpected error occurred.'));
         }
     }
 }
@@ -1981,9 +2032,10 @@ const Utils = {
     showToast(message, duration = 3000) {
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toast-message');
+        const text = apiMsg(message);
 
         if (toast && toastMessage) {
-            toastMessage.textContent = message;
+            toastMessage.textContent = text;
             toast.classList.remove('translate-y-20', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
 
@@ -1997,13 +2049,14 @@ const Utils = {
     /**
      * Show loading overlay
      */
-    showLoading(message = 'Processing...') {
+    showLoading(message) {
         const overlay = document.getElementById('loading-overlay');
         const messageEl = document.getElementById('loading-message');
+        const text = apiMsg(message || apiT('common.processing', 'Processing...'));
 
         if (overlay) {
             if (messageEl) {
-                messageEl.textContent = message;
+                messageEl.textContent = text;
             }
             overlay.classList.remove('hidden');
         }
@@ -2026,7 +2079,7 @@ const Utils = {
         const sessionElements = document.querySelectorAll('#session-id');
         sessionElements.forEach(el => {
             if (el) {
-                el.textContent = sessionId ? sessionId.substr(-8) : 'Not started';
+                el.textContent = sessionId ? sessionId.substr(-8) : apiT('common.notStarted', 'Not started');
             }
         });
     },

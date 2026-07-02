@@ -15,18 +15,18 @@
         .step-todo { background: #e2e8f0; color: #64748b; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen" data-page="individual">
     <header class="bg-white border-b px-4 py-3 flex flex-wrap gap-3 items-center justify-between">
         <nav class="flex flex-wrap gap-3 text-sm items-center">
-            <a href="../index.html" class="text-slate-500">Welcome</a>
-            <a href="portal.html#ai-features" class="text-blue-700 font-medium">Interactive tools</a>
-            <span class="text-slate-900 font-semibold">Résumé matching engine</span>
+            <a href="../index.html" class="text-slate-500" data-i18n="matching.welcome">Welcome</a>
+            <a href="portal.html#ai-features" class="text-blue-700 font-medium" data-i18n="matching.navTools">Interactive tools</a>
+            <span class="text-slate-900 font-semibold" data-i18n="matching.title">Résumé matching engine</span>
         </nav>
         <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-500">UI language</span>
             <select id="ui-lang" class="text-sm border rounded-lg px-2 py-1">
                 <option value="en">English</option>
-                <option value="zh">中文 (labels only)</option>
+                <option value="zh-CN">简体中文</option>
+                <option value="zh-TW">繁體中文</option>
                 <option value="pt">Português</option>
             </select>
         </div>
@@ -36,38 +36,38 @@
         <div class="flex justify-between mb-10 gap-2">
             <div class="flex-1 flex items-center gap-2">
                 <div id="sn1" class="step-num step-active">1</div>
-                <span class="text-sm font-medium">Upload</span>
+                <span class="text-sm font-medium" data-i18n="matching.stepUpload">Upload</span>
             </div>
             <div class="flex-1 flex items-center gap-2">
                 <div id="sn2" class="step-num step-todo">2</div>
-                <span class="text-sm text-slate-500">Optimise setup</span>
+                <span class="text-sm text-slate-500" data-i18n="matching.stepConfig">Optimise setup</span>
             </div>
             <div class="flex-1 flex items-center gap-2 justify-end">
                 <div id="sn3" class="step-num step-todo">3</div>
-                <span class="text-sm text-slate-500">Preview & export</span>
+                <span class="text-sm text-slate-500" data-i18n="matching.stepPreview">Preview & export</span>
             </div>
         </div>
 
         <section id="panel-upload" class="bg-white rounded-2xl shadow border p-6 mb-6">
-            <h1 class="text-xl font-bold mb-2">Step 1 — Upload blind-screening profile</h1>
-            <p class="text-slate-600 text-sm mb-4"><strong>Note:</strong> true PDF/DOC ingestion runs on the backend (OCR, PII stripping). Drop a sample or paste plaintext for this workflow.</p>
+            <h1 class="text-xl font-bold mb-2" data-i18n="matching.step1Title">Step 1 — Upload blind-screening profile</h1>
+            <p class="text-slate-600 text-sm mb-4" data-i18n="matching.step1Note"><strong>Note:</strong> true PDF/DOC ingestion runs on the backend (OCR, PII stripping). Drop a sample or paste plaintext for this workflow.</p>
             <label class="block border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition-colors">
                 <input type="file" id="file-in" accept=".txt,.pdf,.doc,.docx" class="hidden">
                 <i class="fas fa-cloud-upload-alt text-3xl text-blue-500 mb-2"></i>
-                <span class="text-sm font-medium block">Tap to choose .txt / .pdf / .doc</span>
+                <span class="text-sm font-medium block" data-i18n="matching.uploadTap">Tap to choose .txt / .pdf / .doc</span>
             </label>
-            <textarea id="paste-resume" rows="8" class="w-full mt-4 border rounded-xl p-3 text-sm font-mono" placeholder="Or paste headline, skills bullets, latest role description…"></textarea>
-            <button type="button" id="btn-next-1" class="mt-4 bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700">Continue</button>
-            <p class="mt-4 text-xs text-slate-500"><a href="portal.html#feedback" class="text-blue-600 hover:underline font-medium">User feedback</a> · after you try each step</p>
+            <textarea id="paste-resume" rows="8" class="w-full mt-4 border rounded-xl p-3 text-sm font-mono" data-i18n-placeholder="matching.pastePlaceholder" placeholder="Or paste headline, skills bullets, latest role description…"></textarea>
+            <button type="button" id="btn-next-1" class="mt-4 bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700" data-i18n="matching.continue">Continue</button>
+            <p class="mt-4 text-xs text-slate-500"><a href="portal.html#feedback" class="text-blue-600 hover:underline font-medium" data-i18n="matching.feedbackHint">User feedback · after you try each step</a></p>
         </section>
 
         <section id="panel-config" class="hidden bg-white rounded-2xl shadow border p-6 mb-6">
-            <h2 class="text-xl font-bold mb-4">Step 2 — Matching & polish configuration</h2>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Target job description (JD paste)</label>
-            <textarea id="jd-box" rows="5" class="w-full border rounded-xl p-3 text-sm mb-4" placeholder="Paste the hiring brief or summarise must-have competencies…"></textarea>
+            <h2 class="text-xl font-bold mb-4" data-i18n="matching.step2Title">Step 2 — Matching & polish configuration</h2>
+            <label class="block text-sm font-medium text-slate-700 mb-1" data-i18n="matching.jdLabel">Target job description (JD paste)</label>
+            <textarea id="jd-box" rows="5" class="w-full border rounded-xl p-3 text-sm mb-4" data-i18n-placeholder="matching.jdPlaceholder" placeholder="Paste the hiring brief or summarise must-have competencies…"></textarea>
             <div class="grid sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Industry cluster</label>
+                    <label class="block text-sm font-medium mb-1" data-i18n="matching.industryLabel">Industry cluster</label>
                     <select id="industry" class="w-full border rounded-lg p-2 text-sm">
                         <option>Cross-border e-commerce</option>
                         <option>Financial services</option>
@@ -76,34 +76,41 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Tone / polish intensity</label>
+                    <label class="block text-sm font-medium mb-1" data-i18n="matching.polishLabel">Tone / polish intensity</label>
                     <input type="range" id="polish" min="1" max="5" value="3" class="w-full">
-                    <p class="text-xs text-slate-500 mt-1">Slide toward 5 for assertive STAR phrasing · toward 1 for neutral CV tone</p>
+                    <p class="text-xs text-slate-500 mt-1" data-i18n="matching.polishHint">Slide toward 5 for assertive STAR phrasing · toward 1 for neutral CV tone</p>
                 </div>
             </div>
             <div class="flex gap-3">
-                <button type="button" id="btn-back-2" class="border border-slate-300 px-4 py-2 rounded-lg text-sm">Back</button>
-                <button type="button" id="btn-run-ai" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700">Generate skills-first rewrite</button>
+                <button type="button" id="btn-back-2" class="border border-slate-300 px-4 py-2 rounded-lg text-sm" data-i18n="matching.back">Back</button>
+                <button type="button" id="btn-run-ai" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700" data-i18n="matching.generate">Generate skills-first rewrite</button>
             </div>
-            <div id="loader" class="hidden mt-4 flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span> Optimising profile…</div>
+            <div id="loader" class="hidden mt-4 flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span> <span data-i18n="matching.loading">Optimising profile…</span></div>
         </section>
 
         <section id="panel-preview" class="hidden bg-white rounded-2xl shadow border p-6">
-            <h2 class="text-xl font-bold mb-2">Step 3 — Preview, edit & export</h2>
+            <h2 class="text-xl font-bold mb-2" data-i18n="matching.step3Title">Step 3 — Preview, edit & export</h2>
             <textarea id="preview-body" rows="14" class="w-full border rounded-xl p-3 text-sm mb-4 font-mono"></textarea>
             <div id="suggestions" class="text-sm bg-emerald-50 border border-emerald-100 rounded-lg p-4 mb-4 hidden"></div>
             <div class="flex flex-wrap gap-3">
-                <button type="button" id="btn-download" class="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-slate-800"><i class="fas fa-download mr-2"></i>Download .txt export</button>
-                <button type="button" id="btn-back-3" class="border border-slate-300 px-4 py-2 rounded-lg text-sm">Back</button>
-                <a href="portal.html#feedback" class="text-blue-600 text-sm self-center underline">Tell us how this flow felt</a>
+                <button type="button" id="btn-download" class="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-slate-800"><i class="fas fa-download mr-2"></i><span data-i18n="matching.download">Download .txt export</span></button>
+                <button type="button" id="btn-back-3" class="border border-slate-300 px-4 py-2 rounded-lg text-sm" data-i18n="matching.back">Back</button>
+                <a href="portal.html#feedback" class="text-blue-600 text-sm self-center underline" data-i18n="matching.feedbackLink">Tell us how this flow felt</a>
             </div>
         </section>
     </div>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="../mock-api.js"></script>
     <script>
+        function t(key, fallback) {
+            return window.GBAI18n && window.GBAI18n.t ? window.GBAI18n.t(key, fallback) : (fallback || key);
+        }
+
         var step = 1;
+        var lastSuggestions = [];
+
         function setStep(n) {
             step = n;
             document.getElementById('panel-upload').classList.toggle('hidden', n !== 1);
@@ -114,10 +121,22 @@
                 el.className = 'step-num ' + (n === i + 1 ? 'step-active' : n > i + 1 ? 'step-done' : 'step-todo');
             });
         }
+
+        function renderSuggestions() {
+            var box = document.getElementById('suggestions');
+            if (!lastSuggestions.length) {
+                box.classList.add('hidden');
+                return;
+            }
+            box.innerHTML = '<strong>' + t('matching.coachCues', 'Coach cues') + '</strong><ul class="list-disc ml-5 mt-2">' +
+                lastSuggestions.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ul>';
+            box.classList.remove('hidden');
+        }
+
         document.getElementById('btn-next-1').onclick = function () {
-            var t = document.getElementById('paste-resume').value.trim();
-            if (t.length < 40 && !document.getElementById('file-in').files.length)
-                return alert('Please paste a fuller profile or attach a plaintext sample.');
+            var txt = document.getElementById('paste-resume').value.trim();
+            if (txt.length < 40 && !document.getElementById('file-in').files.length)
+                return alert(t('matching.alertShortProfile', 'Please paste a fuller profile or attach a plaintext sample.'));
             setStep(2);
         };
         document.getElementById('btn-back-2').onclick = function () { setStep(1); };
@@ -146,14 +165,12 @@
             };
             var res = await API.optimizeResume(base, { jd: document.getElementById('jd-box').value, polish: +document.getElementById('polish').value });
             document.getElementById('loader').classList.add('hidden');
-            if (!res.success) return alert('Optimiser failed.');
+            if (!res.success) return alert(t('matching.alertFailed', 'Optimiser failed.'));
             var opt = res.data.optimizedResume;
             var txt = 'SKILLS\n' + opt.skills.join(', ') + '\n\nEXPERIENCE\n' + opt.experience.map(function (e) { return e.title + ' — ' + e.company + '\n' + e.description; }).join('\n\n');
             document.getElementById('preview-body').value = txt;
-            var sug = res.data.suggestions || [];
-            var box = document.getElementById('suggestions');
-            box.innerHTML = '<strong>Coach cues</strong><ul class="list-disc ml-5 mt-2">' + sug.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ul>';
-            box.classList.remove('hidden');
+            lastSuggestions = res.data.suggestions || [];
+            renderSuggestions();
             setStep(3);
         };
 
@@ -165,12 +182,10 @@
             a.click();
         };
 
-        document.getElementById('ui-lang').onchange = function () {
-            document.documentElement.setAttribute('lang', this.value === 'en' ? 'en' : this.value);
-            localStorage.setItem('gba_module_lang_pref', this.value);
-        };
-    </script>    <script src="../assets/i18n/i18n.js"></script>
-
+        window.addEventListener('gba:language-changed', function () {
+            renderSuggestions();
+        });
+    </script>
     <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

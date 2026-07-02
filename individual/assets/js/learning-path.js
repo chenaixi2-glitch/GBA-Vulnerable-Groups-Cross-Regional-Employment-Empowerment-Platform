@@ -6,6 +6,13 @@
 let learningPathData = null;
 let timelineEditMode = false;
 
+function uiT(key, fallback, vars) {
+    if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+    let out = fallback;
+    if (vars && out) Object.keys(vars).forEach((k) => { out = String(out).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]); });
+    return out;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeLearningPath();
 });
@@ -70,7 +77,7 @@ function getFormInputs() {
 
 function validateFormInputs({ targetJob, currentSkillsText, currentRole, profileText }) {
     if (!targetJob) {
-        Utils.showToast('Please enter your target job title');
+        Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter your target job title'));
         return false;
     }
 
@@ -79,7 +86,7 @@ function validateFormInputs({ targetJob, currentSkillsText, currentRole, profile
         : [];
 
     if (!profileText && currentSkills.length === 0 && !currentRole) {
-        Utils.showToast('Please provide current skills, role, or profile details');
+        Utils.showToast(uiT('learningPath.toast.skillsRequired', 'Please provide current skills, role, or profile details'));
         return false;
     }
 
@@ -128,25 +135,25 @@ async function generateLearningPathAnalysis() {
         displayResources(learningPathData.resources);
         updateProjectedWeeksHint();
 
-        Utils.showToast('Skill gap analysis completed! Choose your daily study hours.');
+        Utils.showToast(uiT('learningPath.toast.gapCompleted', 'Skill gap analysis completed! Choose your daily study hours.'));
         document.getElementById('daily-hours-section').scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
         document.getElementById('loading-state').classList.add('hidden');
         document.getElementById('assessment-section').classList.remove('hidden');
-        Utils.showToast('Failed to analyze skill gaps: ' + error.message);
+        Utils.showToast(uiT('learningPath.toast.gapFailed', 'Failed to analyze skill gaps: {msg}', { msg: error.message }));
         console.error('Learning path analysis error:', error);
     }
 }
 
 async function generateLearningPathTimeline() {
     if (!learningPathData) {
-        Utils.showToast('Please run skill gap analysis first');
+        Utils.showToast(uiT('learningPath.toast.runGapFirst', 'Please run skill gap analysis first'));
         return;
     }
 
     const dailyHours = getSelectedDailyHours();
     if (!dailyHours || dailyHours <= 0) {
-        Utils.showToast('Please select a valid daily study duration');
+        Utils.showToast(uiT('learningPath.toast.selectDailyHours', 'Please select a valid daily study duration'));
         return;
     }
 
@@ -183,11 +190,11 @@ async function generateLearningPathTimeline() {
         displayTimeline(learningPathData.timeline);
 
         updateSaveLoginHint();
-        Utils.showToast('Learning timeline generated!');
+        Utils.showToast(uiT('learningPath.toast.timelineGenerated', 'Learning timeline generated!'));
         document.getElementById('timeline-section').scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
         document.getElementById('loading-state').classList.add('hidden');
-        Utils.showToast('Failed to generate timeline: ' + error.message);
+        Utils.showToast(uiT('learningPath.toast.timelineFailed', 'Failed to generate timeline: {msg}', { msg: error.message }));
         console.error('Timeline generation error:', error);
     } finally {
         document.getElementById('btn-generate-timeline').disabled = false;
@@ -421,7 +428,7 @@ function setTimelineEditControls(editing) {
 
 function toggleTimelineEdit() {
     if (!learningPathData?.timeline?.length) {
-        Utils.showToast('No timeline to edit');
+        Utils.showToast(uiT('learningPath.toast.noTimeline', 'No timeline to edit'));
         return;
     }
     timelineEditMode = true;
@@ -452,11 +459,11 @@ function readTimelineFromForm() {
 async function applyTimelineEdits() {
     const timeline = readTimelineFromForm();
     if (!timeline.length) {
-        Utils.showToast('Timeline cannot be empty');
+        Utils.showToast(uiT('learningPath.toast.timelineEmpty', 'Timeline cannot be empty'));
         return;
     }
     if (timeline.some(p => !p.title || !p.weeks)) {
-        Utils.showToast('Each phase needs a title and week range');
+        Utils.showToast(uiT('learningPath.toast.phaseNeedsTitle', 'Each phase needs a title and week range'));
         return;
     }
 
@@ -472,9 +479,9 @@ async function applyTimelineEdits() {
         setTimelineEditControls(false);
         displayOverview(learningPathData);
         displayTimeline(learningPathData.timeline, false);
-        Utils.showToast('Timeline updated');
+        Utils.showToast(uiT('learningPath.toast.timelineUpdated', 'Timeline updated'));
     } catch (error) {
-        Utils.showToast('Failed to update timeline: ' + error.message);
+        Utils.showToast(uiT('learningPath.toast.updateFailed', 'Failed to update timeline: {msg}', { msg: error.message }));
         console.error('Timeline update error:', error);
     } finally {
         document.getElementById('btn-apply-timeline').disabled = false;
@@ -483,12 +490,12 @@ async function applyTimelineEdits() {
 
 async function saveLearningPathToAccount() {
     if (!learningPathData?.timeline?.length) {
-        Utils.showToast('Generate a timeline before saving');
+        Utils.showToast(uiT('learningPath.toast.generateTimelineFirst', 'Generate a timeline before saving'));
         return;
     }
 
     if (!apiClient.isLoggedIn()) {
-        Utils.showToast('Please log in to save your learning path');
+        Utils.showToast(uiT('learningPath.toast.loginToSave', 'Please log in to save your learning path'));
         return;
     }
 
@@ -498,12 +505,12 @@ async function saveLearningPathToAccount() {
 
         learningPathData.recordId = result.record_id;
         const hint = document.getElementById('save-status-hint');
-        hint.textContent = result.message || 'Learning path saved to your account.';
+        hint.textContent = result.message || uiT('learningPath.toast.savedToAccount', 'Learning path saved to your account.');
         hint.classList.remove('hidden');
         updateSaveLoginHint();
-        Utils.showToast('Learning path saved!');
+        Utils.showToast(uiT('learningPath.toast.saved', 'Learning path saved!'));
     } catch (error) {
-        Utils.showToast('Save failed: ' + error.message);
+        Utils.showToast(uiT('learningPath.toast.saveFailed', 'Save failed: {msg}', { msg: error.message }));
         console.error('Save learning path error:', error);
     } finally {
         document.getElementById('btn-save-plan').disabled = false;
@@ -617,7 +624,7 @@ function getResourceIcon(type) {
 
 function downloadLearningPlan() {
     if (!learningPathData) {
-        Utils.showToast('No learning plan to download');
+        Utils.showToast(uiT('learningPath.toast.nothingToDownload', 'No learning plan to download'));
         return;
     }
 
@@ -665,12 +672,12 @@ function downloadLearningPlan() {
 
     const blob = new Blob([plan], { type: 'text/plain' });
     Utils.downloadFile(blob, `learning-plan-${Date.now()}.txt`);
-    Utils.showToast('Learning plan exported as TXT');
+    Utils.showToast(uiT('learningPath.toast.exportedTxt', 'Learning plan exported as TXT'));
 }
 
 function exportLearningPlanJson() {
     if (!learningPathData) {
-        Utils.showToast('No learning plan to export');
+        Utils.showToast(uiT('learningPath.toast.nothingToExport', 'No learning plan to export'));
         return;
     }
 
@@ -690,5 +697,5 @@ function exportLearningPlanJson() {
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     Utils.downloadFile(blob, `learning-plan-${Date.now()}.json`);
-    Utils.showToast('Learning plan exported as JSON');
+    Utils.showToast(uiT('learningPath.toast.exportedJson', 'Learning plan exported as JSON'));
 }

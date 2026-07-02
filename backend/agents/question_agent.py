@@ -7,6 +7,7 @@ import json
 from typing import Any
 
 from models.llm import get_llm, _ainvoke_model, _extract_text_content
+from tools.output_language import output_language_instruction, resolve_output_language
 from workflow.state import CopilotState
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
@@ -50,8 +51,13 @@ async def question_node_async(state: CopilotState) -> dict[str, Any]:
     logger.info("Question Agent started for session %s", state.session_id)
 
     state_json = json.dumps(_compact_state_context(state), ensure_ascii=False, indent=2)
+    lang_instruction = output_language_instruction(resolve_output_language(state))
+    system_prompt = (
+        f"{_QUESTION_SYSTEM_PROMPT.rstrip()}\n"
+        f"- 回答语言：{lang_instruction}"
+    )
     prompt = (
-        f"{_QUESTION_SYSTEM_PROMPT}\n\n"
+        f"{system_prompt}\n\n"
         "用户问题：\n"
         f"{state.user_message}\n\n"
         "当前 graph state JSON：\n"

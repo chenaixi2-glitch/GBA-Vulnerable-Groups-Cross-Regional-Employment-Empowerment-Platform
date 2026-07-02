@@ -8,6 +8,9 @@ GAP_ANALYSIS_PROMPT = """你是一个能力缺口分析专家。请根据以下�
 候选人画像：
 {profile_json}
 
+## 输出语言
+{output_language_instruction}
+
 机器协议：
 - 返回且仅返回一个合法 JSON 对象
 - 不要输出 Markdown、代码块、注释或额外说明

@@ -61,12 +61,12 @@
       meta = metaRes.data;
     }
     if (!userRes.success || !userRes.data.user) {
-      throw new Error(userRes.message || '无法加载资料');
+      throw new Error((window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(userRes.message) : userRes.message) || (window.GBAI18n && GBAI18n.t ? GBAI18n.t('apiMessages.无法加载资料', 'Failed to load profile') : 'Failed to load profile'));
     }
 
     const user = userRes.data.user;
     if (user.role !== 'individual') {
-      throw new Error('仅个人账号可编辑此页面');
+      throw new Error(window.GBAI18n && GBAI18n.t ? GBAI18n.t('errors.individualOnlyProfile', 'Only individual accounts can edit this page') : 'Only individual accounts can edit this page');
     }
 
     fillSelect('profile-gender', meta.gender_options, user.gender || '');
@@ -143,7 +143,7 @@
         return loadProfile();
       })
       .catch(function (err) {
-        showMsg('profile-form-msg', err.message || '加载失败', false);
+        showMsg('profile-form-msg', (window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(err.message) : err.message) || (window.GBAI18n && GBAI18n.t ? GBAI18n.t('apiMessages.加载失败', 'Load failed') : 'Load failed'), false);
       });
   }
 

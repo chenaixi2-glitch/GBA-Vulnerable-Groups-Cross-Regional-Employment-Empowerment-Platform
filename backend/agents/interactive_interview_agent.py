@@ -24,6 +24,7 @@ from tools.interview_program import (
     format_program_overview,
     format_stage_context,
 )
+from tools.output_language import prompt_language_kwargs
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import (
     CopilotState,
@@ -170,6 +171,7 @@ async def _generate_stage_transition(
         job_json=job_json,
         resume_json=resume_json,
         conversation_history=history,
+        **prompt_language_kwargs(state),
     )
 
     llm = get_llm()
@@ -245,6 +247,7 @@ async def start_interactive_interview(
         job_json=job_json,
         resume_json=resume_json,
         profile_json=profile_json,
+        **prompt_language_kwargs(state),
     )
 
     llm = get_llm()
@@ -334,6 +337,7 @@ async def process_interactive_turn(
         profile_json=profile_json,
         conversation_history=history,
         latest_answer=answer,
+        **prompt_language_kwargs(state),
     )
 
     llm = get_llm()
@@ -429,6 +433,7 @@ async def generate_interactive_debrief(state: CopilotState) -> InteractiveInterv
         job_json=job_json,
         resume_json=resume_json,
         conversation_history=history,
+        **prompt_language_kwargs(state),
     )
 
     llm = get_llm()

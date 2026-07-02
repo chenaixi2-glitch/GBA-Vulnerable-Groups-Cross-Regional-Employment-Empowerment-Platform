@@ -163,7 +163,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" data-page="individual">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -171,11 +171,11 @@
                 <a href="portal.html" class="text-gray-600 hover:text-blue-600">
                     <i class="fas fa-arrow-left"></i>
                 </a>
-                <h1 class="text-xl font-bold text-gray-900">Interview Preparation</h1>
+                <h1 class="text-xl font-bold text-gray-900" data-i18n="interview.title">Interview Preparation</h1>
             </div>
             <div class="flex items-center gap-3">
                 <span id="session-badge" class="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
-                    Session: <span id="session-id">Not started</span>
+                    <span data-i18n="interview.sessionLabel">Session</span>: <span id="session-id" data-i18n="interview.notStarted">Not started</span>
                 </span>
             </div>
         </div>
@@ -188,44 +188,44 @@
             <aside class="space-y-6">
                 <!-- Prerequisites for interview_agent -->
                 <div class="bg-white rounded-xl p-6 border shadow-sm">
-                    <h3 class="font-bold text-gray-900 mb-2">Interview Prerequisites</h3>
-                    <p class="text-xs text-gray-500 mb-4">Complete all steps before starting the interview session</p>
+                    <h3 class="font-bold text-gray-900 mb-2" data-i18n="interview.prerequisitesTitle">Interview Prerequisites</h3>
+                    <p class="text-xs text-gray-500 mb-4" data-i18n="interview.prerequisitesHint">Complete all steps before starting the interview session</p>
 
                     <div class="space-y-2 mb-4 text-sm">
                         <div id="prereq-profile" class="flex items-center gap-2">
                             <i class="prereq-icon fas fa-circle text-gray-300"></i>
-                            <span>Candidate profile</span>
+                            <span data-i18n="interview.prereqProfile">Candidate profile</span>
                         </div>
                         <div id="prereq-job" class="flex items-center gap-2">
                             <i class="prereq-icon fas fa-circle text-gray-300"></i>
-                            <span>Job description</span>
+                            <span data-i18n="interview.prereqJob">Job description</span>
                         </div>
                         <div id="prereq-resume" class="flex items-center gap-2">
                             <i class="prereq-icon fas fa-circle text-gray-300"></i>
-                            <span>Resume content</span>
+                            <span data-i18n="interview.prereqResume">Resume content</span>
                         </div>
                     </div>
 
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Step 1: Your Resume / Profile</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.step1Label">Step 1: Your Resume / Profile</label>
                             <input type="file" id="interview-resume-file" accept=".pdf,.docx,.doc,.txt" class="hidden" onchange="handleInterviewFileSelect(event)">
                             <button type="button" onclick="document.getElementById('interview-resume-file').click()" class="w-full border border-dashed border-gray-300 rounded-lg py-2 text-sm text-gray-600 hover:border-purple-500">
-                                <i class="fas fa-upload mr-1"></i> Upload resume file
+                                <i class="fas fa-upload mr-1"></i> <span data-i18n="interview.uploadResume">Upload resume file</span>
                             </button>
                             <div id="interview-file-info" class="hidden mt-2 text-xs text-gray-600 flex items-center justify-between">
                                 <span id="interview-file-name"></span>
-                                <button type="button" onclick="clearInterviewFile()" class="text-red-500">Remove</button>
+                                <button type="button" onclick="clearInterviewFile()" class="text-red-500" data-i18n="interview.remove">Remove</button>
                             </div>
-                            <textarea id="interview-profile-text" rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-2" placeholder="Or paste resume / profile text..."></textarea>
-                            <button type="button" onclick="uploadInterviewProfile()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700">
+                            <textarea id="interview-profile-text" rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-2" data-i18n-placeholder="interview.profilePlaceholder" placeholder="Or paste resume / profile text..."></textarea>
+                            <button type="button" onclick="uploadInterviewProfile()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700" data-i18n="interview.submitProfile">
                                 Submit Profile
                             </button>
                         </div>
 
                         <div id="interview-jd-section" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Step 2: Target Job Description</label>
-                            <textarea id="interview-jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Paste the full job description..."></textarea>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.step2Label">Step 2: Target Job Description</label>
+                            <textarea id="interview-jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-2 text-sm" data-i18n-placeholder="interview.jdPlaceholder" placeholder="Paste the full job description..."></textarea>
                             <div class="mt-2 grid grid-cols-1 gap-2">
                                 <select id="interview-employer-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                                     <option value="">Employer type / 单位性质</option>
@@ -245,15 +245,15 @@
                                     <option value="executive">Executive</option>
                                 </select>
                             </div>
-                            <button type="button" onclick="submitInterviewJobDescription()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700">
+                            <button type="button" onclick="submitInterviewJobDescription()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700" data-i18n="interview.submitJd">
                                 Submit Job Description
                             </button>
                         </div>
 
                         <div id="interview-resume-section" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Step 3: Generate Resume Content</label>
-                            <p class="text-xs text-gray-500 mb-2">Required by interview_agent to tailor questions to your resume</p>
-                            <button type="button" onclick="generateInterviewResume()" class="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700">
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.step3Label">Step 3: Generate Resume Content</label>
+                            <p class="text-xs text-gray-500 mb-2" data-i18n="interview.step3Hint">Required by interview_agent to tailor questions to your resume</p>
+                            <button type="button" onclick="generateInterviewResume()" class="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700" data-i18n="interview.generateResume">
                                 Generate Resume Content
                             </button>
                         </div>
@@ -262,7 +262,7 @@
 
                 <!-- Interviewer Avatar & Tone -->
                 <div class="bg-white rounded-xl p-6 border shadow-sm">
-                    <h3 class="font-bold text-gray-900 mb-4">Interviewer Settings</h3>
+                    <h3 class="font-bold text-gray-900 mb-4" data-i18n="interview.settingsTitle">Interviewer Settings</h3>
                     
                     <div class="flex justify-center mb-4">
                         <div id="interviewer-avatar" class="interviewer-avatar avatar-professional">
@@ -270,42 +270,42 @@
                         </div>
                     </div>
                     
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Interview Style</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="interview.interviewStyle">Interview Style</label>
                     <div class="tone-selector">
                         <div class="tone-option selected" data-tone="professional" onclick="selectTone('professional')">
                             <i class="fas fa-briefcase text-2xl mb-1 block"></i>
-                            <div class="text-xs font-medium">Professional</div>
+                            <div class="text-xs font-medium" data-i18n="interview.toneProfessional">Professional</div>
                         </div>
                         <div class="tone-option" data-tone="friendly" onclick="selectTone('friendly')">
                             <i class="fas fa-smile text-2xl mb-1 block"></i>
-                            <div class="text-xs font-medium">Friendly</div>
+                            <div class="text-xs font-medium" data-i18n="interview.toneFriendly">Friendly</div>
                         </div>
                         <div class="tone-option" data-tone="pressure" onclick="selectTone('pressure')">
                             <i class="fas fa-fire text-2xl mb-1 block"></i>
-                            <div class="text-xs font-medium">Pressure</div>
+                            <div class="text-xs font-medium" data-i18n="interview.tonePressure">Pressure</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Job Information -->
                 <div class="bg-white rounded-xl p-6 border shadow-sm">
-                    <h3 class="font-bold text-gray-900 mb-4">Target Position</h3>
+                    <h3 class="font-bold text-gray-900 mb-4" data-i18n="interview.targetPosition">Target Position</h3>
                     
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-                            <input type="text" id="job-title" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="e.g., Software Engineer">
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.jobTitle">Job Title</label>
+                            <input type="text" id="job-title" class="w-full border border-gray-300 rounded-lg p-2 text-sm" data-i18n-placeholder="interview.jobTitlePlaceholder" placeholder="e.g., Software Engineer">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Company (Optional)</label>
-                            <input type="text" id="company-name" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="e.g., Tech Corp">
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.companyOptional">Company (Optional)</label>
+                            <input type="text" id="company-name" class="w-full border border-gray-300 rounded-lg p-2 text-sm" data-i18n-placeholder="interview.companyPlaceholder" placeholder="e.g., Tech Corp">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.industry">Industry</label>
                             <select id="job-industry" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                                <option value="">Select industry</option>
+                                <option value="" data-i18n="interview.selectIndustry">Select industry</option>
                                 <option value="tech">Technology</option>
                                 <option value="finance">Finance</option>
                                 <option value="ecommerce">E-commerce</option>
@@ -317,19 +317,19 @@
                     
                     <button id="btn-load-questions" onclick="loadInterviewQuestions()" class="mt-4 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Complete all prerequisite steps first">
                         <i class="fas fa-play mr-2"></i>
-                        Start Interview Session
+                        <span data-i18n="interview.startSession">Start Interview Session</span>
                     </button>
-                    <p class="text-xs text-gray-500 mt-2 text-center">Complete profile, JD, and resume steps first</p>
+                    <p class="text-xs text-gray-500 mt-2 text-center" data-i18n="interview.completePrereqHint">Complete profile, JD, and resume steps first</p>
                 </div>
 
                 <!-- Session Progress -->
                 <div class="bg-white rounded-xl p-6 border shadow-sm">
-                    <h3 id="sidebar-progress-title" class="font-bold text-gray-900 mb-4">Session Progress</h3>
+                    <h3 id="sidebar-progress-title" class="font-bold text-gray-900 mb-4" data-i18n="interview.sessionProgress">Session Progress</h3>
                     
                     <div class="space-y-3">
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600">Questions Completed</span>
+                                <span class="text-gray-600" data-i18n="interview.questionsCompleted">Questions Completed</span>
                                 <span id="progress-text" class="font-medium">0 / 0</span>
                             </div>
                             <div class="progress-bar">
@@ -339,7 +339,7 @@
                         
                         <div class="text-sm text-gray-600">
                             <div class="flex justify-between mb-1">
-                                <span>Current Question:</span>
+                                <span data-i18n="interview.currentQuestion">Current Question:</span>
                                 <span id="current-q-num" class="font-medium">-</span>
                             </div>
                         </div>
@@ -351,44 +351,44 @@
             <div class="space-y-6">
                 <!-- Mode Selection -->
                 <div class="bg-white rounded-xl p-4 border shadow-sm">
-                    <h3 class="font-bold text-gray-900 mb-3">Practice Mode</h3>
+                    <h3 class="font-bold text-gray-900 mb-3" data-i18n="interview.practiceMode">Practice Mode</h3>
                     <div class="flex gap-3">
                         <button type="button" class="mode-tab active" data-mode="question_bank" onclick="selectInterviewMode('question_bank')">
                             <i class="fas fa-list-ul mr-1"></i>
-                            Question Bank
+                            <span data-i18n="interview.modeQuestionBank">Question Bank</span>
                         </button>
                         <button type="button" class="mode-tab" data-mode="custom" onclick="selectInterviewMode('custom')">
                             <i class="fas fa-file-upload mr-1"></i>
-                            Custom Questions
+                            <span data-i18n="interview.modeCustom">Custom Questions</span>
                         </button>
                         <button type="button" class="mode-tab" data-mode="interactive" onclick="selectInterviewMode('interactive')">
                             <i class="fas fa-comments mr-1"></i>
-                            Interactive Mock
+                            <span data-i18n="interview.modeInteractive">Interactive Mock</span>
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">
+                    <p class="text-xs text-gray-500 mt-2" data-i18n="interview.modeHint">
                         Question Bank generates staged Q&amp;A; Custom Questions uploads your own list and generates reference answers; Interactive Mock runs live dialogue.
                     </p>
 
                     <!-- Program Version (question bank & interactive) -->
                     <div id="program-version-section" class="mt-4 pt-4 border-t border-gray-100">
-                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Interview Program</h4>
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2" data-i18n="interview.programTitle">Interview Program</h4>
                         <div class="grid sm:grid-cols-3 gap-2 mb-3">
                             <button type="button" class="program-version-option selected text-left p-3 border-2 border-purple-500 rounded-lg bg-purple-50" data-version="quick" onclick="selectProgramVersion('quick')">
-                                <div class="font-medium text-sm text-purple-900">极速版 · ~30min</div>
-                                <div class="text-xs text-gray-600 mt-1">初试+终面合并 + 完整专业复试（推荐日常练习）</div>
+                                <div class="font-medium text-sm text-purple-900" data-i18n="interview.programQuickTitle">极速版 · ~30min</div>
+                                <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programQuickDesc">初试+终面合并 + 完整专业复试（推荐日常练习）</div>
                             </button>
                             <button type="button" class="program-version-option text-left p-3 border-2 border-gray-200 rounded-lg hover:border-purple-300" data-version="full" onclick="selectProgramVersion('full')">
-                                <div class="font-medium text-sm text-gray-900">完整版 · ~60min</div>
-                                <div class="text-xs text-gray-600 mt-1">三轮全流程：初筛 → 专业/技术 → 总监/HR终面</div>
+                                <div class="font-medium text-sm text-gray-900" data-i18n="interview.programFullTitle">完整版 · ~60min</div>
+                                <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programFullDesc">三轮全流程：初筛 → 专业/技术 → 总监/HR终面</div>
                             </button>
                             <button type="button" class="program-version-option text-left p-3 border-2 border-gray-200 rounded-lg hover:border-purple-300" data-version="specialized" onclick="selectProgramVersion('specialized')">
-                                <div class="font-medium text-sm text-gray-900">专项版</div>
-                                <div class="text-xs text-gray-600 mt-1">只练技术题 / 终面谈判 / 简历深挖</div>
+                                <div class="font-medium text-sm text-gray-900" data-i18n="interview.programSpecialTitle">专项版</div>
+                                <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programSpecialDesc">只练技术题 / 终面谈判 / 简历深挖</div>
                             </button>
                         </div>
                         <div id="specialized-focus-section" class="hidden">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">专项练习方向</label>
+                            <label class="block text-xs font-medium text-gray-700 mb-1" data-i18n="interview.specializedFocus">专项练习方向</label>
                             <select id="specialized-focus" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="updateSpecializedFocus()">
                                 <option value="technical">只练技术/专业题</option>
                                 <option value="final_negotiation">只练终面谈判</option>
@@ -403,9 +403,9 @@
                 <div id="custom-questions-panel" class="hidden bg-white rounded-xl p-6 border shadow-sm">
                     <h3 class="font-bold text-gray-900 mb-2 flex items-center gap-2">
                         <i class="fas fa-file-upload text-purple-600"></i>
-                        Upload Your Interview Questions
+                        <span data-i18n="interview.customUploadTitle">Upload Your Interview Questions</span>
                     </h3>
-                    <p class="text-sm text-gray-600 mb-4">
+                    <p class="text-sm text-gray-600 mb-4" data-i18n="interview.customUploadDesc">
                         Paste or upload your own questions. AI will generate personalized reference answers based on your profile and job description.
                     </p>
                     <textarea id="custom-questions-text" rows="8" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="One question per line, e.g.&#10;请介绍一下你最有成就感的项目&#10;你如何处理跨部门协作中的冲突？&#10;为什么选择这个岗位？"></textarea>
@@ -413,10 +413,10 @@
                         <input type="file" id="custom-questions-file" accept=".txt,.csv,.md" class="hidden" onchange="handleCustomQuestionsFileSelect(event)">
                         <button type="button" onclick="document.getElementById('custom-questions-file').click()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
                             <i class="fas fa-upload mr-1"></i>
-                            Upload .txt file
+                            <span data-i18n="interview.uploadTxt">Upload .txt file</span>
                         </button>
                         <span id="custom-questions-file-name" class="text-xs text-gray-500"></span>
-                        <button type="button" onclick="clearCustomQuestionsFile()" class="text-xs text-red-500 hidden" id="btn-clear-custom-file">Remove file</button>
+                        <button type="button" onclick="clearCustomQuestionsFile()" class="text-xs text-red-500 hidden" id="btn-clear-custom-file" data-i18n="interview.removeFile">Remove file</button>
                     </div>
                     <p class="text-xs text-gray-500 mt-2">
                         <i class="fas fa-info-circle mr-1"></i>
@@ -471,19 +471,19 @@
                 <div id="answer-section" class="bg-white rounded-xl p-6 border shadow-sm hidden">
                     <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i class="fas fa-pen text-blue-600"></i>
-                        Your Answer
+                        <span data-i18n="interview.yourAnswer">Your Answer</span>
                     </h3>
                     
-                    <textarea id="answer-input" class="w-full border border-gray-300 rounded-lg p-4 text-sm answer-textarea focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Type your answer here. Use the STAR method (Situation, Task, Action, Result) for behavioral questions..."></textarea>
+                    <textarea id="answer-input" class="w-full border border-gray-300 rounded-lg p-4 text-sm answer-textarea focus:ring-2 focus:ring-purple-500 focus:border-transparent" data-i18n-placeholder="interview.answerPlaceholder" placeholder="Type your answer here. Use the STAR method (Situation, Task, Action, Result) for behavioral questions..."></textarea>
                     
                     <div class="flex justify-between items-center mt-4">
                         <div class="text-sm text-gray-500">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Tip: Be specific and provide concrete examples
+                            <span data-i18n="interview.answerTip">Tip: Be specific and provide concrete examples</span>
                         </div>
                         <button onclick="submitAnswer()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
                             <i class="fas fa-check mr-2"></i>
-                            Submit Answer
+                            <span data-i18n="interview.submitAnswer">Submit Answer</span>
                         </button>
                     </div>
                 </div>
@@ -493,9 +493,9 @@
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-bold text-gray-900 flex items-center gap-2">
                             <i class="fas fa-lightbulb text-amber-500"></i>
-                            Reference Answer
+                            <span data-i18n="interview.referenceAnswer">Reference Answer</span>
                         </h3>
-                        <button type="button" onclick="toggleReferenceAnswer()" id="btn-toggle-reference" class="text-sm text-purple-600 hover:text-purple-800">
+                        <button type="button" onclick="toggleReferenceAnswer()" id="btn-toggle-reference" class="text-sm text-purple-600 hover:text-purple-800" data-i18n="interview.show">
                             Show
                         </button>
                     </div>
@@ -506,7 +506,7 @@
                 <div id="feedback-section" class="hidden">
                     <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i class="fas fa-robot text-purple-600"></i>
-                        AI Feedback & Suggestions
+                        <span data-i18n="interview.feedbackTitle">AI Feedback & Suggestions</span>
                     </h3>
                     
                     <div id="feedback-content">
@@ -518,7 +518,7 @@
                 <div id="report-section" class="session-report hidden">
                     <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
                         <i class="fas fa-chart-line"></i>
-                        Interview Session Report
+                        <span data-i18n="interview.reportTitle">Interview Session Report</span>
                     </h3>
                     
                     <div id="report-content" class="space-y-4">
@@ -528,11 +528,11 @@
                     <div class="flex gap-3 mt-6">
                         <button onclick="downloadReport()" class="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                             <i class="fas fa-download mr-2"></i>
-                            Download Report
+                            <span data-i18n="interview.downloadReport">Download Report</span>
                         </button>
                         <button onclick="restartSession()" class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
                             <i class="fas fa-redo mr-2"></i>
-                            New Session
+                            <span data-i18n="interview.newSession">New Session</span>
                         </button>
                     </div>
                 </div>
@@ -652,17 +652,17 @@
     <!-- Save Mock Interview Modal (logged-in users only) -->
     <div id="save-interview-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl p-8 max-w-md mx-4">
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Save mock interview to your account?</h3>
-            <p class="text-sm text-gray-600 mb-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="interview.saveModalTitle">Save mock interview to your account?</h3>
+            <p class="text-sm text-gray-600 mb-4" data-i18n="interview.saveModalBody">
                 Your dialogue and debrief report can be saved to the GBA platform for later review.
                 If you choose not to save, nothing will be written to your account.
             </p>
             <div class="flex flex-col gap-2">
                 <button type="button" id="btn-interview-save-confirm" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700">
                     <i class="fas fa-cloud-upload-alt mr-2"></i>
-                    Save to account
+                    <span data-i18n="interview.saveToAccount">Save to account</span>
                 </button>
-                <button type="button" id="btn-interview-save-skip" class="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50">
+                <button type="button" id="btn-interview-save-skip" class="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50" data-i18n="interview.dontSave">
                     Don't save
                 </button>
             </div>
@@ -674,10 +674,10 @@
         <span id="toast-message"></span>
     </div>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/target-job-context.js"></script>
     <script src="assets/js/api-client.js"></script>
     <script src="assets/js/interview-prep.js"></script>
-    <script src="../assets/i18n/i18n.js"></script>
 </body>
 </html>

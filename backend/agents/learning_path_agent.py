@@ -13,6 +13,7 @@ from agents.json_contracts import LearningPathResourcesOutput, LearningPathTimel
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.learning_path import LEARNING_PATH_TIMELINE_PROMPT
 from prompts.learning_path_resources import LEARNING_PATH_RESOURCES_PROMPT
+from tools.output_language import prompt_language_kwargs
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import CopilotState, Gap, LearningPathPhase, LearningPathResource
 from workflow.trace import append_trace, summarize_user_message
@@ -119,6 +120,7 @@ async def _run_resources_phase(state: CopilotState, gaps: list[Gap]) -> tuple[li
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
         gaps_json=json.dumps(gaps_payload, ensure_ascii=False, indent=2),
+        **prompt_language_kwargs(state),
     )
     llm = get_llm()
     parsed = await ainvoke_json_with_schema(
@@ -186,6 +188,7 @@ async def _run_timeline_phase(state: CopilotState, daily_hours: float) -> dict[s
         estimated_total_hours=estimated_hours,
         daily_hours=daily_hours,
         total_weeks=total_weeks,
+        **prompt_language_kwargs(state),
     )
     llm = get_llm()
     parsed = await ainvoke_json_with_schema(

@@ -3,6 +3,17 @@
  * Parsed items shown one-by-one; each entry stored separately in draft.modules / draft.education.
  */
 
+function profileUiText(key, fallback, vars) {
+    if (window.GBAI18n && GBAI18n.t) return GBAI18n.t(key, fallback, vars);
+    var msg = fallback || key;
+    if (vars) {
+        Object.keys(vars).forEach(function (k) {
+            msg = String(msg).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+    }
+    return msg;
+}
+
 const ProfileEditor = {
     draft: null,
     saveTimer: null,
@@ -101,7 +112,7 @@ const ProfileEditor = {
                 img.classList.remove('hidden');
                 placeholder.classList.add('hidden');
                 removeBtn.classList.remove('hidden');
-                if (status) status.textContent = '已上传';
+                if (status) status.textContent = profileUiText('resume.photoUploaded', 'Uploaded');
             } else {
                 img.src = '';
                 img.classList.add('hidden');
@@ -115,10 +126,10 @@ const ProfileEditor = {
     compressImage(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onerror = () => reject(new Error('无法读取图片'));
+            reader.onerror = () => reject(new Error(profileUiText('resume.photo.readFailed', 'Could not read image')));
             reader.onload = () => {
                 const image = new Image();
-                image.onerror = () => reject(new Error('图片格式无效'));
+                image.onerror = () => reject(new Error(profileUiText('resume.photo.invalidImage', 'Invalid image format')));
                 image.onload = () => {
                     const maxW = 400;
                     const maxH = 520;
@@ -149,11 +160,11 @@ const ProfileEditor = {
 
     async handlePhotoSelect(file) {
         if (!file.type.startsWith('image/')) {
-            Utils.showToast('请上传 JPG、PNG 或 WebP 图片');
+            Utils.showToast(uiT('resume.photo.invalidType', 'Please upload a JPG, PNG, or WebP image'));
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            Utils.showToast('图片不能超过 5MB');
+            Utils.showToast(uiT('resume.photo.tooLarge', 'Image must be 5MB or smaller'));
             return;
         }
 
@@ -167,9 +178,9 @@ const ProfileEditor = {
             if (typeof refreshLanguageChecklist === 'function' && (typeof currentResumeLanguage === 'undefined' || currentResumeLanguage === 'zh')) {
                 await refreshLanguageChecklist('zh');
             }
-            Utils.showToast('证件照已上传');
+            Utils.showToast(profileUiText('resume.photo.uploaded', 'ID photo uploaded'));
         } catch (error) {
-            Utils.showToast('照片上传失败：' + (error.message || '请重试'));
+            Utils.showToast(uiT('resume.photo.uploadFailed', 'Photo upload failed: {msg}', { msg: error.message || uiT('common.retry', 'Please try again') }));
         }
     },
 
@@ -182,7 +193,7 @@ const ProfileEditor = {
         if (typeof refreshLanguageChecklist === 'function' && (typeof currentResumeLanguage === 'undefined' || currentResumeLanguage === 'zh')) {
             await refreshLanguageChecklist('zh');
         }
-        Utils.showToast('已移除证件照');
+        Utils.showToast(profileUiText('resume.photo.removed', 'ID photo removed'));
     },
 
     newId(prefix) {
@@ -377,7 +388,7 @@ const ProfileEditor = {
     scheduleSave(immediate = false) {
         if (this.saveTimer) clearTimeout(this.saveTimer);
         this.saveTimer = setTimeout(() => this.persistDraft(), immediate ? 200 : 1200);
-        this.setSaveStatus('Saving…');
+        this.setSaveStatus(profileUiText('resume.saving', 'Saving…'));
     },
 
     async persistDraft() {
@@ -386,10 +397,12 @@ const ProfileEditor = {
             const draft = this.collectDraftFromForm();
             this.draft = draft;
             await apiClient.saveResumeDraft(draft);
-            this.setSaveStatus(apiClient.isLoggedIn() ? 'Saved (restorable for 12h)' : 'Saved for this session');
+            this.setSaveStatus(apiClient.isLoggedIn()
+                ? profileUiText('resume.draftSaved', 'Saved (restorable for 12h)')
+                : profileUiText('resume.draftSavedSession', 'Saved for this session'));
         } catch (error) {
             console.error('Draft save failed:', error);
-            this.setSaveStatus('Save failed — edits kept locally');
+            this.setSaveStatus(profileUiText('resume.draftSaveFailed', 'Save failed — edits kept locally'));
         }
     },
 
@@ -584,4 +597,8 @@ const ProfileEditor = {
 
 document.addEventListener('DOMContentLoaded', () => {
     ProfileEditor.init();
+});
+
+window.addEventListener('gba:language-changed', () => {
+    ProfileEditor.renderPhotoPreview();
 });

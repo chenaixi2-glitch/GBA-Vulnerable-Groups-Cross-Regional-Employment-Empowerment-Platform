@@ -1,50 +1,55 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>岗位匹配 — GBA Platform</title>
+    <title>Job Matching — GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'); body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-100 min-h-screen" data-page="individual">
     <header class="bg-white border-b px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-3">
-            <a href="portal.html#dashboard" class="text-blue-700 font-semibold">个人门户</a>
-            <a href="my-applications.html" class="text-emerald-700 hover:underline">我的投递</a>
+            <a href="portal.html#dashboard" class="text-blue-700 font-semibold" data-i18n="jobs.portalLink">Individual Portal</a>
+            <a href="my-applications.html" class="text-emerald-700 hover:underline" data-i18n="jobs.myApplications">My Applications</a>
         </div>
         <span id="match-status" class="text-slate-500 text-xs"></span>
     </header>
 
     <div class="max-w-6xl mx-auto px-4 py-8">
         <div class="flex flex-wrap gap-2 mb-4">
-            <button type="button" data-source="internal" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-teal-600 text-white">企业发布岗位</button>
-            <button type="button" data-source="external" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50">爬虫岗位（源站投递）</button>
-            <button type="button" data-source="all" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50">全部岗位</button>
+            <button type="button" data-source="internal" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-teal-600 text-white" data-i18n="jobs.tabInternal">Company Postings</button>
+            <button type="button" data-source="external" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50" data-i18n="jobs.tabExternal">External Jobs (Apply on Source Site)</button>
+            <button type="button" data-source="all" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50" data-i18n="jobs.tabAll">All Jobs</button>
         </div>
 
         <div class="grid lg:grid-cols-5 gap-6">
             <div class="lg:col-span-2 bg-white rounded-2xl border shadow p-4 max-h-[32rem] overflow-y-auto">
-                <h2 class="font-bold text-slate-800 mb-1">推荐岗位</h2>
-                <p id="source-hint" class="text-xs text-slate-500 mb-4">企业端发布的岗位，可在平台内直接投递</p>
+                <h2 class="font-bold text-slate-800 mb-1" data-i18n="jobs.recommendedJobs">Recommended Jobs</h2>
+                <p id="source-hint" class="text-xs text-slate-500 mb-4" data-i18n="jobs.sourceHintInternal">Jobs posted by companies — apply directly on the platform</p>
                 <div id="job-list" class="space-y-2 text-sm"></div>
             </div>
             <div class="lg:col-span-3 space-y-4">
-                <div id="detail" class="bg-white rounded-2xl border p-6 shadow text-sm text-slate-600">请从左侧选择岗位查看详情。</div>
+                <div id="detail" class="bg-white rounded-2xl border p-6 shadow text-sm text-slate-600">
+                    <span data-i18n="jobs.selectJobHint">Select a job on the left to view details.</span>
+                </div>
                 <div id="login-hint" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
-                    请先 <a href="../index.html" class="underline font-semibold">登录个人账号</a> 并完善简历，以查看匹配岗位。
+                    <span data-i18n="jobs.loginHintPrefix">Please</span>
+                    <a href="../index.html" class="underline font-semibold" data-i18n="jobs.loginHintLink">log in to your account</a>
+                    <span data-i18n="jobs.loginHintSuffix">and complete your resume to see matched jobs.</span>
                 </div>
             </div>
         </div>
     </div>
 
     <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-slate-600 border-t border-slate-200">
-        <a href="../index.html" class="hover:text-blue-700">首页</a>
+        <a href="../index.html" class="hover:text-blue-700" data-i18n="jobs.footerHome">Home</a>
         ·
-        <a href="portal.html" class="text-emerald-700 hover:underline font-medium">个人门户</a>
+        <a href="portal.html" class="text-emerald-700 hover:underline font-medium" data-i18n="jobs.footerPortal">Individual Portal</a>
     </footer>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="../mock-api.js"></script>
     <script src="assets/js/platform-api.js"></script>
@@ -52,12 +57,11 @@
         var jobs = [];
         var selectedJob = null;
         var currentSource = 'internal';
+        var lastMatchMeta = null;
 
-        var sourceHints = {
-            internal: '企业端发布的岗位，可在平台内直接投递',
-            external: '爬虫同步的外部岗位，请前往广东省残疾人就业服务网投递',
-            all: '包含企业发布与爬虫同步岗位，投递方式因来源而异',
-        };
+        function jobsT(key, fallback, vars) {
+            return window.GBAI18n ? GBAI18n.t('jobs.' + key, fallback, vars) : fallback;
+        }
 
         function escape(s) {
             var d = document.createElement('div');
@@ -65,18 +69,48 @@
             return d.innerHTML;
         }
 
+        function sourceHintKey(source) {
+            if (source === 'external') return 'sourceHintExternal';
+            if (source === 'all') return 'sourceHintAll';
+            return 'sourceHintInternal';
+        }
+
+        function updateSourceHint() {
+            var hint = document.getElementById('source-hint');
+            var key = sourceHintKey(currentSource);
+            var fallbacks = {
+                sourceHintInternal: 'Jobs posted by companies — apply directly on the platform',
+                sourceHintExternal: 'Externally synced jobs — apply on the Guangdong Disabled Employment Service website',
+                sourceHintAll: 'Includes company and synced external jobs — application method varies by source'
+            };
+            hint.textContent = jobsT(key, fallbacks[key]);
+        }
+
+        function buildStatusText(meta) {
+            if (!meta) return '';
+            var resumePart = meta.has_resume
+                ? jobsT('hasResume', 'Resume linked')
+                : jobsT('suggestResume', 'Complete your resume');
+            if (meta.user_group_types && meta.user_group_types.length) {
+                return jobsT('groupTypes', 'Group types') + '：' + meta.user_group_types.join('、') + ' · ' + resumePart;
+            }
+            return jobsT('noVulnerableGroup', 'No vulnerable group type matched') + ' · ' + resumePart;
+        }
+
         function sourceBadge(source) {
             if (source === 'external') {
-                return '<span class="text-blue-700 text-xs font-medium ml-1">爬虫</span>';
+                return '<span class="text-blue-700 text-xs font-medium ml-1">' + escape(jobsT('badgeExternal', 'External')) + '</span>';
             }
-            return '<span class="text-teal-700 text-xs font-medium ml-1">企业</span>';
+            return '<span class="text-teal-700 text-xs font-medium ml-1">' + escape(jobsT('badgeInternal', 'Company')) + '</span>';
         }
 
         function mapJob(j) {
             return {
                 id: j.id,
                 title: j.title,
-                company: j.company_name || j.department || (j.source === 'external' ? '外部岗位' : '企业岗位'),
+                company: j.company_name || j.department || (j.source === 'external'
+                    ? jobsT('companyExternal', 'External Job')
+                    : jobsT('companyInternal', 'Company Job')),
                 location: j.location || '',
                 salary: j.salary || '',
                 skills: j.skills || [],
@@ -90,53 +124,34 @@
             };
         }
 
-        async function loadJobs() {
+        function renderJobList() {
             var list = document.getElementById('job-list');
-            var status = document.getElementById('match-status');
-            list.innerHTML = '<p class="text-slate-400 py-4"><i class="fas fa-spinner fa-spin"></i> 加载中…</p>';
-            document.getElementById('source-hint').textContent = sourceHints[currentSource] || '';
-
-            jobs = [];
-            try {
-                if (typeof PlatformAPI !== 'undefined' && PlatformAPI.getToken()) {
-                    var res = await PlatformAPI.JobsAPI.matched(currentSource);
-                    if (res.success) {
-                        jobs = (res.data.jobs || []).map(mapJob);
-                        status.textContent = (res.data.user_group_types && res.data.user_group_types.length)
-                            ? '人群类型：' + res.data.user_group_types.join('、') + (res.data.has_resume ? ' · 已关联简历' : ' · 建议完善简历')
-                            : '暂未匹配到弱势群体类型' + (res.data.has_resume ? ' · 已关联简历' : ' · 建议完善简历');
-                    }
-                }
-                if (!jobs.length && typeof API !== 'undefined' && currentSource === 'internal') {
-                    var mock = await API.matchJobs({}, {});
-                    if (mock.success) jobs = (mock.data.jobs || []).map(function (j) {
-                        j.source = 'internal';
-                        return j;
-                    });
-                    document.getElementById('login-hint').classList.remove('hidden');
-                }
-            } catch (e) {
-                list.innerHTML = '<p class="text-red-600">' + escape(e.message) + '</p>';
-                return;
-            }
-
             list.innerHTML = '';
             if (!jobs.length) {
-                list.innerHTML = '<p class="text-slate-500 py-4">暂无符合您人群类型的岗位，请稍后再来或切换来源。</p>';
+                list.innerHTML = '<p class="text-slate-500 py-4">' + escape(jobsT('noJobs', 'No jobs match your profile. Try again later or switch source.')) + '</p>';
                 return;
             }
+
+            var vulnLabel = escape(jobsT('vulnFriendly', 'Vulnerable-group friendly'));
+            var matchLabel = escape(jobsT('matchScore', 'Match score'));
 
             jobs.forEach(function (j) {
                 var b = document.createElement('button');
                 b.type = 'button';
                 b.className = 'w-full text-left px-4 py-3 rounded-xl border hover:border-teal-500 hover:bg-teal-50 transition-colors flex flex-col gap-1';
                 b.innerHTML = '<span class="font-semibold text-slate-900">' + escape(j.title) + sourceBadge(j.source) +
-                    (j.vulnerable_group_friendly ? ' <span class="text-emerald-700 text-xs font-medium">弱势群体友好</span>' : '') + '</span>' +
+                    (j.vulnerable_group_friendly ? ' <span class="text-emerald-700 text-xs font-medium">' + vulnLabel + '</span>' : '') + '</span>' +
                     '<span class="text-xs opacity-75">' + escape(j.company) + ' · ' + escape(j.location) + '</span>' +
-                    '<span class="text-xs text-teal-700 font-medium">匹配分: ' + (j.matchScore || '-') + '</span>';
+                    '<span class="text-xs text-teal-700 font-medium">' + matchLabel + ': ' + (j.matchScore || '-') + '</span>';
                 b.onclick = function () { renderDetail(j); };
                 list.appendChild(b);
             });
+        }
+
+        function resetDetailPlaceholder() {
+            selectedJob = null;
+            document.getElementById('detail').innerHTML =
+                '<span>' + escape(jobsT('selectJobHint', 'Select a job on the left to view details.')) + '</span>';
         }
 
         function renderDetail(j) {
@@ -145,24 +160,31 @@
                 return '<li class="text-sm text-slate-600">' + escape(r) + '</li>';
             }).join('');
 
+            var vulnLabel = escape(jobsT('vulnFriendly', 'Vulnerable-group friendly'));
+            var jobType = j.source === 'external'
+                ? escape(jobsT('jobTypeExternal', 'Synced External'))
+                : escape(jobsT('jobTypeInternal', 'Company Posted'));
+            var jobLabel = escape(jobsT('jobLabel', 'Job'));
+            var scoreUnit = escape(jobsT('scoreUnit', 'pts'));
+
             var actionBtn = '';
             if (j.source === 'external') {
                 var href = j.source_url || 'https://www.jyfw.org.cn/';
                 actionBtn = '<button type="button" id="external-apply-btn" class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700">' +
-                    '<i class="fas fa-external-link-alt"></i> 前往源站投递</button>' +
-                    '<p class="text-xs text-slate-500 mt-2">外部岗位需在广东省残疾人就业服务网完成投递，平台将记录您的跳转意向。</p>';
+                    '<i class="fas fa-external-link-alt"></i> ' + escape(jobsT('applyExternal', 'Go to Source Site')) + '</button>' +
+                    '<p class="text-xs text-slate-500 mt-2">' + escape(jobsT('externalNote', 'External jobs require applying on the source website; we will record your redirect interest.')) + '</p>';
             } else {
                 actionBtn = '<a href="apply.html?jobId=' + encodeURIComponent(j.id) + '" class="inline-flex items-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-orange-700">' +
-                    '<i class="fas fa-paper-plane"></i> 平台内投递</a>';
+                    '<i class="fas fa-paper-plane"></i> ' + escape(jobsT('applyInternal', 'Apply on Platform')) + '</a>';
             }
 
             document.getElementById('detail').innerHTML =
                 '<div class="flex justify-between gap-4 flex-wrap mb-4">' +
-                '<div><p class="text-xs uppercase tracking-wide text-slate-400">岗位 · ' + (j.source === 'external' ? '爬虫同步' : '企业发布') + '</p>' +
+                '<div><p class="text-xs uppercase tracking-wide text-slate-400">' + jobLabel + ' · ' + jobType + '</p>' +
                 '<h3 class="text-xl font-bold text-slate-900">' + escape(j.title) +
-                (j.vulnerable_group_friendly ? ' <span class="text-emerald-700 text-sm font-medium">弱势群体友好</span>' : '') + '</h3>' +
+                (j.vulnerable_group_friendly ? ' <span class="text-emerald-700 text-sm font-medium">' + vulnLabel + '</span>' : '') + '</h3>' +
                 '<p class="text-sm text-teal-700 font-medium">' + escape(j.company) + '</p></div>' +
-                '<span class="self-start px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-bold">' + (j.matchScore || '-') + ' 分</span></div>' +
+                '<span class="self-start px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-bold">' + (j.matchScore || '-') + ' ' + scoreUnit + '</span></div>' +
                 '<p class="mb-3 whitespace-pre-wrap">' + escape(j.description) + '</p>' +
                 '<div class="flex flex-wrap gap-2 mb-4">' +
                 (j.skills || []).map(function (s) { return '<span class="bg-slate-100 px-2 py-1 rounded-full text-xs">' + escape(s) + '</span>'; }).join('') +
@@ -184,6 +206,64 @@
             }
         }
 
+        function refreshDynamicUi() {
+            updateSourceHint();
+            document.getElementById('match-status').textContent = buildStatusText(lastMatchMeta);
+            if (jobs.length) {
+                renderJobList();
+                if (selectedJob) {
+                    var refreshed = jobs.find(function (j) { return j.id === selectedJob.id; });
+                    if (refreshed) renderDetail(refreshed);
+                    else resetDetailPlaceholder();
+                }
+            } else if (!document.getElementById('job-list').querySelector('.fa-spinner')) {
+                var list = document.getElementById('job-list');
+                if (list.children.length === 1 && list.querySelector('p')) {
+                    list.innerHTML = '<p class="text-slate-500 py-4">' + escape(jobsT('noJobs', 'No jobs match your profile. Try again later or switch source.')) + '</p>';
+                }
+            }
+            if (!selectedJob) resetDetailPlaceholder();
+        }
+
+        async function loadJobs() {
+            var list = document.getElementById('job-list');
+            var status = document.getElementById('match-status');
+            list.innerHTML = '<p class="text-slate-400 py-4"><i class="fas fa-spinner fa-spin"></i> ' + escape(jobsT('loading', 'Loading…')) + '</p>';
+            updateSourceHint();
+            lastMatchMeta = null;
+            status.textContent = '';
+
+            jobs = [];
+            selectedJob = null;
+            try {
+                if (typeof PlatformAPI !== 'undefined' && PlatformAPI.getToken()) {
+                    var res = await PlatformAPI.JobsAPI.matched(currentSource);
+                    if (res.success) {
+                        jobs = (res.data.jobs || []).map(mapJob);
+                        lastMatchMeta = {
+                            user_group_types: res.data.user_group_types,
+                            has_resume: res.data.has_resume
+                        };
+                        status.textContent = buildStatusText(lastMatchMeta);
+                    }
+                }
+                if (!jobs.length && typeof API !== 'undefined' && currentSource === 'internal') {
+                    var mock = await API.matchJobs({}, {});
+                    if (mock.success) jobs = (mock.data.jobs || []).map(function (j) {
+                        j.source = 'internal';
+                        return j;
+                    });
+                    document.getElementById('login-hint').classList.remove('hidden');
+                }
+            } catch (e) {
+                list.innerHTML = '<p class="text-red-600">' + escape(e.message) + '</p>';
+                return;
+            }
+
+            renderJobList();
+            if (!selectedJob) resetDetailPlaceholder();
+        }
+
         document.querySelectorAll('.source-tab').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 currentSource = this.dataset.source;
@@ -195,8 +275,15 @@
             });
         });
 
-        loadJobs();
+        window.addEventListener('gba:language-changed', function () {
+            refreshDynamicUi();
+        });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadJobs);
+        } else {
+            loadJobs();
+        }
     </script>
-    <script src="../assets/i18n/i18n.js"></script>
 </body>
 </html>

@@ -8,69 +8,96 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); body{font-family:'Inter',system-ui,sans-serif;}</style>
 </head>
-<body class="bg-amber-50/40 min-h-screen">
+<body class="bg-amber-50/40 min-h-screen" data-page="individual">
     <header class="bg-white border-b px-4 py-3 flex justify-between flex-wrap gap-2">
-        <nav class="text-sm"><a href="portal.html#ai-features" class="text-blue-700 font-medium">Interactive tools</a> · <strong>Policy navigator</strong></nav>
-        <span class="text-xs text-slate-500">Illustrative only — confirm with accountants & bureaus</span>
+        <nav class="text-sm"><a href="portal.html#ai-features" class="text-blue-700 font-medium" data-i18n="policy.navTools">Interactive tools</a> · <strong data-i18n="policy.navTitle">Policy navigator</strong></nav>
+        <span class="text-xs text-slate-500" data-i18n="policy.disclaimer">Illustrative only — confirm with accountants & bureaus</span>
     </header>
 
     <div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
         <div class="flex gap-2 p-1 bg-white rounded-xl border shadow-sm overflow-x-auto">
-            <button type="button" class="tab px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white" data-tab="iit">IIT subsidy</button>
-            <button type="button" class="tab px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-100" data-tab="levy">Disability levy</button>
-            <button type="button" class="tab px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-100" data-tab="sso">Social security transfer</button>
+            <button type="button" class="tab px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white" data-tab="iit" data-i18n="policy.tabIit">IIT subsidy</button>
+            <button type="button" class="tab px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-100" data-tab="levy" data-i18n="policy.tabLevy">Disability levy</button>
+            <button type="button" class="tab px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-100" data-tab="sso" data-i18n="policy.tabSso">Social security transfer</button>
         </div>
 
         <section id="tab-iit" class="tabsheet bg-white rounded-2xl border p-6 shadow">
-            <h1 class="text-xl font-bold mb-2"><i class="fas fa-percent text-amber-500 mr-2"></i>IIT subsidy quick model</h1>
-            <p class="text-slate-600 text-sm mb-6">Models HK/Macau talent subsidy logic: subsidy ≈ IIT paid − 15 % × taxable income (cannot go negative).</p>
+            <h1 class="text-xl font-bold mb-2"><i class="fas fa-percent text-amber-500 mr-2"></i><span data-i18n="policy.iitTitle">IIT subsidy quick model</span></h1>
+            <p class="text-slate-600 text-sm mb-6" data-i18n="policy.iitDesc">Models HK/Macau talent subsidy logic: subsidy ≈ IIT paid − 15 % × taxable income (cannot go negative).</p>
             <div class="grid sm:grid-cols-2 gap-4">
-                <label class="block text-sm"><span class="font-medium text-slate-700">Annual taxable income (CNY thousands)</span>
+                <label class="block text-sm"><span class="font-medium text-slate-700" data-i18n="policy.iitIncLabel">Annual taxable income (CNY thousands)</span>
                     <input type="number" id="inc" value="1000" step="50" class="mt-1 w-full border rounded-lg p-2 text-sm"></label>
-                <label class="block text-sm"><span class="font-medium text-slate-700">Annual IIT withheld (same unit)</span>
+                <label class="block text-sm"><span class="font-medium text-slate-700" data-i18n="policy.iitTaxLabel">Annual IIT withheld (same unit)</span>
                     <input type="number" id="tax" value="300" step="10" class="mt-1 w-full border rounded-lg p-2 text-sm"></label>
             </div>
-            <button type="button" id="btn-iit" class="mt-4 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2 rounded-lg">Calculate illustrative subsidy</button>
+            <button type="button" id="btn-iit" class="mt-4 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2 rounded-lg" data-i18n="policy.iitBtn">Calculate illustrative subsidy</button>
             <div id="res-iit" class="mt-6 p-5 bg-amber-50 rounded-xl border border-amber-200 text-sm hidden">
-                <p class="font-semibold text-amber-900 mb-2">Estimated subsidy bracket</p>
+                <p class="font-semibold text-amber-900 mb-2" data-i18n="policy.iitResultTitle">Estimated subsidy bracket</p>
                 <p id="out-iit" class="font-mono text-slate-800"></p>
             </div>
         </section>
 
         <section id="tab-levy" class="tabsheet hidden bg-white rounded-2xl border p-6 shadow">
-            <h1 class="text-xl font-bold mb-2"><i class="fas fa-wheelchair text-blue-600 mr-2"></i>Disability employment levy estimator</h1>
-            <p class="text-sm text-slate-600 mb-4">Assume required ratio <strong>1.5 %</strong> of headcount. Formula shown for education only.</p>
+            <h1 class="text-xl font-bold mb-2"><i class="fas fa-wheelchair text-blue-600 mr-2"></i><span data-i18n="policy.levyTitle">Disability employment levy estimator</span></h1>
+            <p class="text-sm text-slate-600 mb-4" data-i18n="policy.levyDesc">Assume required ratio 1.5% of headcount. Formula shown for education only.</p>
             <div class="grid sm:grid-cols-3 gap-4">
-                <label class="text-sm">Total employees <input type="number" id="h" value="120" class="mt-1 w-full border rounded-lg p-2"></label>
-                <label class="text-sm">PWD hires <input type="number" id="p" value="1" class="mt-1 w-full border rounded-lg p-2"></label>
-                <label class="text-sm">Avg. salary (annual, k¥) <input type="number" id="avg" value="240" class="mt-1 w-full border rounded-lg p-2"></label>
+                <label class="text-sm"><span data-i18n="policy.levyEmployees">Total employees</span> <input type="number" id="h" value="120" class="mt-1 w-full border rounded-lg p-2"></label>
+                <label class="text-sm"><span data-i18n="policy.levyPwd">PWD hires</span> <input type="number" id="p" value="1" class="mt-1 w-full border rounded-lg p-2"></label>
+                <label class="text-sm"><span data-i18n="policy.levyAvgSalary">Avg. salary (annual, k¥)</span> <input type="number" id="avg" value="240" class="mt-1 w-full border rounded-lg p-2"></label>
             </div>
-            <button type="button" id="btn-levy" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Estimate annual levy baseline</button>
+            <button type="button" id="btn-levy" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700" data-i18n="policy.levyBtn">Estimate annual levy baseline</button>
             <p id="out-levy2" class="mt-4 text-sm bg-blue-50 p-4 rounded-xl border hidden font-mono"></p>
         </section>
 
         <section id="tab-sso" class="tabsheet hidden bg-white rounded-2xl border p-6 shadow">
-            <h1 class="text-xl font-bold mb-4"><i class="fas fa-arrow-right-arrow-left text-emerald-600 mr-2"></i>Social security · cross-border playbook</h1>
+            <h1 class="text-xl font-bold mb-4"><i class="fas fa-arrow-right-arrow-left text-emerald-600 mr-2"></i><span data-i18n="policy.ssoTitle">Social security · cross-border playbook</span></h1>
             <ol class="space-y-4 text-sm border-l-2 border-emerald-300 pl-4">
-                <li><span class="font-semibold text-emerald-700">Evidence pack</span> — passports, payroll contract, enrolment confirmations.</li>
-                <li><span class="font-semibold text-emerald-700">Certificate of contributions</span> issued by the departing fund office.</li>
-                <li><span class="font-semibold text-emerald-700">Incoming city application</span> filed at the bureau that will administer you next.</li>
-                <li><span class="font-semibold text-emerald-700">Consolidated transfer memo</span> once both desks reconcile.</li>
+                <li data-i18n="policy.ssoStep1">Evidence pack — passports, payroll contract, enrolment confirmations.</li>
+                <li data-i18n="policy.ssoStep2">Certificate of contributions issued by the departing fund office.</li>
+                <li data-i18n="policy.ssoStep3">Incoming city application filed at the bureau that will administer you next.</li>
+                <li data-i18n="policy.ssoStep4">Consolidated transfer memo once both desks reconcile.</li>
             </ol>
-            <button type="button" id="btn-policy-qa" class="mt-6 border border-emerald-600 text-emerald-700 px-5 py-2 rounded-lg hover:bg-emerald-50">Fetch AI policy snippet</button>
+            <button type="button" id="btn-policy-qa" class="mt-6 border border-emerald-600 text-emerald-700 px-5 py-2 rounded-lg hover:bg-emerald-50" data-i18n="policy.ssoBtn">Fetch AI policy snippet</button>
             <pre id="sso-ai" class="mt-4 text-xs bg-slate-900 text-green-400 p-4 rounded-xl whitespace-pre-wrap hidden overflow-auto max-h-64"></pre>
         </section>
     </div>
 
     <footer class="max-w-4xl mx-auto px-4 py-8 text-center text-sm text-slate-600 border-t border-amber-200/60">
-        <a href="../index.html" class="hover:text-blue-700">Welcome</a>
+        <a href="../index.html" class="hover:text-blue-700" data-i18n="policy.footerWelcome">Welcome</a>
         ·
-        <a href="portal.html#feedback" class="text-emerald-700 hover:underline font-medium">Submit feedback</a>
+        <a href="portal.html#feedback" class="text-emerald-700 hover:underline font-medium" data-i18n="policy.footerFeedback">Submit feedback</a>
     </footer>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="../mock-api.js"></script>
     <script>
+        function t(key, fallback, vars) {
+            if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+            var msg = fallback || key;
+            if (vars) Object.keys(vars).forEach(function (k) {
+                msg = String(msg).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+            });
+            return msg;
+        }
+
+        var lastIit = null;
+        var lastLevy = null;
+
+        function renderIitOutput() {
+            if (!lastIit) return;
+            document.getElementById('out-iit').textContent = t('policy.iitOutput',
+                'Estimated subsidy ~ ¥ {amount} · (Tax paid − 15% × taxable income), floored at 0)',
+                { amount: lastIit.amount });
+        }
+
+        function renderLevyOutput() {
+            if (!lastLevy) return;
+            document.getElementById('out-levy2').textContent = t('policy.levyOutput',
+                'Headcount deficit vs 1.5% quota: ~{shortfall} FTE equivalents · illustrative levy magnitude ≈ ¥ {levy}',
+                { shortfall: lastLevy.shortfall, levy: lastLevy.levy });
+        }
+
         document.querySelectorAll('.tab').forEach(function (b) {
             b.addEventListener('click', function () {
                 document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('bg-blue-600','text-white'); x.classList.add('hover:bg-slate-100'); });
@@ -79,28 +106,37 @@
                 document.getElementById('tab-' + this.getAttribute('data-tab')).classList.remove('hidden');
             });
         });
+
         document.getElementById('btn-iit').onclick = function () {
             var inc = +document.getElementById('inc').value * 1000;
             var tax = +document.getElementById('tax').value * 1000;
             var sub = Math.max(0, tax - inc * 0.15);
+            lastIit = { amount: Math.round(sub).toLocaleString() };
             document.getElementById('res-iit').classList.remove('hidden');
-            document.getElementById('out-iit').textContent = 'Estimated subsidy ~ ¥ ' + Math.round(sub).toLocaleString() + ' · (Tax paid − 15% × taxable income), floored at 0)';
+            renderIitOutput();
         };
+
         document.getElementById('btn-levy').onclick = function () {
             var h = +document.getElementById('h').value, pa = +document.getElementById('p').value, avg = +document.getElementById('avg').value * 1000;
             var shortfall = Math.max(0, h * 0.015 - pa);
             var levy = shortfall * avg;
-            document.getElementById('out-levy2').textContent = 'Headcount deficit vs 1.5% quota: ~' + shortfall.toFixed(2) + ' FTE equivalents · illustrative levy magnitude ≈ ¥ ' + Math.round(levy).toLocaleString();
+            lastLevy = { shortfall: shortfall.toFixed(2), levy: Math.round(levy).toLocaleString() };
             document.getElementById('out-levy2').classList.remove('hidden');
+            renderLevyOutput();
         };
+
         document.getElementById('btn-policy-qa').onclick = async function () {
             var r = await API.policyQA('cross-border social security transfer');
             var el = document.getElementById('sso-ai');
             el.textContent = r.data.answer || '';
             el.classList.remove('hidden');
         };
-    </script>    <script src="../assets/i18n/i18n.js"></script>
 
+        window.addEventListener('gba:language-changed', function () {
+            renderIitOutput();
+            renderLevyOutput();
+        });
+    </script>
     <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

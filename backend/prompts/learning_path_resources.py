@@ -20,6 +20,9 @@ LEARNING_PATH_RESOURCES_PROMPT = """你是一位职业发展顾问。能力缺�
 
 注意：不要重复分析缺口，不要生成 timeline。
 
+## 输出语言
+{output_language_instruction}
+
 机器协议：
 - 返回且仅返回一个合法 JSON 对象
 - 不要输出 Markdown、代码块、注释或额外说明

@@ -2,23 +2,31 @@
  * GBA Platform - Main Portal Application
  */
 
-// Initialize on page load
+function uiT(key, fallback, vars) {
+    if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+    let s = fallback;
+    if (vars && s) {
+        Object.keys(vars).forEach((k) => {
+            s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+    }
+    return s;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initializePortal();
 });
 
 async function initializePortal() {
-    // Check API connection
     try {
         const health = await apiClient.healthCheck();
         console.log('Backend connected:', health);
-        Utils.showToast('Connected to backend server', 2000);
+        Utils.showToast(uiT('app.connected', 'Connected to backend server'), 2000);
     } catch (error) {
         console.warn('Backend not available:', error.message);
-        Utils.showToast('Backend server not running. Start it with: python main.py', 5000);
+        Utils.showToast(uiT('app.backendDown', 'Backend server not running. Start it with: python main.py'), 5000);
     }
 
-    // Load existing session if available
     const sessionId = apiClient.loadSessionId();
     if (sessionId) {
         Utils.updateSessionDisplay(sessionId);
@@ -26,69 +34,61 @@ async function initializePortal() {
     }
 }
 
-/**
- * Start a new session
- */
 function startNewSession() {
     const newSessionId = apiClient.generateSessionId();
     Utils.updateSessionDisplay(newSessionId);
-    Utils.showToast('New session started');
+    Utils.showToast(uiT('app.newSession', 'New session started'));
     console.log('New session:', newSessionId);
 }
 
-/**
- * Load last session from localStorage
- */
 function loadLastSession() {
     const sessionId = apiClient.loadSessionId();
     if (sessionId) {
         Utils.updateSessionDisplay(sessionId);
-        Utils.showToast('Session loaded');
+        Utils.showToast(uiT('app.sessionLoaded', 'Session loaded'));
     } else {
-        Utils.showToast('No previous session found');
+        Utils.showToast(uiT('app.noPreviousSession', 'No previous session found'));
         startNewSession();
     }
 }
 
-/**
- * Clear all session data
- */
 function clearSessionData() {
-    if (confirm('Are you sure you want to clear all session data?')) {
+    if (confirm(uiT('app.confirmClear', 'Are you sure you want to clear all session data?'))) {
         apiClient.clearSession();
         Utils.updateSessionDisplay('');
-        Utils.showToast('Session cleared');
+        Utils.showToast(uiT('app.sessionCleared', 'Session cleared'));
         console.log('Session cleared');
     }
 }
 
-/**
- * Show API status information
- */
 async function showApiStatus() {
     try {
-        Utils.showLoading('Checking API status...');
+        Utils.showLoading(uiT('app.checkingStatus', 'Checking API status...'));
         const health = await apiClient.healthCheck();
         Utils.hideLoading();
 
-        const sessionId = apiClient.sessionId || 'Not active';
-        alert(`API Status: OK\nBackend URL: ${apiClient.client.defaults.baseURL}\nSession ID: ${sessionId}\nHealth: ${JSON.stringify(health)}`);
+        const sessionId = apiClient.sessionId || uiT('common.notStarted', 'Not started');
+        alert(
+            uiT('app.apiStatusTitle', 'API Status: OK') + '\n'
+            + uiT('app.backendUrl', 'Backend URL') + ': ' + apiClient.client.defaults.baseURL + '\n'
+            + uiT('app.sessionId', 'Session ID') + ': ' + sessionId + '\n'
+            + uiT('app.health', 'Health') + ': ' + JSON.stringify(health)
+        );
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Backend server is not running');
+        Utils.showToast(uiT('app.backendNotRunning', 'Backend server is not running'));
         console.error('API status check failed:', error);
     }
 }
 
-// Session info button handler
 const sessionInfoBtn = document.getElementById('session-info-btn');
 if (sessionInfoBtn) {
     sessionInfoBtn.addEventListener('click', () => {
         const sessionId = apiClient.sessionId;
         if (sessionId) {
-            Utils.showToast(`Session: ${sessionId.substr(-8)}`);
+            Utils.showToast(uiT('app.sessionShort', 'Session: {id}', { id: sessionId.substr(-8) }));
         } else {
-            Utils.showToast('No active session');
+            Utils.showToast(uiT('app.noActiveSession', 'No active session'));
         }
     });
 }

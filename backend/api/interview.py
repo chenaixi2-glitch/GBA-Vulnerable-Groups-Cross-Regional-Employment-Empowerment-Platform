@@ -21,6 +21,7 @@ from auth.session_access import bind_session_owner, ensure_session_access, extra
 from storage.redis_client import get_redis_client, RedisSessionStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
 from services.llm_queue import SessionBusyError, llm_queue_slot
+from tools.output_language import apply_session_language
 from workflow.state import CopilotState
 from log import get_logger
 
@@ -96,16 +97,19 @@ class InteractiveStartRequest(BaseModel):
     max_rounds: int = 0  # 0 = auto from program config
     program_version: str = "quick"  # quick | full | specialized
     specialized_focus: str = ""  # technical | final_negotiation | resume_deep_dive
+    language: str = ""
 
 
 class InteractiveTurnRequest(BaseModel):
     session_id: str
     answer: str
+    language: str = ""
 
 
 class InteractiveEndRequest(BaseModel):
     session_id: str
     generate_debrief: bool = True
+    language: str = ""
 
 
 class InteractiveResponse(BaseModel):
@@ -118,6 +122,7 @@ class CustomInterviewAnswersRequest(BaseModel):
     session_id: str = ""
     questions: list[str] = Field(default_factory=list)
     questions_text: str = ""
+    language: str = ""
 
 
 class CustomInterviewAnswersResponse(BaseModel):
@@ -144,6 +149,7 @@ async def generate_custom_interview_answers(
 
     state = await _load_state(session_id)
     state.session_id = session_id
+    apply_session_language(state, req.language)
 
     try:
         async with llm_queue_slot(session_id):
@@ -185,6 +191,7 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
 
     state = await _load_state(session_id)
     state.session_id = session_id
+    apply_session_language(state, req.language)
 
     if state.interactive_interview.status == "active":
         raise HTTPException(status_code=400, detail="已有进行中的模拟面试，请先结束或完成当前会话")
@@ -226,6 +233,7 @@ async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> Int
     await ensure_session_access(req.session_id, user)
 
     state = await _load_state(req.session_id)
+    apply_session_language(state, req.language)
     if state.interactive_interview.status != "active":
         raise HTTPException(status_code=400, detail="没有进行中的模拟面试")
 
@@ -260,6 +268,7 @@ async def interactive_end(req: InteractiveEndRequest, request: Request) -> Inter
     await ensure_session_access(req.session_id, user)
 
     state = await _load_state(req.session_id)
+    apply_session_language(state, req.language)
     session = state.interactive_interview
 
     if not session.turns:

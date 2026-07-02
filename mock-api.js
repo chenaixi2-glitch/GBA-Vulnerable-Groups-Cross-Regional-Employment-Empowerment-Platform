@@ -670,3 +670,8 @@ const API = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = API;
 }
+
+// Classic script: expose on window for inline handlers and devtools
+if (typeof window !== 'undefined') {
+    window.API = API;
+}

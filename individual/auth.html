@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人端登录 / 注册 — GBA 就业赋能平台</title>
+    <title data-i18n="auth.individualPortal">Individual Portal — Sign in</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -13,110 +13,120 @@
         .auth-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4" data-page="auth">
     <div class="w-full max-w-md">
         <div class="text-center mb-6">
             <a id="auth-back-link" href="../index.html" class="inline-flex items-center text-sm text-gray-500 hover:text-blue-600 mb-4">
-                <i class="fas fa-arrow-left mr-2"></i>返回首页
+                <i class="fas fa-arrow-left mr-2"></i><span data-i18n="auth.backHome">Back to home</span>
             </a>
             <div class="w-14 h-14 mx-auto bg-gradient-to-br from-blue-600 to-green-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl mb-3">GBA</div>
-            <h1 class="text-2xl font-bold text-gray-900">个人端门户</h1>
-            <p class="text-gray-500 text-sm mt-1">求职者登录或注册账号</p>
+            <h1 class="text-2xl font-bold text-gray-900" data-i18n="auth.individualPortal">Individual Portal</h1>
+            <p class="text-gray-500 text-sm mt-1" data-i18n="auth.individualSubtitle">Sign in or create a job seeker account</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-lg border p-6">
-            <h2 id="auth-heading" class="text-lg font-bold text-gray-900 mb-4">登录账号</h2>
+            <h2 id="auth-heading" class="text-lg font-bold text-gray-900 mb-4" data-i18n="auth.loginAccount">Sign in</h2>
             <div class="flex border-b border-gray-200 mb-5">
-                <button type="button" id="auth-tab-login" class="auth-tab active">登录</button>
-                <button type="button" id="auth-tab-register" class="auth-tab">注册</button>
+                <button type="button" id="auth-tab-login" class="auth-tab active" data-i18n="auth.login">Log in</button>
+                <button type="button" id="auth-tab-register" class="auth-tab" data-i18n="auth.register">Sign up</button>
             </div>
 
             <div id="auth-panel-login" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-email">邮箱</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-email" data-i18n="auth.email">Email</label>
                     <input type="email" id="auth-login-email" autocomplete="username" placeholder="you@example.com" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-password">密码</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-password" data-i18n="auth.password">Password</label>
                     <input type="password" id="auth-login-password" autocomplete="current-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <p id="auth-login-error" class="text-red-600 text-sm hidden"></p>
-                <button type="button" id="auth-login-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg">登录</button>
+                <button type="button" id="auth-login-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg" data-i18n="auth.login">Log in</button>
             </div>
 
             <div id="auth-panel-register" class="space-y-4" hidden>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-name">显示名称 <span class="text-gray-400 font-normal">(可选)</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-name"><span data-i18n="auth.displayName">Display name</span> <span class="text-gray-400 font-normal" data-i18n="auth.optional">(optional)</span></label>
                     <input type="text" id="auth-register-name" autocomplete="name" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-email">邮箱</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-email" data-i18n="auth.email">Email</label>
                     <input type="email" id="auth-register-email" autocomplete="email" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password">密码</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password" data-i18n="auth.password">Password</label>
                     <input type="password" id="auth-register-password" autocomplete="new-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password2">确认密码</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password2" data-i18n="auth.confirmPassword">Confirm password</label>
                     <input type="password" id="auth-register-password2" autocomplete="new-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <i class="fas fa-exclamation-triangle mr-1"></i>平台暂不支持找回密码，请务必牢记您设置的密码。
+                    <i class="fas fa-exclamation-triangle mr-1"></i><span data-i18n="auth.noPasswordRecovery">Password recovery is not available — please remember your password.</span>
                 </p>
                 <div id="auth-register-profile-wrap" class="space-y-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <p class="text-xs font-semibold text-blue-800">弱势群体画像（用于岗位匹配）</p>
+                    <p class="text-xs font-semibold text-blue-800" data-i18n="auth.vulnerableProfile">Vulnerable group profile (for job matching)</p>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-age">年龄</label>
+                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-age" data-i18n="auth.age">Age</label>
                             <input type="number" id="auth-register-age" min="16" max="100" class="w-full px-3 py-2 border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-gender">性别</label>
+                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-gender" data-i18n="auth.gender">Gender</label>
                             <select id="auth-register-gender" class="w-full px-3 py-2 border rounded-lg bg-white">
-                                <option value="">请选择</option>
-                                <option value="male">男</option>
-                                <option value="female">女</option>
-                                <option value="other">其他</option>
+                                <option value="" data-i18n="auth.selectGender">Select</option>
+                                <option value="male" data-i18n="auth.male">Male</option>
+                                <option value="female" data-i18n="auth.female">Female</option>
+                                <option value="other" data-i18n="auth.other">Other</option>
                             </select>
                         </div>
                         <div class="col-span-2">
-                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-disability">残疾类型</label>
+                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-disability" data-i18n="auth.disabilityType">Disability type</label>
                             <select id="auth-register-disability" class="w-full px-3 py-2 border rounded-lg bg-white">
-                                <option value="none">无</option>
-                                <option value="physical">肢体</option>
-                                <option value="visual">视力</option>
-                                <option value="hearing">听力</option>
-                                <option value="intellectual">智力</option>
-                                <option value="mental">精神</option>
-                                <option value="multiple">多重</option>
+                                <option value="none" data-i18n="auth.none">None</option>
+                                <option value="physical" data-i18n="auth.physical">Physical</option>
+                                <option value="visual" data-i18n="auth.visual">Visual</option>
+                                <option value="hearing" data-i18n="auth.hearing">Hearing</option>
+                                <option value="intellectual" data-i18n="auth.intellectual">Intellectual</option>
+                                <option value="mental" data-i18n="auth.mental">Mental</option>
+                                <option value="other" data-i18n="auth.multiple">Multiple</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-gap">职业空窗(年)</label>
+                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-gap" data-i18n="profile.careerGap">Career gap (years)</label>
                             <input type="number" id="auth-register-gap" min="0" max="50" step="0.5" value="0" class="w-full px-3 py-2 border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-income">月收入(元)</label>
+                            <label class="block text-xs text-gray-600 mb-1" for="auth-register-income" data-i18n="auth.monthlyIncome">Monthly income (CNY)</label>
                             <input type="number" id="auth-register-income" min="0" step="100" class="w-full px-3 py-2 border rounded-lg" />
                         </div>
                     </div>
                 </div>
                 <p id="auth-register-error" class="text-red-600 text-sm hidden"></p>
-                <button type="button" id="auth-register-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg">注册</button>
+                <button type="button" id="auth-register-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg" data-i18n="auth.register">Sign up</button>
             </div>
         </div>
 
         <p class="text-center text-sm text-gray-500 mt-4">
-            企业用户？<a href="../corporate/auth.html" class="text-green-600 hover:underline font-medium">前往企业端登录</a>
+            <span data-i18n="auth.corporatePrompt">Corporate user?</span>
+            <a href="../corporate/auth.html" class="text-green-600 hover:underline font-medium" data-i18n="auth.corporateLink">Go to corporate sign-in</a>
         </p>
     </div>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="../assets/js/auth-api.js"></script>
     <script src="../assets/js/auth-ui.js"></script>
     <script>
-        AuthUI.initAuthPage({ portal: 'individual', redirectTo: 'portal.html', homeHref: '../index.html' });
+        document.addEventListener('DOMContentLoaded', function () {
+            var boot = function () {
+                AuthUI.initAuthPage({ portal: 'individual', redirectTo: 'portal.html', homeHref: '../index.html' });
+            };
+            if (window.GBAI18n && GBAI18n.initLanguage) {
+                GBAI18n.initLanguage().then(boot);
+            } else {
+                boot();
+            }
+        });
     </script>
-    <script src="../assets/i18n/i18n.js"></script>
 </body>
 </html>

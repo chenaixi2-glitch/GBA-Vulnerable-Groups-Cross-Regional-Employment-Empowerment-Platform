@@ -36,24 +36,40 @@ function resumeLangDisplayLabel(code) {
     return { zh: '简体中文', 'zh-TW': '繁體中文', en: 'English', pt: 'Português' }[lang] || lang;
 }
 
-function checklistTitle(lang, missingCount) {
-    const labels = {
-        zh: `中文简历格式检查（缺失 ${missingCount} 项）`,
-        'zh-TW': `繁體中文履歷格式檢查（缺失 ${missingCount} 項）`,
-        en: `English Resume Checklist (${missingCount} missing)`,
-        pt: `Lista de verificação do CV (${missingCount} em falta)`,
-    };
-    return labels[normalizeResumeLang(lang)] || labels.en;
+function uiApiLang() {
+    if (window.GBAI18n && GBAI18n.uiLangToApiLang) {
+        return GBAI18n.uiLangToApiLang(GBAI18n.getLang());
+    }
+    return 'en';
 }
 
-function checklistCompleteMessage(lang) {
-    const labels = {
-        zh: '核心内容已较完整！请继续确认照片、排版等细节。',
-        'zh-TW': '核心內容已較完整！請繼續確認照片、排版等細節。',
-        en: 'Core sections look good! Double-check photo policy and one-page layout.',
-        pt: 'Secções principais OK! Confirme foto e layout A4.',
-    };
-    return labels[normalizeResumeLang(lang)] || labels.en;
+function uiText(key, fallback, vars) {
+    if (window.GBAI18n && GBAI18n.t) return GBAI18n.t(key, fallback, vars);
+    var msg = fallback || key;
+    if (vars) {
+        Object.keys(vars).forEach(function (k) {
+            msg = String(msg).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+    }
+    return msg;
+}
+
+let lastChecklistData = null;
+
+function checklistTitleSuffix(resumeLang, missingCount) {
+    if (!missingCount) return '';
+    return uiText(
+        'resume.checklistMissing',
+        ' — {lang}: {count} missing',
+        { lang: resumeLangDisplayLabel(resumeLang), count: missingCount }
+    );
+}
+
+function checklistCompleteMessage() {
+    return uiText(
+        'resume.checklistComplete',
+        'Core sections look good! Double-check photo policy and one-page layout.'
+    );
 }
 
 function renderLanguageChecklistPanel(checklist, containerId = 'language-checklist-content') {
@@ -62,16 +78,17 @@ function renderLanguageChecklistPanel(checklist, containerId = 'language-checkli
     if (!container) return;
 
     if (!checklist || !checklist.items || checklist.items.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-500">No checklist available.</p>';
+        container.innerHTML = '<p class="text-sm text-gray-500">' + uiText('resume.checklistUnavailable', 'No checklist available.') + '</p>';
         return;
     }
 
+    lastChecklistData = checklist;
     const lang = normalizeResumeLang(checklist.language || 'zh');
-    const labels = CHECKLIST_SEVERITY_LABELS[lang] || CHECKLIST_SEVERITY_LABELS.en;
+    const labels = CHECKLIST_SEVERITY_LABELS[uiApiLang()] || CHECKLIST_SEVERITY_LABELS.en;
     const missing = checklist.missing_items || checklist.items.filter((i) => i.missing);
-    const title = document.getElementById('language-checklist-title');
-    if (title) {
-        title.textContent = checklistTitle(lang, missing.length);
+    const dyn = document.getElementById('language-checklist-dynamic');
+    if (dyn) {
+        dyn.textContent = checklistTitleSuffix(lang, missing.length);
     }
 
     if (section) section.classList.remove('hidden');
@@ -86,7 +103,7 @@ function renderLanguageChecklistPanel(checklist, containerId = 'language-checkli
         container.innerHTML = summaryHtml + `
             <div class="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
                 <i class="fas fa-check-circle mr-2"></i>
-                ${checklistCompleteMessage(lang)}
+                ${checklistCompleteMessage()}
             </div>`;
         return;
     }
@@ -124,6 +141,8 @@ function escapeHtml(str) {
 function syncResumeLanguageButtons() {
     document.querySelectorAll('[data-resume-lang]').forEach((btn) => {
         const code = normalizeResumeLang(btn.dataset.resumeLang);
+        const labelEl = btn.querySelector('.resume-lang-label');
+        if (labelEl) labelEl.textContent = resumeLangDisplayLabel(code);
         const isActive = code === normalizeResumeLang(currentResumeLanguage);
         btn.classList.toggle('ring-2', isActive);
         btn.classList.toggle('ring-blue-500', isActive);
@@ -131,6 +150,8 @@ function syncResumeLanguageButtons() {
     });
     document.querySelectorAll('[data-resume-translate]').forEach((btn) => {
         const target = normalizeResumeLang(btn.dataset.resumeTranslate);
+        const labelEl = btn.querySelector('.resume-lang-label');
+        if (labelEl) labelEl.textContent = resumeLangDisplayLabel(target);
         btn.disabled = target === normalizeResumeLang(currentResumeLanguage);
     });
 }
@@ -158,19 +179,19 @@ async function onEmployerTypeSelected(employerType) {
             document.getElementById('language-checklist-section')?.classList.remove('hidden');
         }
         const labelMap = {
-            soe: '国央企',
-            public: '体制内',
-            foreign: '外企',
-            private: '民企',
-            npo: '非营利社会组织',
-            hmt: '港澳台资企业',
-            other: '其他',
+            soe: uiText('resume.soe', 'State-owned enterprise'),
+            public: uiText('resume.publicSector', 'Public sector'),
+            foreign: uiText('resume.foreign', 'Foreign enterprise'),
+            private: uiText('resume.private', 'Private enterprise'),
+            npo: uiText('resume.npo', 'Non-profit (NPO/NGO)'),
+            hmt: uiText('resume.hmt', 'HK/Macau/TW-funded'),
+            other: uiText('resume.employerOther', 'Other'),
         };
         const label = labelMap[employerType] || employerType;
         const missing = result.language_checklist?.missing_count || 0;
         Utils.showToast(missing > 0
-            ? `已选择${label}，请查看下方 ${missing} 项格式提醒`
-            : `已选择${label}`);
+            ? uiText('resume.employerSelectedMissing', 'Selected {label} — {count} format reminder(s) below', { label: label, count: missing })
+            : uiText('resume.employerSelected', 'Selected {label}', { label: label }));
     } catch (error) {
         console.warn('Employer type update failed:', error.message);
         await refreshLanguageChecklist(currentResumeLanguage);
@@ -193,13 +214,11 @@ async function onResumeLanguageSelected(language) {
         renderLanguageChecklistPanel(result.language_checklist);
         const count = result.language_checklist?.missing_count || 0;
         if (count > 0) {
-            const msgs = {
-                zh: `中文简历还有 ${count} 项建议补充，请查看下方清单`,
-                'zh-TW': `繁體中文履歷還有 ${count} 項建議補充，請查看下方清單`,
-                en: `${count} item(s) to add for English resume — see checklist below`,
-                pt: `${count} item(s) em falta no CV — ver lista abaixo`,
-            };
-            Utils.showToast(msgs[currentResumeLanguage] || msgs.en);
+            Utils.showToast(uiText(
+                'resume.langMissingItems',
+                '{count} item(s) to review — see checklist below',
+                { count: count }
+            ));
         }
     } catch (error) {
         await refreshLanguageChecklist(currentResumeLanguage);
@@ -213,11 +232,55 @@ function defaultResumeLanguageFromUi() {
     return GBAI18n.uiLangToApiLang(GBAI18n.getLang());
 }
 
+async function syncResumeLanguageFromUi(options = {}) {
+    const { silent = true } = options;
+    if (typeof currentResumeLanguage === 'undefined') return;
+
+    const uiLang = defaultResumeLanguageFromUi();
+    if (normalizeResumeLang(uiLang) === normalizeResumeLang(currentResumeLanguage)) {
+        return;
+    }
+
+    currentResumeLanguage = uiLang;
+    updateResumeLanguageBadge(currentResumeLanguage);
+    if (typeof ProfileEditor !== 'undefined' && ProfileEditor.updatePhotoVisibility) {
+        ProfileEditor.updatePhotoVisibility(currentResumeLanguage);
+    }
+    syncResumeLanguageButtons();
+
+    try {
+        if (typeof apiClient !== 'undefined' && apiClient.sessionId) {
+            const result = await apiClient.syncSessionLanguageFromUi();
+            if (result?.language_checklist) {
+                renderLanguageChecklistPanel(result.language_checklist);
+            } else {
+                await refreshLanguageChecklist(currentResumeLanguage);
+            }
+        }
+    } catch (error) {
+        if (!silent) {
+            console.warn('Resume language sync failed:', error.message);
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof currentResumeLanguage === 'undefined') return;
-    if (currentResumeLanguage === 'zh' && window.GBAI18n) {
-        currentResumeLanguage = defaultResumeLanguageFromUi();
+    currentResumeLanguage = defaultResumeLanguageFromUi();
+    updateResumeLanguageBadge(currentResumeLanguage);
+    syncResumeLanguageButtons();
+});
+
+window.addEventListener('gba:language-changed', () => {
+    syncResumeLanguageFromUi({ silent: true });
+    syncResumeLanguageButtons();
+    if (typeof updateResumeLanguageBadge === 'function' && typeof currentResumeLanguage !== 'undefined') {
         updateResumeLanguageBadge(currentResumeLanguage);
-        syncResumeLanguageButtons();
+    }
+    if (lastChecklistData) {
+        renderLanguageChecklistPanel(lastChecklistData);
+    }
+    if (window.GBAI18n && GBAI18n.applyResumeLangButtonLabels) {
+        GBAI18n.applyResumeLangButtonLabels();
     }
 });

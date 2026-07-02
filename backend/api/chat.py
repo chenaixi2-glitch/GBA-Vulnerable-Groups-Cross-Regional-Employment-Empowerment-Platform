@@ -17,6 +17,7 @@ from workflow.state import CopilotState
 from storage.redis_client import get_redis_client, RedisSessionStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
 from services.llm_queue import SessionBusyError, llm_queue_slot
+from tools.output_language import apply_session_language
 from log import get_logger
 
 logger = get_logger("api")
@@ -51,6 +52,7 @@ class ChatRequest(BaseModel):
     session_id: str = ""
     message: str
     attachments: list[dict[str, Any]] = Field(default_factory=list)
+    language: str = ""  # UI locale → API lang: zh | zh-TW | en | pt
 
 
 class ChatResponse(BaseModel):
@@ -98,6 +100,8 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         state = CopilotState.model_validate(saved_state)
     else:
         state = CopilotState(session_id=session_id)
+
+    apply_session_language(state, req.language)
 
     # 注入用户输入
     prepared_input = prepare_chat_input(req.message, req.attachments)

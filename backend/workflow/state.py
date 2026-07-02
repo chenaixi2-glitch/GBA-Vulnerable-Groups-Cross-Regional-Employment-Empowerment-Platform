@@ -72,7 +72,7 @@ class SectionItem(BaseModel):
 
 class ResumeContentMeta(BaseModel):
     target_role: str = ""
-    language: str = "zh"  # zh | en
+    language: str = "zh"  # zh | zh-TW | en | pt
     version: int = 1
     last_updated_at: str = ""
     content_hash: str = ""
@@ -99,7 +99,7 @@ class PageMargin(BaseModel):
 class RenderConfig(BaseModel):
     template_id: str = "default"
     theme: str = "light"
-    language: str = "zh"  # zh | en — controls section labels and layout defaults
+    language: str = "zh"  # zh | zh-TW | en | pt — controls section labels and layout defaults
     font_family: str = "Source Han Sans"
     font_size: int = 13
     line_height: float = 1.35
@@ -355,4 +355,4 @@ class CopilotState(BaseModel):
     reply_message: str = ""
     triggered_agents: list[str] = Field(default_factory=list)
     workflow_trace: list[WorkflowTraceItem] = Field(default_factory=list)
-    resume_language_target: str = ""  # runtime: zh | en for language_convert intent
+    resume_language_target: str = ""  # runtime: zh | zh-TW | en | pt for language_convert intent

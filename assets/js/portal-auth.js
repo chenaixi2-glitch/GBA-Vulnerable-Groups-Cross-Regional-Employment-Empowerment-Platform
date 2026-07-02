@@ -2,6 +2,17 @@
  * 门户页导航栏登录状态与访问守卫
  */
 (function (global) {
+  function authT(key, fallback, vars) {
+    if (global.GBAI18n && global.GBAI18n.t) return global.GBAI18n.t(key, fallback, vars);
+    var s = fallback || key;
+    if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]); });
+    return s;
+  }
+  function mapApiMessage(msg) {
+    if (!msg) return msg;
+    if (global.GBAI18n && global.GBAI18n.tApiMessage) return global.GBAI18n.tApiMessage(String(msg));
+    return String(msg);
+  }
   async function refreshPortalAuthNav(portal) {
     const expected = AuthAPI.normalizePortalRole(portal);
     const guestEl = document.getElementById('portal-auth-guest');
@@ -32,7 +43,7 @@
         AuthAPI.logout();
         refreshPortalAuthNav(portal);
         if (typeof global.showPortalToast === 'function') {
-          global.showPortalToast('已退出登录');
+          global.showPortalToast(authT('site.signedOut', 'Signed out.'));
         }
       });
     }
@@ -70,7 +81,7 @@
     if (!check.ok) {
       AuthAPI.logout();
       const otherPortal = portal === 'corporate' ? '../individual/auth.html' : '../corporate/auth.html';
-      alert(check.message || '账号类型与当前门户不匹配，请使用正确的入口登录。');
+      alert(mapApiMessage(check.message) || authT('apiMessages.账号类型与当前门户不匹配，请使用正确的入口登录。', 'Account type does not match this portal. Please use the correct sign-in page.'));
       global.location.href = otherPortal;
       return { ok: false };
     }

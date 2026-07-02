@@ -2,6 +2,19 @@
  * 独立登录/注册页 UI（individual/auth.html、corporate/auth.html）
  */
 (function (global) {
+  function authT(key, fallback, vars) {
+    if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+    var s = fallback || key;
+    if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]); });
+    return s;
+  }
+
+  function mapApiMessage(msg) {
+    if (!msg) return msg;
+    if (window.GBAI18n && window.GBAI18n.tApiMessage) return window.GBAI18n.tApiMessage(String(msg));
+    return String(msg);
+  }
+
   function showError(id, message) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -25,7 +38,7 @@
     if (regPanel) regPanel.hidden = view !== 'register';
     if (loginTab) loginTab.classList.toggle('active', view === 'login');
     if (regTab) regTab.classList.toggle('active', view === 'register');
-    if (heading) heading.textContent = view === 'register' ? '注册账号' : '登录账号';
+    if (heading) heading.textContent = view === 'register' ? authT('auth.registerAccount', 'Create account') : authT('auth.loginAccount', 'Sign in');
 
     showError('auth-login-error', '');
     showError('auth-register-error', '');
@@ -86,10 +99,12 @@
         try {
           const res = await AuthAPI.login(email, password, portal);
           if (!res.success) {
-            showError('auth-login-error', res.message);
+            showError('auth-login-error', mapApiMessage(res.message));
             return;
           }
           global.location.href = redirectTo;
+        } catch (e) {
+          showError('auth-login-error', authT('auth.errors.networkDetailed', 'Cannot reach auth service. Ensure the backend is running (npm start in server/).'));
         } finally {
           btn.disabled = false;
         }
@@ -106,14 +121,14 @@
         showError('auth-register-error', '');
 
         if (password !== password2) {
-          showError('auth-register-error', '两次输入的密码不一致。');
+          showError('auth-register-error', authT('auth.passwordsMismatch', 'Passwords do not match.'));
           btn.disabled = false;
           return;
         }
 
         const profile = getRegisterProfile(portal);
         if (portal === 'individual' && !profile) {
-          showError('auth-register-error', '请填写年龄、性别和月收入。');
+          showError('auth-register-error', authT('apiMessages.请填写年龄、性别和月收入。', 'Please complete age, gender, and monthly income.'));
           btn.disabled = false;
           return;
         }
@@ -126,7 +141,7 @@
         try {
           const res = await AuthAPI.register(email, password, portal, name, profile, corporateExtras);
           if (!res.success) {
-            showError('auth-register-error', res.message);
+            showError('auth-register-error', mapApiMessage(res.message));
             return;
           }
           if (portal === 'corporate') {
@@ -134,6 +149,8 @@
             return;
           }
           global.location.href = redirectTo;
+        } catch (e) {
+          showError('auth-register-error', authT('auth.errors.networkDetailed', 'Cannot reach auth service. Ensure the backend is running (npm start in server/).'));
         } finally {
           btn.disabled = false;
         }

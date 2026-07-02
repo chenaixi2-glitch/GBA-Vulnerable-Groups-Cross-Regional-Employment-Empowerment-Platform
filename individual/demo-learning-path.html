@@ -123,7 +123,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" data-page="individual">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -131,11 +131,11 @@
                 <a href="portal.html" class="text-gray-600 hover:text-blue-600">
                     <i class="fas fa-arrow-left"></i>
                 </a>
-                <h1 class="text-xl font-bold text-gray-900">Personalized Learning Path</h1>
+                <h1 class="text-xl font-bold text-gray-900" data-i18n="learningPath.title">Personalized Learning Path</h1>
             </div>
             <div class="flex items-center gap-3">
                 <span id="session-badge" class="text-sm bg-orange-100 text-orange-800 px-3 py-1 rounded-full">
-                    Session: <span id="session-id">Not started</span>
+                    <span data-i18n="learningPath.sessionLabel">Session</span>: <span id="session-id" data-i18n="learningPath.notStarted">Not started</span>
                 </span>
             </div>
         </div>
@@ -147,24 +147,24 @@
         <section id="assessment-section" class="bg-white rounded-xl p-6 border shadow-sm mb-8">
             <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <i class="fas fa-compass text-orange-600"></i>
-                Define Your Career Goals
+                <span data-i18n="learningPath.goalsTitle">Define Your Career Goals</span>
             </h2>
             
             <div class="grid md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Job Title</label>
-                    <input type="text" id="target-job" class="w-full border border-gray-300 rounded-lg p-3" placeholder="e.g., Senior Software Engineer">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.targetJob">Target Job Title</label>
+                    <input type="text" id="target-job" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.targetJobPlaceholder" placeholder="e.g., Senior Software Engineer">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Role (Optional)</label>
-                    <input type="text" id="current-role" class="w-full border border-gray-300 rounded-lg p-3" placeholder="e.g., Junior Developer">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.currentRole">Current Role (Optional)</label>
+                    <input type="text" id="current-role" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.currentRolePlaceholder" placeholder="e.g., Junior Developer">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Industry Focus</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.industryFocus">Industry Focus</label>
                     <select id="industry-focus" class="w-full border border-gray-300 rounded-lg p-3">
-                        <option value="">Select industry</option>
+                        <option value="" data-i18n="learningPath.selectIndustry">Select industry</option>
                         <option value="tech">Technology & Software</option>
                         <option value="finance">Finance & Banking</option>
                         <option value="ecommerce">E-commerce & Retail</option>
@@ -175,9 +175,9 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Employer Type / 单位性质</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.employerType">Employer Type / 单位性质</label>
                     <select id="learning-employer-type" class="w-full border border-gray-300 rounded-lg p-3">
-                        <option value="">Select type</option>
+                        <option value="" data-i18n="learningPath.selectType">Select type</option>
                         <option value="soe">State-owned (国央企)</option>
                         <option value="public">Public Sector (体制内)</option>
                         <option value="foreign">Foreign Enterprise (外企)</option>
@@ -189,9 +189,9 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Experience Level / 经验等级</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.experienceLevel">Experience Level / 经验等级</label>
                     <select id="learning-experience-level" class="w-full border border-gray-300 rounded-lg p-3">
-                        <option value="">Select level</option>
+                        <option value="" data-i18n="learningPath.selectLevel">Select level</option>
                         <option value="entry">Entry Level</option>
                         <option value="mid">Mid Level</option>
                         <option value="senior">Senior Level</option>
@@ -201,37 +201,37 @@
             </div>
             
             <div class="mt-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Current Skills (comma-separated)</label>
-                <textarea id="current-skills" rows="3" class="w-full border border-gray-300 rounded-lg p-3" placeholder="e.g., JavaScript, React, Node.js, Git"></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.currentSkills">Current Skills (comma-separated)</label>
+                <textarea id="current-skills" rows="3" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.currentSkillsPlaceholder" placeholder="e.g., JavaScript, React, Node.js, Git"></textarea>
             </div>
 
             <div class="mt-6 grid md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Profile Details (Optional)</label>
-                    <textarea id="profile-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Paste resume summary or experience details for gap_agent..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.profileDetails">Profile Details (Optional)</label>
+                    <textarea id="profile-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.profilePlaceholder" placeholder="Paste resume summary or experience details for gap_agent..."></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Job Description (Optional)</label>
-                    <textarea id="jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Paste full JD for more accurate gap analysis..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.jdOptional">Target Job Description (Optional)</label>
+                    <textarea id="jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.jdPlaceholder" placeholder="Paste full JD for more accurate gap analysis..."></textarea>
                 </div>
             </div>
 
             <p class="mt-4 text-sm text-gray-500">
                 <i class="fas fa-info-circle mr-1"></i>
-                Step 1 analyzes skill gaps and resources; Step 2 builds your timeline after you choose daily study hours.
+                <span data-i18n="learningPath.stepHint">Step 1 analyzes skill gaps and resources; Step 2 builds your timeline after you choose daily study hours.</span>
             </p>
             
             <button onclick="generateLearningPathAnalysis()" id="btn-generate-path" class="mt-6 w-full md:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-red-700 transition-all">
                 <i class="fas fa-magic mr-2"></i>
-                Analyze Skill Gaps & Resources
+                <span data-i18n="learningPath.analyzeBtn">Analyze Skill Gaps & Resources</span>
             </button>
         </section>
 
         <!-- Loading State -->
         <div id="loading-state" class="hidden text-center py-12">
             <div class="w-20 h-20 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Creating Your Personalized Path</h3>
-            <p class="text-gray-600">AI is analyzing skill gaps and curating resources...</p>
+            <h3 class="text-xl font-bold text-gray-900 mb-2" data-i18n="learningPath.loadingTitle">Creating Your Personalized Path</h3>
+            <p class="text-gray-600" data-i18n="learningPath.loadingDesc">AI is analyzing skill gaps and curating resources...</p>
         </div>
 
         <!-- Learning Path Results -->
@@ -240,22 +240,22 @@
             <div class="grid md:grid-cols-4 gap-6">
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
                     <div class="text-3xl font-bold mb-1" id="total-skills">0</div>
-                    <div class="text-blue-100 text-sm">Skills to Master</div>
+                    <div class="text-blue-100 text-sm" data-i18n="learningPath.skillsToMaster">Skills to Master</div>
                 </div>
                 
                 <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-6 text-white">
                     <div class="text-3xl font-bold mb-1" id="estimated-hours">0</div>
-                    <div class="text-amber-100 text-sm">Estimated Study Hours</div>
+                    <div class="text-amber-100 text-sm" data-i18n="learningPath.estimatedHours">Estimated Study Hours</div>
                 </div>
 
                 <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
                     <div class="text-3xl font-bold mb-1" id="estimated-weeks">0</div>
-                    <div class="text-green-100 text-sm">Estimated Weeks</div>
+                    <div class="text-green-100 text-sm" data-i18n="learningPath.estimatedWeeks">Estimated Weeks</div>
                 </div>
                 
                 <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
                     <div class="text-3xl font-bold mb-1" id="confidence-score">0%</div>
-                    <div class="text-purple-100 text-sm">Success Probability</div>
+                    <div class="text-purple-100 text-sm" data-i18n="learningPath.successProbability">Success Probability</div>
                 </div>
             </div>
 
@@ -263,7 +263,7 @@
             <section class="bg-white rounded-xl p-6 border shadow-sm">
                 <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                     <i class="fas fa-chart-bar text-blue-600"></i>
-                    Skill Gap Analysis
+                    <span data-i18n="learningPath.skillGapTitle">Skill Gap Analysis</span>
                     <span class="text-xs font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">gap_agent</span>
                 </h3>
                 
@@ -276,7 +276,7 @@
             <section id="follow-up-section" class="hidden bg-white rounded-xl p-6 border shadow-sm">
                 <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                     <i class="fas fa-question-circle text-orange-600"></i>
-                    Questions to Clarify
+                    <span data-i18n="learningPath.followUpTitle">Questions to Clarify</span>
                 </h3>
                 <div id="follow-up-container" class="space-y-3"></div>
             </section>
@@ -285,9 +285,9 @@
             <section id="daily-hours-section" class="bg-white rounded-xl p-6 border shadow-sm border-orange-200">
                 <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
                     <i class="fas fa-clock text-orange-600"></i>
-                    Choose Your Daily Study Time
+                    <span data-i18n="learningPath.dailyHoursTitle">Choose Your Daily Study Time</span>
                 </h3>
-                <p class="text-sm text-gray-600 mb-6">
+                <p class="text-sm text-gray-600 mb-6" data-i18n="learningPath.dailyHoursDesc">
                     Based on the estimated total hours above, select how many hours you can study each day to generate your personalized timeline.
                 </p>
 
@@ -296,34 +296,34 @@
                         <input type="radio" name="daily-hours" value="1" class="sr-only peer">
                         <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-600 peer-checked:bg-orange-50 hover:border-orange-300 transition-colors">
                             <div class="text-2xl font-bold text-gray-900">1h</div>
-                            <div class="text-xs text-gray-500">Light pace</div>
+                            <div class="text-xs text-gray-500" data-i18n="learningPath.paceLight">Light pace</div>
                         </div>
                     </label>
                     <label class="daily-hours-option cursor-pointer">
                         <input type="radio" name="daily-hours" value="2" class="sr-only peer" checked>
                         <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-600 peer-checked:bg-orange-50 hover:border-orange-300 transition-colors">
                             <div class="text-2xl font-bold text-gray-900">2h</div>
-                            <div class="text-xs text-gray-500">Recommended</div>
+                            <div class="text-xs text-gray-500" data-i18n="learningPath.paceRecommended">Recommended</div>
                         </div>
                     </label>
                     <label class="daily-hours-option cursor-pointer">
                         <input type="radio" name="daily-hours" value="3" class="sr-only peer">
                         <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-600 peer-checked:bg-orange-50 hover:border-orange-300 transition-colors">
                             <div class="text-2xl font-bold text-gray-900">3h</div>
-                            <div class="text-xs text-gray-500">Focused</div>
+                            <div class="text-xs text-gray-500" data-i18n="learningPath.paceFocused">Focused</div>
                         </div>
                     </label>
                     <label class="daily-hours-option cursor-pointer">
                         <input type="radio" name="daily-hours" value="custom" class="sr-only peer">
                         <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-600 peer-checked:bg-orange-50 hover:border-orange-300 transition-colors">
-                            <div class="text-2xl font-bold text-gray-900">Custom</div>
-                            <div class="text-xs text-gray-500">Your pace</div>
+                            <div class="text-2xl font-bold text-gray-900" data-i18n="learningPath.paceCustom" data-i18n-fallback="Custom">Custom</div>
+                            <div class="text-xs text-gray-500" data-i18n="learningPath.paceCustom">Your pace</div>
                         </div>
                     </label>
                 </div>
 
                 <div id="custom-hours-input" class="hidden mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Custom daily hours</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.customHours">Custom daily hours</label>
                     <input type="number" id="custom-daily-hours" min="0.5" max="12" step="0.5" value="1.5"
                         class="w-full md:w-48 border border-gray-300 rounded-lg p-3" placeholder="e.g., 1.5">
                 </div>
@@ -333,7 +333,7 @@
                 <button onclick="generateLearningPathTimeline()" id="btn-generate-timeline"
                     class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all">
                     <i class="fas fa-calendar-alt mr-2"></i>
-                    Generate Learning Timeline
+                    <span data-i18n="learningPath.generateTimeline">Generate Learning Timeline</span>
                 </button>
             </section>
 
@@ -342,22 +342,22 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
                     <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                         <i class="fas fa-calendar-alt text-green-600"></i>
-                        Your Learning Timeline
+                        <span data-i18n="learningPath.timelineTitle">Your Learning Timeline</span>
                     </h3>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="toggleTimelineEdit()" id="btn-edit-timeline"
                             class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                             <i class="fas fa-edit mr-1"></i>
-                            Edit Timeline
+                            <span data-i18n="learningPath.editTimeline">Edit Timeline</span>
                         </button>
                         <button onclick="applyTimelineEdits()" id="btn-apply-timeline"
                             class="hidden px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
                             <i class="fas fa-check mr-1"></i>
-                            Apply Changes
+                            <span data-i18n="learningPath.applyChanges">Apply Changes</span>
                         </button>
                         <button onclick="cancelTimelineEdit()" id="btn-cancel-timeline"
                             class="hidden px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                            Cancel
+                            <span data-i18n="learningPath.cancel">Cancel</span>
                         </button>
                     </div>
                 </div>
@@ -371,22 +371,22 @@
                     <button onclick="saveLearningPathToAccount()" id="btn-save-plan"
                         class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
                         <i class="fas fa-cloud-upload-alt mr-2"></i>
-                        Save to My Account
+                        <span data-i18n="learningPath.saveToAccount">Save to My Account</span>
                     </button>
                     <button onclick="downloadLearningPlan()"
                         class="px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors">
                         <i class="fas fa-file-alt mr-2"></i>
-                        Export TXT
+                        <span data-i18n="learningPath.exportTxt">Export TXT</span>
                     </button>
                     <button onclick="exportLearningPlanJson()"
                         class="px-6 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                         <i class="fas fa-file-code mr-2"></i>
-                        Export JSON
+                        <span data-i18n="learningPath.exportJson">Export JSON</span>
                     </button>
                 </div>
                 <p id="learning-path-save-login-hint" class="hidden text-sm text-gray-500 mt-4">
                     <i class="fas fa-info-circle mr-1"></i>
-                    Log in via the Individual Portal to save your plan to the database.
+                    <span data-i18n="learningPath.saveLoginHint">Log in via the Individual Portal to save your plan to the database.</span>
                 </p>
             </section>
 
@@ -394,7 +394,7 @@
             <section class="bg-white rounded-xl p-6 border shadow-sm">
                 <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                     <i class="fas fa-book-open text-purple-600"></i>
-                    Curated Learning Resources
+                    <span data-i18n="learningPath.resourcesTitle">Curated Learning Resources</span>
                 </h3>
                 
                 <div id="resources-container" class="grid md:grid-cols-2 gap-4">
@@ -406,39 +406,39 @@
             <section class="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
                 <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <i class="fas fa-rocket text-orange-600"></i>
-                    Your Next Steps
+                    <span data-i18n="learningPath.nextStepsTitle">Your Next Steps</span>
                 </h3>
                 
                 <div class="space-y-3" id="action-plan">
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">1</div>
                         <div>
-                            <div class="font-medium text-gray-900">Start with foundational skills</div>
-                            <div class="text-sm text-gray-600">Begin with the basics before moving to advanced topics</div>
+                            <div class="font-medium text-gray-900" data-i18n="learningPath.step1Title">Start with foundational skills</div>
+                            <div class="text-sm text-gray-600" data-i18n="learningPath.step1Desc">Begin with the basics before moving to advanced topics</div>
                         </div>
                     </div>
                     
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">2</div>
                         <div>
-                            <div class="font-medium text-gray-900">Practice consistently</div>
-                            <div class="text-sm text-gray-600">Dedicate at least 1-2 hours daily to learning</div>
+                            <div class="font-medium text-gray-900" data-i18n="learningPath.step2Title">Practice consistently</div>
+                            <div class="text-sm text-gray-600" data-i18n="learningPath.step2Desc">Dedicate at least 1-2 hours daily to learning</div>
                         </div>
                     </div>
                     
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">3</div>
                         <div>
-                            <div class="font-medium text-gray-900">Build projects</div>
-                            <div class="text-sm text-gray-600">Apply what you learn through hands-on projects</div>
+                            <div class="font-medium text-gray-900" data-i18n="learningPath.step3Title">Build projects</div>
+                            <div class="text-sm text-gray-600" data-i18n="learningPath.step3Desc">Apply what you learn through hands-on projects</div>
                         </div>
                     </div>
                     
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">4</div>
                         <div>
-                            <div class="font-medium text-gray-900">Track your progress</div>
-                            <div class="text-sm text-gray-600">Regularly review and adjust your learning path</div>
+                            <div class="font-medium text-gray-900" data-i18n="learningPath.step4Title">Track your progress</div>
+                            <div class="text-sm text-gray-600" data-i18n="learningPath.step4Desc">Regularly review and adjust your learning path</div>
                         </div>
                     </div>
                 </div>
@@ -450,24 +450,24 @@
             <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-map-signs text-3xl text-orange-600"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Chart Your Career Course</h3>
-            <p class="text-gray-600 mb-6">Tell us about your goals and we'll create a personalized learning roadmap</p>
+            <h3 class="text-xl font-bold text-gray-900 mb-2" data-i18n="learningPath.emptyTitle">Chart Your Career Course</h3>
+            <p class="text-gray-600 mb-6" data-i18n="learningPath.emptyDesc">Tell us about your goals and we'll create a personalized learning roadmap</p>
             
             <div class="grid md:grid-cols-3 gap-4 text-sm max-w-2xl mx-auto">
                 <div class="p-4 bg-orange-50 rounded-lg">
                     <i class="fas fa-bullseye text-orange-600 text-2xl mb-2"></i>
-                    <div class="font-medium mb-1">Goal-Oriented</div>
-                    <div class="text-gray-600 text-xs">Tailored to your target role</div>
+                    <div class="font-medium mb-1" data-i18n="learningPath.emptyGoal">Goal-Oriented</div>
+                    <div class="text-gray-600 text-xs" data-i18n="learningPath.emptyGoalDesc">Tailored to your target role</div>
                 </div>
                 <div class="p-4 bg-blue-50 rounded-lg">
                     <i class="fas fa-layer-group text-blue-600 text-2xl mb-2"></i>
-                    <div class="font-medium mb-1">Skill-Based</div>
-                    <div class="text-gray-600 text-xs">Focus on in-demand competencies</div>
+                    <div class="font-medium mb-1" data-i18n="learningPath.emptySkill">Skill-Based</div>
+                    <div class="text-gray-600 text-xs" data-i18n="learningPath.emptySkillDesc">Focus on in-demand competencies</div>
                 </div>
                 <div class="p-4 bg-green-50 rounded-lg">
                     <i class="fas fa-clock text-green-600 text-2xl mb-2"></i>
-                    <div class="font-medium mb-1">Time-Efficient</div>
-                    <div class="text-gray-600 text-xs">Optimized for your timeline</div>
+                    <div class="font-medium mb-1" data-i18n="learningPath.emptyTime">Time-Efficient</div>
+                    <div class="text-gray-600 text-xs" data-i18n="learningPath.emptyTimeDesc">Optimized for your timeline</div>
                 </div>
             </div>
         </div>
@@ -478,10 +478,10 @@
         <span id="toast-message"></span>
     </div>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/target-job-context.js"></script>
     <script src="assets/js/api-client.js"></script>
     <script src="assets/js/learning-path.js"></script>
-    <script src="../assets/i18n/i18n.js"></script>
 </body>
 </html>

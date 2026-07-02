@@ -24,6 +24,9 @@ LEARNING_PATH_TIMELINE_PROMPT = """你是一位职业发展顾问。请根据已
 3. 阶段数量 2–5 个，总周数应与总学时和每日学习时长相匹配
 4. 每个阶段 description 说明本阶段目标与建议完成的资源/技能
 
+## 输出语言
+{output_language_instruction}
+
 机器协议：
 - 返回且仅返回一个合法 JSON 对象
 - 不要输出 Markdown、代码块、注释或额外说明

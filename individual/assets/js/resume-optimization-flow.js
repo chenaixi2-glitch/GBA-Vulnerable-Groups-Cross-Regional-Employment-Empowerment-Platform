@@ -2,6 +2,17 @@
  * 简历优化流程：JD 确认对话框 + 缺口追问交互对话框
  */
 
+function uiT(key, fallback, vars) {
+    if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+    let s = fallback;
+    if (vars && s) {
+        Object.keys(vars).forEach((k) => {
+            s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+    }
+    return s;
+}
+
 let _jdConfirmResolver = null;
 let _optimizationResolver = null;
 
@@ -32,16 +43,16 @@ function showJdConfirmationModal(payload) {
         const note = payload.alignment_note || '';
         const stack = (payload.primary_tech_stack || []).filter(Boolean);
         const hint = payload.clarification_hint || payload.needs_clarification
-            ? (payload.clarification_hint || '请确认或编辑下方岗位描述后再继续')
+            ? (payload.clarification_hint || uiT('resume.opt.confirmJdHint', 'Please confirm or edit the job description below before continuing'))
             : '';
 
         if (noteEl) {
-            noteEl.textContent = note || '系统已根据您的简历生成以下岗位描述，请确认技术方向与职责是否符合您的目标。';
+            noteEl.textContent = note || uiT('resume.opt.defaultNote', 'The system generated the job description below from your resume. Please confirm the technical direction and responsibilities match your target role.');
             noteEl.classList.toggle('hidden', false);
         }
         if (stackEl) {
             stackEl.innerHTML = stack.length
-                ? `<span class="font-medium">推断主技术栈：</span>${stack.map((s) => `<span class="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs mr-1">${escapeHtml(s)}</span>`).join('')}`
+                ? `<span class="font-medium">${uiT('resume.opt.inferredStack', 'Inferred primary tech stack:')}</span>${stack.map((s) => `<span class="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs mr-1">${escapeHtml(s)}</span>`).join('')}`
                 : '';
             stackEl.classList.toggle('hidden', !stack.length);
         }
@@ -65,7 +76,7 @@ function confirmJdModal() {
     const textarea = document.getElementById('jd-confirmation-text');
     const jdText = textarea?.value.trim() || '';
     if (!jdText) {
-        Utils.showToast('请填写或确认岗位描述后再继续');
+        Utils.showToast(uiT('resume.opt.confirmJdRequired', 'Please fill in or confirm the job description before continuing'));
         return;
     }
     const mainTextarea = document.getElementById('jd-text');
@@ -90,11 +101,11 @@ async function regenerateJdInModal() {
         || document.getElementById('jd-confirmation-text')?.value.trim().split('\n')[0]
         || '';
     if (!jobTitle) {
-        Utils.showToast('请先输入目标岗位名称');
+        Utils.showToast(uiT('resume.opt.jobTitleRequired', 'Please enter a target job title first'));
         return;
     }
     try {
-        Utils.showLoading('正在根据您的简历重新生成岗位描述...');
+        Utils.showLoading(uiT('resume.opt.regeneratingJd', 'Regenerating job description from your resume...'));
         const ctx = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : {};
         const result = await apiClient.generateJdFromTitle(jobTitle, ctx);
         Utils.hideLoading();
@@ -106,7 +117,7 @@ async function regenerateJdInModal() {
         if (textarea) textarea.value = result.jd_text || '';
         if (noteEl) noteEl.textContent = result.alignment_note || noteEl.textContent;
         if (stackEl && result.primary_tech_stack?.length) {
-            stackEl.innerHTML = `<span class="font-medium">推断主技术栈：</span>${result.primary_tech_stack.map((s) => `<span class="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs mr-1">${escapeHtml(s)}</span>`).join('')}`;
+            stackEl.innerHTML = `<span class="font-medium">${uiT('resume.opt.inferredStack', 'Inferred primary tech stack:')}</span>${result.primary_tech_stack.map((s) => `<span class="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs mr-1">${escapeHtml(s)}</span>`).join('')}`;
             stackEl.classList.remove('hidden');
         }
         if (hintEl && result.clarification_hint) {
@@ -115,7 +126,7 @@ async function regenerateJdInModal() {
         }
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('重新生成失败: ' + error.message);
+        Utils.showToast(uiT('resume.opt.regenerateFailed', 'Regeneration failed: {msg}', { msg: error.message }));
     }
 }
 
@@ -140,7 +151,7 @@ function showOptimizationDialog({ gaps = [], questions = [], alignmentHint = '' 
                 ).join('');
                 gapsEl.classList.remove('hidden');
             } else {
-                gapsEl.innerHTML = '<p class="text-sm text-gray-600">未发现高风险缺口，您仍可补充以下信息以获得更精准的简历优化。</p>';
+                gapsEl.innerHTML = '<p class="text-sm text-gray-600">' + uiT('resume.opt.noHighGaps', 'No high-risk gaps found. You can still add details below for more precise resume optimization.') + '</p>';
                 gapsEl.classList.remove('hidden');
             }
         }
@@ -152,7 +163,7 @@ function showOptimizationDialog({ gaps = [], questions = [], alignmentHint = '' 
 
         const qs = (questions || []).length ? questions : [];
         if (!qs.length) {
-            questionsEl.innerHTML = '<p class="text-sm text-gray-500">暂无额外追问，可直接生成简历。</p>';
+            questionsEl.innerHTML = '<p class="text-sm text-gray-500">' + uiT('resume.opt.noExtraQuestions', 'No extra questions — you can generate the resume directly.') + '</p>';
         } else {
             questionsEl.innerHTML = qs.map((q, i) => {
                 const required = (q.priority || '').toLowerCase() === 'high';
@@ -165,7 +176,7 @@ function showOptimizationDialog({ gaps = [], questions = [], alignmentHint = '' 
                     ${q.reason ? `<p class="text-xs text-gray-500 mb-1">${escapeHtml(q.reason)}</p>` : ''}
                     <textarea rows="2" class="optimization-answer w-full border border-gray-300 rounded-lg p-2 text-sm"
                         data-required="${required ? '1' : '0'}"
-                        placeholder="请填写您的回答..."></textarea>
+                        placeholder="${uiT('resume.opt.answerPlaceholder', 'Enter your answer...')}"></textarea>
                 </div>`;
             }).join('');
         }
@@ -198,7 +209,7 @@ function collectOptimizationAnswers() {
 function submitOptimizationDialog() {
     const { answers, missingRequired } = collectOptimizationAnswers();
     if (missingRequired) {
-        Utils.showToast('请先回答标有 * 的必填问题');
+        Utils.showToast(uiT('resume.opt.requiredQuestions', 'Please answer all required questions marked with *'));
         return;
     }
     hideOptimizationDialog();
@@ -228,7 +239,7 @@ async function ensureJdConfirmedBeforeProceed(jdText, options = {}) {
     let payload = { jd_text: jdText, alignment_note: '', primary_tech_stack: [], clarification_hint: '' };
 
     if (isTitleOnlyJd(jdText)) {
-        Utils.showLoading('Analyzing your resume and generating targeted job description...');
+        Utils.showLoading(uiT('resume.opt.analyzingForJd', 'Analyzing your resume and generating a targeted job description...'));
         try {
             const ctx = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : {};
             payload = await apiClient.generateJdFromTitle(jdText, ctx);

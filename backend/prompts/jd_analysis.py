@@ -5,6 +5,9 @@ JD_ANALYSIS_PROMPT = """你是一个专业的岗位需求分析专家。请仔�
 岗位描述原文：
 {jd_text}
 
+## 输出语言
+{output_language_instruction}
+
 机器协议：
 - 返回且仅返回一个合法 JSON 对象
 - 不要输出 Markdown、代码块、注释或额外说明

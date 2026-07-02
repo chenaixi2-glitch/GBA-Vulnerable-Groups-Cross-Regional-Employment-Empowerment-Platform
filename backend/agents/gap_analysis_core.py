@@ -8,6 +8,7 @@ from typing import Any
 from agents.json_contracts import GapAnalysisOutput, GapOutput, QuestionOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.gap_analysis import GAP_ANALYSIS_PROMPT
+from tools.output_language import prompt_language_kwargs
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import CopilotState, Gap, Question
 from log import get_logger
@@ -68,6 +69,7 @@ async def run_gap_analysis(
     prompt = GAP_ANALYSIS_PROMPT.format(
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
+        **prompt_language_kwargs(state),
     )
     llm = get_llm()
     parsed = await ainvoke_json_with_schema(

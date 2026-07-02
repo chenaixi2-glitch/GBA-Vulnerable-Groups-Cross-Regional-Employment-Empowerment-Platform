@@ -32,6 +32,17 @@ let interactiveSession = {
     savePromptDismissed: false,
 };
 
+function uiT(key, fallback, vars) {
+    if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+    let s = fallback;
+    if (vars && s) {
+        Object.keys(vars).forEach((k) => {
+            s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+    }
+    return s;
+}
+
 /** 面试程序版本配置（与后端 interview_program.py 对齐） */
 const INTERVIEW_PROGRAM_PREVIEWS = {
     quick: {
@@ -141,7 +152,7 @@ async function uploadInterviewProfile() {
     const profileText = document.getElementById('interview-profile-text').value.trim();
 
     if (!interviewResumeFile && !profileText) {
-        Utils.showToast('Please upload a resume or paste profile text');
+        Utils.showToast(uiT('interview.toast.uploadOrPaste', 'Please upload a resume or paste profile text'));
         return;
     }
 
@@ -160,11 +171,11 @@ async function uploadInterviewProfile() {
 
         document.getElementById('interview-jd-section').classList.remove('hidden');
         Utils.hideLoading();
-        Utils.showToast('Profile uploaded successfully');
+        Utils.showToast(uiT('interview.toast.profileUploaded', 'Profile uploaded successfully'));
         console.log('Profile agent response:', response);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to upload profile: ' + error.message);
+        Utils.showToast(uiT('interview.toast.profileFailed', 'Failed to upload profile: {msg}', { msg: error.message }));
         console.error('Profile upload error:', error);
     }
 }
@@ -182,7 +193,7 @@ async function submitInterviewJobDescription() {
     }) : null;
 
     if (!jdText && !targetContext?.industry && !targetContext?.employer_type && !targetContext?.experience_level) {
-        Utils.showToast('Please paste the target job description or fill in target job fields');
+        Utils.showToast(uiT('interview.toast.pasteJd', 'Please paste the target job description or fill in target job fields'));
         return;
     }
 
@@ -195,11 +206,11 @@ async function submitInterviewJobDescription() {
 
         document.getElementById('interview-resume-section').classList.remove('hidden');
         Utils.hideLoading();
-        Utils.showToast('Job description submitted successfully');
+        Utils.showToast(uiT('interview.toast.jdSubmitted', 'Job description submitted successfully'));
         console.log('JD agent response:', response);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to submit job description: ' + error.message);
+        Utils.showToast(uiT('interview.toast.jdFailed', 'Failed to submit job description: {msg}', { msg: error.message }));
         console.error('JD submission error:', error);
     }
 }
@@ -225,15 +236,15 @@ async function generateInterviewResume() {
             interviewPrerequisites.resumeReady = true;
             updatePrerequisiteStatus();
             Utils.hideLoading();
-            Utils.showToast('Resume content ready for interview generation');
+            Utils.showToast(uiT('interview.toast.resumeReady', 'Resume content ready for interview generation'));
         } else {
-            throw new Error('Resume content was not generated');
+            throw new Error(uiT('interview.toast.resumeNotGenerated', 'Resume content was not generated'));
         }
 
         console.log('Resume generation response:', response);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to generate resume: ' + error.message);
+        Utils.showToast(uiT('interview.toast.resumeFailed', 'Failed to generate resume: {msg}', { msg: error.message }));
         console.error('Resume generation error:', error);
     }
 }
@@ -415,12 +426,12 @@ async function loadInterviewQuestions() {
     const industry = document.getElementById('job-industry').value;
 
     if (!jobTitle) {
-        Utils.showToast('Please enter a job title');
+        Utils.showToast(uiT('interview.toast.jobTitleRequired', 'Please enter a job title'));
         return;
     }
 
     if (!interviewPrerequisites.profileReady || !interviewPrerequisites.jobReady || !interviewPrerequisites.resumeReady) {
-        Utils.showToast('Please complete all prerequisite steps first');
+        Utils.showToast(uiT('interview.toast.completePrereq', 'Please complete all prerequisite steps first'));
         return;
     }
 
@@ -457,7 +468,7 @@ async function loadInterviewQuestions() {
                 || (programVersion === 'specialized' && INTERVIEW_PROGRAM_PREVIEWS.specialized[specializedFocus]?.label)
                 || programVersion;
         } else {
-            throw new Error('No questions generated. Ensure profile, job description, and resume are complete.');
+            throw new Error(uiT('interview.toast.noQuestionsGenerated', 'No questions generated. Ensure profile, job description, and resume are complete.'));
         }
 
         interviewSession.jobTitle = jobTitle;
@@ -465,7 +476,7 @@ async function loadInterviewQuestions() {
         interviewSession.answers = [];
 
         Utils.hideLoading();
-        Utils.showToast(`Generated ${interviewSession.questions.length} questions across ${interviewSession.stages.length} stages`);
+        Utils.showToast(uiT('interview.toast.questionsGenerated', 'Generated {count} questions across {stages} stages', { count: interviewSession.questions.length, stages: interviewSession.stages.length }));
 
         showInterviewInterface();
         renderQuestionBankStageBanner();
@@ -475,7 +486,7 @@ async function loadInterviewQuestions() {
         console.log('Interview session started:', interviewSession);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to generate questions: ' + error.message);
+        Utils.showToast(uiT('interview.toast.questionsFailed', 'Failed to generate questions: {msg}', { msg: error.message }));
         console.error('Interview session error:', error);
     }
 }
@@ -519,17 +530,17 @@ async function loadCustomInterviewQuestions() {
     const questions = parseCustomQuestionsText(questionsText);
 
     if (!jobTitle) {
-        Utils.showToast('Please enter a job title');
+        Utils.showToast(uiT('interview.toast.jobTitleRequired', 'Please enter a job title'));
         return;
     }
 
     if (!questions.length) {
-        Utils.showToast('Please enter or upload at least one interview question');
+        Utils.showToast(uiT('interview.toast.customQuestionsRequired', 'Please enter or upload at least one interview question'));
         return;
     }
 
     if (!interviewPrerequisites.profileReady || !interviewPrerequisites.jobReady || !interviewPrerequisites.resumeReady) {
-        Utils.showToast('Please complete all prerequisite steps first');
+        Utils.showToast(uiT('interview.toast.completePrereq', 'Please complete all prerequisite steps first'));
         return;
     }
 
@@ -560,7 +571,7 @@ async function loadCustomInterviewQuestions() {
             interviewSession.programVersion = 'custom';
             interviewSession.programLabel = 'Custom Questions';
         } else {
-            throw new Error('No reference answers generated. Ensure profile, job description, and resume are complete.');
+            throw new Error(uiT('interview.toast.noReferenceAnswers', 'No reference answers generated. Ensure profile, job description, and resume are complete.'));
         }
 
         interviewSession.jobTitle = jobTitle;
@@ -568,7 +579,7 @@ async function loadCustomInterviewQuestions() {
         interviewSession.answers = [];
 
         Utils.hideLoading();
-        Utils.showToast(`Generated reference answers for ${interviewSession.questions.length} custom questions`);
+        Utils.showToast(uiT('interview.toast.answersGenerated', 'Generated reference answers for {count} custom questions', { count: interviewSession.questions.length }));
 
         showInterviewInterface();
         document.getElementById('custom-questions-panel')?.classList.add('hidden');
@@ -580,7 +591,7 @@ async function loadCustomInterviewQuestions() {
         console.log('Custom interview session started:', interviewSession);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to generate reference answers: ' + error.message);
+        Utils.showToast(uiT('interview.toast.answersFailed', 'Failed to generate reference answers: {msg}', { msg: error.message }));
         console.error('Custom interview session error:', error);
     }
 }
@@ -590,12 +601,12 @@ async function startInteractiveInterview() {
     const industry = document.getElementById('job-industry').value;
 
     if (!jobTitle) {
-        Utils.showToast('Please enter a job title');
+        Utils.showToast(uiT('interview.toast.jobTitleRequired', 'Please enter a job title'));
         return;
     }
 
     if (!interviewPrerequisites.profileReady || !interviewPrerequisites.jobReady || !interviewPrerequisites.resumeReady) {
-        Utils.showToast('Please complete all prerequisite steps first');
+        Utils.showToast(uiT('interview.toast.completePrereq', 'Please complete all prerequisite steps first'));
         return;
     }
 
@@ -645,7 +656,7 @@ async function startInteractiveInterview() {
         interviewSession.jobTitle = jobTitle;
 
         Utils.hideLoading();
-        Utils.showToast('Interactive mock interview started');
+        Utils.showToast(uiT('interview.toast.started', 'Interactive mock interview started'));
 
         showInteractiveInterface();
         renderInteractiveChat();
@@ -655,7 +666,7 @@ async function startInteractiveInterview() {
         console.log('Interactive interview started:', session);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to start interactive interview: ' + error.message);
+        Utils.showToast(uiT('interview.toast.startFailed', 'Failed to start interactive interview: {msg}', { msg: error.message }));
         console.error('Interactive interview error:', error);
     }
 }
@@ -762,12 +773,12 @@ async function submitInteractiveAnswer() {
     const answer = input.value.trim();
 
     if (!answer) {
-        Utils.showToast('Please type your answer');
+        Utils.showToast(uiT('interview.toast.typeAnswer', 'Please type your answer'));
         return;
     }
 
     if (interactiveSession.status !== 'active') {
-        Utils.showToast('Interview is not active');
+        Utils.showToast(uiT('interview.toast.notActive', 'Interview is not active'));
         return;
     }
 
@@ -795,13 +806,13 @@ async function submitInteractiveAnswer() {
 
         if (session.status === 'completed') {
             document.getElementById('interactive-input-section').classList.add('hidden');
-            Utils.showToast('Interview ended. Generating debrief...');
+            Utils.showToast(uiT('interview.toast.endedDebrief', 'Interview ended. Generating debrief...'));
             await loadInteractiveDebrief();
         }
     } catch (error) {
         input.disabled = false;
         Utils.hideLoading();
-        Utils.showToast('Failed to submit answer: ' + error.message);
+        Utils.showToast(uiT('interview.toast.submitFailed', 'Failed to submit answer: {msg}', { msg: error.message }));
         console.error('Interactive turn error:', error);
     }
 }
@@ -812,7 +823,7 @@ async function endInteractiveInterview() {
             document.getElementById('interactive-debrief-section').classList.remove('hidden');
             return;
         }
-        Utils.showToast('No active interview to end');
+        Utils.showToast(uiT('interview.toast.noInterviewToEnd', 'No active interview to end'));
         return;
     }
 
@@ -834,11 +845,11 @@ async function endInteractiveInterview() {
 
         Utils.hideLoading();
         renderInteractiveDebrief(session.debrief);
-        Utils.showToast('Debrief report ready');
+        Utils.showToast(uiT('interview.toast.debriefReady', 'Debrief report ready'));
         promptSaveInteractiveInterview();
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to generate debrief: ' + error.message);
+        Utils.showToast(uiT('interview.toast.debriefFailed', 'Failed to generate debrief: {msg}', { msg: error.message }));
         console.error('End interactive interview error:', error);
     }
 }
@@ -864,7 +875,7 @@ function setupInteractiveSaveModal() {
     document.getElementById('btn-interview-save-skip')?.addEventListener('click', () => {
         interactiveSession.savePromptDismissed = true;
         hideInteractiveSaveModal();
-        Utils.showToast('Not saved. You can save later from the debrief section.');
+        Utils.showToast(uiT('interview.toast.notSavedLater', 'Not saved. You can save later from the debrief section.'));
     });
 }
 
@@ -1023,17 +1034,17 @@ function updateInteractiveSaveControls() {
 
 async function saveInteractiveInterviewToAccount(skipConfirm = false) {
     if (!apiClient.isLoggedIn()) {
-        Utils.showToast('Please log in to save your mock interview');
+        Utils.showToast(uiT('interview.toast.loginToSave', 'Please log in to save your mock interview'));
         return;
     }
 
     if (!interactiveSession.debrief || interactiveSession.status !== 'completed') {
-        Utils.showToast('Complete the interview and debrief before saving');
+        Utils.showToast(uiT('interview.toast.completeBeforeSave', 'Complete the interview and debrief before saving'));
         return;
     }
 
     if (interactiveSession.savedRecordId) {
-        Utils.showToast('Already saved to your account');
+        Utils.showToast(uiT('interview.toast.alreadySaved', 'Already saved to your account'));
         return;
     }
 
@@ -1047,10 +1058,10 @@ async function saveInteractiveInterviewToAccount(skipConfirm = false) {
         interactiveSession.savedRecordId = response.record_id || interactiveSession.savedRecordId;
         Utils.hideLoading();
         updateInteractiveSaveControls();
-        Utils.showToast(response.message || 'Mock interview saved to your account');
+        Utils.showToast(response.message || uiT('interview.toast.savedToAccount', 'Mock interview saved to your account'));
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast(error.message || 'Failed to save mock interview');
+        Utils.showToast(error.message || uiT('interview.toast.saveFailed', 'Failed to save mock interview'));
         console.error('Save interactive interview error:', error);
     }
 }
@@ -1074,7 +1085,7 @@ function updateInteractiveProgress() {
 function downloadInteractiveDebrief() {
     const debrief = interactiveSession.debrief;
     if (!debrief) {
-        Utils.showToast('No debrief report available');
+        Utils.showToast(uiT('interview.toast.noDebrief', 'No debrief report available'));
         return;
     }
 
@@ -1103,7 +1114,7 @@ function downloadInteractiveDebrief() {
 
     const blob = new Blob([report], { type: 'text/plain' });
     Utils.downloadFile(blob, `interactive-debrief-${Date.now()}.txt`);
-    Utils.showToast('Debrief downloaded');
+    Utils.showToast(uiT('interview.toast.debriefDownloaded', 'Debrief downloaded'));
 }
 
 function showInterviewInterface() {
@@ -1189,7 +1200,7 @@ async function submitAnswer() {
     const answer = document.getElementById('answer-input').value.trim();
 
     if (!answer) {
-        Utils.showToast('Please provide an answer first');
+        Utils.showToast(uiT('interview.toast.answerFirst', 'Please provide an answer first'));
         return;
     }
 
@@ -1210,10 +1221,10 @@ async function submitAnswer() {
             }, 2000);
         }
 
-        Utils.showToast('Answer submitted! Check feedback below.');
+        Utils.showToast(uiT('interview.toast.answerSubmitted', 'Answer submitted! Check feedback below.'));
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast('Failed to get feedback: ' + error.message);
+        Utils.showToast(uiT('interview.toast.feedbackFailed', 'Failed to get feedback: {msg}', { msg: error.message }));
         console.error('Submit answer error:', error);
     }
 }
@@ -1415,7 +1426,7 @@ function downloadReport() {
 
     const blob = new Blob([report], { type: 'text/plain' });
     Utils.downloadFile(blob, `interview-report-${Date.now()}.txt`);
-    Utils.showToast('Report downloaded');
+    Utils.showToast(uiT('interview.toast.reportDownloaded', 'Report downloaded'));
 }
 
 function restartSession() {
@@ -1486,6 +1497,6 @@ function restartSession() {
 
         document.getElementById('btn-load-questions').disabled = true;
         selectInterviewMode(interviewMode);
-        Utils.showToast('Session reset');
+        Utils.showToast(uiT('interview.toast.sessionReset', 'Session reset'));
     }
 }

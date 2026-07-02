@@ -24,6 +24,9 @@ INTERVIEW_GENERATION_PROMPT = """你是资深大厂面试官，专注企业精�
 候选人画像：
 {profile_json}
 
+## 输出语言
+{output_language_instruction}
+
 ## 机器协议
 - 返回且仅返回一个合法 JSON 对象
 - 不要输出 Markdown、代码块、注释或额外说明
@@ -73,6 +76,9 @@ STANDALONE_INTERVIEW_GENERATION_PROMPT = """你是资深面试官。用户希望
 
 候选人画像：
 {profile_json}
+
+## 输出语言
+{output_language_instruction}
 
 ## 机器协议
 - 返回且仅返回一个合法 JSON 对象

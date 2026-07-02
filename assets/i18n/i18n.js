@@ -81,10 +81,25 @@
         return typeof cur === 'string' ? cur : '';
     }
 
-    function t(key, fallback) {
-        if (currentLang === 'en') return fallback || key;
+    function t(key, fallback, vars) {
+        if (currentLang === 'en') {
+            var enVal = fallback || key;
+            if (vars && enVal) {
+                Object.keys(vars).forEach(function (k) {
+                    enVal = String(enVal).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+                });
+            }
+            return enVal;
+        }
         var val = resolveKey(localeCache[currentLang], key);
-        if (val) return val;
+        if (val) {
+            if (vars) {
+                Object.keys(vars).forEach(function (k) {
+                    val = String(val).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+                });
+            }
+            return val;
+        }
         var strings = localeCache[currentLang] && localeCache[currentLang].strings;
         if (strings && strings[fallback || key]) return strings[fallback || key];
         return fallback || key;
@@ -103,6 +118,61 @@
         }
         if (!translated) return raw;
         return raw.replace(trimmed, translated);
+    }
+
+    /** Translate API / backend / thrown Error messages shown to users */
+    function tApiMessage(raw) {
+        if (raw == null) return '';
+        var text = String(raw);
+        if (!text || currentLang === 'en') return text;
+        var data = localeCache[currentLang];
+        if (!data) return text;
+        var trimmed = text.trim();
+        if (data.apiMessages && data.apiMessages[trimmed]) return data.apiMessages[trimmed];
+        if (data.strings && data.strings[trimmed]) return data.strings[trimmed];
+        var prefixes = [
+            ['Save failed: ', 'errors.saveFailedPrefix'],
+            ['Failed to generate job description: ', 'errors.jdFailedPrefix'],
+            ['Failed to upload resume: ', 'errors.uploadFailedPrefix'],
+            ['Failed to generate resume: ', 'errors.generateFailedPrefix'],
+            ['Translation failed: ', 'errors.translationFailedPrefix'],
+            ['Optimization failed: ', 'errors.optimizeFailedPrefix'],
+            ['Download failed: ', 'errors.downloadFailedPrefix'],
+            ['导出失败: ', 'errors.exportFailedPrefix'],
+            ['浏览器打印失败: ', 'errors.printFailedPrefix'],
+            ['重新生成失败: ', 'resume.opt.regenerateFailed'],
+            ['Failed to upload profile: ', 'interview.toast.profileFailed'],
+            ['Failed to submit job description: ', 'interview.toast.jdFailed'],
+            ['Failed to generate resume: ', 'interview.toast.resumeFailed'],
+            ['Failed to generate questions: ', 'interview.toast.questionsFailed'],
+            ['Failed to generate reference answers: ', 'interview.toast.answersFailed'],
+            ['Failed to start interactive interview: ', 'interview.toast.startFailed'],
+            ['Failed to submit answer: ', 'interview.toast.submitFailed'],
+            ['Failed to generate debrief: ', 'interview.toast.debriefFailed'],
+            ['Failed to get feedback: ', 'interview.toast.feedbackFailed'],
+            ['Failed to analyze skill gaps: ', 'learningPath.toast.gapFailed'],
+            ['Failed to generate timeline: ', 'learningPath.toast.timelineFailed'],
+            ['Failed to update timeline: ', 'learningPath.toast.updateFailed'],
+            ['Save failed: ', 'learningPath.toast.saveFailed'],
+            ['API error: ', 'errors.apiError'],
+            ['HTTP ', 'errors.httpPrefix'],
+        ];
+        for (var i = 0; i < prefixes.length; i++) {
+            var p = prefixes[i][0];
+            if (text.indexOf(p) === 0) {
+                var tail = text.slice(p.length);
+                var mappedTail = tApiMessage(tail);
+                if (p === 'API error: ') {
+                    return t('errors.apiError', 'API error: {detail}', { detail: mappedTail });
+                }
+                return mappedTail !== tail ? p.replace(/:\s*$/, '') + ': ' + mappedTail : text;
+            }
+        }
+        return translateString(text, currentLang);
+    }
+
+    function uiText(key, fallback, vars) {
+        return t(key, fallback, vars);
     }
 
     function setText(selector, text, fallback) {
@@ -138,15 +208,15 @@
         setText('[data-i18n="nav-faq"]', pageText('[data-i18n="nav-faq"]', 'faq'));
         setText('[data-i18n="nav-jobs"]', pageText('[data-i18n="nav-jobs"]', 'jobs'));
         setText('[data-i18n="nav-analytics"]', pageText('[data-i18n="nav-analytics"]', 'analytics'));
-        setText('[data-i18n="hero-individual"]', t('home.individual', ''));
-        setText('[data-i18n="hero-corporate"]', t('home.corporate', ''));
+        setText('[data-i18n="hero-individual"]', pageText('[data-i18n="hero-individual"]', 'individual'));
+        setText('[data-i18n="hero-corporate"]', pageText('[data-i18n="hero-corporate"]', 'corporate'));
         setText('[data-i18n="section-features-title"]', pageText('[data-i18n="section-features-title"]', 'features'));
         setText('[data-i18n="section-features-lead"]', pageText('[data-i18n="section-features-lead"]', 'featuresLead'));
-        setText('[data-i18n="section-workflow-title"]', t(pk + '.workflow', t('home.workflow', '')));
-        setText('[data-i18n="section-benefits-title"]', t(pk + '.benefits', t('home.benefits', '')));
+        setText('[data-i18n="section-workflow-title"]', pageText('[data-i18n="section-workflow-title"]', 'workflow'));
+        setText('[data-i18n="section-benefits-title"]', pageText('[data-i18n="section-benefits-title"]', 'benefits'));
         setText('[data-i18n="section-stories-title"]', pageText('[data-i18n="section-stories-title"]', 'stories'));
         setText('[data-i18n="section-faq-title"]', pageText('[data-i18n="section-faq-title"]', 'faq'));
-        setText('[data-i18n="section-cta-title"]', t(pk + '.cta', t('home.cta', '')));
+        setText('[data-i18n="section-cta-title"]', pageText('[data-i18n="section-cta-title"]', 'cta'));
         setText('[data-i18n="hero-open-demos"]', pageText('[data-i18n="hero-open-demos"]', 'open'));
     }
 
@@ -155,7 +225,12 @@
             var key = node.getAttribute('data-i18n');
             if (!key || key.indexOf('.') === -1) return;
             if (/^(home|individual|corporate)\./.test(key)) return;
-            var fb = node.getAttribute('data-i18n-fallback') || node.textContent;
+            if (!node.dataset.i18nDefault) {
+                var raw = (node.textContent || '').trim();
+                var fbAttr = node.getAttribute('data-i18n-fallback');
+                node.dataset.i18nDefault = fbAttr && !/[\u4e00-\u9fff]/.test(fbAttr) ? fbAttr.trim() : raw;
+            }
+            var fb = node.dataset.i18nDefault;
             var text = t(key, fb);
             if (text) node.textContent = text;
         });
@@ -210,6 +285,20 @@
         });
     }
 
+    function applyResumeLangButtonLabels() {
+        if (!window.GBAI18n || !GBAI18n.resumeLangLabel) return;
+        document.querySelectorAll('[data-resume-lang] .resume-lang-label, [data-resume-translate] .resume-lang-label').forEach(function (span) {
+            var btn = span.closest('[data-resume-lang], [data-resume-translate]');
+            if (!btn) return;
+            var code = btn.getAttribute('data-resume-lang') || btn.getAttribute('data-resume-translate');
+            if (code) span.textContent = GBAI18n.resumeLangLabel(code);
+        });
+        var badge = document.getElementById('resume-language-badge');
+        if (badge && badge.dataset.activeLang) {
+            badge.textContent = GBAI18n.resumeLangLabel(badge.dataset.activeLang);
+        }
+    }
+
     function applyLanguage(lang) {
         lang = LABELS[lang] ? lang : 'en';
         currentLang = lang;
@@ -221,6 +310,7 @@
         applyPageCopy(lang);
         applyDataI18n(lang);
         applyStaticStrings(lang);
+        applyResumeLangButtonLabels();
     }
 
     function setLang(lang) {
@@ -331,7 +421,10 @@
         getLang: getLang,
         setLang: setLang,
         applyLanguage: applyLanguage,
+        applyResumeLangButtonLabels: applyResumeLangButtonLabels,
         t: t,
+        uiText: uiText,
+        tApiMessage: tApiMessage,
         initLanguage: initLanguage,
         uiLangToApiLang: uiLangToApiLang,
         apiLangToUiLang: apiLangToUiLang,

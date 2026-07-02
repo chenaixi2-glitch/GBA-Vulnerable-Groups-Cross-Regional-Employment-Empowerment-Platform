@@ -20,6 +20,9 @@ ANSWER_EVALUATION_PROMPT = """你是一位面试辅导专家。请评估候选�
 3. improvements：2–4 条待改进点，每条一句话
 4. suggestions：2–3 条可操作建议（如 STAR 格式、量化结果、补充案例）
 
+## 输出语言
+{output_language_instruction}
+
 机器协议：
 - 返回且仅返回一个合法 JSON 对象
 - 不要输出 Markdown、代码块、注释或额外说明
