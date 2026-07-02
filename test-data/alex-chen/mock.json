@@ -163,22 +163,22 @@
   },
   "interactiveFollowUps": [
     {
-      "brief_feedback": "回答结构清晰，但缺少具体数据和成果量化。",
+      "brief_feedback": "Clear structure, but add concrete metrics and quantified outcomes.",
       "follow_up_type": "follow_up",
-      "interviewer_message": "你刚才提到的项目中，你个人的核心贡献是什么？有没有可以量化的结果？",
-      "category": "项目实操与问题解决"
+      "interviewer_message": "In the project you mentioned, what was your core contribution? Any quantifiable results?",
+      "category": "Project execution & problem solving"
     },
     {
-      "brief_feedback": "案例选择恰当，体现了岗位相关能力。",
+      "brief_feedback": "Good case choice that shows role-relevant skills.",
       "follow_up_type": "new_topic",
-      "interviewer_message": "你为什么选择申请这个岗位？对我们公司和这个职位有什么了解？",
-      "category": "岗位认知与求职动机"
+      "interviewer_message": "Why are you applying for this role? What do you know about our company and this position?",
+      "category": "Role understanding & motivation"
     },
     {
-      "brief_feedback": "动机表达真诚，可再补充对业务的理解。",
+      "brief_feedback": "Motivation sounds sincere; deepen your understanding of the business.",
       "follow_up_type": "new_topic",
-      "interviewer_message": "请描述一次你在高压环境下处理紧急问题的经历。",
-      "category": "压力应变与短板复盘"
+      "interviewer_message": "Describe a time you handled an urgent issue under high pressure.",
+      "category": "Pressure & weakness review"
     }
   ],
   "interactiveInterviewHistory": [

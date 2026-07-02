@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apply for a GBA Role</title>
+    <title data-i18n="apply.pageTitle">Apply for a role — GBA Employment Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -18,77 +18,78 @@
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
             <a href="portal.html#dashboard" class="inline-flex items-center gap-2 text-orange-700 font-semibold">
                 <i class="fas fa-arrow-left"></i>
-                Back to personal portal
+                <span data-i18n="apply.backPortal">Back to personal portal</span>
             </a>
             <a href="demo-resume-matching.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700">
-                Optimize resume first
+                <span data-i18n="apply.optimizeFirst">Optimize resume first</span>
                 <i class="fas fa-wand-magic-sparkles"></i>
             </a>
+            <div id="header-lang-slot"></div>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-10">
         <section class="grid lg:grid-cols-[1.1fr_.9fr] gap-8 items-start">
             <div class="bg-white rounded-3xl shadow-xl border border-orange-100 p-8">
-                <span class="inline-flex items-center px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm font-semibold mb-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm font-semibold mb-4" data-i18n="apply.workflow">
                     Application workflow
                 </span>
-                <h1 id="role-title" class="text-3xl md:text-4xl font-bold mb-4">Apply for this role</h1>
-                <p id="role-summary" class="text-slate-600 text-lg mb-8">Complete a short skills-first application. Sensitive information can stay hidden until you choose to share it.</p>
+                <h1 id="role-title" class="text-3xl md:text-4xl font-bold mb-4" data-i18n="apply.title">Apply for this role</h1>
+                <p id="role-summary" class="text-slate-600 text-lg mb-8" data-i18n="apply.summary">Complete a short skills-first application. Sensitive information can stay hidden until you choose to share it.</p>
 
                 <div class="grid md:grid-cols-3 gap-4 mb-8">
                     <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
                         <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold mb-3">1</div>
-                        <h3 class="font-semibold mb-1">Confirm fit</h3>
-                        <p class="text-sm text-slate-600">Review match reasons and role requirements.</p>
+                        <h3 class="font-semibold mb-1" data-i18n="apply.step1Title">Confirm fit</h3>
+                        <p class="text-sm text-slate-600" data-i18n="apply.step1Desc">Review match reasons and role requirements.</p>
                     </div>
                     <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
                         <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold mb-3">2</div>
-                        <h3 class="font-semibold mb-1">Attach profile</h3>
-                        <p class="text-sm text-slate-600">Use a blind-screening resume or paste key skills.</p>
+                        <h3 class="font-semibold mb-1" data-i18n="apply.step2Title">Attach profile</h3>
+                        <p class="text-sm text-slate-600" data-i18n="apply.step2Desc">Use a blind-screening resume or paste key skills.</p>
                     </div>
                     <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
                         <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold mb-3">3</div>
-                        <h3 class="font-semibold mb-1">Submit</h3>
-                        <p class="text-sm text-slate-600">Submit to the platform; enterprises can review match scores.</p>
+                        <h3 class="font-semibold mb-1" data-i18n="apply.step3Title">Submit</h3>
+                        <p class="text-sm text-slate-600" data-i18n="apply.step3Desc">Submit to the platform; enterprises can review match scores.</p>
                     </div>
                 </div>
 
                 <form id="application-form" class="space-y-5">
                     <div class="grid md:grid-cols-2 gap-4">
                         <label class="block">
-                            <span class="text-sm font-medium text-slate-700">Display name</span>
-                            <input required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Your preferred name">
+                            <span class="text-sm font-medium text-slate-700" data-i18n="apply.displayName">Display name</span>
+                            <input required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" data-i18n-placeholder="apply.displayNamePh" placeholder="Your preferred name">
                         </label>
                         <label class="block">
-                            <span class="text-sm font-medium text-slate-700">Email</span>
-                            <input type="email" required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="you@example.com">
+                            <span class="text-sm font-medium text-slate-700" data-i18n="apply.email">Email</span>
+                            <input type="email" required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" data-i18n-placeholder="apply.emailPh" placeholder="you@example.com">
                         </label>
                     </div>
                     <label class="block">
-                        <span class="text-sm font-medium text-slate-700">Top skills</span>
-                        <input class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Customer service, Excel, Cantonese, live-commerce support">
+                        <span class="text-sm font-medium text-slate-700" data-i18n="apply.topSkills">Top skills</span>
+                        <input class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" data-i18n-placeholder="apply.topSkillsPh" placeholder="Customer service, Excel, Cantonese">
                     </label>
                     <label class="block">
-                        <span class="text-sm font-medium text-slate-700">Short motivation</span>
-                        <textarea id="cover_message" rows="5" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Share why this role fits your work preferences, skills and schedule."></textarea>
+                        <span class="text-sm font-medium text-slate-700" data-i18n="apply.motivation">Short motivation</span>
+                        <textarea id="cover_message" rows="5" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" data-i18n-placeholder="apply.motivationPh" placeholder="Share why this role fits your work preferences, skills and schedule."></textarea>
                     </label>
                     <div class="flex flex-wrap gap-3">
                         <label class="inline-flex items-center gap-2 rounded-full bg-orange-50 text-orange-700 px-4 py-2 text-sm">
                             <input type="checkbox" checked>
-                            Use blind-screening profile
+                            <span data-i18n="apply.blindScreening">Use blind-screening profile</span>
                         </label>
                         <label class="inline-flex items-center gap-2 rounded-full bg-amber-50 text-amber-700 px-4 py-2 text-sm">
                             <input type="checkbox">
-                            Request accessibility support
+                            <span data-i18n="apply.accessibilitySupport">Request accessibility support</span>
                         </label>
                         <label class="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 px-4 py-2 text-sm">
                             <input type="checkbox">
-                            Prefer remote interview
+                            <span data-i18n="apply.remoteInterview">Prefer remote interview</span>
                         </label>
                     </div>
                     <button type="submit" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 hover:-translate-y-0.5 transition-all">
-                        Submit application
+                        <span data-i18n="apply.submit">Submit application</span>
                         <i class="fas fa-paper-plane"></i>
                     </button>
                     <p id="application-msg" class="hidden text-emerald-700 font-medium"></p>
@@ -97,32 +98,45 @@
 
             <aside class="space-y-5">
                 <div class="bg-white rounded-3xl shadow border border-orange-100 p-6">
-                    <h2 class="text-xl font-bold mb-4">Role snapshot</h2>
+                    <h2 class="text-xl font-bold mb-4" data-i18n="apply.roleSnapshot">Role snapshot</h2>
                     <div id="role-tags" class="flex flex-wrap gap-2 mb-5"></div>
                     <ul id="role-checks" class="space-y-3 text-sm text-slate-600"></ul>
                 </div>
                 <div class="bg-slate-900 text-white rounded-3xl shadow p-6">
-                    <h2 class="text-xl font-bold mb-3">What happens next?</h2>
+                    <h2 class="text-xl font-bold mb-3" data-i18n="apply.whatHappensNext">What happens next?</h2>
                     <ol class="space-y-3 text-sm text-slate-300">
-                        <li><span class="font-semibold text-white">1.</span> 系统将计算您与岗位的匹配分并通知企业。</li>
-                        <li><span class="font-semibold text-white">2.</span> 企业端在收到投递后可查看匹配评分。</li>
-                        <li><span class="font-semibold text-white">3.</span> 您可继续优化简历或进行模拟面试准备。</li>
+                        <li><span class="font-semibold text-white">1.</span> <span data-i18n="apply.next1">The platform will compute your match score and notify the employer.</span></li>
+                        <li><span class="font-semibold text-white">2.</span> <span data-i18n="apply.next2">Employers can review match scores after receiving your application.</span></li>
+                        <li><span class="font-semibold text-white">3.</span> <span data-i18n="apply.next3">You can continue optimizing your resume or practicing interviews.</span></li>
                     </ol>
                 </div>
             </aside>
         </section>
     </main>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="assets/js/platform-api.js"></script>
+    <script src="../assets/site-enhancements.js"></script>
     <script>
+        function applyT(key, fallback, vars) {
+            if (window.GBAI18n && GBAI18n.t) return GBAI18n.t(key, fallback, vars);
+            var s = fallback;
+            if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+            return s;
+        }
+        function mapMsg(msg) {
+            if (window.GBAI18n && GBAI18n.tApiMessage) return GBAI18n.tApiMessage(String(msg || ''));
+            return msg || '';
+        }
+
         const params = new URLSearchParams(location.search);
         const jobId = params.get('jobId');
         let currentJob = null;
 
         async function loadJob() {
             if (!jobId) {
-                document.getElementById('role-title').textContent = '请选择岗位';
-                document.getElementById('role-summary').textContent = '请从岗位匹配页选择要投递的岗位。';
+                document.getElementById('role-title').textContent = applyT('apply.selectJob', 'Please select a job');
+                document.getElementById('role-summary').textContent = applyT('apply.selectJobDesc', 'Choose a job from the job matching page.');
                 return;
             }
             try {
@@ -131,14 +145,14 @@
                 currentJob = job;
 
                 if (job.source === 'external') {
-                    document.getElementById('role-title').textContent = '外部岗位：' + job.title;
-                    document.getElementById('role-summary').textContent = '该岗位来自爬虫同步，请在源站完成投递。';
+                    document.getElementById('role-title').textContent = applyT('apply.externalJobTitle', 'External job: {title}', { title: job.title });
+                    document.getElementById('role-summary').textContent = applyT('apply.externalJobDesc', 'This job is from a partner site. Please apply on the original website.');
                     document.getElementById('application-form').classList.add('hidden');
                     const msg = document.getElementById('application-msg');
                     msg.className = 'text-blue-700 font-medium';
                     msg.classList.remove('hidden');
                     const href = job.source_url || 'https://www.jyfw.org.cn/';
-                    msg.innerHTML = '此为爬虫同步岗位，<a href="' + href + '" target="_blank" rel="noopener" class="underline font-semibold" id="external-link">点击前往源站投递</a>。';
+                    msg.innerHTML = applyT('apply.externalLinkHtml', 'Partner site job — <a href="{href}" target="_blank" rel="noopener" class="underline font-semibold" id="external-link">Apply on partner site</a>.', { href: href });
                     document.getElementById('external-link').addEventListener('click', async function () {
                         try {
                             if (PlatformAPI.getToken()) {
@@ -149,18 +163,18 @@
                     return;
                 }
 
-                document.getElementById('role-title').textContent = '投递：' + job.title;
+                document.getElementById('role-title').textContent = applyT('apply.applyTo', 'Apply: {title}', { title: job.title });
                 document.getElementById('role-summary').textContent = (job.company_name || job.department || '') + ' · ' + (job.location || '') +
-                    (job.vulnerable_group_friendly ? ' · 弱势群体友好岗位' : '');
+                    (job.vulnerable_group_friendly ? ' · ' + applyT('apply.vulnerableFriendly', 'Vulnerable-group friendly role') : '');
                 const tags = [job.location, job.salary].filter(Boolean);
                 document.getElementById('role-tags').innerHTML = tags.map(function (t) {
                     return '<span class="px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-sm font-medium">' + t + '</span>';
                 }).join('');
                 document.getElementById('role-checks').innerHTML = (job.skills || []).slice(0, 6).map(function (s) {
                     return '<li class="flex gap-2"><i class="fas fa-check text-emerald-500 mt-0.5"></i><span>' + s + '</span></li>';
-                }).join('') || '<li>查看岗位详情了解要求</li>';
+                }).join('') || '<li>' + applyT('apply.viewRequirements', 'See job details for requirements') + '</li>';
             } catch (e) {
-                document.getElementById('role-summary').textContent = e.message || '无法加载岗位';
+                document.getElementById('role-summary').textContent = mapMsg(e.message) || applyT('apply.loadFailed', 'Could not load job');
             }
         }
 
@@ -168,7 +182,7 @@
             event.preventDefault();
             const msg = document.getElementById('application-msg');
             if (!jobId) {
-                msg.textContent = '缺少岗位 ID，请从岗位列表进入。';
+                msg.textContent = applyT('apply.missingJobId', 'Missing job ID. Please open this page from the job list.');
                 msg.className = 'text-red-600 font-medium';
                 msg.classList.remove('hidden');
                 return;
@@ -178,28 +192,33 @@
                     cover_message: document.getElementById('cover_message').value.trim(),
                 });
                 const score = res.data.application.match_score;
-                msg.textContent = '投递成功！匹配分：' + score + '。可在「我的投递」中查看或撤销。';
+                msg.textContent = applyT('apply.applySuccess', 'Application submitted! Match score: {score}. View or withdraw in My Applications.', { score: score });
                 msg.className = 'text-emerald-700 font-medium';
                 msg.classList.remove('hidden');
                 var link = document.createElement('a');
                 link.href = 'my-applications.html';
                 link.className = 'block mt-2 text-emerald-800 underline text-sm';
-                link.textContent = '前往我的投递';
+                link.textContent = applyT('apply.goToApplications', 'Go to My Applications');
                 msg.appendChild(link);
             } catch (e) {
                 if (e.data && e.data.details && e.data.details.source_url) {
-                    msg.innerHTML = (e.message || '请前往源站投递') + ' — <a href="' + e.data.details.source_url + '" target="_blank" rel="noopener" class="underline">打开源站</a>';
+                    msg.innerHTML = (mapMsg(e.message) || applyT('apply.externalRedirect', 'Apply on the partner site')) + ' — <a href="' + e.data.details.source_url + '" target="_blank" rel="noopener" class="underline">' + applyT('apply.openPartnerSite', 'Open partner site') + '</a>';
                 } else {
-                    msg.textContent = e.message || '投递失败，请先登录个人账号并保存简历。';
+                    msg.textContent = mapMsg(e.message) || applyT('apply.applyFailed', 'Application failed. Sign in and save your resume first.');
                 }
                 msg.className = 'text-red-600 font-medium';
                 msg.classList.remove('hidden');
             }
         });
 
-        loadJob();
-    </script>    <script src="../assets/i18n/i18n.js"></script>
-
-    <script src="../assets/site-enhancements.js"></script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var boot = function () { loadJob(); };
+            if (window.GBAI18n && GBAI18n.initLanguage) {
+                GBAI18n.initLanguage().then(boot);
+            } else {
+                boot();
+            }
+        });
+    </script>
 </body>
 </html>

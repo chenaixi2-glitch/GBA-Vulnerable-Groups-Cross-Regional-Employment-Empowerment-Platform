@@ -9,30 +9,30 @@ let jdUserConfirmed = false;
 let currentResumeLanguage = 'zh';
 let pendingExportFormat = null;
 
-const INDUSTRY_LABELS = {
-    tech: 'Technology',
-    finance: 'Finance',
-    ecommerce: 'E-commerce',
-    healthcare: 'Healthcare',
-    education: 'Education',
-    other: 'Other',
+const INDUSTRY_LABEL_KEYS = {
+    tech: 'resume.tech',
+    finance: 'resume.finance',
+    ecommerce: 'resume.ecommerce',
+    healthcare: 'resume.healthcare',
+    education: 'resume.education',
+    other: 'resume.other',
 };
 
-const EMPLOYER_TYPE_LABELS = {
-    soe: 'State-owned Enterprise (国央企)',
-    public: 'Public Sector (体制内)',
-    foreign: 'Foreign Enterprise (外企)',
-    private: 'Private Enterprise (民企)',
-    npo: 'Non-profit Organization (NPO/NGO 非营利社会组织)',
-    hmt: 'HK/Macau/TW-funded Enterprise (港澳台资企业)',
-    other: 'Other (其他)',
+const EMPLOYER_TYPE_LABEL_KEYS = {
+    soe: 'resume.soe',
+    public: 'resume.publicSector',
+    foreign: 'resume.foreign',
+    private: 'resume.private',
+    npo: 'resume.npo',
+    hmt: 'resume.hmt',
+    other: 'resume.employerOther',
 };
 
-const EXPERIENCE_LABELS = {
-    entry: 'Entry Level (0-2 years)',
-    mid: 'Mid Level (3-5 years)',
-    senior: 'Senior Level (5+ years)',
-    executive: 'Executive / Leadership',
+const EXPERIENCE_LABEL_KEYS = {
+    entry: 'resume.entry',
+    mid: 'resume.mid',
+    senior: 'resume.senior',
+    executive: 'resume.executive',
 };
 
 function uiT(key, fallback, vars) {
@@ -49,32 +49,94 @@ function uiT(key, fallback, vars) {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializeResumeGenerator();
+    if (window.GBAI18n && typeof GBAI18n.initLanguage === 'function') {
+        GBAI18n.initLanguage().then(() => {
+            if (typeof apiClient !== 'undefined') {
+                apiClient.ensureSessionStarted();
+            }
+        }).catch(() => {
+            if (typeof apiClient !== 'undefined') {
+                apiClient.ensureSessionStarted();
+            }
+        });
+    }
 });
 
 function initializeResumeGenerator() {
-    // Load session
-    const sessionId = apiClient.loadSessionId();
-    if (sessionId) {
-        Utils.updateSessionDisplay(sessionId);
-    } else {
-        apiClient.generateSessionId();
-        Utils.updateSessionDisplay(apiClient.sessionId);
+    try {
+        apiClient.ensureSessionStarted();
+    } catch (error) {
+        console.warn('Session init failed:', error);
     }
 
-    // Setup file drag and drop
+    apiClient.ensureBackendAvailable().catch((error) => {
+        console.warn('Backend probe failed:', error.message);
+    });
+
+    setupUploadInputListeners();
     setupDragAndDrop();
     setupJdSectionListeners();
     setupExportModal();
+    updateUploadContinueButton();
     restoreDraftOnLoad();
+}
+
+function hasUploadInput() {
+    const pasted = document.getElementById('resume-text')?.value.trim();
+    return Boolean(currentFile || pasted);
+}
+
+function updateUploadContinueButton() {
+    const btn = document.getElementById('btn-upload-resume');
+    if (!btn) return;
+
+    const ready = hasUploadInput();
+    btn.disabled = !ready;
+    btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+    if (ready) {
+        btn.removeAttribute('disabled');
+    } else {
+        btn.setAttribute('disabled', '');
+    }
+
+    btn.classList.toggle('opacity-50', !ready);
+    btn.classList.toggle('cursor-not-allowed', !ready);
+}
+
+function setupUploadInputListeners() {
+    const fileInput = document.getElementById('resume-file');
+    if (fileInput && !fileInput.dataset.boundUpload) {
+        fileInput.dataset.boundUpload = '1';
+        fileInput.addEventListener('change', handleFileSelect);
+    }
+
+    const resumeText = document.getElementById('resume-text');
+    if (resumeText && !resumeText.dataset.boundUpload) {
+        resumeText.dataset.boundUpload = '1';
+        resumeText.addEventListener('input', () => {
+            if (resumeText.value.trim()) {
+                currentFile = null;
+                document.getElementById('file-info')?.classList.add('hidden');
+                const nativeInput = document.getElementById('resume-file');
+                if (nativeInput) nativeInput.value = '';
+            }
+            updateUploadContinueButton();
+        });
+        resumeText.addEventListener('paste', () => {
+            setTimeout(updateUploadContinueButton, 0);
+        });
+    }
 }
 
 async function restoreDraftOnLoad() {
     try {
         const restored = await ProfileEditor.loadFromServer();
         if (restored) {
+            showUploadResultsPanel();
             document.getElementById('jd-section')?.classList.remove('hidden');
             updateStepIndicator(1, 'completed');
             updateStepIndicator(2, 'active');
+            updateUploadContinueButton();
         }
     } catch (_) {
         /* no draft yet */
@@ -180,25 +242,33 @@ function setupJdSectionListeners() {
     });
 }
 
+const INDUSTRY_FALLBACKS = { tech: 'Technology', finance: 'Finance', ecommerce: 'E-commerce', healthcare: 'Healthcare', education: 'Education', other: 'Other' };
+const EMPLOYER_TYPE_FALLBACKS = { soe: 'State-owned enterprise', public: 'Public sector', foreign: 'Foreign enterprise', private: 'Private enterprise', npo: 'Non-profit (NPO/NGO)', hmt: 'HK/Macau/TW-funded', other: 'Other' };
+const EXPERIENCE_FALLBACKS = { entry: 'Entry Level', mid: 'Mid Level', senior: 'Senior Level', executive: 'Executive' };
+
 function getIndustryLabel(value) {
-    return INDUSTRY_LABELS[value] || value;
+    const key = INDUSTRY_LABEL_KEYS[value];
+    return key ? uiT(key, INDUSTRY_FALLBACKS[value] || value) : value;
 }
 
 function getExperienceLabel(value) {
-    return EXPERIENCE_LABELS[value] || value;
+    const key = EXPERIENCE_LABEL_KEYS[value];
+    return key ? uiT(key, EXPERIENCE_FALLBACKS[value] || value) : value;
 }
 
 function getEmployerTypeLabel(value) {
-    return EMPLOYER_TYPE_LABELS[value] || value;
+    const key = EMPLOYER_TYPE_LABEL_KEYS[value];
+    return key ? uiT(key, EMPLOYER_TYPE_FALLBACKS[value] || value) : value;
 }
 
 /**
- * Generate and fill suggested JD from industry, employer type, experience level, and uploaded resume
+ * Generate and fill suggested JD from JD draft, industry, employer type, and experience level
  */
 async function fillSuggestedJd(industry, experienceLevel, employerType, options = {}) {
     const { silent = false } = options;
     const jdTextarea = document.getElementById('jd-text');
     const generateBtn = document.getElementById('btn-generate-jd');
+    const jdDraft = jdTextarea?.value.trim() || '';
 
     try {
         if (generateBtn) generateBtn.disabled = true;
@@ -209,7 +279,8 @@ async function fillSuggestedJd(industry, experienceLevel, employerType, options 
         const result = await apiClient.generateJobDescription(
             getIndustryLabel(industry),
             getExperienceLabel(experienceLevel),
-            employerType
+            employerType,
+            jdDraft
         );
 
         if (result.jd_text) {
@@ -254,8 +325,11 @@ async function generateSuggestedJd() {
  * Setup drag and drop for file upload
  */
 function setupDragAndDrop() {
-    const dropZone = document.querySelector('.border-dashed');
-    
+    const dropZone = document.getElementById('resume-drop-zone')
+        || document.querySelector('#upload-section .border-dashed')
+        || document.getElementById('resume-file')?.closest('.border-dashed');
+    if (!dropZone) return;
+
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
     });
@@ -321,10 +395,25 @@ function handleFile(file) {
     document.getElementById('file-size').textContent = Utils.formatFileSize(file.size);
     document.getElementById('file-info').classList.remove('hidden');
 
-    // Enable continue button
-    document.getElementById('btn-upload-resume').disabled = false;
+    const resumeText = document.getElementById('resume-text');
+    if (resumeText) resumeText.value = '';
 
-    Utils.showToast(uiT('resume.toast.fileUploaded', 'File uploaded successfully'));
+    updateUploadContinueButton();
+    Utils.showToast(uiT('resume.toast.fileSelected', 'File selected — click Continue to Step 2 to parse'));
+}
+
+/**
+ * Reveal parsed resume results on the right panel after upload.
+ */
+function showUploadResultsPanel() {
+    document.getElementById('empty-state')?.classList.add('hidden');
+    document.getElementById('profile-editor-section')?.classList.remove('hidden');
+
+    const agentPanel = document.getElementById('agent-status-panel');
+    if (agentPanel) {
+        agentPanel.classList.remove('hidden');
+        updateAgentStatus('agent-profile', 'completed');
+    }
 }
 
 /**
@@ -334,7 +423,7 @@ function clearFile() {
     currentFile = null;
     document.getElementById('resume-file').value = '';
     document.getElementById('file-info').classList.add('hidden');
-    document.getElementById('btn-upload-resume').disabled = true;
+    updateUploadContinueButton();
 }
 
 /**
@@ -348,33 +437,43 @@ async function uploadResume() {
         return;
     }
 
+    let slowHintTimer = null;
     try {
         Utils.showLoading(uiT('resume.toast.uploadingResume', 'Uploading resume...'));
-        updateStepIndicator(1, 'completed');
+        slowHintTimer = setTimeout(() => {
+            Utils.showLoading(uiT('resume.toast.uploadingSlow', 'AI is parsing your resume — this may take 1–2 minutes, please wait…'));
+        }, 8000);
 
         let response;
         
         if (currentFile) {
-            // Upload file
             response = await apiClient.uploadResume(currentFile);
         } else {
-            // Use pasted text
-            response = await apiClient.chat(resumeText, []);
+            response = await apiClient.chat(resumeText, [], { allowMockFallback: true });
         }
 
-        Utils.hideLoading();
-        Utils.showToast(uiT('resume.toast.analyzed', 'Resume analyzed successfully'));
+        if (!response?.candidate_profile) {
+            throw new Error(uiT('resume.toast.uploadEmptyResponse', 'No profile data returned. Please try again or paste resume text.'));
+        }
+
+        Utils.showLoading(uiT('resume.toast.renderingResults', 'Rendering parsed resume on the right panel...'));
 
         await ProfileEditor.initFromUpload(response);
+        showUploadResultsPanel();
 
-        // Scroll to profile editor
-        document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth' });
+        updateStepIndicator(1, 'completed');
+        updateUploadContinueButton();
+        document.getElementById('jd-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        Utils.hideLoading();
+        Utils.showToast(uiT('resume.toast.analyzed', 'Resume analyzed successfully'));
 
         console.log('Profile agent response:', response);
     } catch (error) {
         Utils.hideLoading();
         Utils.showToast(uiT('resume.toast.uploadFailed', 'Failed to upload resume: {msg}', { msg: error.message }));
         console.error('Upload error:', error);
+    } finally {
+        if (slowHintTimer) clearTimeout(slowHintTimer);
     }
 }
 
@@ -657,7 +756,7 @@ async function translateResume(targetLanguage) {
         };
         const baseMsg = baseMsgs[lang] || baseMsgs.en;
         Utils.showToast(missing > 0
-            ? baseMsg + uiT('resume.toast.itemsToReview', ' — {count} item(s) to review below', { count: missing })
+            ? baseMsg + uiT('resume.toast.itemsToReview', ' — {count} item(s) to review in profile editor', { count: missing })
             : baseMsg);
     } catch (error) {
         Utils.hideLoading();
@@ -815,6 +914,13 @@ async function tryBrowserPdfFallback() {
     await apiClient.printResumeAsPdf(html);
     Utils.showToast(uiT('resume.toast.printSaveAsPdf', 'Choose "Save as PDF" in the print dialog'));
     return true;
+}
+
+if (typeof window !== 'undefined') {
+    window.handleFileSelect = handleFileSelect;
+    window.handleFile = handleFile;
+    window.clearFile = clearFile;
+    window.uploadResume = uploadResume;
 }
 
 async function exportResume(format = 'pdf') {

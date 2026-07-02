@@ -1,15 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>爱心捐款箱 · 弱势群体法律服务 - 个人端</title>
+    <title data-i18n="donationLegal.individualTitle">Donation box · Legal aid — Individual</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
-        body { font-family: 'Noto Sans SC', sans-serif; }
-    </style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap'); body { font-family: 'Noto Sans SC', sans-serif; }</style>
 </head>
 <body class="bg-gradient-to-b from-amber-50 to-white min-h-screen" data-page="individual">
     <header class="bg-white/90 backdrop-blur border-b sticky top-0 z-50">
@@ -17,34 +14,30 @@
             <a href="portal.html" class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-500 rounded-lg flex items-center justify-center text-white font-bold">GBA</div>
                 <div>
-                    <div class="font-bold text-gray-900">粤港澳大湾区就业赋能平台</div>
-                    <div class="text-xs text-gray-500">个人端 · 爱心捐款箱</div>
+                    <div class="font-bold text-gray-900" data-i18n="donationLegal.brandTitle">GBA Employment Empowerment Platform</div>
+                    <div class="text-xs text-gray-500" data-i18n="donationLegal.individualSubtitle">Individual · Donation box</div>
                 </div>
             </a>
-            <a href="portal.html" class="text-sm text-blue-600 hover:underline"><i class="fas fa-arrow-left mr-1"></i>返回门户</a>
+            <a href="portal.html" class="text-sm text-blue-600 hover:underline"><i class="fas fa-arrow-left mr-1"></i><span data-i18n="donationLegal.backPortal">Back to portal</span></a>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-10">
         <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">爱心捐款箱</h1>
-            <p class="text-gray-600 max-w-2xl mx-auto">
-                募集到的资金将<strong class="text-amber-700">全额</strong>用于<strong class="text-blue-700">弱势群体法律服务</strong>。
-                若您属于弱势群体，平台各项功能<strong>免费</strong>；若非弱势群体，需向捐款箱捐款（金额不限）以支持帮扶服务并解锁平台功能。
-            </p>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3" data-i18n="donationLegal.heroIndividual">Donation box</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto" data-i18n="donationLegal.introIndividual">All funds raised go entirely to vulnerable-group legal services. Vulnerable-group members use the platform free; others donate any amount to support legal aid and unlock features.</p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-8 mb-12">
             <section class="bg-white rounded-2xl shadow-lg border p-6 md:p-8">
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <i class="fas fa-box-open text-amber-500"></i> 投入捐款箱
+                    <i class="fas fa-box-open text-amber-500"></i> <span data-i18n="donationLegal.sectionDonateIndividual">Donate</span>
                 </h2>
                 <div id="donation-box-root"></div>
             </section>
-
             <section class="bg-white rounded-2xl shadow-lg border p-6 md:p-8">
                 <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <i class="fas fa-scale-balanced text-blue-600"></i> 弱势群体法律服务
+                    <i class="fas fa-scale-balanced text-blue-600"></i> <span data-i18n="donationLegal.sectionLegal">Vulnerable-group legal services</span>
                 </h2>
                 <p id="legal-subtitle" class="text-sm text-gray-600 mb-6"></p>
                 <div id="legal-contact" class="mb-6 p-4 bg-blue-50 rounded-xl text-sm text-blue-900 hidden"></div>
@@ -54,29 +47,29 @@
 
         <section class="bg-white rounded-2xl border shadow-lg p-6 md:p-8 mb-12">
             <h2 class="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                <i class="fas fa-file-signature text-blue-600"></i> 法律服务诉求 · 接单
+                <i class="fas fa-file-signature text-blue-600"></i> <span data-i18n="donationLegal.sectionRequestsIndividual">Legal requests · Help</span>
             </h2>
-            <p class="text-sm text-gray-600 mb-6">弱势群体可<strong>上传诉求申请</strong>（含材料附件），律师、法律志愿者或其他用户可<strong>提供帮助</strong>；提供后诉求不会下架，将公开展示帮助者与帮助内容。您可在「我的诉求」中<strong>标记已完成</strong>，诉求将移至「已完成诉求」。</p>
+            <p class="text-sm text-gray-600 mb-6" data-i18n="donationLegal.requestsIntroIndividual">Vulnerable users can submit requests with attachments; lawyers, volunteers or others can help. Requests stay visible after help is offered.</p>
             <div id="legal-aid-root"></div>
         </section>
 
         <section class="bg-white rounded-2xl border p-6 md:p-8">
-            <h2 class="text-lg font-bold text-gray-900 mb-4">收费说明</h2>
+            <h2 class="text-lg font-bold text-gray-900 mb-4" data-i18n="donationLegal.pricingTitle">Pricing</h2>
             <div class="grid md:grid-cols-2 gap-6 text-sm text-gray-700">
                 <div class="p-4 bg-green-50 rounded-xl border border-green-100">
-                    <h3 class="font-semibold text-green-800 mb-2"><i class="fas fa-user-shield mr-1"></i> 弱势群体用户</h3>
+                    <h3 class="font-semibold text-green-800 mb-2"><i class="fas fa-user-shield mr-1"></i> <span data-i18n="donationLegal.vulnUserTitle">Vulnerable-group users</span></h3>
                     <ul class="space-y-1 list-disc list-inside text-green-900/80">
-                        <li>系统根据年龄、残疾、职业空窗、收入等自动识别</li>
-                        <li>简历生成、面试辅导、岗位匹配等功能<strong>全部免费</strong></li>
-                        <li>可免费申请弱势群体法律服务（上传诉求、等待接单或平台协助）</li>
+                        <li data-i18n="donationLegal.vulnUser1">Auto-identified by age, disability, employment gap, income, etc.</li>
+                        <li data-i18n="donationLegal.vulnUser2">Resume, interview prep and job matching are all free</li>
+                        <li data-i18n="donationLegal.vulnUser3">Free legal aid requests (upload, wait for help or platform assist)</li>
                     </ul>
                 </div>
                 <div class="p-4 bg-amber-50 rounded-xl border border-amber-100">
-                    <h3 class="font-semibold text-amber-800 mb-2"><i class="fas fa-hand-holding-heart mr-1"></i> 非弱势群体用户</h3>
+                    <h3 class="font-semibold text-amber-800 mb-2"><i class="fas fa-hand-holding-heart mr-1"></i> <span data-i18n="donationLegal.nonVulnTitle">Other users</span></h3>
                     <ul class="space-y-1 list-disc list-inside text-amber-900/80">
-                        <li>需向捐款箱捐款一次即可解锁平台功能（金额不限）</li>
-                        <li>捐款<strong>100%</strong>用于弱势群体法律服务</li>
-                        <li>以爱心支持大湾区弱势求职者</li>
+                        <li data-i18n="donationLegal.nonVuln1">One donation (any amount) unlocks platform features</li>
+                        <li data-i18n="donationLegal.nonVuln2">100% of donations fund vulnerable-group legal services</li>
+                        <li data-i18n="donationLegal.nonVuln3">Support GBA vulnerable job seekers with your contribution</li>
                     </ul>
                 </div>
             </div>
@@ -87,15 +80,15 @@
     <script src="../assets/js/platform-access.js"></script>
     <script src="../assets/js/donation-box.js"></script>
     <script src="../assets/js/legal-aid.js"></script>
-    <script src="../assets/floating-widget.js"></script>
     <script src="../assets/i18n/i18n.js"></script>
-
     <script src="../assets/site-guide.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        function dlT(key, fb, vars) {
+            return (window.GBAI18n && GBAI18n.t) ? GBAI18n.t(key, fb, vars) : fb;
+        }
+        async function initDonationLegal() {
             DonationBox.renderDonationBox(document.getElementById('donation-box-root'), { portal: 'individual' });
             LegalAidUI.init(document.getElementById('legal-aid-root'), { portal: 'individual', allowSubmit: true });
-
             try {
                 const res = await PlatformAPI.DonationsAPI.getLegalServices();
                 const data = res.data || {};
@@ -105,15 +98,17 @@
                     const el = document.getElementById('legal-contact');
                     el.classList.remove('hidden');
                     el.innerHTML = `
-                        <div><i class="fas fa-phone mr-2"></i>热线：${data.contact.hotline}</div>
-                        <div><i class="fas fa-envelope mr-2"></i>邮箱：${data.contact.email}</div>
+                        <div><i class="fas fa-phone mr-2"></i>${dlT('donationLegal.hotline','Hotline')}: ${data.contact.hotline}</div>
+                        <div><i class="fas fa-envelope mr-2"></i>${dlT('donationLegal.email','Email')}: ${data.contact.email}</div>
                         <div><i class="fas fa-clock mr-2"></i>${data.contact.hours}</div>
                         <div class="mt-2 text-xs opacity-80">${data.fund_promise || ''}</div>`;
                 }
             } catch (e) {
-                document.getElementById('legal-subtitle').textContent = '加载法律服务信息失败，请确认后端服务已启动。';
+                document.getElementById('legal-subtitle').textContent = dlT('donationLegal.legalLoadFailed', 'Failed to load legal services. Please ensure the backend is running.');
             }
-        });
+        }
+        document.addEventListener('DOMContentLoaded', initDonationLegal);
+        window.addEventListener('gba:language-changed', initDonationLegal);
     </script>
 </body>
 </html>

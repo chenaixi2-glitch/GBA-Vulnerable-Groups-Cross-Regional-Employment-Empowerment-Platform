@@ -101,6 +101,7 @@
             </nav>
             
             <div class="flex items-center gap-3">
+                <div id="header-lang-slot"></div>
                 <div id="portal-auth-guest" class="flex items-center gap-2">
                     <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5" data-i18n="portal.login">登录</a>
                     <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg" data-i18n="portal.signup">注册</a>
@@ -179,7 +180,7 @@
                         <i class="fas fa-briefcase text-2xl text-teal-600"></i>
                     </div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="portal.cardJobsTitle">岗位匹配与投递</h3>
-                    <p class="text-gray-600 text-sm mb-4" data-i18n="portal.cardJobsDesc">按人群类型与简历评分推荐岗位。企业岗位平台内投递，爬虫岗位跳转源站。</p>
+                    <p class="text-gray-600 text-sm mb-4" data-i18n="portal.cardJobsDesc">按人群类型与简历评分推荐岗位。企业岗位可在平台内直接投递，外部岗位请前往合作招聘网站投递。</p>
                     <div class="flex items-center text-teal-600 text-sm font-medium">
                         <span data-i18n="portal.browseJobs">浏览岗位</span>
                         <i class="fas fa-arrow-right ml-2"></i>
@@ -280,7 +281,6 @@
     <script src="assets/js/platform-api.js"></script>
     <script src="../assets/js/portal-auth.js"></script>
     <script src="../assets/js/platform-access.js"></script>
-    <script src="../assets/floating-widget.js"></script>
     <script src="../assets/i18n/i18n.js"></script>
 
     <script src="../assets/site-guide.js"></script>
@@ -315,7 +315,7 @@
             el.classList.remove('hidden');
             el.textContent = portalT(
                 'portal.statsLine',
-                '已投递 {apps} 个 · 外部跳转 {ext} 次',
+                '已投递 {apps} 个 · 合作网站投递 {ext} 次',
                 {
                     apps: stats.data.total_applications || 0,
                     ext: stats.data.external_interests || 0

@@ -18,13 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeLearningPath() {
-    const sessionId = apiClient.loadSessionId();
-    if (sessionId) {
-        Utils.updateSessionDisplay(sessionId);
-    } else {
-        apiClient.generateSessionId();
-        Utils.updateSessionDisplay(apiClient.sessionId);
-    }
+    apiClient.ensureSessionStarted();
 
     document.querySelectorAll('input[name="daily-hours"]').forEach(radio => {
         radio.addEventListener('change', onDailyHoursChange);

@@ -22,7 +22,7 @@ async function apply(req, res) {
   if (job.status !== 'active') throw ApiError.badRequest('该岗位已关闭招聘');
 
   if (job.source === 'external') {
-    throw ApiError.badRequest('外部爬虫岗位请在源站投递', {
+    throw ApiError.badRequest('外部岗位请在合作招聘网站投递', {
       source: 'external',
       source_url: job.source_url || 'https://www.jyfw.org.cn/',
     });

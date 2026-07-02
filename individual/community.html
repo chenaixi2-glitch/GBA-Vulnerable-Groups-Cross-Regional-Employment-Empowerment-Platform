@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job-seeking Community - GBA Platform</title>
+    <title data-i18n="community.title">Job-seeking Community - GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -23,7 +23,7 @@
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
             <a href="portal.html#ai-features" class="flex items-center font-bold text-gray-900"><i class="fas fa-handshake text-2xl text-amber-700 mr-2"></i>GBA Platform</a>
             <div class="flex items-center gap-5">
-                <a href="portal.html#ai-features" class="text-sm text-gray-600 hover:text-amber-700">Interactive tools</a>
+                <a href="portal.html#ai-features" class="text-sm text-gray-600 hover:text-amber-700" data-i18n="community.navTools">Interactive tools</a>
                 <div class="language-selector">
                     <button class="flex items-center gap-2 text-sm text-gray-600"><i class="fas fa-globe"></i><span id="current-language">English</span><i class="fas fa-chevron-down text-xs"></i></button>
                     <div class="language-dropdown">
@@ -41,21 +41,21 @@
         <section class="relative overflow-hidden bg-gradient-to-br from-amber-100 via-white to-blue-50 py-20">
             <div class="container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
                 <div>
-                    <span class="inline-flex items-center px-4 py-2 rounded-full bg-white text-amber-800 font-semibold shadow-sm mb-5"><i class="fas fa-people-group mr-2"></i>Job-seeking Community</span>
-                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-5">Find peers, mentors and warm leads across the GBA.</h1>
-                    <p class="text-lg text-gray-600 mb-8">A supportive space for vulnerable job seekers to ask questions, join small peer circles, attend mentor office hours and share cross-border employment experience.</p>
-                    <a href="#circles" class="inline-flex items-center bg-amber-700 hover:bg-amber-800 text-white font-semibold px-6 py-3 rounded-xl shadow">Explore circles <i class="fas fa-arrow-right ml-2"></i></a>
+                    <span class="inline-flex items-center px-4 py-2 rounded-full bg-white text-amber-800 font-semibold shadow-sm mb-5"><i class="fas fa-people-group mr-2"></i><span data-i18n="community.badge">Job-seeking Community</span></span>
+                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-5" data-i18n="community.heroTitle">Find peers, mentors and warm leads across the GBA.</h1>
+                    <p class="text-lg text-gray-600 mb-8" data-i18n="community.heroSubtitle">A supportive space for vulnerable job seekers to ask questions, join small peer circles, attend mentor office hours and share cross-border employment experience.</p>
+                    <a href="#circles" class="inline-flex items-center bg-amber-700 hover:bg-amber-800 text-white font-semibold px-6 py-3 rounded-xl shadow"><span data-i18n="community.exploreCircles">Explore circles</span> <i class="fas fa-arrow-right ml-2"></i></a>
                 </div>
                 <div class="relative min-h-[320px]">
                     <div class="bubble absolute left-8 top-8 w-24 h-24 rounded-full bg-fuchsia-500 text-white flex items-center justify-center text-3xl shadow-xl"><i class="fas fa-user"></i></div>
                     <div class="bubble absolute right-16 top-20 w-28 h-28 rounded-full bg-blue-500 text-white flex items-center justify-center text-3xl shadow-xl"><i class="fas fa-comments"></i></div>
                     <div class="bubble absolute left-32 bottom-10 w-32 h-32 rounded-full bg-emerald-500 text-white flex items-center justify-center text-4xl shadow-xl"><i class="fas fa-handshake"></i></div>
                     <div class="absolute inset-x-10 bottom-0 bg-white rounded-3xl shadow-xl p-6 border border-amber-100">
-                        <p class="font-semibold text-gray-900 mb-3">Today in the community</p>
+                        <p class="font-semibold text-gray-900 mb-3" data-i18n="community.todayTitle">Today in the community</p>
                         <div class="space-y-3 text-sm text-gray-600">
-                            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>12 new mentor replies</div>
-                            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-blue-500"></span>8 cross-border interview tips shared</div>
-                            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-amber-500"></span>3 warm introductions available</div>
+                            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span data-i18n="community.todayMentor">12 new mentor replies</span></div>
+                            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span data-i18n="community.todayTips">8 cross-border interview tips shared</span></div>
+                            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span data-i18n="community.todayIntro">3 warm introductions available</span></div>
                         </div>
                     </div>
                 </div>
@@ -64,29 +64,28 @@
 
         <section id="circles" class="py-16">
             <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center mb-10">Community circles</h2>
+                <h2 class="text-3xl font-bold text-center mb-10" data-i18n="community.circlesTitle">Community circles</h2>
                 <div class="grid md:grid-cols-3 gap-6">
                     <article class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
                         <i class="fas fa-laptop-house text-3xl text-amber-700 mb-4"></i>
-                        <h3 class="font-bold text-xl mb-2">Remote-friendly roles</h3>
-                        <p class="text-gray-600">Share role leads and workplace accommodation tips for remote customer support, data labeling and content review.</p>
+                        <h3 class="font-bold text-xl mb-2" data-i18n="community.circle1Title">Remote-friendly roles</h3>
+                        <p class="text-gray-600" data-i18n="community.circle1Desc">Share role leads and workplace accommodation tips for remote customer support, data labeling and content review.</p>
                     </article>
                     <article class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
                         <i class="fas fa-user-graduate text-3xl text-blue-600 mb-4"></i>
-                        <h3 class="font-bold text-xl mb-2">First interview club</h3>
-                        <p class="text-gray-600">Practice answers, get peer feedback and join weekly mentor office hours before cross-border interviews.</p>
+                        <h3 class="font-bold text-xl mb-2" data-i18n="community.circle2Title">First interview club</h3>
+                        <p class="text-gray-600" data-i18n="community.circle2Desc">Practice answers, get peer feedback and join weekly mentor office hours before cross-border interviews.</p>
                     </article>
                     <article class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
                         <i class="fas fa-route text-3xl text-emerald-600 mb-4"></i>
-                        <h3 class="font-bold text-xl mb-2">Policy buddies</h3>
-                        <p class="text-gray-600">Compare city-specific onboarding checklists, social security steps and document preparation notes.</p>
+                        <h3 class="font-bold text-xl mb-2" data-i18n="community.circle3Title">Policy buddies</h3>
+                        <p class="text-gray-600" data-i18n="community.circle3Desc">Compare city-specific onboarding checklists, social security steps and document preparation notes.</p>
                     </article>
                 </div>
             </div>
         </section>
-    </main>    <script src="../assets/i18n/i18n.js"></script>
-
-
+    </main>
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

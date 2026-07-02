@@ -153,10 +153,11 @@
                 </a>
                 <h1 class="text-xl font-bold text-gray-900" data-i18n="resume.title">Smart Resume Generator</h1>
             </div>
-            <div class="flex items-center gap-3">
-                <span id="session-badge" class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                    <span data-i18n="resume.sessionLabel">Session</span>: <span id="session-id" data-i18n="resume.notStarted">Not started</span>
+            <div id="header-actions" class="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
+                <span id="session-badge" class="text-sm bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap" title="">
+                    <span class="hidden sm:inline" data-i18n="resume.sessionLabel">Session</span><span class="hidden sm:inline">: </span><span id="session-id" class="font-mono">Not started</span>
                 </span>
+                <div id="header-lang-slot"></div>
             </div>
         </div>
     </header>
@@ -191,8 +192,8 @@
                         <span data-i18n="resume.step1Title">Step 1: Upload Your Resume</span>
                     </h2>
                     
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer" onclick="document.getElementById('resume-file').click()">
-                        <input type="file" id="resume-file" accept=".pdf,.docx,.txt,.md" class="hidden" onchange="handleFileSelect(event)">
+                    <div id="resume-drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer" onclick="document.getElementById('resume-file').click()">
+                        <input type="file" id="resume-file" accept=".pdf,.docx,.txt,.md" class="hidden">
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
                         <p class="text-sm text-gray-600 mb-2" data-i18n="resume.uploadClick">Click to upload or drag files here</p>
                         <p class="text-xs text-gray-500" data-i18n="resume.uploadLimit">PDF, DOCX, TXT, MD supported — max 10MB per file</p>
@@ -237,7 +238,7 @@
                         <textarea id="resume-text" rows="8" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-i18n-placeholder="resume.pastePlaceholder" placeholder="Paste your current resume content here..."></textarea>
                     </div>
                     
-                    <button id="btn-upload-resume" onclick="uploadResume()" class="mt-4 w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <button type="button" id="btn-upload-resume" onclick="uploadResume()" class="mt-4 w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled aria-disabled="true">
                         <i class="fas fa-arrow-right mr-2"></i>
                         <span data-i18n="resume.continueStep2">Continue to Step 2</span>
                     </button>
@@ -251,7 +252,7 @@
                     </h2>
                     
                     <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="resume.jdLabel">Paste the job description you're targeting</label>
-                    <p class="text-xs text-gray-500 mb-2" data-i18n="resume.jdOptionalHint">Optional — leave blank and select Industry, Employer Type + Experience Level below to auto-generate a generic JD you can edit.</p>
+                    <p class="text-xs text-gray-500 mb-2" data-i18n="resume.jdOptionalHint">Optional — enter a job title or draft in the box above, then select Industry, Employer Type + Experience Level and click Generate, or leave blank to auto-generate from selections only.</p>
                     <textarea id="jd-text" rows="10" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" data-i18n-placeholder="resume.jdPlaceholder" placeholder="Copy and paste the full job description here, or generate one below..."></textarea>
                     
                     <div id="jd-generated-hint" class="hidden mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
@@ -331,7 +332,7 @@
                     </button>
                     <p class="mt-2 text-xs text-gray-500">
                         <i class="fas fa-info-circle mr-1"></i>
-                        <span data-i18n="resume.generateHint">With job title only, a JD is generated from your resume for confirmation; tech stack questions may follow before optimization.</span>
+                        <span data-i18n="resume.generateHint">Generate suggested JD from your text box content plus Industry, Employer Type, and Experience Level — no resume data used.</span>
                     </p>
                 </section>
             </div>
@@ -412,14 +413,8 @@
                     </div>
                 </div>
 
-                <!-- Language Format Checklist -->
-                <div id="language-checklist-section" class="bg-white rounded-xl p-6 border shadow-sm mb-6 hidden">
-                    <h3 id="language-checklist-title" class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2 flex-wrap">
-                        <i class="fas fa-clipboard-check text-indigo-600"></i>
-                        <span data-i18n="resume.checklistTitle">Resume format check</span>
-                        <span id="language-checklist-dynamic" class="text-base font-normal text-gray-600"></span>
-                    </h3>
-                    <p class="text-xs text-gray-500 mb-4" data-i18n="resume.checklistDesc">Compare photo, layout, sections, and wording against CN/EN resume norms; highlights missing items</p>
+                <!-- Language Format Checklist (integrated into profile editor) -->
+                <div id="language-checklist-section" class="hidden" aria-hidden="true">
                     <div id="language-checklist-content"></div>
                 </div>
 
@@ -512,7 +507,9 @@
                         <span data-i18n="resume.draftRestored">Your draft was restored from your last session (available for 12 hours while logged in).</span>
                     </div>
 
-                    <div class="grid sm:grid-cols-2 gap-3 mb-6">
+                    <div id="profile-format-hints" class="hidden mb-4"></div>
+
+                    <div id="profile-basic-grid" class="grid sm:grid-cols-2 gap-3 mb-6">
                         <div>
                             <label class="block text-xs font-medium text-gray-500 mb-1" data-i18n="resume.name">Name</label>
                             <input id="profile-name" type="text" class="w-full border border-gray-300 rounded-lg p-2 text-sm">

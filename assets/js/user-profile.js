@@ -17,7 +17,7 @@
     if (!wrap) return;
     const types = user.group_types || [];
     if (!types.length) {
-      wrap.innerHTML = '<span class="text-gray-500 text-sm">暂无推断标签，完善下方画像信息后系统将自动更新。</span>';
+      wrap.innerHTML = '<span class="text-gray-500 text-sm">' + (window.GBAI18n && GBAI18n.t ? GBAI18n.t('profile.noGroupTags', 'No inferred tags yet. Complete your profile below to update matching.') : 'No inferred tags yet. Complete your profile below to update matching.') + '</span>';
       return;
     }
     wrap.innerHTML = types.map(function (key) {
@@ -94,11 +94,11 @@
     try {
       const res = await AuthAPI.updateProfile(body);
       if (!res.success) {
-        showMsg('profile-form-msg', res.message, false);
+        showMsg('profile-form-msg', (window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(res.message) : res.message) || res.message, false);
         return;
       }
       fillForm(res.data.user);
-      showMsg('profile-form-msg', '资料已保存', true);
+      showMsg('profile-form-msg', (window.GBAI18n && GBAI18n.t ? GBAI18n.t('profile.saved', 'Profile updated') : 'Profile updated'), true);
       if (typeof PortalAuth !== 'undefined') {
         PortalAuth.refreshPortalAuthNav('individual');
       }
@@ -115,14 +115,17 @@
     const next2 = document.getElementById('password-new2').value;
 
     if (next !== next2) {
-      showMsg('password-form-msg', '两次输入的新密码不一致', false);
+      showMsg('password-form-msg', (window.GBAI18n && GBAI18n.t ? GBAI18n.t('auth.passwordsMismatch', 'Passwords do not match.') : 'Passwords do not match.'), false);
       return;
     }
 
     btn.disabled = true;
     try {
       const res = await AuthAPI.changePassword(current, next);
-      showMsg('password-form-msg', res.success ? res.message : res.message, res.success);
+      const msgText = res.success
+        ? ((window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(res.message) : res.message) || res.message)
+        : ((window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(res.message) : res.message) || res.message);
+      showMsg('password-form-msg', msgText, res.success);
       if (res.success) {
         document.getElementById('password-current').value = '';
         document.getElementById('password-new').value = '';

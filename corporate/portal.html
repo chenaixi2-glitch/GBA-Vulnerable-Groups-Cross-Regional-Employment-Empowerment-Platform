@@ -74,7 +74,6 @@
             font-size: 1.5rem;
         }
         
-        /* Accessibility widget is provided by floating-widget.js */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -108,6 +107,10 @@
         }
         
         .language-selector:hover .language-dropdown {
+            display: block;
+        }
+
+        .language-selector.is-open .language-dropdown {
             display: block;
         }
         
@@ -543,6 +546,7 @@
                             <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
                         </div>
                     </div>
+                    <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium text-sm whitespace-nowrap transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
                     <div id="portal-auth-guest" class="flex items-center space-x-2">
                         <a href="auth.html" class="text-sm text-gray-600 hover:text-green-600 font-medium">登录</a>
                         <a href="auth.html?tab=register" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium">注册</a>
@@ -574,8 +578,6 @@
             </div>
         </div>
     </nav>
-    
-    <!-- Floating Quick-Access Widget (injected by floating-widget.js) -->
     
     <!-- Hero Section -->
     <section class="hero-section flex items-center justify-center relative">
@@ -1621,7 +1623,6 @@
             });
         }
         
-        // initAccessibility is handled by floating-widget.js
         function initAccessibility() {}
         
         // Initialize mobile menu
@@ -2040,7 +2041,6 @@
     <script src="../assets/i18n/i18n.js"></script>
 
     <script src="../assets/site-enhancements.js"></script>
-    <script src="../assets/floating-widget.js"></script>
     <script src="../assets/site-guide.js"></script>
     <script src="../assets/js/auth-api.js"></script>
     <script src="../test-data/browser-bundle.js"></script>

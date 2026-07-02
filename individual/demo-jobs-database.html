@@ -20,7 +20,7 @@
     <div class="max-w-6xl mx-auto px-4 py-8">
         <div class="flex flex-wrap gap-2 mb-4">
             <button type="button" data-source="internal" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-teal-600 text-white" data-i18n="jobs.tabInternal">Company Postings</button>
-            <button type="button" data-source="external" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50" data-i18n="jobs.tabExternal">External Jobs (Apply on Source Site)</button>
+            <button type="button" data-source="external" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50" data-i18n="jobs.tabExternal">Partner Site Jobs (External Apply)</button>
             <button type="button" data-source="all" class="source-tab px-4 py-2 rounded-xl text-sm font-medium bg-white border text-slate-700 hover:bg-slate-50" data-i18n="jobs.tabAll">All Jobs</button>
         </div>
 
@@ -80,8 +80,8 @@
             var key = sourceHintKey(currentSource);
             var fallbacks = {
                 sourceHintInternal: 'Jobs posted by companies — apply directly on the platform',
-                sourceHintExternal: 'Externally synced jobs — apply on the Guangdong Disabled Employment Service website',
-                sourceHintAll: 'Includes company and synced external jobs — application method varies by source'
+                sourceHintExternal: 'Jobs from partner sites such as the Guangdong Disabled Employment Service — apply on the original website',
+                sourceHintAll: 'Includes company postings and partner-site jobs — application method varies by source'
             };
             hint.textContent = jobsT(key, fallbacks[key]);
         }
@@ -162,7 +162,7 @@
 
             var vulnLabel = escape(jobsT('vulnFriendly', 'Vulnerable-group friendly'));
             var jobType = j.source === 'external'
-                ? escape(jobsT('jobTypeExternal', 'Synced External'))
+                ? escape(jobsT('jobTypeExternal', 'Partner Site'))
                 : escape(jobsT('jobTypeInternal', 'Company Posted'));
             var jobLabel = escape(jobsT('jobLabel', 'Job'));
             var scoreUnit = escape(jobsT('scoreUnit', 'pts'));
@@ -171,8 +171,8 @@
             if (j.source === 'external') {
                 var href = j.source_url || 'https://www.jyfw.org.cn/';
                 actionBtn = '<button type="button" id="external-apply-btn" class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700">' +
-                    '<i class="fas fa-external-link-alt"></i> ' + escape(jobsT('applyExternal', 'Go to Source Site')) + '</button>' +
-                    '<p class="text-xs text-slate-500 mt-2">' + escape(jobsT('externalNote', 'External jobs require applying on the source website; we will record your redirect interest.')) + '</p>';
+                    '<i class="fas fa-external-link-alt"></i> ' + escape(jobsT('applyExternal', 'Apply on Partner Site')) + '</button>' +
+                    '<p class="text-xs text-slate-500 mt-2">' + escape(jobsT('externalNote', 'Apply on the partner recruitment website; we will record your application interest.')) + '</p>';
             } else {
                 actionBtn = '<a href="apply.html?jobId=' + encodeURIComponent(j.id) + '" class="inline-flex items-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-orange-700">' +
                     '<i class="fas fa-paper-plane"></i> ' + escape(jobsT('applyInternal', 'Apply on Platform')) + '</a>';

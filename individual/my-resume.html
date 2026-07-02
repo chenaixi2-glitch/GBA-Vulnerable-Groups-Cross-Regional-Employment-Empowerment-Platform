@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Resume - GBA Platform</title>
+    <title data-i18n="myResume.title">My Resume - GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -20,7 +20,7 @@
     <nav class="bg-white shadow-sm sticky top-0 z-40">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
             <a href="portal.html" class="font-bold text-gray-900 flex items-center"><i class="fas fa-handshake text-orange-600 text-2xl mr-2"></i>GBA Platform</a>
-            <a href="portal.html" class="text-sm text-orange-700 hover:underline">Back to portal</a>
+            <a href="portal.html" class="text-sm text-orange-700 hover:underline" data-i18n="myResume.backPortal">Back to portal</a>
         </div>
     </nav>
 
@@ -28,9 +28,9 @@
         <section class="bg-gradient-to-br from-orange-500 to-orange-600 text-white py-16">
             <div class="container mx-auto px-4">
                 <div class="max-w-3xl">
-                    <span class="inline-flex items-center bg-white/15 rounded-full px-4 py-2 font-semibold mb-5"><i class="fas fa-file-lines mr-2"></i>My resume</span>
-                    <h1 class="text-4xl md:text-5xl font-bold mb-4">Upload, parse and polish your cross-border resume.</h1>
-                    <p class="text-lg text-orange-50">Designed for future campus recruitment and social hiring flows: one resume hub, AI parsing, skill extraction and application-ready profile cards.</p>
+                    <span class="inline-flex items-center bg-white/15 rounded-full px-4 py-2 font-semibold mb-5"><i class="fas fa-file-lines mr-2"></i><span data-i18n="myResume.badge">My resume</span></span>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4" data-i18n="myResume.heroTitle">Upload, parse and polish your cross-border resume.</h1>
+                    <p class="text-lg text-orange-50" data-i18n="myResume.heroSubtitle">Designed for campus recruitment and social hiring: one resume hub, AI parsing, skill extraction and application-ready profile cards.</p>
                 </div>
             </div>
         </section>
@@ -38,36 +38,36 @@
         <section class="py-14">
             <div class="container mx-auto px-4 grid lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm p-8">
-                    <h2 class="text-2xl font-bold mb-6">Resume upload</h2>
+                    <h2 class="text-2xl font-bold mb-6" data-i18n="myResume.uploadTitle">Resume upload</h2>
                     <div class="upload-zone rounded-3xl p-10 text-center">
                         <div class="w-20 h-20 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-4xl mx-auto mb-5"><i class="fas fa-cloud-arrow-up"></i></div>
-                        <h3 class="text-xl font-bold mb-2">Drag your resume here</h3>
-                        <p class="text-gray-500 mb-4">支持 PDF、DOCX、TXT、MD（单文件 ≤ 10MB）。解析器将提取教育、技能、项目、工作经历等信息。</p>
+                        <h3 class="text-xl font-bold mb-2" data-i18n="myResume.dragHere">Drag your resume here</h3>
+                        <p class="text-gray-500 mb-4" data-i18n="myResume.formatHint">PDF, DOCX, TXT, MD supported (max 10MB). The parser extracts education, skills, projects and work history.</p>
                         <div class="text-left text-sm text-gray-600 bg-white/80 rounded-2xl p-4 mb-6 space-y-2 max-w-lg mx-auto">
-                            <p><strong class="text-orange-800">不支持：</strong>图片文件（.jpg/.png）、旧版 Word（.doc）、纯扫描图片简历。</p>
-                            <p><strong class="text-orange-800">照片说明：</strong>仅解析文字，不提取或保存简历内证件照；生成英文简历时不含照片；企业盲筛模式下招聘方初审不见照片。</p>
+                            <p data-i18n="myResume.unsupported">Not supported: image files (.jpg/.png), legacy Word (.doc), scanned-only resumes.</p>
+                            <p data-i18n="myResume.photoNote">Photo note: text-only parsing — ID photos are not extracted; English resumes have no photo; blind screening hides photos from recruiters.</p>
                         </div>
-                        <button class="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-xl shadow"><i class="fas fa-upload mr-2"></i>Choose file</button>
+                        <button class="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-xl shadow"><i class="fas fa-upload mr-2"></i><span data-i18n="myResume.chooseFile">Choose file</span></button>
                     </div>
                     <div class="grid md:grid-cols-3 gap-4 mt-6">
-                        <div class="resume-chip bg-orange-50 rounded-2xl p-4"><i class="fas fa-wand-magic-sparkles text-orange-600 mb-3"></i><h4 class="font-bold">AI parsing</h4><p class="text-sm text-gray-600">Extract structured resume fields.</p></div>
-                        <div class="resume-chip bg-amber-50 rounded-2xl p-4"><i class="fas fa-bullseye text-amber-600 mb-3"></i><h4 class="font-bold">Role fit</h4><p class="text-sm text-gray-600">Match skills to GBA openings.</p></div>
-                        <div class="resume-chip bg-rose-50 rounded-2xl p-4"><i class="fas fa-shield-halved text-rose-600 mb-3"></i><h4 class="font-bold">Blind mode</h4><p class="text-sm text-gray-600">Hide sensitive identity data.</p></div>
+                        <div class="resume-chip bg-orange-50 rounded-2xl p-4"><i class="fas fa-wand-magic-sparkles text-orange-600 mb-3"></i><h4 class="font-bold" data-i18n="myResume.chipAi">AI parsing</h4><p class="text-sm text-gray-600" data-i18n="myResume.chipAiDesc">Extract structured resume fields.</p></div>
+                        <div class="resume-chip bg-amber-50 rounded-2xl p-4"><i class="fas fa-bullseye text-amber-600 mb-3"></i><h4 class="font-bold" data-i18n="myResume.chipFit">Role fit</h4><p class="text-sm text-gray-600" data-i18n="myResume.chipFitDesc">Match skills to GBA openings.</p></div>
+                        <div class="resume-chip bg-rose-50 rounded-2xl p-4"><i class="fas fa-shield-halved text-rose-600 mb-3"></i><h4 class="font-bold" data-i18n="myResume.chipBlind">Blind mode</h4><p class="text-sm text-gray-600" data-i18n="myResume.chipBlindDesc">Hide sensitive identity data.</p></div>
                     </div>
                 </div>
                 <aside class="bg-white rounded-3xl shadow-sm p-8">
-                    <h2 class="text-2xl font-bold mb-6">Profile readiness</h2>
+                    <h2 class="text-2xl font-bold mb-6" data-i18n="myResume.readinessTitle">Profile readiness</h2>
                     <div class="space-y-5">
-                        <div><div class="flex justify-between text-sm mb-1"><span>Basic profile</span><span>85%</span></div><div class="h-2 bg-orange-100 rounded"><div class="h-2 bg-orange-500 rounded w-[85%]"></div></div></div>
-                        <div><div class="flex justify-between text-sm mb-1"><span>Skill tags</span><span>62%</span></div><div class="h-2 bg-orange-100 rounded"><div class="h-2 bg-orange-500 rounded w-[62%]"></div></div></div>
-                        <div><div class="flex justify-between text-sm mb-1"><span>Portfolio evidence</span><span>40%</span></div><div class="h-2 bg-orange-100 rounded"><div class="h-2 bg-orange-500 rounded w-[40%]"></div></div></div>
+                        <div><div class="flex justify-between text-sm mb-1"><span data-i18n="myResume.basicProfile">Basic profile</span><span>85%</span></div><div class="h-2 bg-orange-100 rounded"><div class="h-2 bg-orange-500 rounded w-[85%]"></div></div></div>
+                        <div><div class="flex justify-between text-sm mb-1"><span data-i18n="myResume.skillTags">Skill tags</span><span>62%</span></div><div class="h-2 bg-orange-100 rounded"><div class="h-2 bg-orange-500 rounded w-[62%]"></div></div></div>
+                        <div><div class="flex justify-between text-sm mb-1"><span data-i18n="myResume.portfolio">Portfolio evidence</span><span>40%</span></div><div class="h-2 bg-orange-100 rounded"><div class="h-2 bg-orange-500 rounded w-[40%]"></div></div></div>
                     </div>
-                    <div class="mt-8 p-4 rounded-2xl bg-orange-50 text-sm text-gray-600"><strong class="text-orange-700">Next step:</strong> upload one resume and add two project examples to unlock better job recommendations.</div>
+                    <div class="mt-8 p-4 rounded-2xl bg-orange-50 text-sm text-gray-600"><strong class="text-orange-700" data-i18n="myResume.nextStepLabel">Next step:</strong> <span data-i18n="myResume.nextStep">upload one resume and add two project examples to unlock better job recommendations.</span></div>
                 </aside>
             </div>
         </section>
-    </main>    <script src="../assets/i18n/i18n.js"></script>
-
+    </main>
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="../assets/site-enhancements.js"></script>
 </body>
 </html>

@@ -225,6 +225,7 @@
             var key = node.getAttribute('data-i18n');
             if (!key || key.indexOf('.') === -1) return;
             if (/^(home|individual|corporate)\./.test(key)) return;
+            if (node.id === 'session-id' || node.dataset.i18nDynamic === '1') return;
             if (!node.dataset.i18nDefault) {
                 var raw = (node.textContent || '').trim();
                 var fbAttr = node.getAttribute('data-i18n-fallback');
@@ -268,6 +269,9 @@
                 if (!parent || parent.closest('script,style,noscript,[data-i18n]')) {
                     return NodeFilter.FILTER_REJECT;
                 }
+                if (parent.id === 'session-id' || parent.dataset.i18nDynamic === '1') {
+                    return NodeFilter.FILTER_REJECT;
+                }
                 return node.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
             }
         });
@@ -303,8 +307,10 @@
         lang = LABELS[lang] ? lang : 'en';
         currentLang = lang;
         document.documentElement.lang = lang;
-        var cur = document.getElementById('current-language');
-        if (cur) cur.textContent = LABELS[lang];
+        var curNodes = document.querySelectorAll('#current-language');
+        for (var ci = 0; ci < curNodes.length; ci += 1) {
+            curNodes[ci].textContent = LABELS[lang];
+        }
         var sel = document.getElementById('ui-lang');
         if (sel) sel.value = lang === 'zh-CN' ? 'zh-CN' : lang;
         applyPageCopy(lang);
@@ -326,27 +332,109 @@
         });
     }
 
-    function ensureLanguageSwitcher() {
-        if (document.querySelector('[data-lang]') || document.getElementById('ui-lang')) return;
-        var wrap = document.createElement('div');
-        wrap.className =
-            'language-selector fixed top-4 right-4 z-50 bg-white border border-slate-200 shadow-lg rounded-xl px-3 py-2 text-sm';
-        wrap.innerHTML =
-            '<button type="button" class="flex items-center gap-2 text-slate-700"><i class="fas fa-globe"></i><span id="current-language">English</span><span>▾</span></button>' +
-            '<div class="language-dropdown absolute right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg py-2 min-w-[150px] hidden">' +
-            '<a href="#" class="block px-4 py-2 hover:bg-slate-50" data-lang="en">English</a>' +
-            '<a href="#" class="block px-4 py-2 hover:bg-slate-50" data-lang="zh-CN">简体中文</a>' +
-            '<a href="#" class="block px-4 py-2 hover:bg-slate-50" data-lang="zh-TW">繁體中文</a>' +
-            '<a href="#" class="block px-4 py-2 hover:bg-slate-50" data-lang="pt">Português</a>' +
-            '</div>';
-        document.body.appendChild(wrap);
-        wrap.querySelector('button').addEventListener('click', function (event) {
-            event.stopPropagation();
-            wrap.classList.toggle('is-open');
+    function injectLanguageSwitcherStyles() {
+        if (document.getElementById('gba-i18n-switcher-style')) return;
+        var style = document.createElement('style');
+        style.id = 'gba-i18n-switcher-style';
+        style.textContent = [
+            '.language-selector{position:relative}',
+            '.language-dropdown{display:none;position:absolute;right:0;top:100%;margin-top:.35rem;z-index:200;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 10px 25px rgba(15,23,42,.12);padding:.25rem 0}',
+            '.language-selector.is-open .language-dropdown{display:block}',
+            '.language-dropdown a{display:block;padding:.5rem 1rem;color:#334155;text-decoration:none;font-size:.875rem;line-height:1.25rem}',
+            '.language-dropdown a:hover{background:#f8fafc}',
+            '.gba-lang-floating{position:fixed;bottom:5.5rem;left:1rem;z-index:8000;background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 8px 20px rgba(15,23,42,.12);padding:.35rem .5rem;font-size:.875rem}',
+            '.gba-lang-floating .language-dropdown{bottom:100%;top:auto;margin-bottom:.35rem;margin-top:0}',
+            '@media (hover:hover){.language-selector:not(.gba-lang-floating):hover .language-dropdown{display:block}}',
+            '@media (hover:none){.language-selector:hover .language-dropdown{display:none}}'
+        ].join('');
+        document.head.appendChild(style);
+    }
+
+    function languageSwitcherInnerHtml() {
+        return (
+            '<button type="button" class="flex items-center gap-2 text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-50" aria-haspopup="listbox" aria-expanded="false">' +
+            '<i class="fas fa-globe" aria-hidden="true"></i><span id="current-language">English</span><span aria-hidden="true">▾</span></button>' +
+            '<div class="language-dropdown" role="listbox">' +
+            '<a href="#" role="option" data-lang="en">English</a>' +
+            '<a href="#" role="option" data-lang="zh-CN">简体中文</a>' +
+            '<a href="#" role="option" data-lang="zh-TW">繁體中文</a>' +
+            '<a href="#" role="option" data-lang="pt">Português</a>' +
+            '</div>'
+        );
+    }
+
+    function bindLanguageSwitcherToggles() {
+        document.querySelectorAll('.language-selector').forEach(function (sel) {
+            if (sel.dataset.langToggleBound) return;
+            sel.dataset.langToggleBound = '1';
+            var btn = sel.querySelector('button');
+            if (!btn) return;
+            btn.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                var willOpen = !sel.classList.contains('is-open');
+                document.querySelectorAll('.language-selector').forEach(function (other) {
+                    other.classList.remove('is-open');
+                    var otherBtn = other.querySelector('button');
+                    if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+                });
+                if (willOpen) {
+                    sel.classList.add('is-open');
+                    btn.setAttribute('aria-expanded', 'true');
+                }
+            });
         });
+        if (document.documentElement.dataset.gbaLangGlobalClick) return;
+        document.documentElement.dataset.gbaLangGlobalClick = '1';
         document.addEventListener('click', function () {
-            wrap.classList.remove('is-open');
+            document.querySelectorAll('.language-selector').forEach(function (sel) {
+                sel.classList.remove('is-open');
+                var btn = sel.querySelector('button');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            });
         });
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') return;
+            document.querySelectorAll('.language-selector').forEach(function (sel) {
+                sel.classList.remove('is-open');
+                var btn = sel.querySelector('button');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
+
+    function ensureLanguageSwitcher() {
+        if (document.querySelector('[data-lang]') || document.getElementById('ui-lang') || document.getElementById('gba-lang-switcher')) {
+            return;
+        }
+        injectLanguageSwitcherStyles();
+        var wrap = document.createElement('div');
+        wrap.id = 'gba-lang-switcher';
+
+        var slot = document.getElementById('header-lang-slot');
+        if (slot) {
+            wrap.className = 'language-selector relative text-sm shrink-0';
+            wrap.innerHTML = languageSwitcherInnerHtml();
+            slot.appendChild(wrap);
+            return;
+        }
+
+        var headerRow =
+            document.querySelector('header.flex.items-center.justify-between') ||
+            document.querySelector('header .flex.items-center.justify-between') ||
+            document.querySelector('header .flex.flex-wrap.items-center.justify-between') ||
+            document.querySelector('nav .flex.items-center.justify-between') ||
+            document.querySelector('nav .flex.flex-wrap.items-center.justify-between');
+
+        wrap.innerHTML = languageSwitcherInnerHtml();
+        if (headerRow) {
+            wrap.className = 'language-selector shrink-0';
+            headerRow.appendChild(wrap);
+            return;
+        }
+
+        wrap.className = 'language-selector gba-lang-floating';
+        document.body.appendChild(wrap);
     }
 
     function bindLanguageControls() {
@@ -377,7 +465,9 @@
     function initLanguage() {
         if (initPromise) return initPromise;
         initPromise = Promise.resolve().then(function () {
+            injectLanguageSwitcherStyles();
             ensureLanguageSwitcher();
+            bindLanguageSwitcherToggles();
             bindLanguageControls();
             var lang = getLang();
             return loadLocale(lang).then(function () {

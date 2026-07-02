@@ -226,7 +226,10 @@
             display: none;
             z-index: 100;
         }
-        
+
+        .language-selector.is-open .language-dropdown {
+            display: block;
+        }
         
         /* Accessibility Styles */
         body.high-contrast {
@@ -447,6 +450,8 @@
                             <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
                         </div>
                     </div>
+
+                    <a href="individual/donation-legal.html" class="hidden md:inline-flex items-center text-amber-700 hover:text-amber-800 font-medium text-sm whitespace-nowrap transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
                     
                     <div id="nav-auth-guest" class="hidden md:flex items-center gap-2">
                         <button type="button" id="nav-login-btn" class="text-gray-600 hover:text-blue-600 font-medium px-2 py-1 rounded transition-colors">
@@ -478,6 +483,7 @@
                 <a href="individual/demo-jobs-database.html?friendly=1" class="block py-2 text-emerald-700 font-medium">友好岗位</a>
                 <a href="individual/friendly-employers.html" class="block py-2 text-emerald-700 font-medium">友好企业</a>
                 <a href="individual/my-applications.html" class="block py-2 text-orange-700 font-medium">我的投递</a>
+                <a href="individual/donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 font-medium"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
                 <div class="py-3 border-t border-gray-100 mt-2 space-y-2">
                     <div id="nav-mobile-auth-guest">
                         <button type="button" class="nav-mobile-login w-full text-left py-2 text-gray-600 hover:text-blue-600 font-medium">Log in</button>
@@ -1729,7 +1735,7 @@
                         API.logout();
                         refreshNavAuth();
                         applyHomePortalVisibility();
-                        showToast('Signed out.');
+                        showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.signedOut', 'Signed out.') : 'Signed out.'));
                     });
 
             document.getElementById('nav-mobile-logout-btn') &&
@@ -1739,7 +1745,7 @@
                         API.logout();
                         refreshNavAuth();
                         applyHomePortalVisibility();
-                        showToast('Signed out.');
+                        showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.signedOut', 'Signed out.') : 'Signed out.'));
                     });
 
             document.querySelectorAll('.js-auth-open').forEach(function (btn) {
@@ -1761,7 +1767,7 @@
                 try {
                     var res = await AuthAPI.login(emailEl.value, pwEl.value, portal);
                     if (!res.success) {
-                        errEl.textContent = res.message || 'Login failed';
+                        errEl.textContent = (window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(res.message) : res.message) || (window.GBAI18n && GBAI18n.t ? GBAI18n.t('auth.errors.loginFailed', 'Login failed') : 'Login failed');
                         errEl.classList.remove('hidden');
                         return;
                     }
@@ -1771,7 +1777,7 @@
                     closeAuthModal();
                     refreshNavAuth();
                     applyHomePortalVisibility();
-                    showToast('Welcome back, ' + res.data.displayName + '!');
+                    showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.welcomeBack', 'Welcome back, {name}!', { name: res.data.displayName }) : 'Welcome back, ' + res.data.displayName + '!'));
                     window.location.href = portal === 'corporate' ? 'corporate/portal.html' : 'individual/portal.html';
                 } catch (e) {
                     errEl.textContent = '无法连接认证服务，请确认后端已启动（在 server 目录运行 npm start）。';
@@ -1826,7 +1832,7 @@
                     try {
                         var res = await AuthAPI.register(email, pw, portal, name, profile);
                         if (!res.success) {
-                            errEl.textContent = res.message || 'Registration failed';
+                            errEl.textContent = (window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(res.message) : res.message) || (window.GBAI18n && GBAI18n.t ? GBAI18n.t('auth.errors.registerFailed', 'Registration failed') : 'Registration failed');
                             errEl.classList.remove('hidden');
                             return;
                         }
@@ -1837,11 +1843,11 @@
                         refreshNavAuth();
                         applyHomePortalVisibility();
                         if (portal === 'corporate') {
-                            showToast('Account created. Complete your company profile.');
+                            showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.corpRegistered', 'Account created. Complete your company profile.') : 'Account created. Complete your company profile.'));
                             window.location.href = 'corporate/company-profile.html?onboard=1';
                             return;
                         }
-                        showToast('Account created. Explore your portal!');
+                        showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.individualRegistered', 'Account created. Explore your portal!') : 'Account created. Explore your portal!'));
                         window.location.href = 'individual/portal.html';
                     } catch (e) {
                         errEl.textContent = '无法连接认证服务，请确认后端已启动（在 server 目录运行 npm start）。';
@@ -1961,14 +1967,14 @@
             screenReaderBtn.addEventListener('click', () => {
                 toggleSwitch(screenReaderBtn);
                 // Screen reader related functionality can be added here
-                showToast('Screen reader optimizations remain available via your OS and browser.');
+                showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.screenReaderHint', 'Screen reader optimizations remain available via your OS and browser.') : 'Screen reader optimizations remain available via your OS and browser.'));
             });
             
             // Keyboard navigation mode
             keyboardNavBtn.addEventListener('click', () => {
                 toggleSwitch(keyboardNavBtn);
                 // Keyboard navigation related functionality can be added here
-                showToast('Keyboard tips: Tab to focus, Enter to activate, Escape to close dialogs.');
+                showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.keyboardHint', 'Keyboard tips: Tab to focus, Enter to activate, Escape to close dialogs.') : 'Keyboard tips: Tab to focus, Enter to activate, Escape to close dialogs.'));
             });
             
             // Toggle switch state
@@ -2072,7 +2078,6 @@
     </script>
     <script src="assets/i18n/i18n.js"></script>
     <script src="assets/site-enhancements.js"></script>
-    <script src="assets/floating-widget.js"></script>
     <script src="assets/site-guide.js"></script>
 </body>
 </html>

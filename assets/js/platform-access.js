@@ -31,6 +31,13 @@
     return null;
   }
 
+  function getLoginPageUrl() {
+    const path = global.location.pathname.replace(/\\/g, '/');
+    if (path.includes('/corporate/')) return 'auth.html';
+    if (path.includes('/individual/')) return 'auth.html';
+    return isCorporatePortal() ? 'corporate/auth.html' : 'individual/auth.html';
+  }
+
   async function fetchAccess(forceRefresh) {
     if (!forceRefresh && cachedAccess) return cachedAccess;
     const token = getToken();
@@ -72,6 +79,8 @@
 
     const isCorp = isCorporatePortal();
     const donationUrl = getDonationPageUrl() || 'donation-legal.html';
+    const loginUrl = getLoginPageUrl();
+    const loginLabel = isCorp ? '前往企业登录' : '前往个人登录';
 
     let message = '使用本平台功能需向「弱势群体法律服务」捐款箱捐款，金额不限，资金将全额用于法律服务。';
     if (access.reason === 'not_logged_in') {
@@ -99,6 +108,9 @@
         <div class="flex flex-col gap-2">
           <a href="${donationUrl}" class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold text-center hover:opacity-90">
             前往捐款箱 · 了解法律服务
+          </a>
+          <a href="${loginUrl}" class="w-full py-3 px-4 border-2 ${isCorp ? 'border-green-600 text-green-700 hover:bg-green-50' : 'border-blue-600 text-blue-700 hover:bg-blue-50'} rounded-xl font-semibold text-center">
+            ${loginLabel}
           </a>
           <button type="button" id="gba-access-modal-close" class="w-full py-2 text-gray-500 hover:text-gray-700 text-sm">稍后再说</button>
         </div>
@@ -156,5 +168,6 @@
     guardPremiumFeatureLinks,
     guardCurrentPage,
     getDonationPageUrl,
+    getLoginPageUrl,
   };
 })(window);

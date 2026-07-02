@@ -2,6 +2,18 @@
  * 企业端 My Jobs 模块
  */
 (function () {
+  function cT(key, fallback, vars) {
+    if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+    var s = fallback;
+    if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+    return s;
+  }
+  function mapMsg(msg) {
+    if (!msg) return msg;
+    if (window.GBAI18n && window.GBAI18n.tApiMessage) return window.GBAI18n.tApiMessage(String(msg));
+    return String(msg);
+  }
+
   const PAGE_SIZE = 10;
   const state = {
     page: 1,
@@ -119,7 +131,7 @@
     const { page, totalPages, total } = pagination;
     const start = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
     const end = Math.min(page * PAGE_SIZE, total);
-    els.summary.textContent = `Showing ${start}-${end} of ${total} jobs`;
+    els.summary.textContent = cT('corporate.showingJobs', 'Showing {start}-{end} of {total} jobs', { start: start, end: end, total: total });
 
     let html = '';
     html += `<button data-page="prev" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50" ${page <= 1 ? 'disabled' : ''}>Previous</button>`;
@@ -148,7 +160,7 @@
   async function loadJobs() {
     if (state.loading) return;
     state.loading = true;
-    els.tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading jobs...</td></tr>`;
+    els.tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>${cT('corporate.loadingJobs', 'Loading jobs...')}</td></tr>`;
 
     try {
       const res = await CorporateAPI.JobsAPI.list({
@@ -172,7 +184,7 @@
       renderPagination(paginationData);
       if (typeof window.loadCorporateStats === 'function') window.loadCorporateStats();
     } catch (err) {
-      els.tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-600">Failed to load jobs: ${escapeHtml(err.message)}. Is the API server running on port 3000?</td></tr>`;
+      els.tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-600">${cT('corporate.loadJobsFailed', 'Failed to load jobs: {msg}. Is the API server running on port 3000?', { msg: escapeHtml(mapMsg(err.message)) })}</td></tr>`;
     } finally {
       state.loading = false;
     }
@@ -257,14 +269,14 @@
             try {
               await CorporateAPI.JobsAPI.updateApplicationStatus(this.dataset.appStatus, this.value);
             } catch (err) {
-              alert(err.message || 'Failed to update status');
+              alert(mapMsg(err.message) || cT('corporate.updateStatusFailed', 'Failed to update status'));
             }
           });
         });
       }
       els.modal.classList.remove('hidden');
     } catch (err) {
-      alert(err.message || 'Failed to load applicants');
+      alert(mapMsg(err.message) || cT('corporate.loadApplicantsFailed', 'Failed to load applicants'));
     }
   }
 
@@ -295,7 +307,7 @@
       }
       loadJobs();
     } catch (err) {
-      alert(err.message || 'Operation failed');
+      alert(mapMsg(err.message) || cT('corporate.operationFailed', 'Operation failed'));
     }
   }
 

@@ -78,6 +78,7 @@ class GenerateJdRequest(BaseModel):
     industry: str
     experience_level: str
     employer_type: str = ""
+    jd_draft: str = ""
 
 
 class GenerateJdFromTitleRequest(BaseModel):
@@ -237,7 +238,7 @@ async def save_resume_to_account(req: SaveResumeRequest, request: Request, backg
 
 @router.post("/generate-jd")
 async def generate_jd(req: GenerateJdRequest, request: Request):
-    """无具体 JD 时，根据行业、单位性质、经验等级与候选人画像生成通用岗位描述。"""
+    """根据 JD 文本框草稿、行业、单位性质、经验等级生成岗位描述（不结合简历）。"""
     from api.chat import _aload_state, _asave_state
     from agents.json_contracts import JDGenerationOutput
     from models.llm import get_llm, ainvoke_json_with_schema
@@ -256,8 +257,6 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
         raise HTTPException(status_code=404, detail="会话不存在")
 
     state = CopilotState.model_validate(saved)
-    if state.candidate_profile is None:
-        raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
 
     if not req.industry.strip() or not req.experience_level.strip():
         raise HTTPException(status_code=422, detail="请选择行业与经验等级")
@@ -266,13 +265,17 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
 
     employer_type = normalize_employer_type(req.employer_type)
     employer_type_text = employer_type_label(employer_type) or "未指定"
+    jd_draft = req.jd_draft.strip()
     p_key = params_cache_key(req.industry.strip(), employer_type, req.experience_level.strip())
+    use_cache = not jd_draft
 
-    cached = await lookup_jd_cache_by_params(
-        req.industry.strip(),
-        employer_type,
-        req.experience_level.strip(),
-    )
+    cached = None
+    if use_cache:
+        cached = await lookup_jd_cache_by_params(
+            req.industry.strip(),
+            employer_type,
+            req.experience_level.strip(),
+        )
     if cached and cached.get("jd_text"):
         logger.info("JD generate-jd cache hit params=%s title=%s", p_key[:12], cached.get("title"))
         cached_jd = cached.get("jd_text") or ""
@@ -293,12 +296,11 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
             "from_cache": True,
         }
 
-    profile_json = state.candidate_profile.model_dump_json(indent=2)
     prompt = JD_GENERATION_PROMPT.format(
         industry=req.industry.strip(),
         employer_type=employer_type_text,
         experience_level=req.experience_level.strip(),
-        profile_json=profile_json,
+        jd_draft=jd_draft or "（用户尚未填写，请根据行业、单位性质、经验等级生成通用岗位描述）",
     )
 
     llm = get_llm()

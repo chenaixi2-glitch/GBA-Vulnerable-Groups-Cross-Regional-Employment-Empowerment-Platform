@@ -1,14 +1,30 @@
 /**
- * 捐款箱 UI 组件（个人端 / 企业端共用）
+ * Donation box UI (individual / corporate portals)
  */
 (function (global) {
+  const instances = [];
+
+  function dT(key, fallback, vars) {
+    if (global.GBAI18n && global.GBAI18n.t) return global.GBAI18n.t(key, fallback, vars);
+    var s = fallback;
+    if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+    return s;
+  }
+  function mapMsg(msg) {
+    if (!msg) return msg;
+    if (global.GBAI18n && global.GBAI18n.tApiMessage) return global.GBAI18n.tApiMessage(String(msg));
+    return String(msg);
+  }
+
   function formatMoney(n) {
-    return Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function renderDonationBox(container, options) {
     const opts = Object.assign({ portal: 'individual', showLegal: true }, options);
     if (!container) return;
+
+    const boxLabel = dT('donation.boxLabelLine1', 'Vulnerable Groups') + '<br>' + dT('donation.boxLabelLine2', 'Legal Aid Fund');
 
     container.innerHTML = `
       <div class="donation-box-wrap">
@@ -94,7 +110,7 @@
             <div class="coin-drop"></div>
             <div class="box-body">
               <div class="box-slot"></div>
-              <div class="box-label">弱势群体<br>法律服务基金</div>
+              <div class="box-label">${boxLabel}</div>
               <div class="box-heart">❤️</div>
             </div>
           </div>
@@ -104,56 +120,63 @@
 
         <div class="grid grid-cols-3 gap-3 mb-6 text-center">
           <div class="bg-amber-50 rounded-xl p-3 border border-amber-100">
-            <div class="text-xs text-amber-700 mb-1">累计募集</div>
+            <div class="text-xs text-amber-700 mb-1">${dT('donation.totalRaised', 'Total raised')}</div>
             <div class="text-lg font-bold text-amber-800" id="fund-total">¥0.00</div>
           </div>
           <div class="bg-orange-50 rounded-xl p-3 border border-orange-100">
-            <div class="text-xs text-orange-700 mb-1">捐款人次</div>
+            <div class="text-xs text-orange-700 mb-1">${dT('donation.donorCount', 'Donors')}</div>
             <div class="text-lg font-bold text-orange-800" id="fund-count">0</div>
           </div>
           <div class="bg-red-50 rounded-xl p-3 border border-red-100">
-            <div class="text-xs text-red-700 mb-1">资金用途</div>
+            <div class="text-xs text-red-700 mb-1">${dT('donation.fundUsage', 'Fund usage')}</div>
             <div class="text-lg font-bold text-red-800">100%</div>
           </div>
         </div>
 
         <p class="text-xs text-center text-gray-500 mb-4">
-          <i class="fas fa-info-circle mr-1"></i>捐款箱募集到的资金将<strong>全额</strong>用于弱势群体法律服务
+          <i class="fas fa-info-circle mr-1"></i>${dT('donation.fundPromiseShort', '100% of donations go to vulnerable-group legal services')}
         </p>
 
         <form id="donation-form" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">捐款金额（元，不限）</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">${dT('donation.amountLabel', 'Donation amount (any amount)')}</label>
             <div class="flex gap-2 mb-2">
               <button type="button" class="donation-preset px-3 py-1.5 text-sm border rounded-lg hover:bg-amber-50" data-amount="10">¥10</button>
               <button type="button" class="donation-preset px-3 py-1.5 text-sm border rounded-lg hover:bg-amber-50" data-amount="50">¥50</button>
               <button type="button" class="donation-preset px-3 py-1.5 text-sm border rounded-lg hover:bg-amber-50" data-amount="100">¥100</button>
               <button type="button" class="donation-preset px-3 py-1.5 text-sm border rounded-lg hover:bg-amber-50" data-amount="500">¥500</button>
             </div>
-            <input type="number" id="donation-amount" min="0.01" step="0.01" placeholder="自定义金额"
+            <input type="number" id="donation-amount" min="0.01" step="0.01" placeholder="${dT('donation.customAmountPlaceholder', 'Custom amount')}"
               class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">留言（选填）</label>
-            <input type="text" id="donation-message" maxlength="500" placeholder="愿弱势群体就业之路更平坦"
+            <label class="block text-sm font-medium text-gray-700 mb-1">${dT('donation.messageLabel', 'Message (optional)')}</label>
+            <input type="text" id="donation-message" maxlength="500" placeholder="${dT('donation.messagePlaceholder', 'Wishing vulnerable job seekers a smoother path')}"
               class="w-full border rounded-xl px-4 py-3" />
           </div>
           <button type="submit" id="donation-submit"
             class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-            <i class="fas fa-coins"></i> 投入捐款箱
+            <i class="fas fa-coins"></i> ${dT('donation.donate', 'Donate')}
           </button>
         </form>
 
         <div id="donation-vulnerable-notice" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800">
           <i class="fas fa-check-circle mr-1"></i>
-          您属于弱势群体（<span id="vulnerable-types-label"></span>），平台各项功能<strong>免费</strong>使用，无需捐款。
+          ${dT('donation.vulnerableNotice', 'You are identified as a vulnerable-group member ({types}). Platform features are free — no donation required.', { types: '<span id="vulnerable-types-label"></span>' })}
         </div>
 
         <div id="donation-history" class="hidden mt-6">
-          <h4 class="font-semibold text-gray-800 mb-2">我的捐款记录</h4>
+          <h4 class="font-semibold text-gray-800 mb-2">${dT('donation.myHistory', 'My donation history')}</h4>
           <ul id="donation-history-list" class="space-y-2 text-sm"></ul>
         </div>
       </div>`;
+
+    const existing = instances.find(function (i) { return i.container === container; });
+    if (existing) {
+      existing.opts = opts;
+    } else {
+      instances.push({ container: container, opts: opts });
+    }
 
     bindDonationBoxEvents(container, opts);
     loadDonationBoxData(container, opts);
@@ -173,12 +196,12 @@
       e.preventDefault();
       const submitBtn = container.querySelector('#donation-submit');
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中…';
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + dT('donation.processing', 'Processing…');
 
       try {
         const api = opts.portal === 'corporate' ? global.CorporateAPI : global.PlatformAPI;
         const DonationsAPI = api && api.DonationsAPI;
-        if (!DonationsAPI) throw new Error('API 未加载');
+        if (!DonationsAPI) throw new Error(dT('donation.apiNotLoaded', 'API not loaded'));
 
         const res = await DonationsAPI.create({
           amount: Number(amountInput.value),
@@ -186,14 +209,14 @@
         });
 
         if (global.PlatformAccess) global.PlatformAccess.clearAccessCache();
-        showToast(container, res.message || '捐款成功，感谢您的爱心！', 'success');
+        showToast(container, mapMsg(res.message) || dT('donation.success', 'Donation successful. Thank you!'), 'success');
         form.reset();
         await loadDonationBoxData(container, opts);
       } catch (err) {
-        showToast(container, err.message || '捐款失败，请稍后重试', 'error');
+        showToast(container, mapMsg(err.message) || dT('donation.failed', 'Donation failed. Please try again.'), 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-coins"></i> 投入捐款箱';
+        submitBtn.innerHTML = '<i class="fas fa-coins"></i> ' + dT('donation.donate', 'Donate');
       }
     });
   }
@@ -222,33 +245,34 @@
 
       if (access.is_vulnerable) {
         vulnNotice.classList.remove('hidden');
-        container.querySelector('#vulnerable-types-label').textContent = access.group_types_label || '已识别';
+        const labelEl = container.querySelector('#vulnerable-types-label');
+        if (labelEl) labelEl.textContent = access.group_types_label || dT('donation.identified', 'Identified');
         form.classList.add('hidden');
         banner.classList.add('bg-green-50', 'border', 'border-green-200', 'text-green-800');
-        banner.innerHTML = '<i class="fas fa-gift mr-1"></i>弱势群体用户：平台功能永久免费';
+        banner.innerHTML = '<i class="fas fa-gift mr-1"></i>' + dT('donation.vulnerableFree', 'Vulnerable group users: platform features are permanently free');
         banner.classList.remove('hidden');
       } else if (access.has_premium_access && access.reason === 'donated') {
         form.classList.remove('hidden');
         vulnNotice.classList.add('hidden');
         banner.classList.add('bg-green-50', 'border', 'border-green-200', 'text-green-800');
         const corpMsg = opts.portal === 'corporate'
-          ? '您已完成捐款，面试模拟与 HR 绩效统计等高级功能已解锁。欢迎继续支持法律服务基金。'
-          : '您已完成捐款，平台功能已解锁。欢迎继续支持法律服务基金。';
+          ? dT('donation.unlockedCorporate', 'Donation complete — interview simulation and HR analytics are unlocked. Thank you for supporting the legal aid fund.')
+          : dT('donation.unlockedIndividual', 'Donation complete — platform features are unlocked. Thank you for supporting the legal aid fund.');
         banner.innerHTML = '<i class="fas fa-unlock mr-1"></i>' + corpMsg;
         banner.classList.remove('hidden');
       } else if (access.requires_premium_donation) {
         form.classList.remove('hidden');
         vulnNotice.classList.add('hidden');
         banner.classList.add('bg-amber-50', 'border', 'border-amber-200', 'text-amber-900');
-        banner.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>企业用户：招聘与法律帮助免费；面试模拟、HR 绩效统计需捐款解锁（金额不限）';
+        banner.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>' + dT('donation.corporateHint', 'Corporate users: recruiting and legal aid are free; interview simulation and HR analytics require a donation (any amount)');
         banner.classList.remove('hidden');
       } else if (access.requires_donation) {
         form.classList.remove('hidden');
         vulnNotice.classList.add('hidden');
         banner.classList.add('bg-amber-50', 'border', 'border-amber-200', 'text-amber-900');
         const roleHint = opts.portal === 'corporate'
-          ? '企业用户使用平台需向捐款箱捐款（金额不限）'
-          : '非弱势群体用户使用平台需向捐款箱捐款（金额不限）';
+          ? dT('donation.requiresDonationCorporate', 'Corporate users must donate to the box (any amount) to unlock platform features')
+          : dT('donation.requiresDonationIndividual', 'Non-vulnerable users must donate to the box (any amount) to unlock platform features');
         banner.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>' + roleHint;
         banner.classList.remove('hidden');
       }
@@ -260,7 +284,7 @@
           container.querySelector('#donation-history').classList.remove('hidden');
           container.querySelector('#donation-history-list').innerHTML = list
             .slice(0, 5)
-            .map((d) => `<li class="flex justify-between p-2 bg-gray-50 rounded-lg"><span>¥${formatMoney(d.amount)}</span><span class="text-gray-500">${new Date(d.created_at).toLocaleDateString('zh-CN')}</span></li>`)
+            .map((d) => `<li class="flex justify-between p-2 bg-gray-50 rounded-lg"><span>¥${formatMoney(d.amount)}</span><span class="text-gray-500">${new Date(d.created_at).toLocaleDateString()}</span></li>`)
             .join('');
         }
       }
@@ -300,6 +324,14 @@
       toast.classList.remove('translate-y-20', 'opacity-0');
     });
     setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3500);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('gba:language-changed', function () {
+      instances.forEach(function (inst) {
+        renderDonationBox(inst.container, inst.opts);
+      });
+    });
   }
 
   global.DonationBox = { renderDonationBox, renderLegalServices, formatMoney };

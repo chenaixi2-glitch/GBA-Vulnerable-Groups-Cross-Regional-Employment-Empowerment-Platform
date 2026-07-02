@@ -1,34 +1,49 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的投递 — GBA Platform</title>
+    <title data-i18n="applications.title">My Applications</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'); body{font-family:'Inter',sans-serif;}</style>
 </head>
 <body class="bg-slate-100 min-h-screen">
     <header class="bg-white border-b px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
-        <a href="portal.html#dashboard" class="text-blue-700 font-semibold">个人门户</a>
-        <a href="demo-jobs-database.html" class="text-teal-700 hover:underline">岗位匹配</a>
+        <a href="portal.html#dashboard" class="text-blue-700 font-semibold" data-i18n="applications.portal">Individual Portal</a>
+        <div class="flex items-center gap-3">
+            <div id="header-lang-slot"></div>
+            <a href="demo-jobs-database.html" class="text-teal-700 hover:underline" data-i18n="applications.jobMatch">Job matching</a>
+        </div>
     </header>
 
     <div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900">我的投递记录</h1>
-            <p class="text-sm text-slate-500 mt-1">企业发布岗位的平台内投递；爬虫岗位请查看「外部跳转意向」</p>
+            <h1 class="text-2xl font-bold text-slate-900" data-i18n="applications.title">My Applications</h1>
+            <p class="text-sm text-slate-500 mt-1" data-i18n="applications.subtitle">Platform applications for company jobs; see partner site applications for external jobs</p>
         </div>
 
         <div id="stats-bar" class="grid grid-cols-2 md:grid-cols-4 gap-3 hidden"></div>
 
         <div id="apps-list" class="bg-white rounded-2xl border shadow divide-y">
-            <p class="p-6 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin"></i> 加载中…</p>
+            <p class="p-6 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin"></i> <span data-i18n="applications.loading">Loading…</span></p>
         </div>
     </div>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script src="assets/js/platform-api.js"></script>
     <script>
+        function appsT(key, fallback, vars) {
+            if (window.GBAI18n && GBAI18n.t) return GBAI18n.t(key, fallback, vars);
+            var s = fallback;
+            if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+            return s;
+        }
+        function mapMsg(msg) {
+            if (window.GBAI18n && GBAI18n.tApiMessage) return GBAI18n.tApiMessage(String(msg || ''));
+            return msg || '';
+        }
+
         function escape(s) {
             var d = document.createElement('div');
             d.textContent = s || '';
@@ -46,7 +61,9 @@
         }
 
         function sourceLabel(source) {
-            return source === 'external' ? '爬虫岗位' : '企业岗位';
+            return source === 'external'
+                ? appsT('applications.externalJob', 'External job')
+                : appsT('applications.companyJob', 'Company job');
         }
 
         async function loadStats() {
@@ -57,10 +74,10 @@
                 var bar = document.getElementById('stats-bar');
                 bar.classList.remove('hidden');
                 bar.innerHTML =
-                    statCard('平台投递', s.total_applications) +
-                    statCard('企业岗位', s.internal_applications) +
-                    statCard('外部跳转', s.external_interests) +
-                    statCard('平均匹配分', s.avg_match_score != null ? s.avg_match_score : '-');
+                    statCard(appsT('applications.platformApps', 'Platform applications'), s.total_applications) +
+                    statCard(appsT('applications.companyJob', 'Company jobs'), s.internal_applications) +
+                    statCard(appsT('applications.externalClicks', 'Partner site applications'), s.external_interests) +
+                    statCard(appsT('applications.avgMatch', 'Avg match score'), s.avg_match_score != null ? s.avg_match_score : '-');
             } catch (e) { /* ignore */ }
         }
 
@@ -73,14 +90,14 @@
         async function loadApplications() {
             var list = document.getElementById('apps-list');
             if (!PlatformAPI.getToken()) {
-                list.innerHTML = '<p class="p-6 text-amber-700 text-sm">请先 <a href="../index.html" class="underline font-semibold">登录</a> 查看投递记录。</p>';
+                list.innerHTML = '<p class="p-6 text-amber-700 text-sm">' + appsT('applications.loginFirst', 'Please sign in to view applications.') + ' <a href="../index.html" class="underline font-semibold">' + appsT('auth.login', 'Log in') + '</a></p>';
                 return;
             }
             try {
                 var res = await PlatformAPI.JobsAPI.myApplications();
                 var apps = res.data.applications || [];
                 if (!apps.length) {
-                    list.innerHTML = '<p class="p-8 text-center text-slate-500">暂无投递记录。<a href="demo-jobs-database.html" class="text-teal-700 underline">去匹配岗位</a></p>';
+                    list.innerHTML = '<p class="p-8 text-center text-slate-500">' + appsT('applications.noRecords', 'No applications yet.') + ' <a href="demo-jobs-database.html" class="text-teal-700 underline">' + appsT('applications.browseJobs', 'Browse jobs') + '</a></p>';
                     return;
                 }
                 list.innerHTML = apps.map(function (a) {
@@ -89,35 +106,37 @@
                         '<div class="flex-1 min-w-0">' +
                         '<p class="font-semibold text-slate-900">' + escape(a.job_title) + '</p>' +
                         '<p class="text-sm text-slate-500">' + escape(a.company_name || '') + ' · ' + sourceLabel(a.job_source) + '</p>' +
-                        '<p class="text-xs text-slate-400 mt-1">投递于 ' + new Date(a.created_at).toLocaleString('zh-CN') + '</p>' +
+                        '<p class="text-xs text-slate-400 mt-1">' + appsT('applications.appliedAt', 'Applied') + ' ' + new Date(a.created_at).toLocaleString() + '</p>' +
                         '</div>' +
                         '<div class="text-right flex flex-col items-end gap-2">' +
-                        '<span class="text-lg font-bold text-teal-700">' + (a.match_score || 0) + ' 分</span>' +
+                        '<span class="text-lg font-bold text-teal-700">' + (a.match_score || 0) + ' ' + appsT('jobs.scoreUnit', 'pts') + '</span>' +
                         statusBadge(a.status) +
-                        (canWithdraw ? '<button type="button" data-withdraw="' + a.id + '" class="text-xs text-red-600 hover:underline">撤销投递</button>' : '') +
+                        (canWithdraw ? '<button type="button" data-withdraw="' + a.id + '" class="text-xs text-red-600 hover:underline">' + appsT('applications.withdraw', 'Withdraw') + '</button>' : '') +
                         '</div></div>';
                 }).join('');
 
                 list.querySelectorAll('[data-withdraw]').forEach(function (btn) {
                     btn.addEventListener('click', async function () {
-                        if (!confirm('确定撤销该投递？')) return;
+                        if (!confirm(appsT('applications.withdrawConfirm', 'Withdraw this application?'))) return;
                         try {
                             await PlatformAPI.JobsAPI.withdraw(this.dataset.withdraw);
                             loadApplications();
                             loadStats();
                         } catch (e) {
-                            alert(e.message || '撤销失败');
+                            alert(mapMsg(e.message) || appsT('applications.withdrawFailed', 'Withdraw failed'));
                         }
                     });
                 });
             } catch (e) {
-                list.innerHTML = '<p class="p-6 text-red-600">' + escape(e.message) + '</p>';
+                list.innerHTML = '<p class="p-6 text-red-600">' + escape(mapMsg(e.message) || appsT('applications.loadFailed', 'Load failed')) + '</p>';
             }
         }
 
-        loadStats();
-        loadApplications();
+        document.addEventListener('DOMContentLoaded', function () {
+            var start = function () { loadStats(); loadApplications(); };
+            if (window.GBAI18n && GBAI18n.initLanguage) GBAI18n.initLanguage().then(start);
+            else start();
+        });
     </script>
-    <script src="../assets/i18n/i18n.js"></script>
 </body>
 </html>

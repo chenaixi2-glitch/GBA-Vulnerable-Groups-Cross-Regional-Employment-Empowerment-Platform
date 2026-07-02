@@ -4,9 +4,11 @@
  */
 
 const API_CONFIG = {
-    BASE_URL: (typeof window !== 'undefined' && window.GBA_API_BASE_URL) || 'http://localhost:8000/api',
+    BASE_URL: (typeof window !== 'undefined' && window.GBA_API_BASE_URL)
+        || `http://${(typeof window !== 'undefined' && window.location && window.location.hostname) || 'localhost'}:8000/api`,
     // SiliconFlow DeepSeek: single LLM call ~60–90s; multi-agent workflows may take 2–3 min
     TIMEOUT: 300000,
+    HEALTH_TIMEOUT: 12000,
     MOCK_MODE_KEY: 'gba_api_mock_mode',
 };
 
@@ -144,7 +146,7 @@ class MockAPIService {
 
     async saveResumeToAccount(sessionId) {
         await this.delay(400);
-        return { ok: true, message: 'Resume saved securely to your account (demo mode).', session_id: sessionId };
+        return { ok: true, message: apiT('mock.resumeSavedDemo', 'Resume saved securely to your account (demo mode).'), session_id: sessionId };
     }
 
     async saveInteractiveInterview(sessionId, recordId = '') {
@@ -152,7 +154,7 @@ class MockAPIService {
         const id = recordId || `iis_mock_${Date.now()}`;
         return {
             ok: true,
-            message: 'Mock interview saved to your account (demo mode).',
+            message: apiT('mock.interviewSavedDemo', 'Mock interview saved to your account (demo mode).'),
             session_id: sessionId,
             record_id: id,
         };
@@ -169,7 +171,7 @@ class MockAPIService {
         const match = String(lastWeeks).match(/(\d+)$/);
         return {
             ok: true,
-            message: 'Timeline updated (demo mode).',
+            message: apiT('mock.timelineUpdatedDemo', 'Timeline updated (demo mode).'),
             session_id: sessionId,
             timeline,
             estimated_weeks: match ? parseInt(match[1], 10) : timeline.length * 4,
@@ -181,7 +183,7 @@ class MockAPIService {
         const id = recordId || `lpp_mock_${Date.now()}`;
         return {
             ok: true,
-            message: 'Learning path saved to your account (demo mode).',
+            message: apiT('mock.learningPathSavedDemo', 'Learning path saved to your account (demo mode).'),
             session_id: sessionId,
             record_id: id,
         };
@@ -204,19 +206,19 @@ class MockAPIService {
         const base = alexChenMock().interviewSets[tone] || alexChenMock().interviewSets.professional;
         const stagePlans = {
             quick: [
-                { stage_id: 'screening_final', name: '综合面·初筛+终面', count: 5 },
-                { stage_id: 'professional', name: '第二轮·专业/技术面', count: 8 },
+                { stage_id: 'screening_final', name: apiT('mock.stageScreeningFinal', 'Screening + final combined'), count: 5 },
+                { stage_id: 'professional', name: apiT('mock.stageProfessional', 'Round 2 — professional / technical'), count: 8 },
             ],
             full: [
-                { stage_id: 'screening', name: '第一轮·初筛面试', count: 5 },
-                { stage_id: 'professional', name: '第二轮·专业/技术面', count: 8 },
-                { stage_id: 'final', name: '第三轮·总监/HR终面', count: 4 },
+                { stage_id: 'screening', name: apiT('mock.stageScreening', 'Round 1 — screening'), count: 5 },
+                { stage_id: 'professional', name: apiT('mock.stageProfessional', 'Round 2 — professional / technical'), count: 8 },
+                { stage_id: 'final', name: apiT('mock.stageFinal', 'Round 3 — director / HR final'), count: 4 },
             ],
         };
         const specializedPlans = {
-            technical: [{ stage_id: 'specialized_technical', name: '专项·技术/专业面', count: 10 }],
-            final_negotiation: [{ stage_id: 'specialized_final_negotiation', name: '专项·终面谈判', count: 6 }],
-            resume_deep_dive: [{ stage_id: 'specialized_resume_deep_dive', name: '专项·简历深挖', count: 8 }],
+            technical: [{ stage_id: 'specialized_technical', name: apiT('mock.stageSpecializedTechnical', 'Specialized — technical'), count: 10 }],
+            final_negotiation: [{ stage_id: 'specialized_final_negotiation', name: apiT('mock.stageSpecializedNegotiation', 'Specialized — final negotiation'), count: 6 }],
+            resume_deep_dive: [{ stage_id: 'specialized_resume_deep_dive', name: apiT('mock.stageSpecializedResume', 'Specialized — resume deep dive'), count: 8 }],
         };
 
         const plans = programVersion === 'specialized'
@@ -224,13 +226,13 @@ class MockAPIService {
             : (stagePlans[programVersion] || stagePlans.quick);
 
         const demoQuestions = [
-            { question: '自我介绍', category: '简历深挖与个人经历', answer: '结构化介绍：背景+经历+岗位匹配+求职意向。' },
-            { question: '为什么离开上一家公司？', category: '岗位认知与求职动机', answer: '强调成长空间与稳定性，避免负面评价前雇主。' },
-            { question: '你对我们岗位和业务有什么了解？', category: '岗位认知与求职动机', answer: '结合JD与公司业务简述理解。' },
+            { question: apiT('mock.qSelfIntro', 'Tell me about yourself'), category: apiT('mock.catResumeDeep', 'Resume deep dive & experience'), answer: apiT('mock.aSelfIntro', 'Structured intro: background, experience, role fit, and career goal.') },
+            { question: apiT('mock.qWhyLeave', 'Why did you leave your last employer?'), category: apiT('mock.catMotivation', 'Role understanding & motivation'), answer: apiT('mock.aWhyLeave', 'Emphasize growth and stability; avoid negative comments about the former employer.') },
+            { question: apiT('mock.qRoleKnowledge', 'What do you know about our role and business?'), category: apiT('mock.catMotivation', 'Role understanding & motivation'), answer: apiT('mock.aRoleKnowledge', 'Summarize understanding based on the JD and company context.') },
             ...base.map(q => ({ question: q.question, category: q.category, answer: q.answer })),
-            { question: '描述一次高压下处理紧急问题的经历', category: '压力应变与短板复盘', answer: 'STAR结构，突出冷静与结果。' },
-            { question: '你的薪资预期是多少？', category: '职业规划与稳定性', answer: '给出合理区间并表达灵活性。' },
-            { question: '你有什么想问我们的？', category: '面试反向提问', answer: '问团队、成长、业务方向等加分问题。' },
+            { question: apiT('mock.qPressure', 'Describe a time you handled an urgent issue under pressure'), category: apiT('mock.catPressure', 'Pressure & weakness review'), answer: apiT('mock.aPressure', 'Use STAR; highlight calm execution and outcomes.') },
+            { question: apiT('mock.qSalary', 'What are your salary expectations?'), category: apiT('mock.catCareer', 'Career planning & stability'), answer: apiT('mock.aSalary', 'Give a reasonable range and show flexibility.') },
+            { question: apiT('mock.qReverse', 'What questions do you have for us?'), category: apiT('mock.catReverse', 'Reverse questions'), answer: apiT('mock.aReverse', 'Ask about team, growth, and business direction.') },
         ];
 
         const result = [];
@@ -244,7 +246,7 @@ class MockAPIService {
                     stage_name: plan.name,
                     stage_index: stageIndex,
                     category: template.category,
-                    question: i === 0 && stageIndex === 0 ? '自我介绍' : template.question,
+                    question: i === 0 && stageIndex === 0 ? apiT('mock.qSelfIntro', 'Tell me about yourself') : template.question,
                     answer: template.answer,
                     source_refs: [],
                     version: 1,
@@ -278,24 +280,28 @@ class MockAPIService {
         await this.delay(1200);
 
         const programLabels = {
-            quick: '极速版 (~30分钟)',
-            full: '完整版 (~60分钟)',
-            specialized: '专项版',
+            quick: apiT('mock.programQuick', 'Quick (~30 min)'),
+            full: apiT('mock.programFull', 'Full (~60 min)'),
+            specialized: apiT('mock.programSpecialized', 'Specialized'),
         };
         const stageSets = {
             quick: [
-                { stage_id: 'screening_final', name: '综合面·初筛+终面', subtitle: '15分钟 · HR+综合评估', max_turns: 5, turn_count: 1, status: 'active' },
-                { stage_id: 'professional', name: '第二轮·专业/技术面', subtitle: '20-30分钟 · 部门主管', max_turns: 8, turn_count: 0, status: 'pending' },
+                { stage_id: 'screening_final', name: apiT('mock.stageScreeningFinal', 'Screening + final combined'), subtitle: '15 min · HR + assessment', max_turns: 5, turn_count: 1, status: 'active' },
+                { stage_id: 'professional', name: apiT('mock.stageProfessional', 'Round 2 — professional / technical'), subtitle: '20-30 min · department lead', max_turns: 8, turn_count: 0, status: 'pending' },
             ],
             full: [
-                { stage_id: 'screening', name: '第一轮·初筛面试', subtitle: '10-15分钟 · HR', max_turns: 5, turn_count: 1, status: 'active' },
-                { stage_id: 'professional', name: '第二轮·专业/技术面', subtitle: '20-30分钟 · 主管', max_turns: 8, turn_count: 0, status: 'pending' },
-                { stage_id: 'final', name: '第三轮·总监/HR终面', subtitle: '10-15分钟 · 总监/HRD', max_turns: 4, turn_count: 0, status: 'pending' },
+                { stage_id: 'screening', name: apiT('mock.stageScreening', 'Round 1 — screening'), subtitle: '10-15 min · HR', max_turns: 5, turn_count: 1, status: 'active' },
+                { stage_id: 'professional', name: apiT('mock.stageProfessional', 'Round 2 — professional / technical'), subtitle: '20-30 min · manager', max_turns: 8, turn_count: 0, status: 'pending' },
+                { stage_id: 'final', name: apiT('mock.stageFinal', 'Round 3 — director / HR final'), subtitle: '10-15 min · director / HRD', max_turns: 4, turn_count: 0, status: 'pending' },
             ],
             specialized: [{
                 stage_id: `specialized_${specializedFocus || 'technical'}`,
-                name: { technical: '专项·技术/专业面', final_negotiation: '专项·终面谈判', resume_deep_dive: '专项·简历深挖' }[specializedFocus || 'technical'],
-                subtitle: '专项练习',
+                name: {
+                    technical: apiT('mock.stageSpecializedTechnical', 'Specialized — technical'),
+                    final_negotiation: apiT('mock.stageSpecializedNegotiation', 'Specialized — final negotiation'),
+                    resume_deep_dive: apiT('mock.stageSpecializedResume', 'Specialized — resume deep dive'),
+                }[specializedFocus || 'technical'],
+                subtitle: apiT('mock.specializedPractice', 'Specialized practice'),
                 max_turns: 8,
                 turn_count: 1,
                 status: 'active',
@@ -306,10 +312,10 @@ class MockAPIService {
         const totalRounds = maxRounds || stages.reduce((sum, s) => sum + s.max_turns, 0);
 
         const opening = tone === 'pressure'
-            ? '你好，我是今天的面试官。我们采用结构化面试流程，时间有限——请用两分钟做一个结构化自我介绍（个人背景+核心经历+匹配岗位优势+求职意向）。'
+            ? apiT('mock.interviewOpeningQuick', 'Hello, I am your interviewer today. We use a structured process with limited time — please give a two-minute structured self-introduction (background, experience, role fit, and career goal).')
             : tone === 'friendly'
-                ? '你好！很高兴今天能和你交流。我们按企业标准流程进行模拟，先轻松介绍一下自己吧——背景、经历和为什么对这个岗位感兴趣。'
-                : '你好，欢迎参加本次结构化模拟面试。请先做一个结构化自我介绍：个人背景、核心经历、匹配岗位的优势，以及你的求职意向。';
+                ? apiT('mock.interviewOpeningFriendly', 'Hello! Glad to meet you today. Let us start with a relaxed self-introduction — your background, experience, and why this role interests you.')
+                : apiT('mock.interviewOpeningDefault', 'Hello, welcome to this structured mock interview. Please introduce yourself: background, core experience, strengths for this role, and your career goal.');
 
         const session = {
             status: 'active',
@@ -329,7 +335,7 @@ class MockAPIService {
                 role: 'interviewer',
                 content: opening,
                 turn_type: 'opening',
-                category: '简历深挖与个人经历',
+                category: apiT('mock.catResumeDeep', 'Resume deep dive & experience'),
                 round: 1,
                 stage_index: 0,
                 stage_name: stages[0].name,
@@ -346,7 +352,7 @@ class MockAPIService {
         return {
             session_id: sessionId,
             interactive_interview: session,
-            message: '模拟面试已开始（demo mode）',
+            message: apiT('apiMessages.模拟面试已开始（demo mode）', 'Mock interview started (demo mode)'),
         };
     }
 
@@ -386,7 +392,7 @@ class MockAPIService {
             session.turns.push({
                 id: `turn_end_${Date.now()}`,
                 role: 'interviewer',
-                content: '感谢你的回答，本次模拟面试到此结束。你可以查看复盘报告。',
+                content: apiT('mock.interviewClosing', 'Thank you for your answers. This mock interview is complete. You can view the debrief report.'),
                 turn_type: 'end',
                 category: followUp.category,
                 round: session.round_count,
@@ -394,7 +400,7 @@ class MockAPIService {
             });
             session.status = 'completed';
             session.ended_at = new Date().toISOString();
-            session.latest_interviewer_message = '感谢你的回答，本次模拟面试到此结束。';
+            session.latest_interviewer_message = apiT('mock.interviewClosing', 'Thank you for your answers. This mock interview is complete. You can view the debrief report.');
             session.latest_brief_feedback = followUp.brief_feedback;
         } else {
             session.round_count += 1;
@@ -414,7 +420,7 @@ class MockAPIService {
         return {
             session_id: sessionId,
             interactive_interview: session,
-            message: shouldEnd ? '面试已结束' : '请继续回答',
+            message: shouldEnd ? apiT('mock.interviewEnded', 'Interview ended') : apiT('mock.continueAnswer', 'Please continue your answer'),
         };
     }
 
@@ -431,44 +437,44 @@ class MockAPIService {
         if (generateDebrief) {
             session.debrief = {
                 overall_score: 76,
-                summary: '整体表现良好，沟通表达清晰，案例选择贴合岗位。建议在回答中增加量化成果，并加强对公司业务和岗位要求的关联阐述。',
+                summary: apiT('mock.debriefSummary', 'Solid overall performance with clear communication and relevant examples. Add quantified outcomes and stronger links to the role and company.'),
                 strengths: [
-                    '表达流畅，逻辑结构较好',
-                    '能结合真实经历回答问题',
-                    '态度积极，求职动机明确',
+                    apiT('mock.debriefStrength1', 'Fluent delivery with good structure'),
+                    apiT('mock.debriefStrength2', 'Answers grounded in real experience'),
+                    apiT('mock.debriefStrength3', 'Positive attitude and clear motivation'),
                 ],
                 weaknesses: [
-                    '部分回答缺少量化数据',
-                    '对岗位业务细节了解可加深',
-                    '压力情境下的回答可更简洁有力',
+                    apiT('mock.debriefWeakness1', 'Some answers lack quantified metrics'),
+                    apiT('mock.debriefWeakness2', 'Role and business details could be deeper'),
+                    apiT('mock.debriefWeakness3', 'Pressure answers could be more concise'),
                 ],
                 key_moments: [
                     {
-                        question: '请做一个自我介绍',
-                        your_answer_summary: '介绍了教育背景和客服实习经历',
-                        analysis: '结构完整但可更突出与岗位的匹配亮点',
-                        improved_answer: '以目标岗位为核心，用1-2个量化成果开场，再展开相关经历',
+                        question: apiT('mock.debriefMoment1Q', 'Please introduce yourself'),
+                        your_answer_summary: apiT('mock.debriefMoment1Summary', 'Covered education and customer-service internship'),
+                        analysis: apiT('mock.debriefMoment1Analysis', 'Structure is complete; lead with role-fit highlights'),
+                        improved_answer: apiT('mock.debriefMoment1Improved', 'Open with 1–2 quantified outcomes tied to the target role, then expand relevant experience'),
                         score: 72,
                     },
                     {
-                        question: '描述一次处理客户投诉的经历',
-                        your_answer_summary: '讲述了跨境订单延迟的处理过程',
-                        analysis: 'STAR结构较好，缺少最终客户满意度或业务指标',
-                        improved_answer: '补充处理时效、客户反馈和后续流程优化措施',
+                        question: apiT('mock.debriefMoment2Q', 'Describe handling a customer complaint'),
+                        your_answer_summary: apiT('mock.debriefMoment2Summary', 'Explained a delayed cross-border order case'),
+                        analysis: apiT('mock.debriefMoment2Analysis', 'Good STAR structure; missing satisfaction or business metrics'),
+                        improved_answer: apiT('mock.debriefMoment2Improved', 'Add resolution time, customer feedback, and process improvements'),
                         score: 78,
                     },
                 ],
                 recommendations: [
-                    '每次回答尽量包含一个量化结果',
-                    '提前研究目标公司业务和岗位要求',
-                    '用STAR法则练习行为面试题',
-                    '准备2-3个不同维度的核心案例',
+                    apiT('mock.debriefRec1', 'Include at least one quantified result per answer'),
+                    apiT('mock.debriefRec2', 'Research the target company and role requirements'),
+                    apiT('mock.debriefRec3', 'Practice behavioral questions with STAR'),
+                    apiT('mock.debriefRec4', 'Prepare 2–3 core cases across different dimensions'),
                 ],
                 category_scores: {
-                    '简历深挖与个人经历': 75,
-                    '岗位认知与求职动机': 80,
-                    '项目实操与问题解决': 72,
-                    '压力应变与短板复盘': 70,
+                    [apiT('mock.catResumeDeep', 'Resume deep dive & experience')]: 75,
+                    [apiT('mock.catMotivation', 'Role understanding & motivation')]: 80,
+                    [apiT('mock.catProject', 'Project execution & problem solving')]: 72,
+                    [apiT('mock.catPressure', 'Pressure & weakness review')]: 70,
                 },
                 generated_at: new Date().toISOString(),
             };
@@ -477,7 +483,7 @@ class MockAPIService {
         return {
             session_id: sessionId,
             interactive_interview: session,
-            message: '复盘报告已生成（demo mode）',
+            message: apiT('mock.debriefGenerated', 'Debrief report generated (demo mode)'),
         };
     }
 
@@ -491,7 +497,7 @@ class MockAPIService {
             response.triggered_agents = ['profile_agent'];
             response.candidate_profile = this.candidateProfilePayload();
             response.resume_content_json = this.profilePayload();
-            response.reply_message = 'Profile extracted successfully (demo mode).';
+            response.reply_message = apiT('mock.profileExtractedDemo', 'Profile extracted successfully (demo mode).');
             return response;
         }
 
@@ -632,7 +638,7 @@ class MockAPIService {
         if (raw === 'zh-tw' || raw === 'zh-hant') return 'zh-TW';
         if (raw === 'pt' || raw === 'pt-pt' || raw === 'pt-mo') return 'pt';
         return 'zh';
-    },
+    }
 
     buildMockChecklist(language) {
         const lang = this.normalizeResumeLanguage(language);
@@ -660,9 +666,9 @@ class MockAPIService {
         await this.delay(400);
         const checklist = this.buildMockChecklist(language);
         return { language: checklist.language, language_checklist: checklist };
-    },
+    }
 
-    buildMockJd(industry, experienceLevel, employerType = 'private') {
+    buildMockJd(industry, experienceLevel, employerType = 'private', jdDraft = '') {
         const industryLabels = {
             tech: 'Technology',
             finance: 'Finance',
@@ -690,19 +696,16 @@ class MockAPIService {
         const employerLabel = employerLabels[employerType] || employerType || 'Private Enterprise';
         const levelLabel = levelLabels[experienceLevel] || experienceLevel || 'Mid Level';
 
+        const draftTitle = (jdDraft || '').split('\n')[0].trim();
+        const jobTitle = draftTitle || `${industryLabel} Professional`;
+
         return {
-            title: `${industryLabel} Professional (${levelLabel})`,
+            title: jobTitle,
             jd_text: [
-                `Job Title: ${industryLabel} Professional`,
-                `Industry: ${industryLabel}`,
-                `Employer Type: ${employerLabel}`,
-                `Experience Level: ${levelLabel}`,
-                '',
-                'Job Summary:',
-                `We are seeking a motivated ${levelLabel.toLowerCase()} professional for roles across the ${industryLabel.toLowerCase()} sector in the Greater Bay Area. This generic description covers common target positions aligned with your background.`,
+                `Job Title: ${jobTitle}`,
                 '',
                 'Key Responsibilities:',
-                '- Apply domain knowledge and technical/operational skills to daily work',
+                `- Perform core duties for ${levelLabel.toLowerCase()} roles in the ${industryLabel.toLowerCase()} sector`,
                 '- Collaborate with cross-functional and cross-border teams',
                 '- Communicate clearly with stakeholders in English and Chinese contexts',
                 '- Solve problems independently and improve processes continuously',
@@ -710,7 +713,7 @@ class MockAPIService {
                 '',
                 'Requirements:',
                 `- ${levelLabel} experience in ${industryLabel.toLowerCase()} or related fields`,
-                '- Relevant skills demonstrated in your uploaded resume',
+                `- Experience aligned with ${employerLabel} workplace expectations`,
                 '- Strong communication, teamwork, and learning agility',
                 '- Ability to adapt to cross-regional employment in the GBA',
                 '',
@@ -722,12 +725,9 @@ class MockAPIService {
         };
     }
 
-    async generateJobDescription(sessionId, industry, experienceLevel, employerType = 'private') {
+    async generateJobDescription(sessionId, industry, experienceLevel, employerType = 'private', jdDraft = '') {
         await this.delay(1200);
-        if (!this.state.hasProfile) {
-            throw new Error(apiT('errors.uploadResumeFirst', 'Please upload your resume first'));
-        }
-        return this.buildMockJd(industry, experienceLevel, employerType);
+        return this.buildMockJd(industry, experienceLevel, employerType, jdDraft);
     }
 }
 
@@ -755,44 +755,96 @@ class APIClient {
         });
     }
 
+    _syncMockModeIndicator() {
+        if (typeof document === 'undefined') return;
+        let banner = document.getElementById('gba-mock-mode-banner');
+        if (!this.useMockMode) {
+            banner?.remove();
+            return;
+        }
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'gba-mock-mode-banner';
+            banner.className = 'fixed top-0 inset-x-0 z-[9998] bg-amber-500 text-white text-center text-sm py-2 px-4 shadow-md';
+            banner.innerHTML = (
+                '<strong>演示模式</strong>：后端未连接，简历解析会使用示例数据（Alex Chen），与上传文件无关。'
+                + ' 请启动 backend 后刷新页面，或在控制台执行 <code class="bg-amber-600/40 px-1 rounded">localStorage.removeItem(\'gba_api_mock_mode\'); location.reload()</code>'
+            );
+            document.body.prepend(banner);
+        }
+    }
+
+    _healthUrl() {
+        return `${API_CONFIG.BASE_URL.replace('/api', '')}/health`;
+    }
+
+    async _probeBackendHealth() {
+        try {
+            await axios.get(this._healthUrl(), { timeout: API_CONFIG.HEALTH_TIMEOUT });
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
     async ensureBackendAvailable() {
         if (this.backendChecked) {
             return !this.useMockMode;
         }
         this.backendChecked = true;
 
-        if (localStorage.getItem(API_CONFIG.MOCK_MODE_KEY) === 'true') {
-            this.useMockMode = true;
-            console.warn('[API] Demo mode enabled (mock backend)');
-            return false;
-        }
+        const wasMockCached = localStorage.getItem(API_CONFIG.MOCK_MODE_KEY) === 'true';
 
         try {
-            await axios.get(`${API_CONFIG.BASE_URL.replace('/api', '')}/health`, { timeout: 3000 });
+            await axios.get(this._healthUrl(), { timeout: API_CONFIG.HEALTH_TIMEOUT });
             this.useMockMode = false;
             localStorage.removeItem(API_CONFIG.MOCK_MODE_KEY);
+            this._syncMockModeIndicator();
+            if (wasMockCached && typeof Utils !== 'undefined') {
+                Utils.showToast(apiT('mock.backendRestored', 'Connected to live backend — please re-upload your resume to parse it'));
+            }
             return true;
         } catch (error) {
             this.useMockMode = true;
             localStorage.setItem(API_CONFIG.MOCK_MODE_KEY, 'true');
+            this._syncMockModeIndicator();
             console.warn('[API] Backend unavailable, using demo mode:', error.message);
             if (typeof Utils !== 'undefined') {
-                Utils.showToast('Backend offline — running in demo mode with sample data');
+                Utils.showToast(apiT('mock.backendOfflineDemo', 'Backend offline — running in demo mode with sample data'));
             }
             return false;
         }
+    }
+
+    /**
+     * Only enter global demo mode when the backend health check fails.
+     * Avoids flipping to Alex Chen mock data after transient errors (e.g. draft save).
+     */
+    async _enableMockModeIfBackendDown(options = {}) {
+        const { showToast = true } = options;
+        const backendUp = await this._probeBackendHealth();
+        if (backendUp) {
+            return false;
+        }
+        this.enableMockMode();
+        if (showToast && typeof Utils !== 'undefined') {
+            Utils.showToast(apiT('mock.backendUnreachableDemo', 'Backend unreachable — switched to demo mode'));
+        }
+        return true;
     }
 
     enableMockMode() {
         this.useMockMode = true;
         this.backendChecked = true;
         localStorage.setItem(API_CONFIG.MOCK_MODE_KEY, 'true');
+        this._syncMockModeIndicator();
     }
 
     disableMockMode() {
         this.useMockMode = false;
         this.backendChecked = false;
         localStorage.removeItem(API_CONFIG.MOCK_MODE_KEY);
+        this._syncMockModeIndicator();
     }
 
     /**
@@ -852,17 +904,47 @@ class APIClient {
     }
 
     /**
+     * Ensure a session exists and refresh the header badge.
+     */
+    ensureSessionStarted() {
+        if (!this.sessionId) {
+            this.generateSessionId();
+        }
+        if (typeof Utils !== 'undefined') {
+            Utils.updateSessionDisplay(this.sessionId);
+        }
+        return this.sessionId;
+    }
+
+    _applyChatResponseSession(data) {
+        if (data && data.session_id && data.session_id !== this.sessionId) {
+            this.saveSessionId(data.session_id);
+        }
+        if (typeof Utils !== 'undefined') {
+            Utils.updateSessionDisplay(this.sessionId);
+        }
+        return data;
+    }
+
+    _isSessionAccessError(error) {
+        const status = error && error.response && error.response.status;
+        return status === 401 || status === 403;
+    }
+
+    /**
      * Main chat endpoint - unified entry point for all agents
      */
-    async chat(message, attachments = []) {
+    async chat(message, attachments = [], options = {}) {
+        const retryOnAccessDenied = options.retryOnAccessDenied !== false;
+        const allowMockFallback = options.allowMockFallback !== false;
         try {
-            if (!this.sessionId) {
-                this.generateSessionId();
-            }
+            this.ensureSessionStarted();
 
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
-                return this.mockService.chat(this.sessionId, message, attachments);
+                return this._applyChatResponseSession(
+                    await this.mockService.chat(this.sessionId, message, attachments)
+                );
             }
 
             const response = await this.client.post('/chat', {
@@ -872,18 +954,31 @@ class APIClient {
                 language: this.getApiLanguage(),
             });
 
-            return response.data;
+            return this._applyChatResponseSession(response.data);
         } catch (error) {
             console.error('Chat API error:', error);
-            if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
-                if (typeof Utils !== 'undefined') {
-                    Utils.showToast('Backend unreachable — switched to demo mode');
+            if (this._isSessionAccessError(error) && retryOnAccessDenied) {
+                this.clearSession();
+                this.generateSessionId();
+                return this.chat(message, attachments, { retryOnAccessDenied: false, allowMockFallback });
+            }
+            if (allowMockFallback && this._shouldUseMockFallback(error)) {
+                const switched = await this._enableMockModeIfBackendDown();
+                if (switched) {
+                    return this._applyChatResponseSession(
+                        await this.mockService.chat(this.sessionId, message, attachments)
+                    );
                 }
-                return this.mockService.chat(this.sessionId, message, attachments);
             }
             throw this.handleError(error);
         }
+    }
+
+    _shouldUseMockFallback(error) {
+        if (this.useMockMode) return false;
+        if (!error.response) return true;
+        const status = error.response.status;
+        return status >= 500 || status === 408 || status === 429;
     }
 
     /**
@@ -899,7 +994,7 @@ class APIClient {
                     content: base64Content,
                     content_encoding: 'base64',
                 },
-            ]);
+            ], { allowMockFallback: true });
 
             return response;
         } catch (error) {
@@ -967,9 +1062,9 @@ class APIClient {
     }
 
     /**
-     * Generate a generic target JD when user has no specific job posting
+     * Generate a suggested target JD from JD draft text, industry, employer type, and experience level
      */
-    async generateJobDescription(industry, experienceLevel, employerType = '') {
+    async generateJobDescription(industry, experienceLevel, employerType = '', jdDraft = '') {
         try {
             if (!this.sessionId) {
                 throw new Error(apiT('errors.noActiveSession', 'No active session'));
@@ -980,7 +1075,7 @@ class APIClient {
 
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
-                return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private');
+                return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private', jdDraft);
             }
 
             const response = await this.client.post('/resume/generate-jd', {
@@ -988,17 +1083,14 @@ class APIClient {
                 industry: industry,
                 experience_level: experienceLevel,
                 employer_type: employerType,
+                jd_draft: jdDraft || '',
             });
 
             return response.data;
         } catch (error) {
             console.error('JD generation error:', error);
-            if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
-                if (typeof Utils !== 'undefined') {
-                    Utils.showToast('Backend unreachable — switched to demo mode');
-                }
-                return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private');
+            if (!error.response && !this.useMockMode && await this._enableMockModeIfBackendDown()) {
+                return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private', jdDraft);
             }
             throw this.handleError(error);
         }
@@ -1065,7 +1157,7 @@ class APIClient {
                 throw new Error(apiT('errors.draftNotFound', '404: Draft not found'));
             }
             if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
+                console.warn('[API] Draft load failed, using local fallback:', error.message);
                 return this.mockService.getResumeDraft(this.sessionId);
             }
             throw this.handleError(error);
@@ -1099,7 +1191,7 @@ class APIClient {
         } catch (error) {
             console.error('Save draft error:', error);
             if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
+                console.warn('[API] Draft save failed, keeping edits in local fallback:', error.message);
                 return this.mockService.saveResumeDraft(this.sessionId, draft, this.isLoggedIn());
             }
             throw this.handleError(error);
@@ -1258,7 +1350,7 @@ class APIClient {
         } catch (error) {
             console.error('Get resume HTML error:', error);
             if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
+                console.warn('[API] Resume HTML fetch failed, using local fallback:', error.message);
                 return this.mockService.getResumeHtml(this.sessionId);
             }
             throw error;
@@ -1322,7 +1414,7 @@ class APIClient {
         } catch (error) {
             console.error('Set resume language error:', error);
             if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
+                console.warn('[API] Set resume language failed, using local checklist fallback:', error.message);
                 return this.mockService.getLanguageChecklist(this.sessionId, targetLanguage);
             }
             throw this.handleError(error);
@@ -1355,7 +1447,7 @@ class APIClient {
         } catch (error) {
             console.error('Language checklist error:', error);
             if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
+                console.warn('[API] Language checklist failed, using local fallback:', error.message);
                 return this.mockService.getLanguageChecklist(this.sessionId, language);
             }
             throw this.handleError(error);
@@ -1384,8 +1476,7 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('Resume translation error:', error);
-            if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
+            if (!error.response && !this.useMockMode && await this._enableMockModeIfBackendDown()) {
                 return this.mockService.translateResume(this.sessionId, targetLanguage);
             }
             throw this.handleError(error);
@@ -1562,8 +1653,7 @@ class APIClient {
             if (error.response) {
                 throw await this.parseExportError(error);
             }
-            if (!error.response && !this.useMockMode) {
-                this.enableMockMode();
+            if (!error.response && !this.useMockMode && await this._enableMockModeIfBackendDown({ showToast: false })) {
                 return this.mockService.exportResume(this.sessionId, format);
             }
             throw error;
@@ -1625,7 +1715,7 @@ class APIClient {
                 return {
                     session_id: this.sessionId,
                     interview_qa: this.mockService.customInterviewAnswersPayload(questions),
-                    message: `Generated reference answers for ${questions.length} custom questions (demo mode).`,
+                    message: apiT('mock.customAnswersDemo', 'Generated reference answers for {count} custom questions (demo mode).', { count: questions.length }),
                 };
             }
             const response = await this.client.post('/interview/custom/generate-answers', {
@@ -1971,7 +2061,7 @@ class APIClient {
      */
     async healthCheck() {
         try {
-            const response = await axios.get(`${API_CONFIG.BASE_URL.replace('/api', '')}/health`, { timeout: 3000 });
+            const response = await axios.get(`${API_CONFIG.BASE_URL.replace('/api', '')}/health`, { timeout: API_CONFIG.HEALTH_TIMEOUT });
             return response.data;
         } catch (error) {
             console.error('Health check error:', error);
@@ -2023,6 +2113,14 @@ class APIClient {
 
 // Create global API client instance
 const apiClient = new APIClient();
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('gba:language-changed', () => {
+        if (typeof Utils !== 'undefined') {
+            Utils.updateSessionDisplay(apiClient.sessionId);
+        }
+    });
+}
 
 // Utility functions
 const Utils = {
@@ -2076,12 +2174,24 @@ const Utils = {
      * Update session ID display
      */
     updateSessionDisplay(sessionId) {
-        const sessionElements = document.querySelectorAll('#session-id');
+        const resolved = sessionId || (typeof apiClient !== 'undefined' ? apiClient.sessionId : '');
+        const label = resolved
+            ? String(resolved).substr(-8)
+            : apiT('common.notStarted', 'Not started');
+        const sessionElements = document.querySelectorAll('#session-id, #session-id-display');
         sessionElements.forEach(el => {
             if (el) {
-                el.textContent = sessionId ? sessionId.substr(-8) : apiT('common.notStarted', 'Not started');
+                el.textContent = label;
+                el.dataset.i18nDynamic = '1';
+                el.title = resolved || apiT('common.notStarted', 'Not started');
             }
         });
+        const badge = document.getElementById('session-badge');
+        if (badge) {
+            badge.title = resolved
+                ? apiT('common.sessionFull', 'Session ID: {id}', { id: resolved })
+                : apiT('common.notStarted', 'Not started');
+        }
     },
 
     /**

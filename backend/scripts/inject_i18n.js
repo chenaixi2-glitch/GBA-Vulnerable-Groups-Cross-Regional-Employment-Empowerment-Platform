@@ -27,8 +27,6 @@ dirs.forEach((dir) => {
                 );
             } else if (html.includes('site-guide.js')) {
                 html = html.replace(/(\s*<script src="[^"]*site-guide\.js"><\/script>)/, tag + '$1');
-            } else if (html.includes('floating-widget.js')) {
-                html = html.replace(/(\s*<script src="[^"]*floating-widget\.js"><\/script>)/, tag + '$1');
             } else {
                 html = html.replace('</body>', tag + '</body>');
             }

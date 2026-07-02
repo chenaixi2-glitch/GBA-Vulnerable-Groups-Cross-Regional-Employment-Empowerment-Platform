@@ -717,17 +717,17 @@
                 const summ  = document.getElementById('job-summary').value.trim();
                 const resp  = document.getElementById('responsibilities').value.trim();
                 if (!title || !dept || !type || !loc || !summ || !resp) {
-                    showToast('Please fill in all required fields before continuing.', 'error');
+                    showToast(corpT('corporate.fillRequired', 'Please fill in all required fields before continuing.'), 'error');
                     return false;
                 }
                 const salMin = document.getElementById('salary-min').value;
                 const salMax = document.getElementById('salary-max').value;
                 if (!salMin || !salMax || Number(salMin) <= 0 || Number(salMax) <= 0) {
-                    showToast('Please enter salary range (min and max monthly CNY).', 'error');
+                    showToast(corpT('corporate.salaryRequired', 'Please enter salary range (min and max monthly CNY).'), 'error');
                     return false;
                 }
                 if (Number(salMin) > Number(salMax)) {
-                    showToast('Salary minimum cannot exceed maximum.', 'error');
+                    showToast(corpT('corporate.salaryMinMax', 'Salary minimum cannot exceed maximum.'), 'error');
                     return false;
                 }
             }
@@ -955,7 +955,7 @@
                 if (btn) btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
                 document.title = 'Edit Job — GBA Platform';
             } catch (e) {
-                showToast(e.message || 'Failed to load job for editing', 'error');
+                showToast(mapCorpMsg(e.message) || corpT('corporate.loadJobFailed', 'Failed to load job for editing'), 'error');
             }
         }
 
@@ -976,14 +976,14 @@
                     : await CorporateAPI.JobsAPI.create(payload);
                 const job = res.data.job;
                 if (isEditMode) {
-                    showToast('岗位已更新', 'success');
+                    showToast(corpT('corporate.jobUpdated', 'Job updated'), 'success');
                     setTimeout(function () { window.location.href = 'my-jobs.html'; }, 800);
                     return;
                 }
                 document.getElementById('success-job-id').textContent = 'GBA-' + job.id;
                 document.getElementById('success-modal').classList.remove('hidden');
             } catch (err) {
-                showToast(err.message || 'Failed to save job. Are you logged in as corporate?', 'error');
+                showToast(mapCorpMsg(err.message) || corpT('corporate.saveJobFailed', 'Failed to save job. Are you logged in as corporate?'), 'error');
             } finally {
                 btn.innerHTML = isEditMode
                     ? '<i class="fas fa-save"></i> Save Changes'
@@ -1001,15 +1001,28 @@
             showStep(1);
         }
 
+        function corpT(key, fallback, vars) {
+            if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+            var s = fallback;
+            if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+            return s;
+        }
+        function mapCorpMsg(msg) {
+            if (!msg) return msg;
+            if (window.GBAI18n && window.GBAI18n.tApiMessage) return window.GBAI18n.tApiMessage(String(msg));
+            return String(msg);
+        }
+
         // ── Toast notification ─────────────────────────────────────────────────
         function showToast(msg, type) {
+            const text = mapCorpMsg(msg);
             const existing = document.getElementById('toast-msg');
             if (existing) existing.remove();
             const toast = document.createElement('div');
             toast.id = 'toast-msg';
             toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 ' +
                 (type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200');
-            toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>${msg}`;
+            toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>${text}`;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3500);
         }
@@ -1039,7 +1052,6 @@
     <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/api-client.js"></script>
     <script src="../assets/js/platform-access.js"></script>
-    <script src="../assets/floating-widget.js"></script>
     <script src="../assets/i18n/i18n.js"></script>
 
     <script src="../assets/site-guide.js"></script>

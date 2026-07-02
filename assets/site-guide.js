@@ -67,7 +67,7 @@
                 { target: '#features', title: 'Platform capabilities', body: 'Explore resume AI, interview prep, learning paths, policy tools, and inclusive hiring features built for cross-border employment.' },
                 { target: '#how-it-works', title: 'How it works', body: 'Follow the end-to-end loop from profile creation and matching to applications, interviews, and post-hire support.' },
                 { target: '#faq', title: 'FAQ & help', body: 'Find answers about access, donations, data security, and accessibility. Expand any question for details.' },
-                { target: '#language-toggle-btn, .language-selector', title: 'Language & accessibility', body: 'Switch between English, Chinese, and Portuguese. Use the green quick-access button (bottom-right) for text size and contrast options.' }
+                { target: '#language-toggle-btn, .language-selector', title: 'Language & accessibility', body: 'Switch between English, Chinese, and Portuguese.' }
             ],
             'zh-CN': [
                 { target: null, title: '欢迎使用大湾区就业赋能平台', body: '本平台连接大湾区求职者与包容型企业，提供 AI 简历/面试、岗位匹配与法律支持等服务。' },
@@ -75,7 +75,7 @@
                 { target: '#features', title: '平台能力', body: '了解智能简历、面试准备、学习路径、政策工具与包容招聘等功能，助力跨境就业。' },
                 { target: '#how-it-works', title: '运作方式', body: '从注册建档、智能匹配到投递、面试与入职跟进，一站式完成就业闭环。' },
                 { target: '#faq', title: '常见问题', body: '查阅访问权限、捐款解锁、数据安全与无障碍等说明，点击问题展开详情。' },
-                { target: '#language-toggle-btn, .language-selector', title: '语言与无障碍', body: '可切换英文、中文与葡语。右下角绿色按钮可调字号、高对比度等显示选项。' }
+                { target: '#language-toggle-btn, .language-selector', title: '语言与无障碍', body: '可切换英文、中文与葡语。' }
             ],
             'zh-TW': [
                 { target: null, title: '歡迎使用大灣區就業賦能平台', body: '本平台連接大灣區求職者與包容型企業，提供 AI 履歷/面試、職位匹配與法律支援等服務。' },
@@ -83,7 +83,7 @@
                 { target: '#features', title: '平台能力', body: '了解智能履歷、面試準備、學習路徑、政策工具與包容招聘等功能，助力跨境就業。' },
                 { target: '#how-it-works', title: '運作方式', body: '從註冊建檔、智能匹配到投遞、面試與入職跟進，一站式完成就業閉環。' },
                 { target: '#faq', title: '常見問題', body: '查閱訪問權限、捐款解鎖、資料安全與無障礙等說明，點擊問題展開詳情。' },
-                { target: '#language-toggle-btn, .language-selector', title: '語言與無障礙', body: '可切換英文、中文與葡語。右下角綠色按鈕可調字號、高對比度等顯示選項。' }
+                { target: '#language-toggle-btn, .language-selector', title: '語言與無障礙', body: '可切換英文、中文與葡語。' }
             ],
             pt: [
                 { target: null, title: 'Bem-vindo à Plataforma GBA', body: 'A plataforma liga candidatos e empregadores inclusivos na GBA com ferramentas de IA, matching e apoio jurídico.' },
@@ -91,7 +91,7 @@
                 { target: '#features', title: 'Capacidades', body: 'Explore CV com IA, preparação para entrevistas, percursos de aprendizagem e recrutamento inclusivo.' },
                 { target: '#how-it-works', title: 'Como funciona', body: 'Siga o ciclo completo: perfil, matching, candidaturas, entrevistas e acompanhamento pós-contratação.' },
                 { target: '#faq', title: 'FAQ', body: 'Respostas sobre acesso, doações, segurança de dados e acessibilidade.' },
-                { target: '#language-toggle-btn, .language-selector', title: 'Idioma e acessibilidade', body: 'Mude entre inglês, chinês e português. Use o botão verde (canto inferior direito) para tamanho de texto e contraste.' }
+                { target: '#language-toggle-btn, .language-selector', title: 'Idioma e acessibilidade', body: 'Mude entre inglês, chinês e português.' }
             ]
         },
         individual: {
@@ -101,8 +101,7 @@
                 { target: 'a[href="demo-resume-generator.html"]', title: 'Smart resume', body: 'Upload a resume and target job description. AI analyzes gaps and generates a tailored version.' },
                 { target: 'a[href="demo-interview.html"]', title: 'Interview prep', body: 'Practice role-specific questions with AI feedback to build confidence before real interviews.' },
                 { target: 'a[href="demo-jobs-database.html"]', title: 'Job matching', body: 'Browse matched roles by group type and resume score. Apply on-platform or follow external links.' },
-                { target: 'a[href="donation-legal.html"]', title: 'Donation & legal aid', body: 'Vulnerable groups use the platform for free. Others may donate any amount to unlock features and support legal services.' },
-                { target: '#gba-fab', title: 'Quick access widget', body: 'The green button opens navigation shortcuts, display settings (text size, contrast), and page links.' }
+                { target: 'a[href="donation-legal.html"]', title: 'Donation & legal aid', body: 'Vulnerable groups use the platform for free. Others may donate any amount to unlock features and support legal services.' }
             ],
             'zh-CN': [
                 { target: null, title: '个人端使用指引', body: '仪表盘集中了 AI 职业工具、岗位匹配、投递记录与捐款/法律服务入口。' },
@@ -110,8 +109,7 @@
                 { target: 'a[href="demo-resume-generator.html"]', title: '智能简历', body: '上传简历与目标岗位描述，AI 分析差距并生成定制版简历。' },
                 { target: 'a[href="demo-interview.html"]', title: '面试准备', body: '针对目标岗位练习 AI 生成的面试题，获得反馈后再参加真实面试。' },
                 { target: 'a[href="demo-jobs-database.html"]', title: '岗位匹配', body: '按人群类型与简历评分浏览推荐岗位，平台内可直接投递。' },
-                { target: 'a[href="donation-legal.html"]', title: '捐款与法律服务', body: '弱势群体免费使用；其他用户可向法律服务捐款箱捐款（金额不限）以解锁功能。' },
-                { target: '#gba-fab', title: '快捷入口', body: '右下角绿色按钮可打开页面导航、字号/对比度等显示设置及其他页面跳转。' }
+                { target: 'a[href="donation-legal.html"]', title: '捐款与法律服务', body: '弱势群体免费使用；其他用户可向法律服务捐款箱捐款（金额不限）以解锁功能。' }
             ],
             'zh-TW': [
                 { target: null, title: '個人端使用指引', body: '儀表板集中了 AI 職業工具、職位匹配、投遞記錄與捐款/法律服務入口。' },
@@ -119,8 +117,7 @@
                 { target: 'a[href="demo-resume-generator.html"]', title: '智能履歷', body: '上傳履歷與目標職位描述，AI 分析差距並生成定制版履歷。' },
                 { target: 'a[href="demo-interview.html"]', title: '面試準備', body: '針對目標職位練習 AI 生成的面試題，獲得回饋後再參加真實面試。' },
                 { target: 'a[href="demo-jobs-database.html"]', title: '職位匹配', body: '按人群類型與履歷評分瀏覽推薦職位，平台內可直接投遞。' },
-                { target: 'a[href="donation-legal.html"]', title: '捐款與法律服務', body: '弱勢群體免費使用；其他用戶可向法律服務捐款箱捐款（金額不限）以解鎖功能。' },
-                { target: '#gba-fab', title: '快捷入口', body: '右下角綠色按鈕可打開頁面導航、字號/對比度等顯示設定及其他頁面跳轉。' }
+                { target: 'a[href="donation-legal.html"]', title: '捐款與法律服務', body: '弱勢群體免費使用；其他用戶可向法律服務捐款箱捐款（金額不限）以解鎖功能。' }
             ],
             pt: [
                 { target: null, title: 'Guia do portal individual', body: 'O painel reúne ferramentas de IA, matching, candidaturas e acesso jurídico/doações.' },
@@ -128,8 +125,7 @@
                 { target: 'a[href="demo-resume-generator.html"]', title: 'CV inteligente', body: 'Carregue CV e descrição da vaga. A IA analisa lacunas e gera uma versão personalizada.' },
                 { target: 'a[href="demo-interview.html"]', title: 'Preparação para entrevista', body: 'Pratique perguntas específicas do cargo com feedback da IA.' },
                 { target: 'a[href="demo-jobs-database.html"]', title: 'Matching de vagas', body: 'Navegue vagas recomendadas por perfil e pontuação do CV.' },
-                { target: 'a[href="donation-legal.html"]', title: 'Doação e apoio jurídico', body: 'Grupos vulneráveis usam gratuitamente. Outros podem doar para desbloquear funcionalidades.' },
-                { target: '#gba-fab', title: 'Acesso rápido', body: 'O botão verde abre atalhos, definições de visualização e links de páginas.' }
+                { target: 'a[href="donation-legal.html"]', title: 'Doação e apoio jurídico', body: 'Grupos vulneráveis usam gratuitamente. Outros podem doar para desbloquear funcionalidades.' }
             ]
         },
         corporate: {
@@ -139,7 +135,7 @@
                 { target: '#ai-features', title: 'HR & compliance tools', body: 'Use blind screening, compliance calculators, DEI analytics, and remote-work readiness checks.' },
                 { target: '#jobs', title: 'My jobs', body: 'View and manage posted roles, edit requirements, and monitor applicant volume.' },
                 { target: 'a[href="post-job.html"]', title: 'Post a job', body: 'Create new inclusive roles with target group criteria so matching scores applicants accurately.' },
-                { target: '.language-selector', title: 'Language & quick access', body: 'Switch UI language here. Use the green widget (bottom-right) for navigation and display settings.' }
+                { target: '.language-selector', title: 'Language', body: 'Switch UI language here.' }
             ],
             'zh-CN': [
                 { target: null, title: '企业端使用指引', body: '在一个门户中管理包容招聘、发布带目标条件的岗位，并查看评分排序的申请人。' },
@@ -147,7 +143,7 @@
                 { target: '#ai-features', title: 'HR 与合规工具', body: '使用盲筛、合规测算、DEI 分析与远程包容工作就绪检查。' },
                 { target: '#jobs', title: '岗位管理', body: '查看已发布岗位、编辑要求并监控申请量。' },
                 { target: 'a[href="post-job.html"]', title: '发布岗位', body: '创建带目标人群条件的包容型岗位，以便系统准确匹配评分。' },
-                { target: '.language-selector', title: '语言与快捷入口', body: '在此切换界面语言。右下角绿色按钮提供导航与显示设置。' }
+                { target: '.language-selector', title: '语言', body: '在此切换界面语言。' }
             ],
             'zh-TW': [
                 { target: null, title: '企業端使用指引', body: '在一個門戶中管理包容招聘、發布帶目標條件的職位，並查看評分排序的申請人。' },
@@ -155,7 +151,7 @@
                 { target: '#ai-features', title: 'HR 與合規工具', body: '使用盲篩、合規測算、DEI 分析與遠端包容工作就緒檢查。' },
                 { target: '#jobs', title: '職位管理', body: '查看已發布職位、編輯要求並監控申請量。' },
                 { target: 'a[href="post-job.html"]', title: '發布職位', body: '創建帶目標人群條件的包容型職位，以便系統準確匹配評分。' },
-                { target: '.language-selector', title: '語言與快捷入口', body: '在此切換介面語言。右下角綠色按鈕提供導航與顯示設定。' }
+                { target: '.language-selector', title: '語言', body: '在此切換介面語言。' }
             ],
             pt: [
                 { target: null, title: 'Guia do portal empresarial', body: 'Gerencie recrutamento inclusivo, publique vagas com critérios-alvo e analise candidatos pontuados.' },
@@ -163,7 +159,7 @@
                 { target: '#ai-features', title: 'Ferramentas de RH', body: 'Triagem cega, calculadoras de conformidade, análise DEI e verificação de trabalho remoto.' },
                 { target: '#jobs', title: 'Minhas vagas', body: 'Veja e gira vagas publicadas e monitorize candidaturas.' },
                 { target: 'a[href="post-job.html"]', title: 'Publicar vaga', body: 'Crie vagas inclusivas com critérios de grupo-alvo para matching preciso.' },
-                { target: '.language-selector', title: 'Idioma e acesso rápido', body: 'Mude o idioma aqui. Use o widget verde para navegação e definições de visualização.' }
+                { target: '.language-selector', title: 'Idioma', body: 'Mude o idioma aqui.' }
             ]
         }
     };
@@ -513,12 +509,6 @@
         return /(^|\/)index\.html$/.test(path) && path.indexOf('/individual/') === -1 && path.indexOf('/corporate/') === -1;
     }
 
-    function syncWidgetGuideButton() {
-        var btn = document.getElementById('gwa-site-guide-btn');
-        if (!btn) return;
-        btn.innerHTML = '<i class="fas fa-compass"></i>' + t('fabLabel');
-    }
-
     function shouldAutoStart() {
         if (!isMainPortalPage()) return false;
         var params;
@@ -542,7 +532,6 @@
         if (!steps.length) return;
 
         buildUi();
-        syncWidgetGuideButton();
 
         if (shouldAutoStart()) {
             window.setTimeout(function () {
@@ -565,7 +554,6 @@
     window.addEventListener('gba:language-changed', function () {
         steps = loadSteps();
         refreshLabels();
-        syncWidgetGuideButton();
         if (active) renderStep(false);
     });
 

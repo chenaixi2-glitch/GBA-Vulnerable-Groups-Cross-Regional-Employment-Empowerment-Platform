@@ -1,32 +1,37 @@
 /**
- * 收集 JD 文本框 + 行业 / 单位性质 / 经验等级，供简历、面试、学习路径共用。
+ * Collect JD textarea + industry / employer type / experience level for resume, interview, learning path.
  */
 
-const TARGET_JOB_INDUSTRY_LABELS = {
-    tech: 'Technology',
-    finance: 'Finance',
-    ecommerce: 'E-commerce',
-    healthcare: 'Healthcare',
-    education: 'Education',
-    manufacturing: 'Manufacturing',
-    other: 'Other',
-};
+function tjcT(key, fallback, vars) {
+    if (typeof window !== 'undefined' && window.GBAI18n && window.GBAI18n.t) {
+        return window.GBAI18n.t(key, fallback, vars);
+    }
+    let s = fallback;
+    if (vars && s) Object.keys(vars).forEach((k) => { s = String(s).replace('{' + k + '}', vars[k]); });
+    return s;
+}
 
-const TARGET_JOB_EMPLOYER_LABELS = {
-    soe: 'State-owned Enterprise (国央企)',
-    public: 'Public Sector (体制内)',
-    foreign: 'Foreign Enterprise (外企)',
-    private: 'Private Enterprise (民企)',
-    npo: 'Non-profit Organization (NPO/NGO 非营利社会组织)',
-    hmt: 'HK/Macau/TW-funded Enterprise (港澳台资企业)',
-    other: 'Other (其他)',
+const TARGET_JOB_INDUSTRY_KEYS = {
+    tech: 'resume.tech', finance: 'resume.finance', ecommerce: 'resume.ecommerce',
+    healthcare: 'resume.healthcare', education: 'resume.education', manufacturing: 'resume.manufacturing', other: 'resume.other',
 };
-
-const TARGET_JOB_EXPERIENCE_LABELS = {
-    entry: 'Entry Level (0-2 years)',
-    mid: 'Mid Level (3-5 years)',
-    senior: 'Senior Level (5+ years)',
-    executive: 'Executive / Leadership',
+const TARGET_JOB_INDUSTRY_FB = {
+    tech: 'Technology', finance: 'Finance', ecommerce: 'E-commerce', healthcare: 'Healthcare',
+    education: 'Education', manufacturing: 'Manufacturing', other: 'Other',
+};
+const TARGET_JOB_EMPLOYER_KEYS = {
+    soe: 'resume.soe', public: 'resume.publicSector', foreign: 'resume.foreign',
+    private: 'resume.private', npo: 'resume.npo', hmt: 'resume.hmt', other: 'resume.employerOther',
+};
+const TARGET_JOB_EMPLOYER_FB = {
+    soe: 'State-owned enterprise', public: 'Public sector', foreign: 'Foreign enterprise',
+    private: 'Private enterprise', npo: 'Non-profit (NPO/NGO)', hmt: 'HK/Macau/TW-funded', other: 'Other',
+};
+const TARGET_JOB_EXPERIENCE_KEYS = {
+    entry: 'resume.entry', mid: 'resume.mid', senior: 'resume.senior', executive: 'resume.executive',
+};
+const TARGET_JOB_EXPERIENCE_FB = {
+    entry: 'Entry Level', mid: 'Mid Level', senior: 'Senior Level', executive: 'Executive',
 };
 
 const TARGET_JOB_FIELD_MAP = {
@@ -47,15 +52,18 @@ function readFirstFieldValue(ids) {
 }
 
 function getTargetIndustryLabel(value) {
-    return TARGET_JOB_INDUSTRY_LABELS[value] || value;
+    const key = TARGET_JOB_INDUSTRY_KEYS[value];
+    return key ? tjcT(key, TARGET_JOB_INDUSTRY_FB[value] || value) : value;
 }
 
 function getTargetEmployerLabel(value) {
-    return TARGET_JOB_EMPLOYER_LABELS[value] || value;
+    const key = TARGET_JOB_EMPLOYER_KEYS[value];
+    return key ? tjcT(key, TARGET_JOB_EMPLOYER_FB[value] || value) : value;
 }
 
 function getTargetExperienceLabel(value) {
-    return TARGET_JOB_EXPERIENCE_LABELS[value] || value;
+    const key = TARGET_JOB_EXPERIENCE_KEYS[value];
+    return key ? tjcT(key, TARGET_JOB_EXPERIENCE_FB[value] || value) : value;
 }
 
 /**
@@ -94,11 +102,11 @@ function buildTargetJobContextBlock(context) {
 function buildJdSubmissionText(jdText, context) {
     const body = (jdText || context?.jd_text || '').trim();
     const meta = [];
-    if (context?.industryLabel) meta.push(`目标行业: ${context.industryLabel}`);
-    if (context?.employerTypeLabel) meta.push(`单位性质: ${context.employerTypeLabel}`);
-    if (context?.experienceLevelLabel) meta.push(`经验等级: ${context.experienceLevelLabel}`);
+    if (context?.industryLabel) meta.push(tjcT('resume.metaIndustry', 'Target industry: {label}', { label: context.industryLabel }));
+    if (context?.employerTypeLabel) meta.push(tjcT('resume.metaEmployer', 'Employer type: {label}', { label: context.employerTypeLabel }));
+    if (context?.experienceLevelLabel) meta.push(tjcT('resume.metaExperience', 'Experience level: {label}', { label: context.experienceLevelLabel }));
     if (!meta.length) return body;
-    return [body, '', '--- 目标岗位补充信息 ---', ...meta].filter((line, idx, arr) => !(idx === 0 && !line)).join('\n');
+    return [body, '', '--- ' + tjcT('resume.metaSection', 'Target job details') + ' ---', ...meta].filter((line, idx, arr) => !(idx === 0 && !line)).join('\n');
 }
 
 const JD_DETAIL_MARKERS = [

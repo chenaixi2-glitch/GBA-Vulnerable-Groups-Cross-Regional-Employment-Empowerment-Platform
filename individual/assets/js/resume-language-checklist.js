@@ -1,12 +1,12 @@
 /**
- * Resume language format checklist — display missing items per language rules
+ * Resume language format checklist — inline markers on profile editor sections
  */
 
 const CHECKLIST_SEVERITY_STYLES = {
-    required: { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-800', icon: 'fa-circle-exclamation text-red-500' },
-    recommended: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-800', icon: 'fa-lightbulb text-amber-500' },
-    warning: { bg: 'bg-orange-50', border: 'border-orange-200', badge: 'bg-orange-100 text-orange-800', icon: 'fa-triangle-exclamation text-orange-500' },
-    ok: { bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-800', icon: 'fa-check-circle text-green-500' },
+    required: { ring: 'ring-red-300', border: 'border-red-300', badge: 'bg-red-100 text-red-800', icon: 'fa-circle-exclamation text-red-500' },
+    recommended: { ring: 'ring-amber-300', border: 'border-amber-300', badge: 'bg-amber-100 text-amber-800', icon: 'fa-lightbulb text-amber-500' },
+    warning: { ring: 'ring-orange-300', border: 'border-orange-300', badge: 'bg-orange-100 text-orange-800', icon: 'fa-triangle-exclamation text-orange-500' },
+    ok: { ring: 'ring-green-300', border: 'border-green-300', badge: 'bg-green-100 text-green-800', icon: 'fa-check-circle text-green-500' },
 };
 
 const CHECKLIST_SEVERITY_LABELS = {
@@ -15,6 +15,32 @@ const CHECKLIST_SEVERITY_LABELS = {
     en: { required: 'Required', recommended: 'Recommended', warning: 'Warning', ok: 'OK' },
     pt: { required: 'Obrigatório', recommended: 'Recomendado', warning: 'Aviso', ok: 'OK' },
 };
+
+/** Map checklist field keys to profile editor DOM targets */
+const FORMAT_CHECK_FIELD_TARGETS = {
+    photo: '#profile-photo-section',
+    name: '#profile-name',
+    phone: '#profile-phone',
+    email: '#profile-email',
+    city: '#profile-city',
+    address: '#profile-city',
+    age: '#profile-basic-grid',
+    gender: '#profile-basic-grid',
+    native_place: '#profile-basic-grid',
+    political_status: '#profile-basic-grid',
+    linkedin: '#profile-basic-grid',
+    education: '[data-section-type="education"]',
+    internships: '[data-section-type="internship"]',
+    projects: '[data-section-type="project"]',
+    skills: '[data-section-type="skill"]',
+    awards: '[data-section-type="award"]',
+    summary: '[data-section-type="custom"]',
+    volunteer: '[data-section-type="custom"]',
+    metrics: '[data-section-type="internship"]',
+    language_certs: '[data-section-type="skill"]',
+};
+
+const FORMAT_CHECK_SEVERITY_RANK = { required: 3, warning: 2, recommended: 1, ok: 0 };
 
 function normalizeResumeLang(code) {
     if (window.GBAI18n && GBAI18n.normalizeResumeLang) return GBAI18n.normalizeResumeLang(code);
@@ -56,79 +82,6 @@ function uiText(key, fallback, vars) {
 
 let lastChecklistData = null;
 
-function checklistTitleSuffix(resumeLang, missingCount) {
-    if (!missingCount) return '';
-    return uiText(
-        'resume.checklistMissing',
-        ' — {lang}: {count} missing',
-        { lang: resumeLangDisplayLabel(resumeLang), count: missingCount }
-    );
-}
-
-function checklistCompleteMessage() {
-    return uiText(
-        'resume.checklistComplete',
-        'Core sections look good! Double-check photo policy and one-page layout.'
-    );
-}
-
-function renderLanguageChecklistPanel(checklist, containerId = 'language-checklist-content') {
-    const container = document.getElementById(containerId);
-    const section = document.getElementById('language-checklist-section');
-    if (!container) return;
-
-    if (!checklist || !checklist.items || checklist.items.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-500">' + uiText('resume.checklistUnavailable', 'No checklist available.') + '</p>';
-        return;
-    }
-
-    lastChecklistData = checklist;
-    const lang = normalizeResumeLang(checklist.language || 'zh');
-    const labels = CHECKLIST_SEVERITY_LABELS[uiApiLang()] || CHECKLIST_SEVERITY_LABELS.en;
-    const missing = checklist.missing_items || checklist.items.filter((i) => i.missing);
-    const dyn = document.getElementById('language-checklist-dynamic');
-    if (dyn) {
-        dyn.textContent = checklistTitleSuffix(lang, missing.length);
-    }
-
-    if (section) section.classList.remove('hidden');
-
-    const summaryHtml = checklist.summary
-        ? `<p class="text-sm text-gray-700 mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">${escapeHtml(checklist.summary)}</p>`
-        : '';
-
-    const itemsToShow = missing.length > 0 ? missing : checklist.items.filter((i) => i.severity === 'warning' || i.severity === 'ok').slice(0, 6);
-
-    if (missing.length === 0) {
-        container.innerHTML = summaryHtml + `
-            <div class="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-                <i class="fas fa-check-circle mr-2"></i>
-                ${checklistCompleteMessage()}
-            </div>`;
-        return;
-    }
-
-    container.innerHTML = summaryHtml + itemsToShow.map((item) => {
-        const style = CHECKLIST_SEVERITY_STYLES[item.severity] || CHECKLIST_SEVERITY_STYLES.recommended;
-        const severityLabel = labels[item.severity] || item.severity;
-        return `
-            <div class="checklist-item ${style.bg} ${style.border} border rounded-lg p-3 mb-2">
-                <div class="flex items-start gap-3">
-                    <i class="fas ${style.icon} mt-0.5"></i>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 mb-1">
-                            <span class="font-semibold text-gray-900 text-sm">${escapeHtml(item.label)}</span>
-                            <span class="px-2 py-0.5 rounded text-xs font-medium ${style.badge}">${severityLabel}</span>
-                            ${item.category ? `<span class="text-xs text-gray-400">${escapeHtml(item.category)}</span>` : ''}
-                        </div>
-                        <p class="text-sm text-gray-700">${escapeHtml(item.message)}</p>
-                        ${item.suggestion ? `<p class="text-xs text-gray-500 mt-1"><i class="fas fa-arrow-right mr-1"></i>${escapeHtml(item.suggestion)}</p>` : ''}
-                    </div>
-                </div>
-            </div>`;
-    }).join('');
-}
-
 function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -136,6 +89,130 @@ function escapeHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+}
+
+function clearFormatCheckMarkers() {
+    document.querySelectorAll('.format-check-target').forEach((el) => {
+        el.classList.remove(
+            'format-check-target',
+            'ring-2',
+            'ring-red-300',
+            'ring-amber-300',
+            'ring-orange-300',
+            'border-red-300',
+            'border-amber-300',
+            'border-orange-300'
+        );
+        el.querySelectorAll('.format-check-inline-badge').forEach((badge) => badge.remove());
+    });
+
+    const hints = document.getElementById('profile-format-hints');
+    if (hints) {
+        hints.classList.add('hidden');
+        hints.innerHTML = '';
+    }
+}
+
+function resolveFormatCheckTarget(item) {
+    const field = item.field || '';
+    const category = item.category || '';
+    return FORMAT_CHECK_FIELD_TARGETS[field] || FORMAT_CHECK_FIELD_TARGETS[category] || null;
+}
+
+function appendInlineBadge(container, item, labels) {
+    if (!container || container.querySelector('.format-check-inline-badge')) return;
+    const style = CHECKLIST_SEVERITY_STYLES[item.severity] || CHECKLIST_SEVERITY_STYLES.recommended;
+    const severityLabel = labels[item.severity] || item.severity;
+    const badge = document.createElement('span');
+    badge.className = `format-check-inline-badge ml-2 px-2 py-0.5 rounded text-xs font-medium ${style.badge}`;
+    badge.textContent = severityLabel;
+    badge.title = item.message || item.label || '';
+
+    const header = container.querySelector('h4, label');
+    if (header) {
+        header.appendChild(badge);
+    } else {
+        container.prepend(badge);
+    }
+}
+
+function applyFormatCheckToProfileEditor(checklist) {
+    clearFormatCheckMarkers();
+    if (!checklist || !checklist.items || !checklist.items.length) return;
+
+    const profileSection = document.getElementById('profile-editor-section');
+    if (!profileSection || profileSection.classList.contains('hidden')) return;
+
+    const lang = normalizeResumeLang(checklist.language || 'zh');
+    const labels = CHECKLIST_SEVERITY_LABELS[uiApiLang()] || CHECKLIST_SEVERITY_LABELS.en;
+    const actionable = checklist.items.filter((item) => item.missing && item.severity !== 'ok');
+
+    if (!actionable.length) {
+        const hints = document.getElementById('profile-format-hints');
+        if (hints) {
+            hints.classList.remove('hidden');
+            hints.innerHTML = `
+                <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    ${escapeHtml(uiText(
+                        'resume.checklistComplete',
+                        'Core sections look good! Double-check photo policy and one-page layout.'
+                    ))}
+                </div>`;
+        }
+        return;
+    }
+
+    const targetBest = new Map();
+    actionable.forEach((item) => {
+        const selector = resolveFormatCheckTarget(item);
+        if (!selector) return;
+        const prev = targetBest.get(selector);
+        const rank = FORMAT_CHECK_SEVERITY_RANK[item.severity] || 0;
+        if (!prev || rank > (FORMAT_CHECK_SEVERITY_RANK[prev.severity] || 0)) {
+            targetBest.set(selector, item);
+        }
+    });
+
+    targetBest.forEach((item, selector) => {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        const style = CHECKLIST_SEVERITY_STYLES[item.severity] || CHECKLIST_SEVERITY_STYLES.recommended;
+        el.classList.add('format-check-target', 'ring-2', style.ring, style.border);
+        appendInlineBadge(el, item, labels);
+    });
+
+    const hintsEl = document.getElementById('profile-format-hints');
+    if (!hintsEl) return;
+
+    hintsEl.classList.remove('hidden');
+    const summary = checklist.summary
+        ? `<p class="text-sm text-gray-700 mb-2">${escapeHtml(checklist.summary)}</p>`
+        : '';
+
+    hintsEl.innerHTML = summary + actionable.map((item) => {
+        const style = CHECKLIST_SEVERITY_STYLES[item.severity] || CHECKLIST_SEVERITY_STYLES.recommended;
+        const rowBg = item.severity === 'required' ? 'bg-red-50 border-red-200'
+            : item.severity === 'warning' ? 'bg-orange-50 border-orange-200'
+                : 'bg-amber-50 border-amber-200';
+        const severityLabel = labels[item.severity] || item.severity;
+        return `
+            <div class="flex items-start gap-2 p-2 mb-1 rounded-lg border ${rowBg}">
+                <i class="fas ${style.icon} mt-0.5"></i>
+                <div class="min-w-0">
+                    <span class="font-medium text-sm text-gray-900">${escapeHtml(item.label)}</span>
+                    <span class="ml-1 text-xs ${style.badge} px-1.5 py-0.5 rounded">${severityLabel}</span>
+                    <p class="text-xs text-gray-700 mt-0.5">${escapeHtml(item.message)}</p>
+                    ${item.suggestion ? `<p class="text-xs text-gray-500 mt-0.5"><i class="fas fa-arrow-right mr-1"></i>${escapeHtml(item.suggestion)}</p>` : ''}
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function renderLanguageChecklistPanel(checklist) {
+    lastChecklistData = checklist || null;
+    document.getElementById('language-checklist-section')?.classList.add('hidden');
+    applyFormatCheckToProfileEditor(checklist);
 }
 
 function syncResumeLanguageButtons() {
@@ -176,7 +253,6 @@ async function onEmployerTypeSelected(employerType) {
         const result = await apiClient.setEmployerType(employerType);
         if (result.language_checklist) {
             renderLanguageChecklistPanel(result.language_checklist);
-            document.getElementById('language-checklist-section')?.classList.remove('hidden');
         }
         const labelMap = {
             soe: uiText('resume.soe', 'State-owned enterprise'),
@@ -190,7 +266,7 @@ async function onEmployerTypeSelected(employerType) {
         const label = labelMap[employerType] || employerType;
         const missing = result.language_checklist?.missing_count || 0;
         Utils.showToast(missing > 0
-            ? uiText('resume.employerSelectedMissing', 'Selected {label} — {count} format reminder(s) below', { label: label, count: missing })
+            ? uiText('resume.employerSelectedMissing', 'Selected {label} — {count} format reminder(s) in profile editor', { label: label, count: missing })
             : uiText('resume.employerSelected', 'Selected {label}', { label: label }));
     } catch (error) {
         console.warn('Employer type update failed:', error.message);
@@ -216,7 +292,7 @@ async function onResumeLanguageSelected(language) {
         if (count > 0) {
             Utils.showToast(uiText(
                 'resume.langMissingItems',
-                '{count} item(s) to review — see checklist below',
+                '{count} item(s) to review — see reminders in profile editor',
                 { count: count }
             ));
         }
@@ -224,7 +300,7 @@ async function onResumeLanguageSelected(language) {
         await refreshLanguageChecklist(currentResumeLanguage);
     }
 
-    document.getElementById('language-checklist-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function defaultResumeLanguageFromUi() {
@@ -278,7 +354,7 @@ window.addEventListener('gba:language-changed', () => {
         updateResumeLanguageBadge(currentResumeLanguage);
     }
     if (lastChecklistData) {
-        renderLanguageChecklistPanel(lastChecklistData);
+        applyFormatCheckToProfileEditor(lastChecklistData);
     }
     if (window.GBAI18n && GBAI18n.applyResumeLangButtonLabels) {
         GBAI18n.applyResumeLangButtonLabels();

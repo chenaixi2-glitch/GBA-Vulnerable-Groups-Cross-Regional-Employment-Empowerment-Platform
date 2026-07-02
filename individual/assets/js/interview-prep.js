@@ -44,28 +44,30 @@ function uiT(key, fallback, vars) {
 }
 
 /** 面试程序版本配置（与后端 interview_program.py 对齐） */
-const INTERVIEW_PROGRAM_PREVIEWS = {
-    quick: {
-        label: '极速版 (~30分钟)',
-        stages: [
-            '综合面·初筛+终面 (5轮)',
-            '专业/技术面 (8轮)',
-        ],
-    },
-    full: {
-        label: '完整版 (~60分钟)',
-        stages: [
-            '第一轮·初筛面试 (5轮)',
-            '第二轮·专业/技术面 (8轮)',
-            '第三轮·总监/HR终面 (4轮)',
-        ],
-    },
-    specialized: {
-        technical: { label: '专项·技术/专业面 (10轮)' },
-        final_negotiation: { label: '专项·终面谈判 (6轮)' },
-        resume_deep_dive: { label: '专项·简历深挖 (8轮)' },
-    },
-};
+function getInterviewProgramPreviews() {
+    return {
+        quick: {
+            label: uiT('mock.programQuick', 'Quick (~30 min)'),
+            stages: [
+                uiT('mock.stageQuick1', 'Screening + final combined (5 rounds)'),
+                uiT('mock.stageQuick2', 'Professional / technical (8 rounds)'),
+            ],
+        },
+        full: {
+            label: uiT('mock.programFull', 'Full (~60 min)'),
+            stages: [
+                uiT('mock.stageFull1', 'Round 1 — screening (5 rounds)'),
+                uiT('mock.stageFull2', 'Round 2 — professional / technical (8 rounds)'),
+                uiT('mock.stageFull3', 'Round 3 — director / HR final (4 rounds)'),
+            ],
+        },
+        specialized: {
+            technical: { label: uiT('mock.stageSpecializedTechnical', 'Specialized — technical (10 rounds)') },
+            final_negotiation: { label: uiT('mock.stageSpecializedNegotiation', 'Specialized — final negotiation (6 rounds)') },
+            resume_deep_dive: { label: uiT('mock.stageSpecializedResume', 'Specialized — resume deep dive (8 rounds)') },
+        },
+    };
+}
 
 let interviewMode = 'question_bank'; // question_bank | custom | interactive
 
@@ -84,13 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeInterviewPrep() {
-    const sessionId = apiClient.loadSessionId();
-    if (sessionId) {
-        Utils.updateSessionDisplay(sessionId);
-    } else {
-        apiClient.generateSessionId();
-        Utils.updateSessionDisplay(apiClient.sessionId);
-    }
+    apiClient.ensureSessionStarted();
 
     setupInputValidation();
     updatePrerequisiteStatus();
@@ -350,7 +346,7 @@ function renderQuestionBankStageBanner() {
         : '';
     if (badgeEl) {
         badgeEl.textContent = interviewSession.programLabel
-            || INTERVIEW_PROGRAM_PREVIEWS[interviewSession.programVersion]?.label
+            || getInterviewProgramPreviews()[interviewSession.programVersion]?.label
             || '';
     }
 
@@ -404,10 +400,10 @@ function updateProgramPreview() {
 
     if (version === 'specialized') {
         const focus = document.getElementById('specialized-focus')?.value || 'technical';
-        const cfg = INTERVIEW_PROGRAM_PREVIEWS.specialized[focus];
+        const cfg = getInterviewProgramPreviews().specialized[focus];
         html = `<div class="font-medium text-gray-800">${cfg?.label || '专项版'}</div>`;
     } else {
-        const cfg = INTERVIEW_PROGRAM_PREVIEWS[version];
+        const cfg = getInterviewProgramPreviews()[version];
         html = `<div class="font-medium text-gray-800 mb-1">${cfg.label}</div>`;
         html += cfg.stages.map((s, i) => `<div>${i + 1}. ${s}</div>`).join('');
     }
@@ -464,8 +460,8 @@ async function loadInterviewQuestions() {
             }));
             interviewSession.stages = buildQuestionBankStages(interviewSession.questions);
             interviewSession.programVersion = programVersion;
-            interviewSession.programLabel = INTERVIEW_PROGRAM_PREVIEWS[programVersion]?.label
-                || (programVersion === 'specialized' && INTERVIEW_PROGRAM_PREVIEWS.specialized[specializedFocus]?.label)
+            interviewSession.programLabel = getInterviewProgramPreviews()[programVersion]?.label
+                || (programVersion === 'specialized' && getInterviewProgramPreviews().specialized[specializedFocus]?.label)
                 || programVersion;
         } else {
             throw new Error(uiT('interview.toast.noQuestionsGenerated', 'No questions generated. Ensure profile, job description, and resume are complete.'));
@@ -692,7 +688,7 @@ function renderStageBanner() {
     if (stage && subEl) subEl.textContent = stage.subtitle || '';
     if (badgeEl) {
         badgeEl.textContent = interactiveSession.programLabel
-            || INTERVIEW_PROGRAM_PREVIEWS[interactiveSession.programVersion]?.label
+            || getInterviewProgramPreviews()[interactiveSession.programVersion]?.label
             || '';
     }
 

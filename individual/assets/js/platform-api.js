@@ -18,6 +18,13 @@
     }
   }
 
+  function mapApiMessage(msg) {
+    if (global.GBAI18n && global.GBAI18n.tApiMessage) {
+      return global.GBAI18n.tApiMessage(String(msg || ''));
+    }
+    return msg || '';
+  }
+
   async function request(path, options = {}) {
     const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
     const token = getToken();
@@ -26,7 +33,7 @@
     const res = await fetch(`${API_BASE}${path}`, Object.assign({}, options, { headers }));
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const err = new Error(data.message || `HTTP ${res.status}`);
+      const err = new Error(mapApiMessage(data.message) || `HTTP ${res.status}`);
       err.status = res.status;
       err.data = data;
       throw err;

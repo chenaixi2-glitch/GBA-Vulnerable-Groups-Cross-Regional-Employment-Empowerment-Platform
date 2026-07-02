@@ -160,11 +160,11 @@ const ProfileEditor = {
 
     async handlePhotoSelect(file) {
         if (!file.type.startsWith('image/')) {
-            Utils.showToast(uiT('resume.photo.invalidType', 'Please upload a JPG, PNG, or WebP image'));
+            Utils.showToast(profileUiText('resume.photo.invalidType', 'Please upload a JPG, PNG, or WebP image'));
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            Utils.showToast(uiT('resume.photo.tooLarge', 'Image must be 5MB or smaller'));
+            Utils.showToast(profileUiText('resume.photo.tooLarge', 'Image must be 5MB or smaller'));
             return;
         }
 
@@ -180,7 +180,7 @@ const ProfileEditor = {
             }
             Utils.showToast(profileUiText('resume.photo.uploaded', 'ID photo uploaded'));
         } catch (error) {
-            Utils.showToast(uiT('resume.photo.uploadFailed', 'Photo upload failed: {msg}', { msg: error.message || uiT('common.retry', 'Please try again') }));
+            Utils.showToast(profileUiText('resume.photo.uploadFailed', 'Photo upload failed: {msg}', { msg: error.message || profileUiText('common.retry', 'Please try again') }));
         }
     },
 
@@ -507,10 +507,14 @@ const ProfileEditor = {
         const draft = this.draft || { profile_basic: {}, education: [], modules: [] };
         const basic = draft.profile_basic || {};
 
-        document.getElementById('profile-name').value = basic.name || '';
-        document.getElementById('profile-email').value = basic.email || '';
-        document.getElementById('profile-phone').value = basic.phone || '';
-        document.getElementById('profile-city').value = basic.city || '';
+        const nameEl = document.getElementById('profile-name');
+        const emailEl = document.getElementById('profile-email');
+        const phoneEl = document.getElementById('profile-phone');
+        const cityEl = document.getElementById('profile-city');
+        if (nameEl) nameEl.value = basic.name || '';
+        if (emailEl) emailEl.value = basic.email || '';
+        if (phoneEl) phoneEl.value = basic.phone || '';
+        if (cityEl) cityEl.value = basic.city || '';
         this.renderPhotoPreview();
 
         const body = document.getElementById('profile-editor-body');
@@ -532,7 +536,21 @@ const ProfileEditor = {
         body.innerHTML = html;
 
         const total = education.length + (draft.modules || []).length;
-        document.getElementById('profile-module-count').textContent = String(total);
+        const countEl = document.getElementById('profile-module-count');
+        if (countEl) countEl.textContent = String(total);
+
+        if (typeof applyFormatCheckToProfileEditor === 'function' && typeof lastChecklistData !== 'undefined' && lastChecklistData) {
+            applyFormatCheckToProfileEditor(lastChecklistData);
+        }
+    },
+
+    isDraftEmpty(draft) {
+        if (!draft) return true;
+        const basic = draft.profile_basic || {};
+        const hasBasic = Boolean(basic.name || basic.email || basic.phone || basic.city);
+        const hasEducation = (draft.education || []).some((entry) => entry.school || entry.major || entry.degree);
+        const hasModules = (draft.modules || []).some((mod) => mod.content || mod.title);
+        return !hasBasic && !hasEducation && !hasModules;
     },
 
     show(restored = false) {
@@ -540,6 +558,7 @@ const ProfileEditor = {
         document.getElementById('profile-editor-section')?.classList.remove('hidden');
         const hint = document.getElementById('profile-restored-hint');
         if (hint) hint.classList.toggle('hidden', !restored);
+        document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
 
     ensureDraftShape(draft) {
@@ -575,23 +594,31 @@ const ProfileEditor = {
     },
 
     async initFromUpload(response) {
-        let draft = response.candidate_profile
-            ? this.profileResponseToDraft(response.candidate_profile)
-            : null;
+        if (!response?.candidate_profile) {
+            throw new Error(profileUiText('resume.toast.uploadEmptyResponse', 'No profile data returned. Please try again or paste resume text.'));
+        }
 
-        try {
-            const serverDraft = await apiClient.getResumeDraft();
-            if (serverDraft.draft) draft = this.ensureDraftShape(serverDraft.draft);
-        } catch (_) { /* use upload profile */ }
+        const draft = this.ensureDraftShape(this.profileResponseToDraft(response.candidate_profile));
+        if (this.isDraftEmpty(draft)) {
+            throw new Error(profileUiText('resume.toast.uploadEmptyProfile', 'Could not extract resume details. Try pasting resume text directly.'));
+        }
 
-        this.draft = draft || { profile_basic: {}, education: [], modules: [] };
+        this.draft = draft;
         this.render();
         this.show(false);
-        await this.persistDraft();
+
+        try {
+            await this.persistDraft();
+        } catch (error) {
+            console.warn('Draft save after upload failed:', error.message);
+            this.setSaveStatus(profileUiText('resume.draftSaveFailed', 'Save failed — edits kept locally'));
+        }
 
         document.getElementById('jd-section')?.classList.remove('hidden');
-        updateStepIndicator(1, 'completed');
-        updateStepIndicator(2, 'active');
+        if (typeof updateStepIndicator === 'function') {
+            updateStepIndicator(1, 'completed');
+            updateStepIndicator(2, 'active');
+        }
     },
 };
 
