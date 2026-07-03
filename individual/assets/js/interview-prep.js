@@ -14,7 +14,11 @@ let interviewSession = {
     programLabel: '',
     questionLanguage: '',
     feedbackLanguage: '',
+    savedRecordId: null,
 };
+
+/** 已保存题库记录列表（登录用户） */
+let questionBankSavedRecords = [];
 
 /** 交互式多轮模拟面试状态 */
 let interactiveSession = {
@@ -71,6 +75,68 @@ function getInterviewProgramPreviews() {
     };
 }
 
+function getProgramStageLabels(programVersion, specializedFocus) {
+    const previews = getInterviewProgramPreviews();
+    if (programVersion === 'specialized') {
+        const focus = specializedFocus || 'technical';
+        const label = previews.specialized[focus]?.label;
+        return label ? [label] : [uiT('interview.loading.defaultStage', 'Specialized practice')];
+    }
+    const cfg = previews[programVersion] || previews.quick;
+    return cfg?.stages?.length ? cfg.stages : previews.quick.stages;
+}
+
+function buildQuestionGenerationProgressSteps(mode, programVersion, specializedFocus, questionCount = 0) {
+    const steps = [
+        {
+            message: uiT('interview.loading.analyzing', 'Analyzing profile and job requirements...'),
+            stepLabel: uiT('interview.loading.stepAnalyze', 'Step 1 · Analyze'),
+            percent: 15,
+        },
+        {
+            message: uiT('interview.loading.matching', 'Matching skills with role requirements...'),
+            stepLabel: uiT('interview.loading.stepMatch', 'Step 2 · Match'),
+            percent: 28,
+        },
+    ];
+
+    if (mode === 'custom') {
+        steps.push({
+            message: uiT('interview.loading.customAnswers', 'Generating reference answers for {count} questions...', { count: questionCount }),
+            stepLabel: uiT('interview.loading.stepAnswers', 'Step 3 · Answers'),
+            percent: 78,
+        });
+    } else {
+        const stages = getProgramStageLabels(programVersion, specializedFocus);
+        stages.forEach((stageLabel, index) => {
+            const pct = 30 + Math.round(((index + 1) / (stages.length + 1)) * 55);
+            steps.push({
+                message: uiT('interview.loading.stage', 'Generating questions: {stage}...', { stage: stageLabel }),
+                stepLabel: uiT('interview.loading.stepStage', 'Step {n} · Stage {m}', { n: index + 3, m: index + 1 }),
+                percent: pct,
+            });
+        });
+    }
+
+    steps.push({
+        message: uiT('interview.loading.finalizing', 'Finalizing question bank...'),
+        stepLabel: uiT('interview.loading.stepFinalize', 'Final step'),
+        percent: 92,
+    });
+
+    return steps;
+}
+
+function startQuestionGenerationProgress(mode, programVersion, specializedFocus, questionCount = 0) {
+    return Utils.startLoadingProgressSimulation({
+        title: mode === 'custom'
+            ? uiT('interview.loadingTitleAnswers', 'Generating Reference Answers')
+            : uiT('interview.loadingTitle', 'Generating Questions'),
+        steps: buildQuestionGenerationProgressSteps(mode, programVersion, specializedFocus, questionCount),
+        capPercent: 95,
+    });
+}
+
 let interviewMode = 'question_bank'; // question_bank | custom | interactive
 
 let interviewPrerequisites = {
@@ -84,8 +150,10 @@ let interviewResumeFile = null;
 document.addEventListener('DOMContentLoaded', () => {
     initializeInterviewPrep();
     setupInteractiveSaveModal();
+    setupQuestionBankSaveModal();
     selectProgramVersion('quick');
     initInterviewLanguages();
+    loadQuestionBankSavedRecords();
 });
 
 function normalizeInterviewLang(code) {
@@ -374,6 +442,7 @@ function selectInterviewMode(mode) {
     } else if (!isInteractive && interviewSession.questions.length) {
         renderQuestionBankStageBanner();
     }
+    updateQuestionBankSaveControls();
 }
 
 function getSelectedProgramOptions() {
@@ -509,8 +578,11 @@ async function loadInterviewQuestions() {
         return;
     }
 
+    let progress = null;
     try {
-        Utils.showLoading('Generating personalized questions...');
+        const { programVersion, specializedFocus } = getSelectedProgramOptions();
+        progress = startQuestionGenerationProgress('question_bank', programVersion, specializedFocus);
+
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
             fields: {
                 jdText: ['interview-jd-text'],
@@ -519,8 +591,6 @@ async function loadInterviewQuestions() {
                 experienceLevel: ['interview-experience-level'],
             },
         }) : null;
-
-        const { programVersion, specializedFocus } = getSelectedProgramOptions();
 
         const response = await apiClient.startInterviewSession(
             jobTitle, industry, interviewSession.tone, targetContext, programVersion, specializedFocus,
@@ -549,7 +619,9 @@ async function loadInterviewQuestions() {
         interviewSession.jobTitle = jobTitle;
         interviewSession.currentQuestionIndex = 0;
         interviewSession.answers = [];
+        interviewSession.savedRecordId = null;
 
+        await progress.complete(uiT('interview.loadingComplete', 'Question bank ready!'));
         Utils.hideLoading();
         Utils.showToast(uiT('interview.toast.questionsGenerated', 'Generated {count} questions across {stages} stages', { count: interviewSession.questions.length, stages: interviewSession.stages.length }));
 
@@ -560,6 +632,7 @@ async function loadInterviewQuestions() {
 
         console.log('Interview session started:', interviewSession);
     } catch (error) {
+        progress?.stop();
         Utils.hideLoading();
         Utils.showToast(uiT('interview.toast.questionsFailed', 'Failed to generate questions: {msg}', { msg: error.message }));
         console.error('Interview session error:', error);
@@ -619,8 +692,9 @@ async function loadCustomInterviewQuestions() {
         return;
     }
 
+    let progress = null;
     try {
-        Utils.showLoading('Generating personalized reference answers...');
+        progress = startQuestionGenerationProgress('custom', 'custom', '', questions.length);
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
             fields: {
                 jdText: ['interview-jd-text'],
@@ -654,7 +728,9 @@ async function loadCustomInterviewQuestions() {
         interviewSession.jobTitle = jobTitle;
         interviewSession.currentQuestionIndex = 0;
         interviewSession.answers = [];
+        interviewSession.savedRecordId = null;
 
+        await progress.complete(uiT('interview.loadingCompleteAnswers', 'Reference answers ready!'));
         Utils.hideLoading();
         Utils.showToast(uiT('interview.toast.answersGenerated', 'Generated reference answers for {count} custom questions', { count: interviewSession.questions.length }));
 
@@ -667,6 +743,7 @@ async function loadCustomInterviewQuestions() {
 
         console.log('Custom interview session started:', interviewSession);
     } catch (error) {
+        progress?.stop();
         Utils.hideLoading();
         Utils.showToast(uiT('interview.toast.answersFailed', 'Failed to generate reference answers: {msg}', { msg: error.message }));
         console.error('Custom interview session error:', error);
@@ -1199,10 +1276,285 @@ function downloadInteractiveDebrief() {
     Utils.showToast(uiT('interview.toast.debriefDownloaded', 'Debrief downloaded'));
 }
 
+function formatInterviewSavedAt(iso) {
+    if (!iso) return '';
+    try {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return String(iso);
+        return d.toLocaleString(undefined, {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    } catch (_e) {
+        return String(iso);
+    }
+}
+
+function defaultQuestionBankRecordName() {
+    return formatInterviewSavedAt(new Date().toISOString());
+}
+
+function setupQuestionBankSaveModal() {
+    document.getElementById('btn-question-bank-save-confirm')?.addEventListener('click', async () => {
+        await saveQuestionBankToAccount();
+    });
+    document.getElementById('btn-question-bank-save-cancel')?.addEventListener('click', () => {
+        hideQuestionBankSaveModal();
+    });
+}
+
+function showQuestionBankSaveModal() {
+    const input = document.getElementById('question-bank-record-name');
+    if (input && !input.value.trim()) {
+        input.placeholder = defaultQuestionBankRecordName();
+    }
+    document.getElementById('save-question-bank-modal')?.classList.remove('hidden');
+}
+
+function hideQuestionBankSaveModal() {
+    document.getElementById('save-question-bank-modal')?.classList.add('hidden');
+}
+
+function openQuestionBankSaveModal() {
+    if (!apiClient.isLoggedIn()) {
+        Utils.showToast(uiT('interview.toast.loginToSaveQuestionBank', 'Please log in to save your question bank'));
+        return;
+    }
+    if (!interviewSession.questions.length) {
+        Utils.showToast(uiT('interview.toast.noQuestionsToSave', 'No questions to save yet'));
+        return;
+    }
+    if (interviewSession.savedRecordId) {
+        Utils.showToast(uiT('interview.toast.questionBankAlreadySaved', 'Already saved to your account'));
+        return;
+    }
+    showQuestionBankSaveModal();
+}
+
+function buildQuestionBankSavePayload(recordName) {
+    saveCurrentAnswer();
+    const industry = document.getElementById('job-industry')?.value || '';
+    return {
+        record_name: (recordName || '').trim(),
+        mode: interviewMode === 'custom' ? 'custom' : 'question_bank',
+        job_title: interviewSession.jobTitle || document.getElementById('job-title')?.value.trim() || '',
+        industry,
+        tone: interviewSession.tone,
+        program_version: interviewSession.programVersion || '',
+        program_label: interviewSession.programLabel || '',
+        user_answers: [...interviewSession.answers],
+        questions: interviewSession.questions.map((q) => ({
+            id: q.id,
+            question: q.question,
+            category: q.category,
+            answer: q.answer,
+            stage_id: q.stage_id,
+            stage_name: q.stage_name,
+            stage_index: q.stage_index,
+        })),
+        stages: interviewSession.stages || [],
+    };
+}
+
+async function saveQuestionBankToAccount() {
+    if (!apiClient.isLoggedIn()) {
+        Utils.showToast(uiT('interview.toast.loginToSaveQuestionBank', 'Please log in to save your question bank'));
+        return;
+    }
+    if (!interviewSession.questions.length) {
+        Utils.showToast(uiT('interview.toast.noQuestionsToSave', 'No questions to save yet'));
+        return;
+    }
+    if (interviewSession.savedRecordId) {
+        Utils.showToast(uiT('interview.toast.questionBankAlreadySaved', 'Already saved to your account'));
+        return;
+    }
+
+    const recordNameInput = document.getElementById('question-bank-record-name');
+    const recordName = (recordNameInput?.value || '').trim();
+
+    try {
+        Utils.showLoading('Saving question bank...');
+        const response = await apiClient.saveQuestionBank(buildQuestionBankSavePayload(recordName));
+        interviewSession.savedRecordId = response.record_id || interviewSession.savedRecordId;
+        hideQuestionBankSaveModal();
+        if (recordNameInput) recordNameInput.value = '';
+        Utils.hideLoading();
+        updateQuestionBankSaveControls();
+        await loadQuestionBankSavedRecords();
+        Utils.showToast(response.message || uiT('interview.toast.questionBankSaved', 'Question bank saved to your account'));
+    } catch (error) {
+        Utils.hideLoading();
+        Utils.showToast(error.message || uiT('interview.toast.questionBankSaveFailed', 'Failed to save question bank'));
+        console.error('Save question bank error:', error);
+    }
+}
+
+function updateQuestionBankSaveControls() {
+    const isQuestionBankMode = interviewMode === 'question_bank' || interviewMode === 'custom';
+    const hasQuestions = interviewSession.questions.length > 0;
+    const loggedIn = apiClient.isLoggedIn();
+    const alreadySaved = Boolean(interviewSession.savedRecordId);
+
+    ['btn-save-question-bank', 'btn-save-question-bank-report'].forEach((id) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.classList.toggle('hidden', !isQuestionBankMode || !hasQuestions || !loggedIn || alreadySaved);
+    });
+
+    const badge = document.getElementById('question-bank-saved-badge');
+    if (badge) {
+        if (alreadySaved) {
+            badge.classList.remove('hidden');
+            badge.textContent = uiT('interview.savedToAccount', 'Saved to Account');
+        } else {
+            badge.classList.add('hidden');
+            badge.textContent = '';
+        }
+    }
+}
+
+async function loadQuestionBankSavedRecords() {
+    const section = document.getElementById('question-bank-saved-section');
+    if (!section) return;
+
+    if (typeof apiClient === 'undefined' || !apiClient.isLoggedIn()) {
+        section.classList.add('hidden');
+        questionBankSavedRecords = [];
+        renderQuestionBankSavedRecords();
+        updateQuestionBankSaveControls();
+        return;
+    }
+
+    try {
+        const result = await apiClient.getQuestionBankHistory(20);
+        questionBankSavedRecords = result.records || [];
+        section.classList.remove('hidden');
+        renderQuestionBankSavedRecords();
+    } catch (error) {
+        console.warn('Could not load saved question banks:', error.message);
+        section.classList.remove('hidden');
+        renderQuestionBankSavedRecords(true);
+    }
+    updateQuestionBankSaveControls();
+}
+
+function renderQuestionBankSavedRecords(loadFailed = false) {
+    const list = document.getElementById('question-bank-saved-list');
+    const empty = document.getElementById('question-bank-saved-empty');
+    if (!list) return;
+
+    if (loadFailed) {
+        list.innerHTML = `<p class="text-xs text-red-600">${uiT('interview.savedQuestionBanksLoadFailed', 'Could not load saved records. Please try again later.')}</p>`;
+        if (empty) empty.classList.add('hidden');
+        return;
+    }
+
+    if (!questionBankSavedRecords.length) {
+        list.innerHTML = '';
+        if (empty) empty.classList.remove('hidden');
+        return;
+    }
+
+    if (empty) empty.classList.add('hidden');
+    list.innerHTML = questionBankSavedRecords.map((record) => {
+        const name = record.record_name || formatInterviewSavedAt(record.saved_at);
+        const savedAt = formatInterviewSavedAt(record.saved_at);
+        const subtitle = [
+            record.job_title,
+            record.question_count ? `${record.question_count} Q` : '',
+            savedAt,
+        ].filter(Boolean).join(' · ');
+        const modeLabel = record.mode === 'custom'
+            ? uiT('interview.modeCustom', 'Custom Questions')
+            : uiT('interview.modeQuestionBank', 'Question Bank');
+        return `
+            <div class="flex items-center justify-between gap-2 p-3 border border-gray-200 rounded-lg bg-gray-50/80">
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">${escapeInterviewHtml(name)}</p>
+                    <p class="text-xs text-gray-500 mt-0.5 truncate">${escapeInterviewHtml(subtitle)}</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">${escapeInterviewHtml(modeLabel)}</p>
+                </div>
+                <button type="button" onclick="restoreQuestionBankRecord('${escapeInterviewHtml(record.id)}')"
+                    class="shrink-0 px-2 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100">
+                    ${uiT('interview.loadSavedRecord', 'Load')}
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function escapeInterviewHtml(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+async function restoreQuestionBankRecord(recordId) {
+    if (!recordId) return;
+    try {
+        Utils.showLoading('Loading saved question bank...');
+        const record = await apiClient.getSavedQuestionBank(recordId);
+        const data = record.data || {};
+        const qaList = data.interview_qa || [];
+
+        interviewSession.questions = qaList.map((qa, index) => ({
+            id: qa.id || `q_${index}`,
+            question: qa.question,
+            category: qa.category || 'General',
+            answer: qa.answer || '',
+            stage_id: qa.stage_id || '',
+            stage_name: qa.stage_name || '',
+            stage_index: qa.stage_index ?? 0,
+        }));
+        interviewSession.stages = data.stages?.length
+            ? data.stages
+            : buildQuestionBankStages(interviewSession.questions);
+        interviewSession.answers = Array.isArray(data.user_answers)
+            ? [...data.user_answers]
+            : [];
+        while (interviewSession.answers.length < interviewSession.questions.length) {
+            interviewSession.answers.push('');
+        }
+        interviewSession.jobTitle = record.job_title || '';
+        interviewSession.tone = record.tone || 'professional';
+        interviewSession.programVersion = record.program_version || 'quick';
+        interviewSession.programLabel = data.program_label || '';
+        interviewSession.currentQuestionIndex = 0;
+        interviewSession.savedRecordId = null;
+        interviewMode = record.mode === 'custom' ? 'custom' : 'question_bank';
+
+        if (record.job_title) {
+            document.getElementById('job-title').value = record.job_title;
+        }
+        selectTone(interviewSession.tone);
+        selectInterviewMode(interviewMode);
+
+        Utils.hideLoading();
+        showInterviewInterface();
+        renderQuestionBankStageBanner();
+        displayCurrentQuestion();
+        updateProgress();
+        updateQuestionBankSaveControls();
+        Utils.showToast(uiT('interview.toast.questionBankLoaded', 'Saved question bank loaded'));
+    } catch (error) {
+        Utils.hideLoading();
+        Utils.showToast(error.message || uiT('interview.toast.questionBankLoadFailed', 'Failed to load saved question bank'));
+        console.error('Restore question bank error:', error);
+    }
+}
+
 function showInterviewInterface() {
     document.getElementById('empty-state').classList.add('hidden');
     document.getElementById('question-section').classList.remove('hidden');
     document.getElementById('answer-section').classList.remove('hidden');
+    updateQuestionBankSaveControls();
 }
 
 function toggleReferenceAnswer() {
@@ -1485,6 +1837,7 @@ function generateSessionReport() {
     reportContent.innerHTML = html;
     reportSection.classList.remove('hidden');
     reportSection.scrollIntoView({ behavior: 'smooth' });
+    updateQuestionBankSaveControls();
 }
 
 function downloadReport() {
@@ -1526,6 +1879,7 @@ function restartSession() {
             programLabel: '',
             questionLanguage: getDefaultInterviewLang(),
             feedbackLanguage: getDefaultInterviewLang(),
+            savedRecordId: null,
         };
 
         interactiveSession = {
@@ -1546,6 +1900,7 @@ function restartSession() {
         };
 
         hideInteractiveSaveModal();
+        hideQuestionBankSaveModal();
         interviewPrerequisites = {
             profileReady: false,
             jobReady: false,
@@ -1585,6 +1940,7 @@ function restartSession() {
 
         document.getElementById('btn-load-questions').disabled = true;
         selectInterviewMode(interviewMode);
+        updateQuestionBankSaveControls();
         Utils.showToast(uiT('interview.toast.sessionReset', 'Session reset'));
     }
 }

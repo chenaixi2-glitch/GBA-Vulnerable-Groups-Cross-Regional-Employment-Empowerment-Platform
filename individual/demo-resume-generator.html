@@ -624,6 +624,22 @@
                         <a href="auth.html" class="ml-1 underline font-medium" data-i18n="resume.profileSaveLoginLink">Log in</a>
                     </p>
 
+                    <div id="profile-saved-records-section" class="hidden mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50/60">
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <h4 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="fas fa-folder-open text-blue-600"></i>
+                                <span data-i18n="resume.savedRecordsTitle">Saved profiles</span>
+                            </h4>
+                            <button type="button" onclick="ProfileEditor.loadSavedRecords()" class="text-xs text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-sync-alt mr-1"></i>
+                                <span data-i18n="resume.savedRecordsRefresh">Refresh</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.savedRecordsHint">Each save is kept as a separate record. Uploading a new resume replaces the current working copy only.</p>
+                        <p id="profile-saved-records-empty" class="hidden text-xs text-gray-500" data-i18n="resume.savedRecordsEmpty">No saved profiles yet. Click “Save to account” to create one.</p>
+                        <div id="profile-saved-records-list" class="space-y-2"></div>
+                    </div>
+
                     <div id="profile-restored-hint" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
                         <i class="fas fa-history mr-1"></i>
                         <span id="profile-restored-hint-text" data-i18n="resume.draftRestored">Your draft was restored from your last session (available for 12 hours while logged in).</span>

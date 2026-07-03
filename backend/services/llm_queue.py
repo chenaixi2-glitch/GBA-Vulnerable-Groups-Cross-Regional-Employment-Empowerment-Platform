@@ -27,6 +27,10 @@ class SessionBusyError(Exception):
     """Raised when a session already has an in-flight LLM job."""
 
 
+# Machine-readable API detail — frontend maps via i18n apiMessages
+SESSION_BUSY_API_DETAIL = "SESSION_BUSY"
+
+
 def _job_key(job_id: str) -> str:
     return f"{_JOB_PREFIX}{job_id}"
 
@@ -147,6 +151,44 @@ async def _try_acquire(client: aioredis.Redis, job_id: str, max_concurrent: int)
         await client.delete(_GATE_KEY)
 
 
+async def _recover_stale_session_lock(client: aioredis.Redis, session_id: str) -> bool:
+    """Clear orphaned session lock when the associated job no longer exists."""
+    lock_key = _session_lock_key(session_id)
+    existing_job_id = await client.get(lock_key)
+    if not existing_job_id:
+        return False
+
+    session_job_id = await client.get(_session_job_key(session_id))
+    if not session_job_id or session_job_id != existing_job_id:
+        logger.warning(
+            "LLM queue: clearing stale session lock (session job mismatch) session=%s",
+            session_id,
+        )
+        await client.delete(lock_key)
+        if session_job_id and session_job_id != existing_job_id:
+            await client.delete(_session_job_key(session_id))
+        return True
+
+    if await client.zscore(_WAITING_KEY, existing_job_id) is not None:
+        return False
+
+    job_key = _job_key(existing_job_id)
+    if await client.exists(job_key):
+        status = await client.hget(job_key, "status")
+        if status in ("queued", "running"):
+            return False
+
+    logger.warning(
+        "LLM queue: clearing stale session lock (job gone) session=%s job=%s",
+        session_id,
+        existing_job_id,
+    )
+    await client.delete(lock_key)
+    await client.delete(_session_job_key(session_id))
+    await client.delete(job_key)
+    return True
+
+
 async def _release_slot(client: aioredis.Redis, job_id: str, session_id: str) -> None:
     running = int(await client.get(_RUNNING_KEY) or 0)
     if running > 0:
@@ -171,7 +213,10 @@ async def llm_queue_slot(session_id: str) -> AsyncIterator[str]:
 
     locked = await client.set(_session_lock_key(session_id), job_id, nx=True, ex=lock_ttl)
     if not locked:
-        raise SessionBusyError(session_id)
+        if await _recover_stale_session_lock(client, session_id):
+            locked = await client.set(_session_lock_key(session_id), job_id, nx=True, ex=lock_ttl)
+        if not locked:
+            raise SessionBusyError(session_id)
 
     enqueued_at = time.time()
     try:

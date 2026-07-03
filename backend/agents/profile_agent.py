@@ -64,8 +64,10 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
     now = datetime.now(timezone.utc).isoformat()
     material_id = f"mat_{uuid.uuid4().hex[:12]}"
 
-    # 已有画像
-    existing = state.candidate_profile
+    replace_mode = state.profile_replace_mode or bool(state.user_attachments)
+
+    # 已有画像（新上传时覆盖，不合并）
+    existing = None if replace_mode else state.candidate_profile
     existing_json = existing.model_dump_json(indent=2) if existing else "{}"
 
     prompt = PROFILE_EXTRACTION_PROMPT.format(
@@ -98,8 +100,8 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
         school=basic_data.school,
     )
 
-    # 增量合并 basic
-    if existing:
+    # 增量合并 basic（仅非覆盖模式）
+    if existing and not replace_mode:
         if not new_basic.name and existing.profile_basic.name:
             new_basic.name = existing.profile_basic.name
         if not new_basic.email and existing.profile_basic.email:
@@ -119,12 +121,11 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
         uploaded_at=now,
     )
 
-    # 合并材料
-    materials = list(existing.materials) if existing else []
-    materials.append(new_material)
+    materials = [new_material] if replace_mode else list(existing.materials) if existing else []
+    if not replace_mode:
+        materials.append(new_material)
 
-    # 合并事实
-    existing_facts = list(existing.facts) if existing else []
+    existing_facts = [] if replace_mode else list(existing.facts) if existing else []
     new_facts_data = parsed.facts
     for fd in new_facts_data:
         fact = Fact(

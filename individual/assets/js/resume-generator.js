@@ -629,6 +629,8 @@ function clearFile() {
     updateUploadContinueButton();
 }
 
+let resumeUploadInProgress = false;
+
 /**
  * Upload resume and trigger profile_agent
  */
@@ -638,6 +640,17 @@ async function uploadResume() {
     if (!currentFile && !resumeText) {
         Utils.showToast(uiT('resume.toast.uploadOrPaste', 'Please upload a file or paste resume text'));
         return;
+    }
+
+    if (resumeUploadInProgress) {
+        return;
+    }
+
+    const uploadBtn = document.getElementById('btn-upload-resume');
+    resumeUploadInProgress = true;
+    if (uploadBtn) {
+        uploadBtn.disabled = true;
+        uploadBtn.setAttribute('aria-disabled', 'true');
     }
 
     let slowHintTimer = null;
@@ -652,7 +665,7 @@ async function uploadResume() {
         if (currentFile) {
             response = await apiClient.uploadResume(currentFile);
         } else {
-            response = await apiClient.chat(resumeText, [], { allowMockFallback: true });
+            response = await apiClient.chat(resumeText, [], { allowMockFallback: true, replaceProfile: true });
         }
 
         if (!response?.candidate_profile) {
@@ -700,9 +713,14 @@ async function uploadResume() {
         console.log('Profile agent response:', response);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast(uiT('resume.toast.uploadFailed', 'Failed to upload resume: {msg}', { msg: error.message }));
+        const toastMsg = error.code === API_ERROR.SESSION_BUSY
+            ? error.message
+            : uiT('resume.toast.uploadFailed', 'Failed to upload resume: {msg}', { msg: error.message || '' });
+        Utils.showToast(toastMsg);
         console.error('Upload error:', error);
     } finally {
+        resumeUploadInProgress = false;
+        updateUploadContinueButton();
         if (slowHintTimer) clearTimeout(slowHintTimer);
     }
 }

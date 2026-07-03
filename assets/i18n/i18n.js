@@ -97,8 +97,9 @@
         }
     };
 
-    /** Map Chinese API messages → English when UI language is English */
+    /** Map API error codes / Chinese API messages → English when UI language is English */
     var EN_API_MESSAGES = {
+        'SESSION_BUSY': 'Another AI task is already running for this session. Please wait for it to finish, then try again.',
         '您属于弱势群体，平台各项功能免费使用，无需捐款': 'You belong to a vulnerable group — platform features are free; no donation required.',
         '感谢您的爱心捐款！资金将全额用于弱势群体法律服务。': 'Thank you for your donation! All funds go to legal aid for vulnerable groups.',
         '请输入有效的捐款金额（大于 0，不限上限）': 'Please enter a valid donation amount (greater than 0).',
@@ -234,6 +235,17 @@
             });
         }
         return translated;
+    }
+
+    /** Translate API error code (e.g. SESSION_BUSY) for the current UI language */
+    function tApiCode(code, i18nKey, fallbackEn) {
+        if (code == null) return '';
+        var key = String(code).trim();
+        if (!key) return '';
+        if (currentLang === 'en' && EN_API_MESSAGES[key]) return EN_API_MESSAGES[key];
+        var data = localeCache[currentLang];
+        if (data && data.apiMessages && data.apiMessages[key]) return data.apiMessages[key];
+        return t(i18nKey, fallbackEn);
     }
 
     /** Translate API / backend / thrown Error messages shown to users */
@@ -646,6 +658,7 @@
         t: t,
         uiText: uiText,
         tApiMessage: tApiMessage,
+        tApiCode: tApiCode,
         tMetaOption: tMetaOption,
         formatGroupTypes: formatGroupTypes,
         translateOptionMap: translateOptionMap,

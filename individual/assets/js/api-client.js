@@ -36,6 +36,18 @@ function apiT(key, fallback, vars) {
     return s;
 }
 
+function apiCode(code, i18nKey, fallbackEn) {
+    if (typeof window !== 'undefined' && window.GBAI18n && window.GBAI18n.tApiCode) {
+        return window.GBAI18n.tApiCode(code, i18nKey, fallbackEn);
+    }
+    return fallbackEn || String(code || '');
+}
+
+/** Machine-readable API error codes returned in HTTP detail fields */
+const API_ERROR = {
+    SESSION_BUSY: 'SESSION_BUSY',
+};
+
 function apiMsg(message) {
     if (message == null) return '';
     if (typeof window !== 'undefined' && window.GBAI18n && window.GBAI18n.tApiMessage) {
@@ -166,17 +178,76 @@ class MockAPIService {
         return { ok: true, message: apiT('mock.resumeSavedDemo', 'Resume saved securely to your account (demo mode).'), session_id: sessionId };
     }
 
-    async saveProfileToAccount(sessionId, draft) {
+    _profileRecordsKey() {
+        return 'gba_mock_profile_save_records';
+    }
+
+    _loadProfileRecords() {
+        try {
+            const raw = localStorage.getItem(this._profileRecordsKey());
+            return raw ? JSON.parse(raw) : [];
+        } catch (_e) {
+            return [];
+        }
+    }
+
+    _saveProfileRecords(records) {
+        localStorage.setItem(this._profileRecordsKey(), JSON.stringify(records));
+    }
+
+    async saveProfileToAccount(sessionId, draft, recordName = '') {
         await this.delay(400);
         const payload = { ...draft, updated_at: draft.updated_at || new Date().toISOString() };
         localStorage.setItem(this._draftKey(sessionId), JSON.stringify(payload));
         localStorage.setItem(this._userDraftKey(), JSON.stringify({ session_id: sessionId, draft: payload }));
-        localStorage.setItem(`${this._userDraftKey()}_mysql`, JSON.stringify({ session_id: sessionId, draft: payload }));
+        const candidateName = (payload.profile_basic && payload.profile_basic.name) || '';
+        const name = String(recordName || '').trim() || candidateName || 'Resume profile';
+        const recordId = `spr_mock_${Date.now()}`;
+        const savedAt = payload.updated_at;
+        const records = this._loadProfileRecords();
+        records.unshift({
+            id: recordId,
+            session_id: sessionId,
+            record_name: name,
+            candidate_name: candidateName,
+            saved_at: savedAt,
+            data: { draft: payload, candidate_profile: this.candidateProfilePayload() },
+        });
+        this._saveProfileRecords(records.slice(0, 50));
         return {
             ok: true,
             message: apiT('mock.profileSavedDemo', 'Profile saved to your account (demo mode).'),
             session_id: sessionId,
-            updated_at: payload.updated_at,
+            record_id: recordId,
+            record_name: name,
+            saved_at: savedAt,
+            updated_at: savedAt,
+        };
+    }
+
+    async getProfileSaveHistory(limit = 20) {
+        await this.delay(300);
+        return { records: this._loadProfileRecords().slice(0, limit) };
+    }
+
+    async restoreSavedProfile(recordId, sessionId) {
+        await this.delay(400);
+        const record = this._loadProfileRecords().find((r) => r.id === recordId);
+        if (!record) {
+            throw new Error(apiT('errors.notFound', 'Resource not found. Please check your session ID.'));
+        }
+        const draft = record.data?.draft;
+        if (!draft) {
+            throw new Error(apiT('errors.notFound', 'Resource not found. Please check your session ID.'));
+        }
+        await this.saveResumeDraft(sessionId, draft, true);
+        this.state.hasProfile = true;
+        return {
+            ok: true,
+            session_id: sessionId,
+            record_id: recordId,
+            record_name: record.record_name || '',
+            draft,
         };
     }
 
@@ -188,6 +259,75 @@ class MockAPIService {
             message: apiT('mock.interviewSavedDemo', 'Mock interview saved to your account (demo mode).'),
             session_id: sessionId,
             record_id: id,
+        };
+    }
+
+    async saveQuestionBank(sessionId, payload = {}) {
+        await this.delay(400);
+        const now = new Date();
+        const savedAt = now.toISOString();
+        const recordName = (payload.record_name || '').trim()
+            || now.toLocaleString(undefined, {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit',
+            });
+        const id = `qbs_mock_${Date.now()}`;
+        return {
+            ok: true,
+            message: apiT('mock.questionBankSavedDemo', 'Question bank saved to your account (demo mode).'),
+            session_id: sessionId,
+            record_id: id,
+            record_name: recordName,
+            saved_at: savedAt,
+        };
+    }
+
+    async getQuestionBankHistory(limit = 20) {
+        await this.delay(300);
+        const now = new Date();
+        return {
+            records: [{
+                id: 'qbs_mock_demo',
+                record_name: now.toLocaleString(undefined, {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit',
+                }),
+                job_title: 'Software Engineer',
+                industry: 'tech',
+                tone: 'professional',
+                mode: 'question_bank',
+                program_version: 'quick',
+                question_count: 13,
+                saved_at: now.toISOString(),
+            }].slice(0, limit),
+        };
+    }
+
+    async getSavedQuestionBank(recordId) {
+        await this.delay(300);
+        const now = new Date();
+        return {
+            id: recordId,
+            record_name: now.toLocaleString(undefined, {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit',
+            }),
+            job_title: 'Software Engineer',
+            industry: 'tech',
+            tone: 'professional',
+            mode: 'question_bank',
+            program_version: 'quick',
+            question_count: 2,
+            saved_at: now.toISOString(),
+            data: {
+                interview_qa: [
+                    { id: 'q1', question: 'Please introduce yourself.', category: 'Behavioral', answer: 'Sample answer.' },
+                    { id: 'q2', question: 'Why this role?', category: 'Motivation', answer: 'Sample answer.' },
+                ],
+                user_answers: ['My intro...', ''],
+                program_label: 'Quick (~30 min)',
+                stages: [],
+            },
         };
     }
 
@@ -1557,6 +1697,7 @@ class APIClient {
                 message: message,
                 attachments: attachments,
                 language: chatLanguage,
+                replace_profile: Boolean(options.replaceProfile),
                 language_scope: options.languageScope === 'interview_question' ? 'interview_question'
                     : options.languageScope === 'interview_feedback' ? 'interview_feedback'
                     : 'page',
@@ -1602,7 +1743,7 @@ class APIClient {
                     content: base64Content,
                     content_encoding: 'base64',
                 },
-            ], { allowMockFallback: true });
+            ], { allowMockFallback: true, replaceProfile: true });
 
             return response;
         } catch (error) {
@@ -1853,7 +1994,7 @@ class APIClient {
     /**
      * Save parsed/edited profile draft to user account (MySQL) — survives page refresh
      */
-    async saveProfileToAccount(draft) {
+    async saveProfileToAccount(draft, recordName = '') {
         try {
             if (!this.sessionId) {
                 throw new Error(apiT('errors.noActiveSession', 'No active session'));
@@ -1870,16 +2011,64 @@ class APIClient {
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
                 await this.mockService.saveResumeDraft(this.sessionId, payload, true);
-                return this.mockService.saveProfileToAccount(this.sessionId, payload);
+                return this.mockService.saveProfileToAccount(this.sessionId, payload, recordName);
             }
 
             const response = await this.client.post('/resume/profile/save', {
                 session_id: this.sessionId,
                 draft: payload,
+                record_name: String(recordName || '').trim(),
             });
             return response.data;
         } catch (error) {
             console.error('Save profile error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * List saved profile records for the logged-in user
+     */
+    async getProfileSaveHistory(limit = 20) {
+        try {
+            if (!this.isLoggedIn()) {
+                return { records: [] };
+            }
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return this.mockService.getProfileSaveHistory(limit);
+            }
+            const response = await this.client.get('/resume/profile/history', {
+                params: { limit },
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Get profile save history error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * Load a saved profile record into the current Redis session
+     */
+    async restoreSavedProfile(recordId) {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+            if (!this.isLoggedIn()) {
+                throw new Error(apiT('errors.loginToSaveProfile', 'Please log in to save your profile to the website'));
+            }
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return this.mockService.restoreSavedProfile(recordId, this.sessionId);
+            }
+            const response = await this.client.post(`/resume/profile/saved/${encodeURIComponent(recordId)}/restore`, {
+                session_id: this.sessionId,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Restore saved profile error:', error);
             throw this.handleError(error);
         }
     }
@@ -2732,6 +2921,80 @@ class APIClient {
     }
 
     /**
+     * Save question bank session to user account (MySQL)
+     */
+    async saveQuestionBank(payload = {}) {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+            if (!this.isLoggedIn()) {
+                throw new Error(apiT('errors.loginToSaveQuestionBank', 'Please log in to save your question bank'));
+            }
+
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return this.mockService.saveQuestionBank(this.sessionId, payload);
+            }
+
+            const response = await this.client.post('/interview/question-bank/save', {
+                session_id: this.sessionId,
+                ...payload,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Save question bank error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * List saved question bank records for logged-in user
+     */
+    async getQuestionBankHistory(limit = 20) {
+        try {
+            if (!this.isLoggedIn()) {
+                throw new Error(apiT('errors.loginToViewQuestionBank', 'Please log in to view saved question banks'));
+            }
+
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return this.mockService.getQuestionBankHistory(limit);
+            }
+
+            const response = await this.client.get('/interview/question-bank/history', {
+                params: { limit },
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Get question bank history error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * Get a single saved question bank record
+     */
+    async getSavedQuestionBank(recordId) {
+        try {
+            if (!this.isLoggedIn()) {
+                throw new Error(apiT('errors.loginToViewQuestionBank', 'Please log in to view saved question banks'));
+            }
+
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return this.mockService.getSavedQuestionBank(recordId);
+            }
+
+            const response = await this.client.get(`/interview/question-bank/saved/${encodeURIComponent(recordId)}`);
+            return response.data;
+        } catch (error) {
+            console.error('Get saved question bank error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
      * Step 1: Analyze skill gaps and recommend resources (no timeline yet).
      */
     async generateLearningPathAnalysis({
@@ -2944,11 +3207,21 @@ class APIClient {
             const mappedDetail = apiMsg(typeof detail === 'string' ? detail : JSON.stringify(detail));
 
             switch (status) {
-                case 404:
+                case 404: {
+                    const data = error.response.data || {};
                     if (data.detail && typeof data.detail === 'string' && !/^not found$/i.test(data.detail)) {
-                        return new Error(data.detail);
+                        return new Error(apiMsg(data.detail));
                     }
                     return new Error(apiT('errors.notFound', 'Resource not found. Please check your session ID.'));
+                }
+                case 409: {
+                    const code = typeof detail === 'string' ? detail.trim() : '';
+                    const err = new Error(
+                        apiCode(code, 'errors.sessionBusy', 'Another AI task is already running for this session. Please wait for it to finish, then try again.')
+                    );
+                    if (code) err.code = code;
+                    return err;
+                }
                 case 500:
                     return new Error(apiT('errors.serverError', 'Server error. Please try again later.'));
                 case 422:
@@ -2989,6 +3262,9 @@ if (typeof window !== 'undefined') {
 
 // Utility functions
 const Utils = {
+    _loadingProgressTimer: null,
+    _loadingProgressState: null,
+
     /**
      * Show toast notification
      */
@@ -3012,27 +3288,161 @@ const Utils = {
     /**
      * Show loading overlay
      */
-    showLoading(message) {
+    showLoading(message, options = {}) {
         const overlay = document.getElementById('loading-overlay');
         const messageEl = document.getElementById('loading-message');
+        const titleEl = document.getElementById('loading-title');
         const text = apiMsg(message || apiT('common.processing', 'Processing...'));
 
         if (overlay) {
             if (messageEl) {
                 messageEl.textContent = text;
             }
+            if (titleEl && options.title) {
+                titleEl.textContent = apiMsg(options.title);
+            }
+            if (options.showProgress) {
+                this._resetLoadingProgressUi();
+                const progressWrap = document.getElementById('loading-progress-wrap');
+                if (progressWrap) {
+                    progressWrap.classList.remove('hidden');
+                }
+                if (typeof options.percent === 'number') {
+                    this.updateLoadingProgress({ percent: options.percent, message: text, stepLabel: options.stepLabel });
+                }
+            } else {
+                this._hideLoadingProgressUi();
+            }
             overlay.classList.remove('hidden');
         }
+    },
+
+    _resetLoadingProgressUi() {
+        const fill = document.getElementById('loading-progress-fill');
+        const text = document.getElementById('loading-progress-text');
+        const step = document.getElementById('loading-progress-step');
+        if (fill) fill.style.width = '0%';
+        if (text) text.textContent = '0%';
+        if (step) step.textContent = '';
+    },
+
+    _hideLoadingProgressUi() {
+        const progressWrap = document.getElementById('loading-progress-wrap');
+        if (progressWrap) {
+            progressWrap.classList.add('hidden');
+        }
+    },
+
+    /**
+     * Update loading overlay progress bar (0–100)
+     */
+    updateLoadingProgress({ message, percent, stepLabel } = {}) {
+        const fill = document.getElementById('loading-progress-fill');
+        const text = document.getElementById('loading-progress-text');
+        const step = document.getElementById('loading-progress-step');
+        const messageEl = document.getElementById('loading-message');
+        const clamped = Math.min(100, Math.max(0, Number(percent) || 0));
+
+        if (fill) fill.style.width = `${clamped}%`;
+        if (text) text.textContent = `${Math.round(clamped)}%`;
+        if (step && stepLabel !== undefined) step.textContent = stepLabel;
+        if (messageEl && message) {
+            messageEl.textContent = apiMsg(message);
+        }
+    },
+
+    /**
+     * Simulate staged progress while waiting for a long-running API call.
+     * Returns { stop, complete } — call complete() before hideLoading on success.
+     */
+    startLoadingProgressSimulation({ title, steps = [], capPercent = 95, tickMs = 400 } = {}) {
+        this.stopLoadingProgressSimulation();
+
+        const normalizedSteps = (steps.length ? steps : [
+            { message: apiT('common.processing', 'Processing...'), percent: capPercent },
+        ]).map((step, index) => ({
+            message: step.message || '',
+            stepLabel: step.stepLabel || step.label || '',
+            percent: Math.min(capPercent, Number(step.percent) || Math.round(((index + 1) / steps.length) * capPercent)),
+            durationMs: step.durationMs || 0,
+        }));
+
+        this._loadingProgressState = {
+            currentPercent: 0,
+            stepIndex: 0,
+            capPercent,
+            normalizedSteps,
+        };
+
+        this.showLoading(normalizedSteps[0].message, {
+            title,
+            showProgress: true,
+            percent: 0,
+            stepLabel: normalizedSteps[0].stepLabel,
+        });
+
+        const advance = () => {
+            const state = this._loadingProgressState;
+            if (!state) return;
+
+            const step = state.normalizedSteps[state.stepIndex];
+            if (!step) return;
+
+            const target = step.percent;
+            const increment = Math.max(0.4, (target - state.currentPercent) / 8);
+            state.currentPercent = Math.min(target, state.currentPercent + increment);
+
+            this.updateLoadingProgress({
+                percent: state.currentPercent,
+                message: step.message,
+                stepLabel: step.stepLabel,
+            });
+
+            if (state.currentPercent >= target - 0.5) {
+                if (state.stepIndex < state.normalizedSteps.length - 1) {
+                    state.stepIndex += 1;
+                } else if (state.currentPercent < state.capPercent) {
+                    state.currentPercent = Math.min(state.capPercent, state.currentPercent + 0.15);
+                    this.updateLoadingProgress({ percent: state.currentPercent, message: step.message, stepLabel: step.stepLabel });
+                }
+            }
+        };
+
+        this._loadingProgressTimer = setInterval(advance, tickMs);
+        advance();
+
+        return {
+            stop: () => this.stopLoadingProgressSimulation(),
+            complete: async (message) => {
+                this.stopLoadingProgressSimulation();
+                this.updateLoadingProgress({
+                    percent: 100,
+                    message: message || apiT('interview.loadingComplete', 'Done!'),
+                    stepLabel: '',
+                });
+                await new Promise((resolve) => setTimeout(resolve, 350));
+            },
+        };
+    },
+
+    stopLoadingProgressSimulation() {
+        if (this._loadingProgressTimer) {
+            clearInterval(this._loadingProgressTimer);
+            this._loadingProgressTimer = null;
+        }
+        this._loadingProgressState = null;
     },
 
     /**
      * Hide loading overlay
      */
     hideLoading() {
+        this.stopLoadingProgressSimulation();
         const overlay = document.getElementById('loading-overlay');
         if (overlay) {
             overlay.classList.add('hidden');
         }
+        this._hideLoadingProgressUi();
     },
 
     /**

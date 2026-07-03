@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import uuid
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from storage.redis_client import get_redis_client, RedisSessionStore, RedisDraftStore
 from auth.jwt import get_optional_user
-from auth.session_access import bind_session_owner, ensure_session_access
+from auth.session_access import bind_session_owner, ensure_session_access, extract_user_id
 from workflow.state import CopilotState
 from log import get_logger
 
@@ -123,15 +125,14 @@ class SaveResumeRequest(BaseModel):
 class SaveProfileRequest(BaseModel):
     session_id: str
     draft: ResumeDraftPayload | None = None
+    record_name: str = Field(default="", description="User-defined name for this saved record")
 
 
 @router.get("/draft")
 async def get_resume_draft(request: Request, session_id: str = ""):
-    """获取简历编辑草稿；已登录用户可无 session_id 恢复 12h 内草稿或 MySQL 持久化资料。"""
+    """获取简历编辑草稿；已登录用户可无 session_id 恢复 12h 内 Redis 草稿或当前会话解析结果。"""
     from api.chat import _aload_state
     from api.draft_utils import profile_to_draft
-    from storage.mysql_client import get_mysql_pool, MySQLStore
-    from workflow.state import CandidateProfile
 
     user = get_optional_user(request)
 
@@ -154,27 +155,6 @@ async def get_resume_draft(request: Request, session_id: str = ""):
                 "source": "redis_user",
                 "restored": True,
             }
-
-        try:
-            pool = await get_mysql_pool()
-            db = MySQLStore(pool)
-            mysql_row = await db.get_latest_candidate_profile_for_user(user_id)
-            if mysql_row and mysql_row.get("data"):
-                mysql_session_id = mysql_row.get("session_id") or resolved_session_id or session_id
-                if mysql_session_id:
-                    await bind_session_owner(mysql_session_id, user)
-                draft = profile_to_draft(CandidateProfile.model_validate(mysql_row["data"]))
-                if mysql_session_id:
-                    draft_store = RedisDraftStore(client, mysql_session_id, user_id)
-                    await draft_store.save_draft(draft, logged_in=True)
-                return {
-                    "session_id": mysql_session_id,
-                    "draft": draft,
-                    "source": "mysql",
-                    "restored": True,
-                }
-        except Exception as exc:
-            logger.warning("MySQL profile restore failed for user %s: %s", user_id, exc)
 
     if not resolved_session_id:
         raise HTTPException(status_code=404, detail="未找到可恢复的简历草稿")
@@ -226,14 +206,19 @@ async def save_resume_draft(req: SaveDraftRequest, request: Request):
 
 @router.post("/profile/save")
 async def save_profile_to_account(req: SaveProfileRequest, request: Request):
-    """用户确认后将简历编辑资料持久化到 MySQL（同时写入 Redis 草稿）。"""
-    from api.chat import _aload_state, _persist_to_mysql_safe
-    from api.draft_utils import sync_draft_to_session
+    """用户确认后将简历编辑资料保存为独立记录（可多条，含自定义名称）。"""
+    from api.chat import _aload_state
+    from api.draft_utils import sync_draft_to_session, draft_to_profile
     from datetime import datetime, timezone
+    from storage.mysql_client import get_mysql_pool, MySQLStore
 
     user = get_optional_user(request)
     if not user:
         raise HTTPException(status_code=401, detail="请先登录后再保存到网站")
+
+    user_id = extract_user_id(user)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="无效的用户身份")
 
     await bind_session_owner(req.session_id, user)
     await ensure_session_access(req.session_id, user)
@@ -244,7 +229,6 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
     if not saved:
         raise HTTPException(status_code=404, detail="会话不存在")
 
-    user_id = user.get("sub")
     draft_store = RedisDraftStore(client, req.session_id, user_id)
 
     if req.draft is not None:
@@ -265,14 +249,170 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
     if state.candidate_profile is None:
         raise HTTPException(status_code=400, detail="没有可保存的简历资料，请先上传并解析简历")
 
-    await _persist_to_mysql_safe(state, user_id)
+    if req.draft is not None:
+        draft = req.draft.model_dump()
+        draft["updated_at"] = datetime.now(timezone.utc).isoformat()
+    elif draft:
+        pass
+    else:
+        from api.draft_utils import profile_to_draft
+        draft = profile_to_draft(state.candidate_profile)
 
-    updated_at = (req.draft.updated_at if req.draft else None) or datetime.now(timezone.utc).isoformat()
+    candidate_name = (draft.get("profile_basic") or {}).get("name") or ""
+    record_name = req.record_name.strip() or candidate_name or "Resume profile"
+    row_id = f"spr_{uuid.uuid4().hex[:16]}"
+
+    pool = await get_mysql_pool()
+    db = MySQLStore(pool)
+    try:
+        await db.upsert_session(req.session_id, user_id=user_id)
+        await db.save_profile_record(
+            row_id=row_id,
+            session_id=req.session_id,
+            user_id=user_id,
+            record_name=record_name,
+            candidate_name=candidate_name,
+            data={
+                "draft": draft,
+                "candidate_profile": state.candidate_profile.model_dump(),
+            },
+        )
+    except Exception as exc:
+        logger.error("Profile record save failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"保存失败: {exc}")
+
+    updated_at = draft.get("updated_at") or datetime.now(timezone.utc).isoformat()
     return {
         "ok": True,
         "message": "Profile saved securely to your account.",
         "session_id": req.session_id,
+        "record_id": row_id,
+        "record_name": record_name,
+        "saved_at": updated_at,
         "updated_at": updated_at,
+    }
+
+
+@router.get("/profile/history")
+async def profile_save_history(request: Request, limit: int = 20) -> dict:
+    """列出当前用户已保存的简历资料记录。"""
+    from storage.mysql_client import get_mysql_pool, MySQLStore
+
+    user = get_optional_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="请先登录")
+
+    user_id = extract_user_id(user)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="无效的用户身份")
+
+    pool = await get_mysql_pool()
+    db = MySQLStore(pool)
+    records = await db.list_profile_records_by_user(user_id, limit=min(limit, 50))
+
+    for row in records:
+        if row.get("saved_at") is not None:
+            row["saved_at"] = str(row["saved_at"])
+
+    return {"records": records}
+
+
+@router.get("/profile/saved/{record_id}")
+async def get_saved_profile_record(record_id: str, request: Request) -> dict:
+    """获取单条已保存的简历资料记录。"""
+    from storage.mysql_client import get_mysql_pool, MySQLStore
+
+    user = get_optional_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="请先登录")
+
+    user_id = extract_user_id(user)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="无效的用户身份")
+
+    pool = await get_mysql_pool()
+    db = MySQLStore(pool)
+    record = await db.get_profile_record_for_user(record_id, user_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在或无权访问")
+
+    if record.get("saved_at") is not None:
+        record["saved_at"] = str(record["saved_at"])
+
+    return record
+
+
+class RestoreSavedProfileRequest(BaseModel):
+    session_id: str
+
+
+@router.post("/profile/saved/{record_id}/restore")
+async def restore_saved_profile_record(record_id: str, req: RestoreSavedProfileRequest, request: Request):
+    """将已保存的简历资料加载到当前 Redis 会话（覆盖工作区，不影响其他已保存记录）。"""
+    from api.chat import _aload_state, _asave_state, _reset_profile_working_state
+    from api.draft_utils import sync_draft_to_session, draft_to_profile
+    from datetime import datetime, timezone
+    from storage.mysql_client import get_mysql_pool, MySQLStore
+
+    user = get_optional_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="请先登录")
+
+    user_id = extract_user_id(user)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="无效的用户身份")
+
+    await bind_session_owner(req.session_id, user)
+    await ensure_session_access(req.session_id, user)
+
+    pool = await get_mysql_pool()
+    db = MySQLStore(pool)
+    record = await db.get_profile_record_for_user(record_id, user_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在或无权访问")
+
+    data = record.get("data") or {}
+    draft = data.get("draft")
+    if not draft:
+        raise HTTPException(status_code=400, detail="记录数据不完整")
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    draft_store = RedisDraftStore(client, req.session_id, user_id)
+
+    draft = dict(draft)
+    draft["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await draft_store.save_draft(draft, logged_in=True)
+
+    saved = await _aload_state(store)
+    if saved:
+        state = CopilotState.model_validate(saved)
+        state = _reset_profile_working_state(state)
+    else:
+        state = CopilotState(session_id=req.session_id)
+
+    profile_data = data.get("candidate_profile")
+    if profile_data:
+        from workflow.state import CandidateProfile
+        state.candidate_profile = CandidateProfile.model_validate(profile_data)
+    else:
+        state.candidate_profile = draft_to_profile(draft)
+
+    await sync_draft_to_session(store, req.session_id, draft)
+
+    persist_data = state.model_dump(exclude={
+        "user_message", "user_attachments", "current_intent",
+        "execution_plan", "reply_message", "triggered_agents", "workflow_trace",
+        "resume_language_target", "profile_replace_mode",
+    })
+    await _asave_state(store, persist_data)
+
+    return {
+        "ok": True,
+        "session_id": req.session_id,
+        "record_id": record_id,
+        "record_name": record.get("record_name") or "",
+        "draft": draft,
     }
 
 
@@ -320,7 +460,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     from api.chat import _aload_state, _asave_state
     from agents.json_contracts import JDGenerationOutput
     from models.llm import get_llm, ainvoke_json_with_schema
-    from services.llm_queue import SessionBusyError, llm_queue_slot
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
     from prompts.jd_generation import JD_GENERATION_PROMPT
     from services.jd_cache_service import lookup_jd_cache_by_params, save_jd_cache
     from tools.jd_cache import params_cache_key, ensure_title_in_jd_text, extract_title_from_jd
@@ -392,7 +532,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
         async with llm_queue_slot(req.session_id):
             parsed = await ainvoke_json_with_schema(llm, prompt, JDGenerationOutput, logger, "JD Generation")
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as e:
         logger.error("JD generation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"岗位描述生成失败: {e}")
@@ -441,7 +581,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
     """仅岗位名称时，结合候选人简历生成定向 JD，供用户确认后再进入优化流程。"""
     from api.chat import _aload_state, _asave_state
     from services.jd_title_service import generate_jd_from_title_for_profile
-    from services.llm_queue import SessionBusyError, llm_queue_slot
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
     from tools.resume_layout import normalize_employer_type, normalize_language
 
     user = get_optional_user(request)
@@ -474,7 +614,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
                 language=output_lang,
             )
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except RuntimeError as exc:
@@ -775,7 +915,7 @@ async def restore_resume_snapshot(req: RestoreResumeSnapshotRequest, request: Re
 async def generate_resume_from_profile(req: GenerateFromProfileRequest, request: Request, background_tasks: BackgroundTasks):
     """从候选人画像生成简历（不结合 JD、不做缺口优化）— 供语言切换与直接导出。"""
     from api.chat import _aload_state, _asave_state, _persist_to_mysql_safe
-    from services.llm_queue import SessionBusyError, llm_queue_slot
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
     from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
     from tools.resume_language_checklist import check_resume_language_requirements
 
@@ -799,7 +939,7 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
         async with llm_queue_slot(req.session_id):
             final = await _run_profile_resume_pipeline(state)
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as e:
         logger.error("Profile resume generation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
@@ -829,7 +969,7 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
 async def translate_resume(req: TranslateResumeRequest, request: Request, background_tasks: BackgroundTasks):
     """简历语言切换 — 已有 HTML 时互转；尚无 HTML 时从画像生成目标语言版本。"""
     from api.chat import _ainvoke_graph, _aload_state, _asave_state, _get_graph, _persist_to_mysql_safe
-    from services.llm_queue import SessionBusyError, llm_queue_slot
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
     from tools.resume_layout import language_label, normalize_language, VALID_RESUME_LANGUAGES
     from tools.resume_language_checklist import check_resume_language_requirements
 
@@ -854,7 +994,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
             async with llm_queue_slot(req.session_id):
                 final = await _run_profile_resume_pipeline(state)
         except SessionBusyError:
-            raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+            raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
         except Exception as e:
             logger.error("Profile resume generation (via translate) failed: %s", e, exc_info=True)
             raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
@@ -875,7 +1015,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
             async with llm_queue_slot(req.session_id):
                 result = await _ainvoke_graph(graph, state.model_dump())
         except SessionBusyError:
-            raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+            raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
         except Exception as e:
             logger.error("Resume translation failed: %s", e, exc_info=True)
             raise HTTPException(status_code=500, detail=f"简历转换失败: {e}")
@@ -904,7 +1044,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 async def render_resume(req: RenderRequest, request: Request, background_tasks: BackgroundTasks):
     """渲染指令接口。"""
     from api.chat import _ainvoke_graph, _aload_state, _asave_state, _get_graph, _persist_to_mysql_safe
-    from services.llm_queue import SessionBusyError, llm_queue_slot
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -927,7 +1067,7 @@ async def render_resume(req: RenderRequest, request: Request, background_tasks: 
         async with llm_queue_slot(req.session_id):
             result = await _ainvoke_graph(graph, state.model_dump())
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as e:
         logger.error("Render failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"渲染失败: {e}")

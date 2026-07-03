@@ -118,6 +118,26 @@ CREATE TABLE IF NOT EXISTS interactive_interview_sessions (
     FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 10a. 题库模式保存记录（登录用户主动保存，含自定义名称）
+CREATE TABLE IF NOT EXISTS question_bank_sessions (
+    id               VARCHAR(64)      PRIMARY KEY,
+    session_id       VARCHAR(64)      NOT NULL,
+    user_id          BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+    record_name      VARCHAR(256)     NOT NULL DEFAULT '',
+    job_title        VARCHAR(256)     NOT NULL DEFAULT '',
+    industry         VARCHAR(64)      NOT NULL DEFAULT '',
+    tone             VARCHAR(32)      NOT NULL DEFAULT 'professional',
+    mode             VARCHAR(32)      NOT NULL DEFAULT 'question_bank' COMMENT 'question_bank | custom',
+    program_version  VARCHAR(32)      NOT NULL DEFAULT '',
+    question_count   INT              NOT NULL DEFAULT 0,
+    data             JSON             NOT NULL,
+    saved_at         DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_qbs_user (user_id),
+    INDEX idx_qbs_session (session_id),
+    INDEX idx_qbs_saved_at (saved_at),
+    FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 10b. 学习路径计划表（登录用户主动保存）
 CREATE TABLE IF NOT EXISTS learning_path_plans (
     id                    VARCHAR(64)      PRIMARY KEY,
@@ -134,6 +154,21 @@ CREATE TABLE IF NOT EXISTS learning_path_plans (
     INDEX idx_lpp_user (user_id),
     INDEX idx_lpp_session (session_id),
     INDEX idx_lpp_saved_at (saved_at),
+    FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10d. 用户主动保存的简历资料记录（可多条，含自定义名称）
+CREATE TABLE IF NOT EXISTS saved_profile_records (
+    id              VARCHAR(64)      PRIMARY KEY,
+    session_id      VARCHAR(64)      NOT NULL,
+    user_id         BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+    record_name     VARCHAR(256)     NOT NULL DEFAULT '',
+    candidate_name  VARCHAR(128)     NOT NULL DEFAULT '',
+    data            JSON             NOT NULL,
+    saved_at        DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_spr_user (user_id),
+    INDEX idx_spr_session (session_id),
+    INDEX idx_spr_saved_at (saved_at),
     FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

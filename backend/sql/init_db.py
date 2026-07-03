@@ -59,8 +59,10 @@ def run_init_schema() -> None:
         print("[INFO] 数据库初始化完成。")
         _migrate_sessions_user_id(connection)
         _migrate_interactive_interview_sessions(connection)
+        _migrate_question_bank_sessions(connection)
         _migrate_learning_path_plans(connection)
         _migrate_jd_cache(connection)
+        _migrate_saved_profile_records(connection)
     finally:
         connection.close()
 
@@ -113,6 +115,38 @@ def _migrate_interactive_interview_sessions(connection) -> None:
         print("[INFO] interactive_interview_sessions 表已就绪。")
     except pymysql.Error as e:
         print(f"[WARN] interactive_interview_sessions 迁移失败: {e}")
+
+
+def _migrate_question_bank_sessions(connection) -> None:
+    """为已有库补充 question_bank_sessions 表（幂等）。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    sql = f"""
+        CREATE TABLE IF NOT EXISTS `{db_name}`.`question_bank_sessions` (
+            id               VARCHAR(64)      PRIMARY KEY,
+            session_id       VARCHAR(64)      NOT NULL,
+            user_id          BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+            record_name      VARCHAR(256)     NOT NULL DEFAULT '',
+            job_title        VARCHAR(256)     NOT NULL DEFAULT '',
+            industry         VARCHAR(64)      NOT NULL DEFAULT '',
+            tone             VARCHAR(32)      NOT NULL DEFAULT 'professional',
+            mode             VARCHAR(32)      NOT NULL DEFAULT 'question_bank',
+            program_version  VARCHAR(32)      NOT NULL DEFAULT '',
+            question_count   INT              NOT NULL DEFAULT 0,
+            data             JSON             NOT NULL,
+            saved_at         DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_qbs_user (user_id),
+            INDEX idx_qbs_session (session_id),
+            INDEX idx_qbs_saved_at (saved_at),
+            FOREIGN KEY (session_id) REFERENCES `{db_name}`.`sessions`(session_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+        print("[INFO] question_bank_sessions 表已就绪。")
+    except pymysql.Error as e:
+        print(f"[WARN] question_bank_sessions 迁移失败: {e}")
 
 
 def _migrate_learning_path_plans(connection) -> None:
@@ -179,6 +213,33 @@ def _migrate_jd_cache(connection) -> None:
         print("[INFO] jd_cache 表已就绪。")
     except pymysql.Error as e:
         print(f"[WARN] jd_cache 迁移失败: {e}")
+
+
+def _migrate_saved_profile_records(connection) -> None:
+    """为已有库补充 saved_profile_records 表（幂等）。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    sql = f"""
+        CREATE TABLE IF NOT EXISTS `{db_name}`.`saved_profile_records` (
+            id              VARCHAR(64)      PRIMARY KEY,
+            session_id      VARCHAR(64)      NOT NULL,
+            user_id         BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+            record_name     VARCHAR(256)     NOT NULL DEFAULT '',
+            candidate_name  VARCHAR(128)     NOT NULL DEFAULT '',
+            data            JSON             NOT NULL,
+            saved_at        DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_spr_user (user_id),
+            INDEX idx_spr_session (session_id),
+            INDEX idx_spr_saved_at (saved_at),
+            FOREIGN KEY (session_id) REFERENCES `{db_name}`.`sessions`(session_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+        print("[INFO] saved_profile_records 表已就绪。")
+    except pymysql.Error as e:
+        print(f"[WARN] saved_profile_records 迁移失败: {e}")
 
 
 def _is_comment_only(sql: str) -> bool:

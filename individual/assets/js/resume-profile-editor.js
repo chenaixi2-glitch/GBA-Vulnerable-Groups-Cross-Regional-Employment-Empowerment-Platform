@@ -18,6 +18,7 @@ const ProfileEditor = {
     draft: null,
     saveTimer: null,
     maxPhotoBytes: 2 * 1024 * 1024,
+    savedRecords: [],
 
     SECTION_ORDER: ['education', 'skill', 'internship', 'project', 'award', 'paper', 'custom'],
 
@@ -118,6 +119,7 @@ const ProfileEditor = {
         this.bindEvents();
         this.updatePhotoVisibility(typeof currentResumeLanguage !== 'undefined' ? currentResumeLanguage : 'zh');
         this.updateSaveUi();
+        this.loadSavedRecords();
     },
 
     bindEvents() {
@@ -167,6 +169,139 @@ const ProfileEditor = {
             e.target.value = '';
         });
         document.getElementById('profile-photo-remove-btn')?.addEventListener('click', () => this.removePhoto());
+
+        document.getElementById('profile-saved-records-list')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-restore-profile-record]');
+            if (btn) {
+                this.restoreSavedRecord(btn.dataset.restoreProfileRecord);
+            }
+        });
+    },
+
+    formatSavedAt(iso) {
+        if (!iso) return '';
+        try {
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return String(iso);
+            return d.toLocaleString(undefined, {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch (_e) {
+            return String(iso);
+        }
+    },
+
+    defaultRecordName() {
+        const name = (this.draft?.profile_basic?.name || '').trim();
+        if (name) {
+            return profileUiText('resume.savedRecordDefaultName', '{name} — resume', { name });
+        }
+        return profileUiText('resume.savedRecordUntitled', 'My resume');
+    },
+
+    promptRecordName() {
+        const defaultName = this.defaultRecordName();
+        const input = window.prompt(
+            profileUiText('resume.savedRecordNamePrompt', 'Enter a name for this saved profile:'),
+            defaultName
+        );
+        if (input === null) return null;
+        const trimmed = input.trim();
+        return trimmed || defaultName;
+    },
+
+    async loadSavedRecords() {
+        const section = document.getElementById('profile-saved-records-section');
+        if (!section) return;
+        if (typeof apiClient === 'undefined' || !apiClient.isLoggedIn()) {
+            section.classList.add('hidden');
+            this.savedRecords = [];
+            this.renderSavedRecordsPanel();
+            return;
+        }
+        try {
+            const result = await apiClient.getProfileSaveHistory(20);
+            this.savedRecords = result.records || [];
+            section.classList.remove('hidden');
+            this.renderSavedRecordsPanel();
+        } catch (error) {
+            console.warn('Could not load saved profile records:', error.message);
+            section.classList.remove('hidden');
+            this.renderSavedRecordsPanel(true);
+        }
+    },
+
+    renderSavedRecordsPanel(loadFailed = false) {
+        const list = document.getElementById('profile-saved-records-list');
+        const empty = document.getElementById('profile-saved-records-empty');
+        if (!list) return;
+
+        if (loadFailed) {
+            list.innerHTML = `<p class="text-xs text-red-600">${this.escapeHtml(profileUiText('resume.savedRecordsLoadFailed', 'Could not load saved records. Please try again later.'))}</p>`;
+            if (empty) empty.classList.add('hidden');
+            return;
+        }
+
+        if (!this.savedRecords.length) {
+            list.innerHTML = '';
+            if (empty) empty.classList.remove('hidden');
+            return;
+        }
+
+        if (empty) empty.classList.add('hidden');
+        list.innerHTML = this.savedRecords.map((record) => {
+            const name = record.record_name || record.candidate_name || profileUiText('resume.savedRecordUntitled', 'My resume');
+            const savedAt = this.formatSavedAt(record.saved_at);
+            const subtitle = record.candidate_name && record.candidate_name !== name
+                ? `${this.escapeHtml(record.candidate_name)} · ${this.escapeHtml(savedAt)}`
+                : this.escapeHtml(savedAt);
+            return `
+                <div class="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50/80">
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">${this.escapeHtml(name)}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">${subtitle}</p>
+                    </div>
+                    <button type="button" data-restore-profile-record="${this.escapeHtml(record.id)}"
+                        class="shrink-0 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100">
+                        ${this.escapeHtml(profileUiText('resume.savedRecordLoad', 'Load'))}
+                    </button>
+                </div>`;
+        }).join('');
+    },
+
+    async restoreSavedRecord(recordId) {
+        if (!recordId) return;
+        if (!apiClient.isLoggedIn()) {
+            Utils.showToast(profileUiText('errors.loginToSaveProfile', 'Please log in to save your profile to the website'));
+            return;
+        }
+        try {
+            Utils.showLoading(profileUiText('resume.savedRecordLoading', 'Loading saved profile...'));
+            const result = await apiClient.restoreSavedProfile(recordId);
+            this.draft = this.ensureDraftShape(result.draft);
+            this._missingSlotsKey = '';
+            this.render({ preserveDraft: true });
+            this.show(false);
+            this.setSaveStatus(profileUiText('resume.savedRecordLoaded', 'Loaded saved profile into editor'));
+            if (typeof refreshLanguageChecklist === 'function') {
+                await refreshLanguageChecklist(this.getResumeLang());
+            }
+            if (typeof showUploadResultsPanel === 'function') {
+                showUploadResultsPanel();
+            }
+            if (typeof updateProfileContinueUi === 'function') {
+                updateProfileContinueUi(typeof lastChecklistData !== 'undefined' ? lastChecklistData : null);
+            }
+            Utils.hideLoading();
+            Utils.showToast(profileUiText('resume.savedRecordLoadedToast', 'Saved profile loaded'));
+        } catch (error) {
+            Utils.hideLoading();
+            Utils.showToast(profileUiText('resume.savedRecordLoadFailed', 'Failed to load: {msg}', { msg: error.message }));
+        }
     },
 
     ensureExtras() {
@@ -536,6 +671,12 @@ const ProfileEditor = {
             saveBtn.classList.toggle('opacity-50', !loggedIn);
             saveBtn.classList.toggle('cursor-not-allowed', !loggedIn);
         }
+        if (loggedIn) {
+            this.loadSavedRecords();
+        } else {
+            const section = document.getElementById('profile-saved-records-section');
+            if (section) section.classList.add('hidden');
+        }
     },
 
     applyRestoredHint(source) {
@@ -565,14 +706,20 @@ const ProfileEditor = {
             return;
         }
 
+        const recordName = this.promptRecordName();
+        if (recordName === null) return;
+
         try {
             Utils.showLoading(profileUiText('resume.toast.savingProfile', 'Saving profile to your account...'));
             const draft = this.collectDraftFromForm();
             this.draft = draft;
-            const result = await apiClient.saveProfileToAccount(draft);
-            this.setSaveStatus(profileUiText('resume.profileSavedAccount', 'Saved to account — persists after refresh'));
+            const result = await apiClient.saveProfileToAccount(draft, recordName);
+            this.setSaveStatus(profileUiText('resume.profileSavedNamed', 'Saved as “{name}”', {
+                name: result.record_name || recordName,
+            }));
             Utils.hideLoading();
             Utils.showToast(profileUiText('resume.toast.profileSaved', 'Profile saved to your account'));
+            await this.loadSavedRecords();
             if (typeof onProfileDraftSaved === 'function') {
                 onProfileDraftSaved();
             }
@@ -852,6 +999,7 @@ const ProfileEditor = {
         this.render({ preserveDraft: true });
         this.show(false);
         this.updateSaveUi();
+        document.getElementById('profile-restored-hint')?.classList.add('hidden');
 
         if (typeof updateProfileContinueUi === 'function') {
             updateProfileContinueUi(typeof lastChecklistData !== 'undefined' ? lastChecklistData : null);

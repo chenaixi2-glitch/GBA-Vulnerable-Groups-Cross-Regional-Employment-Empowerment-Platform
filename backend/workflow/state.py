@@ -369,6 +369,7 @@ class CopilotState(BaseModel):
     reply_message: str = ""
     triggered_agents: list[str] = Field(default_factory=list)
     workflow_trace: list[WorkflowTraceItem] = Field(default_factory=list)
+    profile_replace_mode: bool = False  # runtime: new upload replaces existing profile instead of merging
     resume_language_target: str = ""  # runtime: zh | zh-TW | en | pt for language_convert intent
     chat_output_language: str = ""  # runtime: per-request page UI locale
     chat_question_output_language: str = ""  # runtime: per-request interview question locale

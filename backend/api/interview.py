@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
@@ -20,7 +21,7 @@ from auth.jwt import get_optional_user
 from auth.session_access import bind_session_owner, ensure_session_access, extract_user_id
 from storage.redis_client import get_redis_client, RedisSessionStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
-from services.llm_queue import SessionBusyError, llm_queue_slot
+from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
 from tools.output_language import (
     apply_interview_feedback_language,
     apply_interview_languages,
@@ -164,7 +165,7 @@ async def generate_custom_interview_answers(
         async with llm_queue_slot(session_id):
             result = await custom_interview_answers_async(state, questions)
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as exc:
         logger.error("Custom interview answers failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail=f"生成参考答案失败: {exc}")
@@ -218,7 +219,7 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
                 specialized_focus=req.specialized_focus,
             )
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -254,7 +255,7 @@ async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> Int
         async with llm_queue_slot(req.session_id):
             session = await process_interactive_turn(state, req.answer)
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -295,7 +296,7 @@ async def interactive_end(req: InteractiveEndRequest, request: Request) -> Inter
             session.status = "completed"
             session.ended_at = session.ended_at or ""
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -423,5 +424,147 @@ async def get_saved_interactive_interview(record_id: str, request: Request) -> d
 
     if record.get("saved_at") is not None:
         record["saved_at"] = str(record["saved_at"])
+
+    return record
+
+
+def _default_question_bank_record_name(saved_at: datetime | None = None) -> str:
+    """未提供自定义名称时，使用保存时间作为默认名称。"""
+    ts = saved_at or datetime.utcnow()
+    return ts.strftime("%Y-%m-%d %H:%M")
+
+
+class QuestionBankSaveRequest(BaseModel):
+    session_id: str
+    record_name: str = ""
+    mode: str = "question_bank"
+    job_title: str = ""
+    industry: str = ""
+    tone: str = "professional"
+    program_version: str = ""
+    program_label: str = ""
+    user_answers: list[str] = Field(default_factory=list)
+    questions: list[dict[str, Any]] = Field(default_factory=list)
+    stages: list[dict[str, Any]] = Field(default_factory=list)
+
+
+@router.post("/question-bank/save")
+async def save_question_bank(req: QuestionBankSaveRequest, request: Request) -> dict[str, Any]:
+    """登录用户将题库练习记录保存到数据库。"""
+    user = get_optional_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="请先登录后再保存题库记录")
+
+    user_id = extract_user_id(user)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="无效的用户身份")
+
+    await bind_session_owner(req.session_id, user)
+
+    state = await _load_state(req.session_id)
+    questions = req.questions
+    if not questions and state.interview_qa:
+        questions = [qa.model_dump() for qa in state.interview_qa]
+    if not questions:
+        raise HTTPException(status_code=400, detail="没有可保存的面试题目，请先生成题库")
+
+    row_id = f"qbs_{uuid.uuid4().hex[:16]}"
+    job_title = req.job_title.strip() or (state.job.title if state.job else "")
+    industry = req.industry.strip() or (state.job.industry if state.job else "")
+    mode = (req.mode or "question_bank").strip() or "question_bank"
+    program_version = req.program_version.strip() or ""
+    program_label = req.program_label.strip() or ""
+    saved_at = datetime.utcnow()
+    record_name = req.record_name.strip() or _default_question_bank_record_name(saved_at)
+
+    pool = await get_mysql_pool()
+    db = MySQLStore(pool)
+    try:
+        await db.upsert_session(req.session_id, user_id=user_id)
+        saved_at_str = await db.save_question_bank_session(
+            row_id=row_id,
+            session_id=req.session_id,
+            user_id=user_id,
+            record_name=record_name,
+            job_title=job_title,
+            industry=industry,
+            tone=req.tone or "professional",
+            mode=mode,
+            program_version=program_version,
+            question_count=len(questions),
+            data={
+                "interview_qa": questions,
+                "user_answers": req.user_answers,
+                "program_label": program_label,
+                "stages": req.stages,
+            },
+        )
+    except Exception as exc:
+        logger.error("Question bank save failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"保存失败: {exc}")
+
+    return {
+        "ok": True,
+        "message": "题库记录已保存到您的账户。",
+        "session_id": req.session_id,
+        "record_id": row_id,
+        "record_name": record_name,
+        "saved_at": saved_at_str,
+    }
+
+
+@router.get("/question-bank/history")
+async def question_bank_history(request: Request, limit: int = 20) -> dict[str, Any]:
+    """列出当前登录用户已保存的题库记录摘要。"""
+    user = get_optional_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="请先登录")
+
+    user_id = extract_user_id(user)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="无效的用户身份")
+
+    pool = await get_mysql_pool()
+    db = MySQLStore(pool)
+    records = await db.list_question_bank_sessions_by_user(user_id, limit=min(limit, 50))
+
+    for row in records:
+        if row.get("saved_at") is not None:
+            row["saved_at"] = str(row["saved_at"])
+        if not (row.get("record_name") or "").strip():
+            try:
+                ts = datetime.strptime(str(row["saved_at"]), "%Y-%m-%d %H:%M:%S")
+                row["record_name"] = _default_question_bank_record_name(ts)
+            except ValueError:
+                row["record_name"] = str(row.get("saved_at") or "")
+
+    return {"records": records}
+
+
+@router.get("/question-bank/saved/{record_id}")
+async def get_saved_question_bank(record_id: str, request: Request) -> dict[str, Any]:
+    """获取单条已保存的题库完整记录。"""
+    user = get_optional_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="请先登录")
+
+    user_id = extract_user_id(user)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="无效的用户身份")
+
+    pool = await get_mysql_pool()
+    db = MySQLStore(pool)
+    record = await db.get_question_bank_session_for_user(record_id, user_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="记录不存在或无权访问")
+
+    if record.get("saved_at") is not None:
+        record["saved_at"] = str(record["saved_at"])
+    if not (record.get("record_name") or "").strip():
+        try:
+            ts = datetime.strptime(str(record["saved_at"]), "%Y-%m-%d %H:%M:%S")
+            record["record_name"] = _default_question_bank_record_name(ts)
+        except ValueError:
+            record["record_name"] = str(record.get("saved_at") or "")
 
     return record

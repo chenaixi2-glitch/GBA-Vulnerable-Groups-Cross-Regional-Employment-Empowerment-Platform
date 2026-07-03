@@ -14,9 +14,9 @@ from auth.jwt import get_optional_user
 from auth.session_access import bind_session_owner, ensure_session_access
 from workflow.graph import compile_graph
 from workflow.state import CopilotState
-from storage.redis_client import get_redis_client, RedisSessionStore
+from storage.redis_client import get_redis_client, RedisSessionStore, RedisDraftStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
-from services.llm_queue import SessionBusyError, llm_queue_slot
+from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
 from tools.output_language import (
     apply_chat_output_language,
     apply_interview_feedback_language,
@@ -46,6 +46,23 @@ async def _asave_state(store: RedisSessionStore, state: dict[str, Any]) -> None:
     await store.save_state(state)
 
 
+def _reset_profile_working_state(state: CopilotState) -> CopilotState:
+    """Clear profile and downstream resume artifacts so a new upload fully replaces Redis content."""
+    from workflow.state import ResumeHtml
+
+    state.candidate_profile = None
+    state.resume_content_json = None
+    state.resume_html = ResumeHtml()
+    state.gaps = []
+    state.questions_to_ask = []
+    state.experiences_to_remove = []
+    state.learning_path_timeline = []
+    state.learning_path_resources = []
+    state.learning_path_estimated_hours = 0
+    state.learning_path_daily_hours = 0.0
+    return state
+
+
 async def _ainvoke_graph(graph: Any, payload: dict[str, Any], *, config: dict[str, Any] | None = None) -> Any:
     if hasattr(graph, "ainvoke"):
         return await graph.ainvoke(payload, config=config)
@@ -58,6 +75,7 @@ class ChatRequest(BaseModel):
     attachments: list[dict[str, Any]] = Field(default_factory=list)
     language: str = ""  # UI locale → API lang: zh | zh-TW | en | pt
     language_scope: str = "page"  # page | interview_question | interview_feedback
+    replace_profile: bool = False  # True when uploading a new resume — overwrite Redis working copy
 
 
 class ChatResponse(BaseModel):
@@ -125,6 +143,14 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     state.user_message = prepared_input.user_message
     state.user_attachments = prepared_input.user_attachments
 
+    replace_profile = req.replace_profile or bool(prepared_input.user_attachments)
+    if replace_profile:
+        state = _reset_profile_working_state(state)
+        state.profile_replace_mode = True
+        draft_store = RedisDraftStore(redis_client, session_id, user.get("sub") if user else None)
+        await draft_store.clear_draft()
+        logger.info("Profile replace mode: cleared Redis draft for session %s", session_id)
+
     # 执行 workflow graph，加上config指定langsmith的run_name，方便在LangSmith上查看每次API调用的执行详情
     graph = _get_graph()
     try:
@@ -133,7 +159,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
                 graph, state.model_dump(), config={"run_name": f"API-Chat-Request: {session_id}"}
             )
     except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as e:
         logger.error("Workflow execution failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"处理失败: {e}")
@@ -145,6 +171,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     persist_data = final_state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
                                                      "execution_plan", "reply_message", "triggered_agents",
                                                      "workflow_trace", "resume_language_target",
+                                                     "profile_replace_mode",
                                                      "chat_output_language",
                                                      "chat_question_output_language",
                                                      "chat_feedback_output_language"})

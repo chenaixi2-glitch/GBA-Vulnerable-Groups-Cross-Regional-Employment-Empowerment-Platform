@@ -236,6 +236,78 @@ class MySQLStore:
             await conn.commit()
         logger.debug("Saved interactive interview id=%s user=%s session=%s", row_id, user_id, session_id)
 
+    async def save_question_bank_session(
+        self,
+        row_id: str,
+        session_id: str,
+        user_id: int | str,
+        record_name: str,
+        job_title: str,
+        industry: str,
+        tone: str,
+        mode: str,
+        program_version: str,
+        question_count: int,
+        data: dict,
+    ) -> str:
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        json_str = json.dumps(data, ensure_ascii=False, default=str)
+        sql = """
+            INSERT INTO question_bank_sessions
+                (id, session_id, user_id, record_name, job_title, industry, tone,
+                 mode, program_version, question_count, data, saved_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (
+                    row_id, session_id, int(user_id), record_name or "", job_title or "",
+                    industry or "", tone or "professional", mode or "question_bank",
+                    program_version or "", question_count, json_str, now,
+                ))
+            await conn.commit()
+        logger.debug("Saved question bank id=%s user=%s session=%s", row_id, user_id, session_id)
+        return now
+
+    async def list_question_bank_sessions_by_user(
+        self, user_id: int | str, limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        sql = """
+            SELECT id, session_id, record_name, job_title, industry, tone, mode,
+                   program_version, question_count, saved_at
+            FROM question_bank_sessions
+            WHERE user_id = %s
+            ORDER BY saved_at DESC
+            LIMIT %s
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (int(user_id), limit))
+                rows = await cur.fetchall()
+        return [dict(row) for row in rows]
+
+    async def get_question_bank_session_for_user(
+        self, row_id: str, user_id: int | str,
+    ) -> dict[str, Any] | None:
+        sql = """
+            SELECT id, session_id, record_name, job_title, industry, tone, mode,
+                   program_version, question_count, data, saved_at
+            FROM question_bank_sessions
+            WHERE id = %s AND user_id = %s
+            LIMIT 1
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (row_id, int(user_id)))
+                row = await cur.fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        data = result.get("data")
+        if isinstance(data, str):
+            result["data"] = json.loads(data)
+        return result
+
     async def list_interactive_interviews_by_user(
         self, user_id: int | str, limit: int = 20,
     ) -> list[dict[str, Any]]:
@@ -353,6 +425,68 @@ class MySQLStore:
             result["data"] = json.loads(data)
         if result.get("daily_hours") is not None:
             result["daily_hours"] = float(result["daily_hours"])
+        return result
+
+    async def save_profile_record(
+        self,
+        row_id: str,
+        session_id: str,
+        user_id: int | str,
+        record_name: str,
+        candidate_name: str,
+        data: dict,
+    ) -> None:
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        json_str = json.dumps(data, ensure_ascii=False, default=str)
+        sql = """
+            INSERT INTO saved_profile_records
+                (id, session_id, user_id, record_name, candidate_name, data, saved_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (
+                    row_id, session_id, int(user_id),
+                    record_name or "", candidate_name or "", json_str, now,
+                ))
+            await conn.commit()
+        logger.debug("Saved profile record id=%s user=%s session=%s", row_id, user_id, session_id)
+
+    async def list_profile_records_by_user(
+        self, user_id: int | str, limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        sql = """
+            SELECT id, session_id, record_name, candidate_name, saved_at
+            FROM saved_profile_records
+            WHERE user_id = %s
+            ORDER BY saved_at DESC
+            LIMIT %s
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (int(user_id), limit))
+                rows = await cur.fetchall()
+        return [dict(row) for row in rows]
+
+    async def get_profile_record_for_user(
+        self, row_id: str, user_id: int | str,
+    ) -> dict[str, Any] | None:
+        sql = """
+            SELECT id, session_id, record_name, candidate_name, data, saved_at
+            FROM saved_profile_records
+            WHERE id = %s AND user_id = %s
+            LIMIT 1
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (row_id, int(user_id)))
+                row = await cur.fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        data = result.get("data")
+        if isinstance(data, str):
+            result["data"] = json.loads(data)
         return result
 
     async def save_event(self, event: dict) -> None:

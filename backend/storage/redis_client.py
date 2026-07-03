@@ -153,6 +153,14 @@ class RedisDraftStore:
             return None
         return json.loads(data)
 
+    async def clear_draft(self) -> None:
+        """Remove session and user-linked draft keys (e.g. before a fresh resume upload)."""
+        await self._client.delete(self._session_draft_key())
+        if self.user_id:
+            await self._client.delete(self._user_draft_key())
+            await self._client.delete(f"user:{self.user_id}:resume_draft_data")
+        logger.debug("Cleared resume draft session=%s user=%s", self.session_id, self.user_id)
+
     @classmethod
     async def load_user_draft(cls, client: aioredis.Redis, user_id: str | int) -> dict[str, Any] | None:
         data = await client.get(f"user:{user_id}:resume_draft_data")
