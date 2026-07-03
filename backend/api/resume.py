@@ -628,10 +628,8 @@ class SetResumeLanguageRequest(BaseModel):
 async def set_resume_language(req: SetResumeLanguageRequest, request: Request):
     """设置目标简历语言并返回格式检查清单（生成/互转前调用）。"""
     from api.chat import _aload_state, _asave_state
-    from api.draft_utils import state_with_draft
     from tools.resume_language_checklist import check_resume_language_requirements
     from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
-    from storage.redis_client import RedisDraftStore
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -642,11 +640,7 @@ async def set_resume_language(req: SetResumeLanguageRequest, request: Request):
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
-    saved = await _aload_state(store)
-    if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
-
-    state = CopilotState.model_validate(saved)
+    state = await _load_or_bootstrap_state(store, req.session_id, client, user)
     state.render_config = state.render_config.model_copy(update={"language": target})
 
     persist_data = state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
@@ -654,9 +648,6 @@ async def set_resume_language(req: SetResumeLanguageRequest, request: Request):
                                               "workflow_trace", "resume_language_target"})
     await _asave_state(store, persist_data)
 
-    draft_store = RedisDraftStore(client, req.session_id, user.get("sub") if user else None)
-    draft = await draft_store.load_draft()
-    state = state_with_draft(state, draft)
     checklist = check_resume_language_requirements(state, target)
     return {"language": target, "language_checklist": checklist}
 
@@ -666,9 +657,62 @@ class RenderRequest(BaseModel):
     render_instruction: str
 
 
+class GenerateFromProfileRequest(BaseModel):
+    session_id: str
+    language: str = Field(default="", description="Target language: zh, zh-TW, en, or pt")
+
+
 class TranslateResumeRequest(BaseModel):
     session_id: str
     target_language: str = Field(description="Target language: zh, zh-TW, en, or pt")
+
+
+_PERSIST_EXCLUDE = {
+    "user_message", "user_attachments", "current_intent",
+    "execution_plan", "reply_message", "triggered_agents", "workflow_trace",
+    "resume_language_target",
+}
+
+
+async def _load_or_bootstrap_state(
+    store: RedisSessionStore,
+    session_id: str,
+    client,
+    user,
+) -> CopilotState:
+    """Load CopilotState from Redis; bootstrap from editor draft when session is missing."""
+    from api.chat import _aload_state
+    from api.draft_utils import bootstrap_session_from_draft, state_with_draft
+
+    draft_store = RedisDraftStore(client, session_id, user.get("sub") if user else None)
+    draft = await draft_store.load_draft()
+
+    saved = await _aload_state(store)
+    if not saved:
+        if draft:
+            await bootstrap_session_from_draft(store, session_id, draft)
+            saved = await _aload_state(store)
+        if not saved:
+            raise HTTPException(
+                status_code=404,
+                detail="会话不存在，请先上传并解析简历，或保存编辑内容后再试",
+            )
+
+    state = CopilotState.model_validate(saved)
+    return state_with_draft(state, draft)
+
+
+async def _run_profile_resume_pipeline(state: CopilotState) -> CopilotState:
+    """Generate resume HTML from candidate profile only — no JD, no gap analysis."""
+    from agents.content_agent import content_node_async
+    from agents.render_agent import render_node_async
+
+    state.current_intent = "generate_profile"
+    data = state.model_dump()
+    for agent_fn in (content_node_async, render_node_async):
+        updates = await agent_fn(CopilotState.model_validate(data))
+        data.update(updates)
+    return CopilotState.model_validate(data)
 
 
 class RestoreResumeSnapshotRequest(BaseModel):
@@ -727,12 +771,66 @@ async def restore_resume_snapshot(req: RestoreResumeSnapshotRequest, request: Re
     }
 
 
+@router.post("/generate-from-profile")
+async def generate_resume_from_profile(req: GenerateFromProfileRequest, request: Request, background_tasks: BackgroundTasks):
+    """从候选人画像生成简历（不结合 JD、不做缺口优化）— 供语言切换与直接导出。"""
+    from api.chat import _aload_state, _asave_state, _persist_to_mysql_safe
+    from services.llm_queue import SessionBusyError, llm_queue_slot
+    from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
+    from tools.resume_language_checklist import check_resume_language_requirements
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+    if user:
+        await bind_session_owner(req.session_id, user)
+
+    target = normalize_language(req.language or "zh")
+    if target not in VALID_RESUME_LANGUAGES:
+        raise HTTPException(status_code=422, detail="language 必须为 zh、zh-TW、en 或 pt")
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    state = await _load_or_bootstrap_state(store, req.session_id, client, user)
+    state.render_config = state.render_config.model_copy(update={"language": target})
+    if state.candidate_profile is None:
+        raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
+
+    try:
+        async with llm_queue_slot(req.session_id):
+            final = await _run_profile_resume_pipeline(state)
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+    except Exception as e:
+        logger.error("Profile resume generation failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
+
+    if final.resume_content_json is None or not (final.resume_html.html if final.resume_html else ""):
+        raise HTTPException(status_code=500, detail="简历生成结果为空，请重试")
+
+    persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
+    await _asave_state(store, persist_data)
+
+    if user:
+        background_tasks.add_task(_persist_to_mysql_safe, final, user.get("sub"))
+
+    checklist = check_resume_language_requirements(final, target)
+    return {
+        "language": final.resume_content_json.meta.language if final.resume_content_json else target,
+        "resume_content_json": final.resume_content_json.model_dump() if final.resume_content_json else None,
+        "render_config": final.render_config.model_dump(),
+        "resume_html": final.resume_html.model_dump(),
+        "reply_message": final.reply_message,
+        "language_checklist": checklist,
+        "from_profile_only": True,
+    }
+
+
 @router.post("/translate")
 async def translate_resume(req: TranslateResumeRequest, request: Request, background_tasks: BackgroundTasks):
-    """中英文简历互转 — 触发 language_convert 意图。"""
+    """简历语言切换 — 已有 HTML 时互转；尚无 HTML 时从画像生成目标语言版本。"""
     from api.chat import _ainvoke_graph, _aload_state, _asave_state, _get_graph, _persist_to_mysql_safe
     from services.llm_queue import SessionBusyError, llm_queue_slot
-    from tools.resume_layout import language_label, normalize_language
+    from tools.resume_layout import language_label, normalize_language, VALID_RESUME_LANGUAGES
     from tools.resume_language_checklist import check_resume_language_requirements
 
     user = get_optional_user(request)
@@ -746,40 +844,45 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
-    saved = await _aload_state(store)
-    if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+    state = await _load_or_bootstrap_state(store, req.session_id, client, user)
 
-    state = CopilotState.model_validate(saved)
     if state.resume_content_json is None:
-        raise HTTPException(status_code=400, detail="简历尚未生成，请先上传并生成简历")
+        if state.candidate_profile is None:
+            raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
+        state.render_config = state.render_config.model_copy(update={"language": target})
+        try:
+            async with llm_queue_slot(req.session_id):
+                final = await _run_profile_resume_pipeline(state)
+        except SessionBusyError:
+            raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        except Exception as e:
+            logger.error("Profile resume generation (via translate) failed: %s", e, exc_info=True)
+            raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
+    else:
+        from tools.resume_page_policy import page_limit_label, resolve_page_limit
 
-    from tools.resume_page_policy import page_limit_label, resolve_page_limit
+        page_limit = resolve_page_limit(state)
+        layout_label = page_limit_label(page_limit, target)
+        state.user_message = (
+            f"将简历转换为{language_label(target)}版本，遵循{language_label(target)}简历格式，控制在{layout_label}内"
+        )
+        state.resume_language_target = target
+        state.current_intent = "language_convert"
+        state.execution_plan = ["content_agent", "render_agent"]
 
-    page_limit = resolve_page_limit(state)
-    layout_label = page_limit_label(page_limit, target)
-    state.user_message = (
-        f"将简历转换为{language_label(target)}版本，遵循{language_label(target)}简历格式，控制在{layout_label}内"
-    )
-    state.resume_language_target = target
-    state.current_intent = "language_convert"
-    state.execution_plan = ["content_agent", "render_agent"]
+        graph = _get_graph()
+        try:
+            async with llm_queue_slot(req.session_id):
+                result = await _ainvoke_graph(graph, state.model_dump())
+        except SessionBusyError:
+            raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
+        except Exception as e:
+            logger.error("Resume translation failed: %s", e, exc_info=True)
+            raise HTTPException(status_code=500, detail=f"简历转换失败: {e}")
 
-    graph = _get_graph()
-    try:
-        async with llm_queue_slot(req.session_id):
-            result = await _ainvoke_graph(graph, state.model_dump())
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
-    except Exception as e:
-        logger.error("Resume translation failed: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"简历转换失败: {e}")
+        final = CopilotState.model_validate(result)
 
-    final = CopilotState.model_validate(result)
-
-    persist_data = final.model_dump(exclude={"user_message", "user_attachments", "current_intent",
-                                              "execution_plan", "reply_message", "triggered_agents",
-                                              "workflow_trace", "resume_language_target"})
+    persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
     await _asave_state(store, persist_data)
 
     if user:

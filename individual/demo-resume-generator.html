@@ -299,8 +299,9 @@
                 <section id="jd-section" class="bg-white rounded-xl p-6 border shadow-sm hidden">
                     <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i class="fas fa-briefcase text-green-600"></i>
-                        <span data-i18n="resume.step2Title">Step 2: Target Job Description</span>
+                        <span data-i18n="resume.step2Title">Step 2: JD-based polish (optional)</span>
                     </h2>
+                    <p class="text-xs text-gray-500 mb-3" data-i18n="resume.step2OptionalDesc">Optional — tailor and optimize your resume against a target job. You can already preview and export from Step 1 without a JD.</p>
                     
                     <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="resume.jdLabel">Paste the job description you're targeting</label>
                     <p class="text-xs text-gray-500 mb-2" data-i18n="resume.jdOptionalHint">Optional — enter a job title or draft in the box above, then select Industry, Employer Type + Experience Level and click Generate, or leave blank to auto-generate from selections only.</p>
@@ -358,11 +359,11 @@
                     
                     <button id="btn-generate" onclick="generateResume()" class="mt-3 w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-magic mr-2"></i>
-                        <span data-i18n="resume.generateResume">Generate Customized Resume</span>
+                        <span data-i18n="resume.generateJdTailoredResume">Generate JD-tailored resume</span>
                     </button>
                     <p class="mt-2 text-xs text-gray-500">
                         <i class="fas fa-info-circle mr-1"></i>
-                        <span data-i18n="resume.generateHint">Generate suggested JD from your text box content plus Industry, Employer Type, and Experience Level — no resume data used.</span>
+                        <span data-i18n="resume.generateJdHint">Runs gap analysis and optimization against the job description — separate from preview/export in Step 1.</span>
                     </p>
                 </section>
             </div>
@@ -636,8 +637,8 @@
 
                     <div id="resume-language-section" class="mb-6 p-4 border border-blue-100 bg-blue-50/40 rounded-lg">
                         <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="resume.languageLabel">Resume Language</label>
-                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.selectHint">After selection, we check missing items for that resume format.</p>
-                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.languageActionHint">After generating, switching language converts the resume and enables export in the preview panel.</p>
+                        <p class="text-xs text-gray-500 mb-2" data-i18n="resume.selectHint">After selection, we check missing items for that resume format.</p>
+                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.languageActionHint">Switch language to generate a preview and export — no job description required.</p>
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" data-resume-lang="zh" onclick="onResumeLanguageSelected('zh')"
                                 class="px-3 py-2.5 border border-red-300 rounded-lg text-sm font-medium text-red-800 hover:bg-red-50 ring-2 ring-blue-500 bg-blue-50">
@@ -654,6 +655,20 @@
                             <button type="button" data-resume-lang="pt" onclick="onResumeLanguageSelected('pt')"
                                 class="px-3 py-2.5 border border-emerald-300 rounded-lg text-sm font-medium text-emerald-800 hover:bg-emerald-50">
                                 <i class="fas fa-globe-europe mr-1"></i><span class="resume-lang-label">Portuguese</span>
+                            </button>
+                        </div>
+                        <button type="button" id="btn-generate-profile-resume" onclick="generateResumeFromProfile()"
+                            class="mt-3 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                            <i class="fas fa-eye mr-2"></i>
+                            <span data-i18n="resume.generateProfilePreview">Generate preview &amp; export</span>
+                        </button>
+                        <div id="profile-export-actions" class="hidden mt-3 flex flex-wrap gap-2">
+                            <button type="button" onclick="promptExportResume('pdf')" class="px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900">PDF</button>
+                            <button type="button" onclick="promptExportResume('docx')" class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700">DOCX</button>
+                            <button type="button" onclick="promptExportResume('html')" class="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700">HTML</button>
+                            <button type="button" onclick="promptExportResume('markdown')" class="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700">Markdown</button>
+                            <button type="button" onclick="switchResumeView('preview')" class="px-3 py-1.5 text-xs border border-purple-300 text-purple-800 rounded-lg hover:bg-purple-50">
+                                <span data-i18n="resume.openPreview">Open full preview</span>
                             </button>
                         </div>
                     </div>

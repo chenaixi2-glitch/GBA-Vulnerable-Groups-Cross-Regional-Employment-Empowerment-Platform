@@ -253,6 +253,10 @@ function hideSaveModal() {
 
 async function promptExportResume(format) {
     pendingExportFormat = format;
+    if (!resumeGenerated) {
+        const ok = await generateResumeFromProfile({ silent: false });
+        if (!ok) return;
+    }
     if (apiClient.isLoggedIn() && resumeGenerated) {
         showSaveModal();
         return;
@@ -665,6 +669,7 @@ async function uploadResume() {
         jdUserConfirmed = false;
         resumeUndoStack = [];
         resumeRedoStack = [];
+        updateProfileExportUi();
         document.getElementById('resume-preview-section')?.classList.add('hidden');
         document.getElementById('gap-analysis-section')?.classList.add('hidden');
         if (typeof updateResumeViewSwitcher === 'function') {
@@ -702,8 +707,88 @@ async function uploadResume() {
     }
 }
 
+function updateProfileExportUi() {
+    const bar = document.getElementById('profile-export-actions');
+    if (bar) {
+        bar.classList.toggle('hidden', !resumeGenerated);
+    }
+}
+
+function applyResumeGenerationResult(response, lang) {
+    if (response?.resume_html?.html) {
+        displayResume(response.resume_html.html);
+    }
+    updateResumeLanguageBadge(response?.language || lang);
+    if (response?.language_checklist) {
+        renderLanguageChecklistPanel(response.language_checklist);
+    } else if (typeof refreshLanguageChecklist === 'function') {
+        refreshLanguageChecklist(lang);
+    }
+    resumeGenerated = true;
+    updateResumeViewSwitcher();
+    updateProfileExportUi();
+    document.getElementById('resume-preview-section')?.classList.remove('hidden');
+    showResumeChatPanel();
+}
+
 /**
- * Generate customized resume
+ * Generate resume from parsed profile only — no JD or gap optimization.
+ */
+async function generateResumeFromProfile(options = {}) {
+    const { silent = false, language } = options;
+
+    if (!hasParsedProfileOnPage()) {
+        Utils.showToast(uiT('resume.toast.uploadOrPaste', 'Please upload a file or paste resume text'));
+        document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return false;
+    }
+
+    const lang = typeof normalizeResumeLang === 'function'
+        ? normalizeResumeLang(language || currentResumeLanguage)
+        : (language || currentResumeLanguage || 'zh');
+
+    if (resumeGenerated && lang === normalizeResumeLang(currentResumeLanguage)) {
+        setResumeView('preview', { scroll: true });
+        return true;
+    }
+
+    if (resumeGenerated) {
+        await translateResume(lang);
+        return true;
+    }
+
+    try {
+        if (!silent) {
+            Utils.showLoading(uiT('resume.toast.generatingProfileResume', 'Generating resume from your profile...'));
+        }
+        await syncDraftBeforeGenerate({ required: true, showLoading: false });
+        const draft = (typeof ProfileEditor !== 'undefined' && ProfileEditor.collectDraftFromForm)
+            ? ProfileEditor.collectDraftFromForm()
+            : null;
+        if (typeof applyResumeLanguageSelection === 'function') {
+            await applyResumeLanguageSelection(lang);
+        }
+        const response = await apiClient.generateResumeFromProfile(lang, draft);
+        applyResumeGenerationResult(response, lang);
+        resetResumeUndoHistory();
+        if (!silent) {
+            Utils.hideLoading();
+            Utils.showToast(uiT('resume.toast.profileResumeReady', 'Resume ready — you can preview and export below'));
+        }
+        setResumeView('preview', { scroll: !silent });
+        return true;
+    } catch (error) {
+        if (!silent) Utils.hideLoading();
+        Utils.showToast(uiT('resume.toast.profileResumeFailed', 'Could not generate resume: {msg}', { msg: error.message }));
+        console.error('Profile resume generation error:', error);
+        return false;
+    }
+}
+
+window.generateResumeFromProfile = generateResumeFromProfile;
+
+/**
+ * Generate JD-tailored resume (optional Step 2 — gap analysis + optimization).
  */
 async function generateResume() {
     const generateBtn = document.getElementById('btn-generate');
@@ -853,13 +938,11 @@ async function generateResume() {
         updateAgentStatus('agent-render', 'running');
 
         if (resumeResponse.resume_html && resumeResponse.resume_html.html) {
-            displayResume(resumeResponse.resume_html.html);
-            updateResumeLanguageBadge(resumeResponse.resume_content_json?.meta?.language || 'zh');
+            applyResumeGenerationResult(resumeResponse, resumeResponse.resume_content_json?.meta?.language || currentResumeLanguage);
         } else {
             const resumeData = await apiClient.getResumeHtml();
             if (resumeData.resume_html && resumeData.resume_html.html) {
-                displayResume(resumeData.resume_html.html);
-                updateResumeLanguageBadge('zh');
+                applyResumeGenerationResult({ resume_html: resumeData.resume_html }, currentResumeLanguage);
             } else {
                 throw new Error(uiT('errors.resumeHtmlUnavailable', 'Resume HTML not available'));
             }
@@ -871,15 +954,11 @@ async function generateResume() {
         document.getElementById('gap-analysis-section').classList.remove('hidden');
 
         updateStepIndicator(3, 'completed');
-        resumeGenerated = true;
-
-        await refreshLanguageChecklist(currentResumeLanguage);
 
         resetResumeUndoHistory();
 
         Utils.showToast(uiT('resume.toast.generated', 'Resume generated successfully!'));
 
-        showResumeChatPanel();
         setResumeView('preview', { scroll: true });
 
         console.log('Resume generation complete:', resumeResponse);
@@ -1410,14 +1489,9 @@ async function translateResume(targetLanguage) {
         if (response.resume_html && response.resume_html.html) {
             displayResume(response.resume_html.html);
         }
-        updateResumeLanguageBadge(response.language || lang);
+        applyResumeGenerationResult(response, lang);
         if (beforeSnapshot.html && response.resume_html?.html) {
             pushResumeUndoSnapshot(beforeSnapshot);
-        }
-        if (response.language_checklist) {
-            renderLanguageChecklistPanel(response.language_checklist);
-        } else {
-            await refreshLanguageChecklist(lang);
         }
         Utils.hideLoading();
         const missing = response.language_checklist?.missing_count || 0;
@@ -1431,9 +1505,6 @@ async function translateResume(targetLanguage) {
         Utils.showToast(missing > 0
             ? baseMsg + uiT('resume.toast.itemsToReview', ' — {count} item(s) to review in profile editor', { count: missing })
             : baseMsg);
-        resumeGenerated = true;
-        updateResumeViewSwitcher();
-        showResumeChatPanel();
         setResumeView('preview', { scroll: true });
     } catch (error) {
         Utils.hideLoading();
@@ -1443,46 +1514,16 @@ async function translateResume(targetLanguage) {
 }
 
 /**
- * Unified resume language switch — translate + export when generated; otherwise set target language for generation.
+ * Unified resume language switch — profile-only generate/convert, no JD required.
  */
 async function onResumeLanguageSelected(language) {
     const lang = typeof normalizeResumeLang === 'function' ? normalizeResumeLang(language) : language;
-    if (lang === normalizeResumeLang(currentResumeLanguage)) {
-        return;
-    }
-
     if (resumeGenerated) {
+        if (lang === normalizeResumeLang(currentResumeLanguage)) return;
         await translateResume(lang);
         return;
     }
-
-    if (typeof applyResumeLanguageSelection === 'function') {
-        await applyResumeLanguageSelection(lang);
-    }
-
-    if (typeof refreshAndValidateRequiredFields === 'function') {
-        try {
-            const { valid } = await refreshAndValidateRequiredFields();
-            if (valid) {
-                revealJdSection();
-                const label = typeof resumeLangDisplayLabel === 'function'
-                    ? resumeLangDisplayLabel(lang)
-                    : lang;
-                Utils.showToast(uiT(
-                    'resume.toast.langReadyGenerate',
-                    'Resume language set to {lang}. Continue in Step 2 to generate your resume.',
-                    { lang: label }
-                ));
-                document.getElementById('jd-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                return;
-            }
-        } catch (_) {
-            /* validation optional */
-        }
-    }
-
-    ensureEditViewForProfileNavigation();
-    document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    await generateResumeFromProfile({ language: lang });
 }
 
 window.onResumeLanguageSelected = onResumeLanguageSelected;

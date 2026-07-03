@@ -824,6 +824,16 @@ class MockAPIService {
             return response;
         }
 
+        if (msg.includes('profile only') || msg.includes('without job description')) {
+            this.state.hasResume = true;
+            response.triggered_agents = ['content_agent', 'render_agent'];
+            response.resume_content_json = this.profilePayload();
+            response.resume_html = { html: this.mockResumeHtmlForLanguage(lang), version: 1 };
+            response.reply_message = apiT('mock.profileResumeGenerated', 'Resume generated from profile (demo mode).');
+            response.from_profile_only = true;
+            return response;
+        }
+
         if (msg.includes('optimize') && (msg.includes('a4') || msg.includes('one a4'))) {
             this.state.hasResume = true;
             response.triggered_agents = ['content_agent', 'render_agent'];
@@ -959,6 +969,21 @@ class MockAPIService {
         const response = await this.chat(sessionId, messageMap[lang] || messageMap.zh, [], { language: lang });
         response.language = lang;
         response.language_checklist = this.buildMockChecklist(lang);
+        return response;
+    }
+
+    async generateResumeFromProfile(sessionId, targetLanguage) {
+        await this.delay(1200);
+        const lang = this.normalizeResumeLanguage(targetLanguage);
+        const response = await this.chat(
+            sessionId,
+            'Generate resume from candidate profile only without job description',
+            [],
+            { language: lang }
+        );
+        response.language = lang;
+        response.language_checklist = this.buildMockChecklist(lang);
+        response.from_profile_only = true;
         return response;
     }
 
@@ -2141,8 +2166,31 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('Set resume language error:', error);
+            const status = error.response?.status;
+            if (status === 404 && typeof ProfileEditor !== 'undefined' && ProfileEditor.collectDraftFromForm) {
+                try {
+                    const draft = ProfileEditor.collectDraftFromForm();
+                    const empty = typeof ProfileEditor.isDraftEmpty === 'function'
+                        ? ProfileEditor.isDraftEmpty(draft)
+                        : false;
+                    if (draft && !empty) {
+                        await this.saveResumeDraft(draft);
+                        const retry = await this.client.put('/resume/language', {
+                            session_id: this.sessionId,
+                            target_language: targetLanguage,
+                        });
+                        return retry.data;
+                    }
+                } catch (retryErr) {
+                    console.warn('[API] Set resume language retry failed:', retryErr.message);
+                }
+            }
             if (!error.response && !this.useMockMode) {
                 console.warn('[API] Set resume language failed, using local checklist fallback:', error.message);
+                return this.mockService.getLanguageChecklist(this.sessionId, targetLanguage);
+            }
+            if (status === 404 && !this.useMockMode) {
+                console.warn('[API] Set resume language failed, using local checklist fallback');
                 return this.mockService.getLanguageChecklist(this.sessionId, targetLanguage);
             }
             throw this.handleError(error);
@@ -2178,6 +2226,69 @@ class APIClient {
             if ((!error.response && !this.useMockMode) || status === 404) {
                 console.warn('[API] Language checklist failed, using local fallback:', error.message);
                 return this.mockService.getLanguageChecklist(this.sessionId, language);
+            }
+            throw this.handleError(error);
+        }
+    }
+
+    async ensureSessionFromDraft(draft) {
+        if (!this.sessionId) {
+            this.generateSessionId();
+        }
+        if (this.useMockMode || !draft) {
+            return;
+        }
+        try {
+            await this.ensureBackendAvailable();
+            await this.saveResumeDraft(draft);
+        } catch (error) {
+            console.warn('[API] Session bootstrap from draft failed:', error.message);
+        }
+    }
+
+    /**
+     * Generate resume from parsed profile only (no JD / gap optimization).
+     */
+    async generateResumeFromProfile(targetLanguage, draft = null) {
+        try {
+            if (!this.sessionId) {
+                this.generateSessionId();
+            }
+
+            const lang = this.normalizeResumeLanguage(targetLanguage || this.getChatLanguage());
+            if (draft) {
+                await this.ensureSessionFromDraft(draft);
+            }
+            await this.syncResumeLanguageToSession();
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return this.mockService.generateResumeFromProfile(this.sessionId, lang);
+            }
+
+            const response = await this.client.post('/resume/generate-from-profile', {
+                session_id: this.sessionId,
+                language: lang,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Generate resume from profile error:', error);
+            const status = error.response?.status;
+            if (status === 404 && draft && !this.useMockMode) {
+                try {
+                    await this.ensureSessionFromDraft(draft);
+                    const lang = this.normalizeResumeLanguage(targetLanguage || this.getChatLanguage());
+                    const retry = await this.client.post('/resume/generate-from-profile', {
+                        session_id: this.sessionId,
+                        language: lang,
+                    });
+                    return retry.data;
+                } catch (retryErr) {
+                    console.error('Generate resume from profile retry failed:', retryErr);
+                }
+            }
+            if (!error.response && !this.useMockMode && await this._enableMockModeIfBackendDown()) {
+                const lang = this.normalizeResumeLanguage(targetLanguage || this.getChatLanguage());
+                return this.mockService.generateResumeFromProfile(this.sessionId, lang);
             }
             throw this.handleError(error);
         }
@@ -2834,6 +2945,9 @@ class APIClient {
 
             switch (status) {
                 case 404:
+                    if (data.detail && typeof data.detail === 'string' && !/^not found$/i.test(data.detail)) {
+                        return new Error(data.detail);
+                    }
                     return new Error(apiT('errors.notFound', 'Resource not found. Please check your session ID.'));
                 case 500:
                     return new Error(apiT('errors.serverError', 'Server error. Please try again later.'));
