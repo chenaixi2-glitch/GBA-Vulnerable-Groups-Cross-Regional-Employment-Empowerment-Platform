@@ -213,9 +213,6 @@ async def save_resume_draft(req: SaveDraftRequest, request: Request):
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
-    saved = await store.load_state()
-    if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
 
     draft = req.draft.model_dump()
     draft["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -347,7 +344,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     employer_type = normalize_employer_type(req.employer_type)
     employer_type_text = employer_type_label(employer_type) or "未指定"
     jd_draft = req.jd_draft.strip()
-    output_lang = normalize_language(req.language or state.render_config.language or state.resume_language_target or "zh")
+    output_lang = normalize_language(req.language or "zh")
     p_key = params_cache_key(req.industry.strip(), employer_type, req.experience_level.strip())
     use_cache = not jd_draft
 
@@ -465,9 +462,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
         raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
 
     employer_type = normalize_employer_type(req.employer_type or state.meta.employer_type)
-    output_lang = normalize_language(
-        req.language or state.render_config.language or state.resume_language_target or "zh"
-    )
+    output_lang = normalize_language(req.language or "zh")
     try:
         async with llm_queue_slot(req.session_id):
             parsed = await generate_jd_from_title_for_profile(
@@ -557,8 +552,10 @@ async def set_target_job_context(req: TargetJobContextRequest, request: Request)
 async def set_employer_type(req: SetEmployerTypeRequest, request: Request):
     """设置目标单位性质并返回更新后的格式检查清单。"""
     from api.chat import _aload_state, _asave_state
+    from api.draft_utils import state_with_draft
     from tools.resume_language_checklist import check_resume_language_requirements
     from tools.resume_layout import normalize_employer_type
+    from storage.redis_client import RedisDraftStore
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -584,6 +581,9 @@ async def set_employer_type(req: SetEmployerTypeRequest, request: Request):
     await _asave_state(store, persist_data)
 
     lang = state.render_config.language or (state.resume_content_json.meta.language if state.resume_content_json else "zh")
+    draft_store = RedisDraftStore(client, req.session_id, user.get("sub") if user else None)
+    draft = await draft_store.load_draft()
+    state = state_with_draft(state, draft)
     checklist = check_resume_language_requirements(state, lang)
     return {"employer_type": employer_type, "language_checklist": checklist}
 
@@ -592,8 +592,10 @@ async def set_employer_type(req: SetEmployerTypeRequest, request: Request):
 async def get_language_checklist(session_id: str, language: str = "zh", employer_type: str = "", request: Request = None):
     """根据目标语言检查简历缺失项与格式提醒。"""
     from api.chat import _aload_state
+    from api.draft_utils import state_with_draft
     from tools.resume_language_checklist import check_resume_language_requirements
-    from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
+    from tools.resume_layout import normalize_employer_type, normalize_language, VALID_RESUME_LANGUAGES
+    from storage.redis_client import RedisDraftStore
 
     user = get_optional_user(request) if request else None
     await ensure_session_access(session_id, user)
@@ -608,6 +610,11 @@ async def get_language_checklist(session_id: str, language: str = "zh", employer
     lang = normalize_language(language)
     if employer_type.strip():
         state.meta = state.meta.model_copy(update={"employer_type": normalize_employer_type(employer_type)})
+
+    draft_store = RedisDraftStore(client, session_id, user.get("sub") if user else None)
+    draft = await draft_store.load_draft()
+    state = state_with_draft(state, draft)
+
     result = check_resume_language_requirements(state, lang)
     return result
 
@@ -621,8 +628,10 @@ class SetResumeLanguageRequest(BaseModel):
 async def set_resume_language(req: SetResumeLanguageRequest, request: Request):
     """设置目标简历语言并返回格式检查清单（生成/互转前调用）。"""
     from api.chat import _aload_state, _asave_state
+    from api.draft_utils import state_with_draft
     from tools.resume_language_checklist import check_resume_language_requirements
     from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
+    from storage.redis_client import RedisDraftStore
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -645,6 +654,9 @@ async def set_resume_language(req: SetResumeLanguageRequest, request: Request):
                                               "workflow_trace", "resume_language_target"})
     await _asave_state(store, persist_data)
 
+    draft_store = RedisDraftStore(client, req.session_id, user.get("sub") if user else None)
+    draft = await draft_store.load_draft()
+    state = state_with_draft(state, draft)
     checklist = check_resume_language_requirements(state, target)
     return {"language": target, "language_checklist": checklist}
 
@@ -657,6 +669,62 @@ class RenderRequest(BaseModel):
 class TranslateResumeRequest(BaseModel):
     session_id: str
     target_language: str = Field(description="Target language: zh, zh-TW, en, or pt")
+
+
+class RestoreResumeSnapshotRequest(BaseModel):
+    session_id: str
+    resume_content_json: dict | None = None
+    render_config: dict | None = None
+    resume_html: dict | None = None
+
+
+@router.post("/restore-snapshot")
+async def restore_resume_snapshot(req: RestoreResumeSnapshotRequest, request: Request):
+    """将 Redis 会话中的简历状态恢复到指定快照（用于撤销/重做）。"""
+    from api.chat import _aload_state, _asave_state
+    from workflow.state import ResumeContent, RenderConfig, ResumeHtml
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+
+    if not req.resume_html and not req.resume_content_json:
+        raise HTTPException(status_code=422, detail="快照至少需包含 resume_html 或 resume_content_json")
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    saved = await _aload_state(store)
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    state = CopilotState.model_validate(saved)
+
+    if req.resume_content_json is not None:
+        state.resume_content_json = ResumeContent.model_validate(req.resume_content_json)
+    if req.render_config is not None:
+        state.render_config = RenderConfig.model_validate(req.render_config)
+    if req.resume_html is not None:
+        state.resume_html = ResumeHtml.model_validate(req.resume_html)
+
+    persist_data = state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
+                                              "execution_plan", "reply_message", "triggered_agents",
+                                              "workflow_trace", "resume_language_target",
+                                              "chat_output_language",
+                                              "chat_question_output_language",
+                                              "chat_feedback_output_language"})
+    await _asave_state(store, persist_data)
+
+    language = (
+        state.resume_content_json.meta.language
+        if state.resume_content_json
+        else state.render_config.language
+    )
+    return {
+        "ok": True,
+        "language": language,
+        "resume_content_json": state.resume_content_json.model_dump() if state.resume_content_json else None,
+        "render_config": state.render_config.model_dump(),
+        "resume_html": state.resume_html.model_dump(),
+    }
 
 
 @router.post("/translate")

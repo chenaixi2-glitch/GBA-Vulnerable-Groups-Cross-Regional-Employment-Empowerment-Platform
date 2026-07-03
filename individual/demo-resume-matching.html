@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skills-first Résumé Matching — GBA Platform</title>
+    <title data-i18n="matching.pageTitle">Skills-first Résumé Matching — GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -23,12 +23,7 @@
             <span class="text-slate-900 font-semibold" data-i18n="matching.title">Résumé matching engine</span>
         </nav>
         <div class="flex items-center gap-2">
-            <select id="ui-lang" class="text-sm border rounded-lg px-2 py-1">
-                <option value="en">English</option>
-                <option value="zh-CN">简体中文</option>
-                <option value="zh-TW">繁體中文</option>
-                <option value="pt">Português</option>
-            </select>
+            <div id="header-lang-slot"></div>
         </div>
     </header>
 
@@ -68,12 +63,7 @@
             <div class="grid sm:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-medium mb-1" data-i18n="matching.industryLabel">Industry cluster</label>
-                    <select id="industry" class="w-full border rounded-lg p-2 text-sm">
-                        <option>Cross-border e-commerce</option>
-                        <option>Financial services</option>
-                        <option>Hospitality & tourism</option>
-                        <option>Public sector mobility</option>
-                    </select>
+                    <select id="industry" class="w-full border rounded-lg p-2 text-sm"></select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1" data-i18n="matching.polishLabel">Tone / polish intensity</label>
@@ -107,6 +97,26 @@
         function t(key, fallback) {
             return window.GBAI18n && window.GBAI18n.t ? window.GBAI18n.t(key, fallback) : (fallback || key);
         }
+
+        var INDUSTRY_OPTIONS = [
+            ['industryEcommerce', 'Cross-border e-commerce'],
+            ['industryFinance', 'Financial services'],
+            ['industryHospitality', 'Hospitality & tourism'],
+            ['industryPublic', 'Public sector mobility']
+        ];
+
+        function fillIndustrySelect() {
+            var sel = document.getElementById('industry');
+            if (!sel) return;
+            var current = sel.value || INDUSTRY_OPTIONS[0][0];
+            sel.innerHTML = INDUSTRY_OPTIONS.map(function (pair) {
+                var key = pair[0];
+                var selected = key === current ? ' selected' : '';
+                return '<option value="' + key + '"' + selected + '>' + t('matching.' + key, pair[1]) + '</option>';
+            }).join('');
+        }
+
+        fillIndustrySelect();
 
         var step = 1;
         var lastSuggestions = [];
@@ -183,6 +193,7 @@
         };
 
         window.addEventListener('gba:language-changed', function () {
+            fillIndustrySelect();
             renderSuggestions();
         });
     </script>

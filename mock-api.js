@@ -1,4 +1,17 @@
 // Mock API responses for demos — fixtures in test-data/mock/
+function mockT(key, fallback, vars) {
+    if (typeof window !== 'undefined' && window.GBAI18n && window.GBAI18n.t) {
+        return window.GBAI18n.t(key, fallback, vars);
+    }
+    var s = fallback || key;
+    if (vars && s) {
+        Object.keys(vars).forEach(function (k) {
+            s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+    }
+    return s;
+}
+
 function platformMockData() {
     if (typeof window !== 'undefined' && window.GBA_TEST_DATA && window.GBA_TEST_DATA.mock) {
         return window.GBA_TEST_DATA.mock;
@@ -49,10 +62,10 @@ const API = {
                     score: Math.floor(Math.random() * 20) + 80
                 },
                 suggestions: [
-                    "Highlighted your communication and teamwork impact",
-                    "Surfaced patience and crisis-handling from your CS experience",
-                    "Tightened job descriptions for clearer impact",
-                    "Improved resume structure for easier scanning"
+                    mockT('mock.optimizeSuggestion1', 'Highlighted your communication and teamwork impact'),
+                    mockT('mock.optimizeSuggestion2', 'Surfaced patience and crisis-handling from your CS experience'),
+                    mockT('mock.optimizeSuggestion3', 'Tightened job descriptions for clearer impact'),
+                    mockT('mock.optimizeSuggestion4', 'Improved resume structure for easier scanning')
                 ]
             }
         };
@@ -70,7 +83,7 @@ const API = {
                             return {
                                 id: j.id,
                                 title: j.title,
-                                company: j.company_name || j.department || '企业岗位',
+                                company: j.company_name || j.department || mockT('mock.defaultJobCompany', 'Company job'),
                                 location: j.location || '',
                                 salary: j.salary || '',
                                 type: 'Full-time',
@@ -152,10 +165,10 @@ const API = {
                 interviewStyle,
                 questions,
                 tips: [
-                    "Stay confident; answer clearly and in order",
-                    "Use STAR (Situation, Task, Action, Result) framing",
-                    "Surface soft skills tied to this role",
-                    "Prepare thoughtful questions about the company and sector"
+                    mockT('mock.interviewTip1', 'Stay confident; answer clearly and in order'),
+                    mockT('mock.interviewTip2', 'Use STAR (Situation, Task, Action, Result) framing'),
+                    mockT('mock.interviewTip3', 'Surface soft skills tied to this role'),
+                    mockT('mock.interviewTip4', 'Prepare thoughtful questions about the company and sector')
                 ]
             }
         };
@@ -184,8 +197,7 @@ const API = {
                 success: true,
                 data: {
                     question,
-                    answer:
-                        "Thank you — your question spans specialised regulation. Confirm details with competent authorities or counsel. Topics this demo recognises in English or Mandarin include: cross-border social security transfers, IIT subsidies, disability employment levy rules, inclusive hiring subsidies, qualification recognition, and visa / work-authorisation pathways.",
+                    answer: mockT('mock.policyFallbackAnswer', 'Thank you — your question spans specialised regulation. Confirm details with competent authorities or counsel. Topics this demo recognises in English or Mandarin include: cross-border social security transfers, IIT subsidies, disability employment levy rules, inclusive hiring subsidies, qualification recognition, and visa / work-authorisation pathways.'),
                     relatedTopics: policySynonyms.map((x) => x.data.question)
                 }
             };
@@ -212,7 +224,7 @@ const API = {
         if (!path) {
             return {
                 success: false,
-                message: "No learning path is available for that role in this demo."
+                message: mockT('mock.learningPathUnavailable', 'No learning path is available for that role in this demo.')
             };
         }
         
@@ -256,30 +268,30 @@ const API = {
                     "Time management": Math.floor(Math.random() * 30) + 70
                 },
                 strengths: [
-                    "Communication and collaboration read as signature strengths — great for stakeholder-heavy roles.",
-                    "You onboard new concepts quickly, which lowers ramp time for rotations.",
-                    "You stay productive when priorities shift mid-sprint."
+                    mockT('mock.skillStrength1', 'Communication and collaboration read as signature strengths — great for stakeholder-heavy roles.'),
+                    mockT('mock.skillStrength2', 'You onboard new concepts quickly, which lowers ramp time for rotations.'),
+                    mockT('mock.skillStrength3', 'You stay productive when priorities shift mid-sprint.')
                 ],
                 improvementAreas: [
-                    "Deepen tooling or certifications tied to your target JD.",
-                    "Stretch creative judgement with cross-functional critiques.",
-                    "Layer structured time-blocking on top of your natural hustle."
+                    mockT('mock.skillImprove1', 'Deepen tooling or certifications tied to your target JD.'),
+                    mockT('mock.skillImprove2', 'Stretch creative judgement with cross-functional critiques.'),
+                    mockT('mock.skillImprove3', 'Layer structured time-blocking on top of your natural hustle.')
                 ],
                 recommendedJobs: [
                     {
-                        title: "E-commerce Customer Service",
+                        title: mockT('mock.jobRecommend1Title', 'E-commerce Customer Service'),
                         matchScore: Math.floor(Math.random() * 15) + 80,
-                        reason: "Patience + clarity map exceptionally well to frontline CS KPIs."
+                        reason: mockT('mock.jobRecommend1Reason', 'Patience + clarity map exceptionally well to frontline CS KPIs.')
                     },
                     {
-                        title: "Data Annotator",
+                        title: mockT('mock.jobRecommend2Title', 'Data Annotator'),
                         matchScore: Math.floor(Math.random() * 15) + 75,
-                        reason: "Detail orientation shines for precision labelling workloads."
+                        reason: mockT('mock.jobRecommend2Reason', 'Detail orientation shines for precision labelling workloads.')
                     },
                     {
-                        title: "Content Moderator",
+                        title: mockT('mock.jobRecommend3Title', 'Content Moderator'),
                         matchScore: Math.floor(Math.random() * 15) + 70,
-                        reason: "Balanced judgement helps keep community policies consistent."
+                        reason: mockT('mock.jobRecommend3Reason', 'Balanced judgement helps keep community policies consistent.')
                     }
                 ]
             }
@@ -297,11 +309,11 @@ const API = {
             {
                 phrases: [/optimize .*resume|resume optimization|better cv|\u4f18\u5316\u7b80\u5386/i],
                 data: {
-                    text: "Lead with measurable wins, tune keywords to each role, and keep layout scannable. Upload your draft to our AI resume coach for targeted rewrites.",
+                    text: mockT('mock.oliviaResumeText', 'Lead with measurable wins, tune keywords to each role, and keep layout scannable. Upload your draft to our AI resume coach for targeted rewrites.'),
                     actions: [
                         {
                             type: "button",
-                            text: "Open resume coach",
+                            text: mockT('mock.oliviaResumeBtn', 'Open resume coach'),
                             action: "open_modal",
                             modal: "resume-optimize"
                         }
@@ -311,11 +323,11 @@ const API = {
             {
                 phrases: [/customer service job|support role|live chat agent|\u67e5\u627e\u5ba2\u670d/i],
                 data: {
-                    text: "Blind-review friendly CS roles—including cross-border e-commerce desks—often mix remote shifts with coaching. Dive into curated matches tailored to accessibility needs.",
+                    text: mockT('mock.oliviaJobsText', 'Blind-review friendly CS roles—including cross-border e-commerce desks—often mix remote shifts with coaching. Dive into curated matches tailored to accessibility needs.'),
                     actions: [
                         {
                             type: "button",
-                            text: "View matches",
+                            text: mockT('mock.oliviaJobsBtn', 'View matches'),
                             action: "open_modal",
                             modal: "job-match"
                         }
@@ -325,11 +337,11 @@ const API = {
             {
                 phrases: [/social security|mandatory contributions|\u793e\u4fdd|\u8de8\u5883/i],
                 data: {
-                    text: "Hong Kong and Macau hires in mainland GBA cities can participate in—or later transfer—mainland social programmes. Officials need contribution histories from both municipalities.",
+                    text: mockT('mock.oliviaPolicyText', 'Hong Kong and Macau hires in mainland GBA cities can participate in—or later transfer—mainland social programmes. Officials need contribution histories from both municipalities.'),
                     actions: [
                         {
                             type: "button",
-                            text: "Open policy briefing",
+                            text: mockT('mock.oliviaPolicyBtn', 'Open policy briefing'),
                             action: "open_modal",
                             modal: "policy-qa",
                             params: { question: "Cross-border social security transfer" }
@@ -340,11 +352,11 @@ const API = {
             {
                 phrases: [/mock interview|practice interview|\u9762\u8bd5|\u6a21\u62df/i],
                 data: {
-                    text: "Pick warm, neutral, or stress interview personas. Olivia builds question packs from your resume + JD then shares rubric-aligned feedback afterwards.",
+                    text: mockT('mock.oliviaInterviewText', 'Pick warm, neutral, or stress interview personas. Olivia builds question packs from your resume + JD then shares rubric-aligned feedback afterwards.'),
                     actions: [
                         {
                             type: "button",
-                            text: "Start mock interview",
+                            text: mockT('mock.oliviaInterviewBtn', 'Start mock interview'),
                             action: "open_modal",
                             modal: "interview-coach"
                         }
@@ -365,23 +377,23 @@ const API = {
         return {
             success: true,
             data: {
-                text: "Hi — I'm Olivia, your bilingual cross-border careers copilot. Ask about CV upgrades, equitable job discovery, subsidies, visas, or interview drills.",
+                text: mockT('mock.oliviaDefaultText', "Hi — I'm Olivia, your bilingual cross-border careers copilot. Ask about CV upgrades, equitable job discovery, subsidies, visas, or interview drills."),
                 actions: [
                     {
                         type: "button",
-                        text: "Resume help",
+                        text: mockT('mock.oliviaDefaultResumeBtn', 'Resume help'),
                         action: "open_modal",
                         modal: "resume-optimize"
                     },
                     {
                         type: "button",
-                        text: "Job matches",
+                        text: mockT('mock.oliviaDefaultJobsBtn', 'Job matches'),
                         action: "open_modal",
                         modal: "job-match"
                     },
                     {
                         type: "button",
-                        text: "Policy Q&A",
+                        text: mockT('mock.oliviaDefaultPolicyBtn', 'Policy Q&A'),
                         action: "open_modal",
                         modal: "policy-qa"
                     }
@@ -525,10 +537,10 @@ const API = {
         }
         const id = String(identifier || '').trim();
         if (!id || !password) {
-            return { success: false, message: 'Please enter email and password.' };
+            return { success: false, message: mockT('auth.errors.fillRequired', 'Please fill all required fields.') };
         }
         if (String(password).length < 6) {
-            return { success: false, message: 'Password must be at least 6 characters.' };
+            return { success: false, message: mockT('auth.errors.passwordMin', 'Password must be at least 6 characters.') };
         }
 
         const expectedPortal = this.normalizePortalRole(portalHint);
@@ -550,8 +562,8 @@ const API = {
                         success: false,
                         message:
                             expectedRole === 'corporate'
-                                ? '该账号为个人账号，请前往个人端登录。'
-                                : '该账号为企业账号，请前往企业端登录。',
+                                ? mockT('auth.errors.wrongPortalCorporate', 'This is an individual account. Please log in on the individual portal.')
+                                : mockT('auth.errors.wrongPortalIndividual', 'This is a corporate account. Please log in on the corporate portal.'),
                     };
                 }
                 const portal = this.normalizePortalRole(portalHint || u.role);
@@ -568,9 +580,9 @@ const API = {
                 this.saveAuthToken(nodeRes.data.token);
                 return { success: true, data: session };
             }
-            return { success: false, message: nodeRes.message || 'Login failed' };
+            return { success: false, message: nodeRes.message || mockT('auth.errors.loginFailed', 'Login failed') };
         } catch (e) {
-            return { success: false, message: '无法连接认证服务，请确认后端已启动。' };
+            return { success: false, message: mockT('auth.errors.networkDetailed', 'Cannot reach auth service. Ensure the backend is running.') };
         }
     },
 
@@ -580,10 +592,10 @@ const API = {
         }
         const id = String(identifier || '').trim();
         if (!id || !password) {
-            return { success: false, message: 'Please fill all required fields.' };
+            return { success: false, message: mockT('auth.errors.fillRequired', 'Please fill all required fields.') };
         }
         if (String(password).length < 6) {
-            return { success: false, message: 'Password must be at least 6 characters.' };
+            return { success: false, message: mockT('auth.errors.passwordMin', 'Password must be at least 6 characters.') };
         }
 
         const portal = this.normalizePortalRole(portalHint);
@@ -599,7 +611,7 @@ const API = {
             };
             if (role === 'individual') {
                 if (!profileOptional || profileOptional.age == null || !profileOptional.gender || profileOptional.current_income == null) {
-                    return { success: false, message: 'Please complete age, gender and monthly income.' };
+                    return { success: false, message: mockT('auth.errors.completeProfileFields', 'Please complete age, gender and monthly income.') };
                 }
                 body.age = profileOptional.age;
                 body.gender = profileOptional.gender;
@@ -626,9 +638,9 @@ const API = {
                 this.saveAuthToken(nodeRes.data.token);
                 return { success: true, data: session };
             }
-            return { success: false, message: nodeRes.message || 'Registration failed' };
+            return { success: false, message: nodeRes.message || mockT('auth.errors.registerFailed', 'Registration failed') };
         } catch (e) {
-            return { success: false, message: '无法连接认证服务，请确认后端已启动。' };
+            return { success: false, message: mockT('auth.errors.networkDetailed', 'Cannot reach auth service. Ensure the backend is running.') };
         }
     },
 

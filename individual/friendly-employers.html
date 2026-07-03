@@ -10,13 +10,29 @@
 <body class="bg-slate-50 min-h-screen">
     <header class="bg-white border-b px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-sm">
         <a href="../index.html" class="text-blue-700 font-semibold"><i class="fas fa-arrow-left mr-1"></i><span data-i18n="friendlyEmployers.home">Home</span></a>
-        <a href="demo-jobs-database.html?friendly=1" class="text-emerald-700 font-medium" data-i18n="friendlyEmployers.viewJobs">View friendly jobs</a>
+        <div class="flex items-center gap-3">
+            <div id="header-lang-slot"></div>
+            <a href="demo-jobs-database.html?friendly=1" class="text-emerald-700 font-medium" data-i18n="friendlyEmployers.viewJobs">View friendly jobs</a>
+        </div>
     </header>
     <main class="max-w-5xl mx-auto px-4 py-8">
         <h1 class="text-2xl font-bold text-slate-900 mb-2" data-i18n="friendlyEmployers.heading">Vulnerable-group friendly employers</h1>
         <p class="text-slate-600 mb-6 text-sm" data-i18n="friendlyEmployers.subtitle">Companies that post inclusive jobs or prioritize vulnerable candidates appear here.</p>
-        <div id="company-list" class="grid md:grid-cols-2 gap-4"></div>
+        <div id="company-list" class="grid md:grid-cols-2 gap-4">
+            <p class="text-slate-500 col-span-2" id="fe-loading"><i class="fas fa-spinner fa-spin"></i> <span data-i18n="common.loading">Loading…</span></p>
+        </div>
+        <p class="sr-only" data-i18n="friendlyEmployers.empty">No friendly employers yet — companies are welcome to post inclusive jobs.</p>
+        <p class="sr-only" data-i18n="friendlyEmployers.badge">Vulnerable-group friendly</p>
+        <p class="sr-only" data-i18n="friendlyEmployers.noIndustry">Industry not specified</p>
+        <p class="sr-only" data-i18n="friendlyEmployers.defaultDesc">This company posted vulnerable-group friendly jobs.</p>
     </main>
+    <footer class="max-w-5xl mx-auto px-4 py-8 text-center text-sm text-slate-600 border-t border-slate-200">
+        <a href="../index.html" class="hover:text-blue-700" data-i18n="friendlyEmployers.footerHome">Home</a>
+        <span class="mx-2">·</span>
+        <a href="demo-jobs-database.html?friendly=1" class="text-emerald-700 hover:underline font-medium" data-i18n="friendlyEmployers.viewJobs">View friendly jobs</a>
+        <span class="mx-2">·</span>
+        <a href="portal.html" class="text-emerald-700 hover:underline font-medium" data-i18n="friendlyEmployers.footerPortal">Individual Portal</a>
+    </footer>
     <script src="assets/js/platform-api.js"></script>
     <script src="../assets/i18n/i18n.js"></script>
     <script>
@@ -33,7 +49,7 @@
         }
         async function load() {
             var list = document.getElementById('company-list');
-            list.innerHTML = '<p class="text-slate-500 col-span-2"><i class="fas fa-spinner fa-spin"></i> ' + feT('common.loading', 'Loading…') + '</p>';
+            list.innerHTML = '<p class="text-slate-500 col-span-2"><i class="fas fa-spinner fa-spin"></i> ' + escape(feT('common.loading', 'Loading…')) + '</p>';
             try {
                 var res = await PlatformAPI.CompanyAPI.listFriendly();
                 var companies = res.data.companies || [];
@@ -50,10 +66,14 @@
                         '<p class="text-sm text-slate-600">' + escape(c.inclusivity_info || c.description || feT('friendlyEmployers.defaultDesc', 'This company posted vulnerable-group friendly jobs.')) + '</p></article>';
                 }).join('');
             } catch (e) {
-                list.innerHTML = '<p class="text-red-600 col-span-2">' + escape(e.message) + '</p>';
+                list.innerHTML = '<p class="text-red-600 col-span-2">' + escape(feT('friendlyEmployers.loadError', 'Could not load employers. Please try again later.', { message: e.message })) + '</p>';
             }
         }
-        document.addEventListener('DOMContentLoaded', load);
+        document.addEventListener('DOMContentLoaded', function () {
+            var start = load;
+            if (window.GBAI18n && GBAI18n.initLanguage) GBAI18n.initLanguage().then(start);
+            else start();
+        });
         window.addEventListener('gba:language-changed', load);
     </script>
 </body>

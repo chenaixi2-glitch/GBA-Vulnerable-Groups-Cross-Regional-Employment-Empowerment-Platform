@@ -30,11 +30,7 @@ async def generate_jd_from_title_for_profile(
     employer_text = employer_type_label(employer_key) or "未指定"
     profile_json = state.candidate_profile.model_dump_json(indent=2)
 
-    output_lang = normalize_language(
-        language or (state.render_config.language if state.render_config else "")
-        or state.resume_language_target
-        or "zh"
-    )
+    output_lang = normalize_language(language or "zh")
 
     prompt = JD_TITLE_GENERATION_PROMPT.format(
         job_title=job_title.strip(),

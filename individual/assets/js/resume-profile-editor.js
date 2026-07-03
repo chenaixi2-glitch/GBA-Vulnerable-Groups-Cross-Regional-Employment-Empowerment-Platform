@@ -730,7 +730,12 @@ const ProfileEditor = {
         </div>`;
     },
 
-    render() {
+    render(options = {}) {
+        const preserveDraft = Boolean(options.preserveDraft);
+        if (!preserveDraft && document.querySelector('[data-education-id], [data-module-id], #profile-summary')) {
+            this.draft = this.collectDraftFromForm();
+        }
+
         const draft = this.draft || { profile_basic: {}, education: [], modules: [] };
         const basic = draft.profile_basic || {};
 
@@ -820,7 +825,7 @@ const ProfileEditor = {
                 Utils.updateSessionDisplay(result.session_id);
             }
             this.draft = this.ensureDraftShape(result.draft);
-            this.render();
+            this.render({ preserveDraft: true });
             this.applyRestoredHint(result.source);
             this.show(result.restored);
             this.updateSaveUi();
@@ -843,7 +848,8 @@ const ProfileEditor = {
         }
 
         this.draft = draft;
-        this.render();
+        this._missingSlotsKey = '';
+        this.render({ preserveDraft: true });
         this.show(false);
         this.updateSaveUi();
 

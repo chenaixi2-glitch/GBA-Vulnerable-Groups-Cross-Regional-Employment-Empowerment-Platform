@@ -175,12 +175,46 @@ def draft_to_profile(draft: dict[str, Any]) -> CandidateProfile:
     return CandidateProfile(profile_basic=basic, materials=[], facts=facts)
 
 
+def state_with_draft(state: CopilotState, draft: dict[str, Any] | None) -> CopilotState:
+    """Overlay the latest profile-editor draft onto session state for validation/display."""
+    if not draft:
+        return state
+    profile = draft_to_profile(draft)
+    if state.candidate_profile and state.candidate_profile.materials:
+        profile.materials = list(state.candidate_profile.materials)
+    data = state.model_dump()
+    data["candidate_profile"] = profile.model_dump()
+    return CopilotState.model_validate(data)
+
+
+_PERSIST_EXCLUDE = {
+    "user_message", "user_attachments", "current_intent",
+    "execution_plan", "reply_message", "triggered_agents", "workflow_trace",
+}
+
+
+def _persist_payload(state_dict: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in state_dict.items() if k not in _PERSIST_EXCLUDE}
+
+
+async def bootstrap_session_from_draft(store, session_id: str, draft: dict[str, Any]) -> None:
+    """Create a new Redis session seeded from the profile editor draft."""
+    from api.chat import _asave_state
+
+    state = CopilotState(session_id=session_id)
+    profile = draft_to_profile(draft)
+    state_dict = state.model_dump()
+    state_dict["candidate_profile"] = profile.model_dump()
+    await _asave_state(store, _persist_payload(state_dict))
+
+
 async def sync_draft_to_session(store, session_id: str, draft: dict[str, Any]) -> None:
     """Merge draft into Redis session state candidate_profile."""
     from api.chat import _aload_state, _asave_state
 
     saved = await _aload_state(store)
     if not saved:
+        await bootstrap_session_from_draft(store, session_id, draft)
         return
 
     state = CopilotState.model_validate(saved)
@@ -191,11 +225,4 @@ async def sync_draft_to_session(store, session_id: str, draft: dict[str, Any]) -
 
     state_dict = state.model_dump()
     state_dict["candidate_profile"] = profile.model_dump()
-    persist_data = {
-        k: v for k, v in state_dict.items()
-        if k not in {
-            "user_message", "user_attachments", "current_intent",
-            "execution_plan", "reply_message", "triggered_agents", "workflow_trace",
-        }
-    }
-    await _asave_state(store, persist_data)
+    await _asave_state(store, _persist_payload(state_dict))

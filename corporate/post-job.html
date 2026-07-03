@@ -223,7 +223,7 @@
                 <span class="text-gray-200">|</span>
                 <a href="../index.html" class="flex items-center gap-1.5">
                     <i class="fas fa-handshake text-green-600"></i>
-                    <span class="font-bold text-gray-800 text-sm">GBA Platform</span>
+                    <span class="font-bold text-gray-800 text-sm" data-i18n="strings.GBA Platform" data-i18n-fallback="GBA Platform">GBA Platform</span>
                 </a>
             </div>
             <div class="flex items-center gap-3">
@@ -240,7 +240,7 @@
 
             <!-- Page header -->
             <div class="mb-8 pt-4">
-                <h1 class="text-2xl font-bold text-gray-900" data-i18n="postJob.pageHeading">Post a New Job</h1>
+                <h1 id="page-heading" class="text-2xl font-bold text-gray-900" data-i18n="postJob.pageHeading">Post a New Job</h1>
                 <p class="text-gray-500 text-sm mt-1" data-i18n="postJob.pageSubtitle">Fill in the details below to publish your job opening to GBA talent pool</p>
             </div>
 
@@ -283,67 +283,67 @@
                             <div>
                                 <label class="form-label"><span data-i18n="postJob.department">Department</span> <span class="required">*</span></label>
                                 <select id="department" class="form-input" required>
-                                    <option value="">Select department</option>
-                                    <option>Technology & Engineering</option>
-                                    <option>Finance & Accounting</option>
-                                    <option>Marketing & Communications</option>
-                                    <option>Human Resources</option>
-                                    <option>Sales & Business Development</option>
-                                    <option>Customer Service</option>
-                                    <option>Operations & Logistics</option>
-                                    <option>Legal & Compliance</option>
-                                    <option>Design & Creative</option>
-                                    <option>Other</option>
+                                    <option value="" data-i18n="postJob.selectDepartment">Select department</option>
+                                    <option value="Technology & Engineering" data-i18n="postJob.deptTech">Technology & Engineering</option>
+                                    <option value="Finance & Accounting" data-i18n="postJob.deptFinance">Finance & Accounting</option>
+                                    <option value="Marketing & Communications" data-i18n="postJob.deptMarketing">Marketing & Communications</option>
+                                    <option value="Human Resources" data-i18n="postJob.deptHr">Human Resources</option>
+                                    <option value="Sales & Business Development" data-i18n="postJob.deptSales">Sales & Business Development</option>
+                                    <option value="Customer Service" data-i18n="postJob.deptCustomer">Customer Service</option>
+                                    <option value="Operations & Logistics" data-i18n="postJob.deptOps">Operations & Logistics</option>
+                                    <option value="Legal & Compliance" data-i18n="postJob.deptLegal">Legal & Compliance</option>
+                                    <option value="Design & Creative" data-i18n="postJob.deptDesign">Design & Creative</option>
+                                    <option value="Other" data-i18n="postJob.deptOther">Other</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Employment Type <span class="required">*</span></label>
+                                <label class="form-label"><span data-i18n="postJob.employmentType">Employment Type</span> <span class="required">*</span></label>
                                 <select id="employment-type" class="form-input" required>
-                                    <option value="">Select type</option>
-                                    <option>Full-time</option>
-                                    <option>Part-time</option>
-                                    <option>Contract</option>
-                                    <option>Internship</option>
-                                    <option>Freelance</option>
+                                    <option value="" data-i18n="postJob.selectType">Select type</option>
+                                    <option value="Full-time" data-i18n="postJob.empFullTime">Full-time</option>
+                                    <option value="Part-time" data-i18n="postJob.empPartTime">Part-time</option>
+                                    <option value="Contract" data-i18n="postJob.empContract">Contract</option>
+                                    <option value="Internship" data-i18n="postJob.empInternship">Internship</option>
+                                    <option value="Freelance" data-i18n="postJob.empFreelance">Freelance</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Work Location <span class="required">*</span></label>
+                                <label class="form-label"><span data-i18n="postJob.workLocation">Work Location</span> <span class="required">*</span></label>
                                 <select id="work-location" class="form-input" required>
-                                    <option value="">Select location</option>
-                                    <option>Hong Kong</option>
-                                    <option>Macau</option>
-                                    <option>Shenzhen</option>
-                                    <option>Guangzhou</option>
-                                    <option>Foshan</option>
-                                    <option>Dongguan</option>
-                                    <option>Zhuhai</option>
-                                    <option>Remote (GBA)</option>
-                                    <option>Hybrid</option>
+                                    <option value="" data-i18n="postJob.selectLocation">Select location</option>
+                                    <option value="Hong Kong" data-i18n="postJob.locHongKong">Hong Kong</option>
+                                    <option value="Macau" data-i18n="postJob.locMacau">Macau</option>
+                                    <option value="Shenzhen" data-i18n="postJob.locShenzhen">Shenzhen</option>
+                                    <option value="Guangzhou" data-i18n="postJob.locGuangzhou">Guangzhou</option>
+                                    <option value="Foshan" data-i18n="postJob.locFoshan">Foshan</option>
+                                    <option value="Dongguan" data-i18n="postJob.locDongguan">Dongguan</option>
+                                    <option value="Zhuhai" data-i18n="postJob.locZhuhai">Zhuhai</option>
+                                    <option value="Remote (GBA)" data-i18n="postJob.locRemoteGba">Remote (GBA)</option>
+                                    <option value="Hybrid" data-i18n="postJob.locHybrid">Hybrid</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Work Mode</label>
+                                <label class="form-label" data-i18n="postJob.workMode">Work Mode</label>
                                 <select id="work-mode" class="form-input">
-                                    <option>On-site</option>
-                                    <option>Remote</option>
-                                    <option>Hybrid</option>
+                                    <option value="On-site" data-i18n="postJob.modeOnSite">On-site</option>
+                                    <option value="Remote" data-i18n="postJob.modeRemote">Remote</option>
+                                    <option value="Hybrid" data-i18n="postJob.modeHybrid">Hybrid</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Salary Range (Monthly, CNY) <span class="required">*</span></label>
+                                <label class="form-label"><span data-i18n="postJob.salaryRange">Salary Range (Monthly, CNY)</span> <span class="required">*</span></label>
                                 <div class="flex items-center gap-2">
-                                    <input type="number" id="salary-min" class="form-input" placeholder="Min e.g. 10000" required min="1">
+                                    <input type="number" id="salary-min" class="form-input" data-i18n-placeholder="postJob.placeholderSalaryMin" placeholder="Min e.g. 10000" required min="1">
                                     <span class="text-gray-400 shrink-0">—</span>
-                                    <input type="number" id="salary-max" class="form-input" placeholder="Max e.g. 25000" required min="1">
+                                    <input type="number" id="salary-max" class="form-input" data-i18n-placeholder="postJob.placeholderSalaryMax" placeholder="Max e.g. 25000" required min="1">
                                 </div>
                             </div>
                             <div>
-                                <label class="form-label">Number of Openings</label>
-                                <input type="number" id="headcount" class="form-input" placeholder="e.g. 2" min="1" value="1">
+                                <label class="form-label" data-i18n="postJob.headcount">Number of Openings</label>
+                                <input type="number" id="headcount" class="form-input" data-i18n-placeholder="postJob.placeholderHeadcount" placeholder="e.g. 2" min="1" value="1">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="form-label">Application Deadline</label>
+                                <label class="form-label" data-i18n="postJob.deadline">Application Deadline</label>
                                 <input type="date" id="deadline" class="form-input">
                             </div>
                         </div>
@@ -353,17 +353,17 @@
                     <div class="form-card">
                         <div class="section-title">
                             <span class="icon"><i class="fas fa-align-left"></i></span>
-                            Job Description
+                            <span data-i18n="postJob.jobDescription">Job Description</span>
                         </div>
                         <div class="space-y-5">
                             <div>
-                                <label class="form-label">Job Summary <span class="required">*</span></label>
-                                <textarea id="job-summary" class="form-input" rows="4" placeholder="Brief overview of this role and its purpose within the team..." required></textarea>
+                                <label class="form-label"><span data-i18n="postJob.jobSummary">Job Summary</span> <span class="required">*</span></label>
+                                <textarea id="job-summary" class="form-input" rows="4" data-i18n-placeholder="postJob.placeholderSummary" placeholder="Brief overview of this role and its purpose within the team..." required></textarea>
                             </div>
                             <div>
-                                <label class="form-label">Key Responsibilities <span class="required">*</span></label>
-                                <textarea id="responsibilities" class="form-input" rows="6" placeholder="• Develop and maintain core platform features&#10;• Collaborate with cross-functional teams&#10;• Conduct code reviews and mentor junior developers" required></textarea>
-                                <p class="text-xs text-gray-400 mt-1">Use bullet points (•) for clarity</p>
+                                <label class="form-label"><span data-i18n="postJob.responsibilities">Key Responsibilities</span> <span class="required">*</span></label>
+                                <textarea id="responsibilities" class="form-input" rows="6" data-i18n-placeholder="postJob.placeholderResp" placeholder="• Develop and maintain core platform features&#10;• Collaborate with cross-functional teams&#10;• Conduct code reviews and mentor junior developers" required></textarea>
+                                <p class="text-xs text-gray-400 mt-1" data-i18n="postJob.bulletHint">Use bullet points (•) for clarity</p>
                             </div>
                         </div>
                     </div>
@@ -375,63 +375,63 @@
                     <div class="form-card">
                         <div class="section-title">
                             <span class="icon"><i class="fas fa-graduation-cap"></i></span>
-                            Qualifications & Skills
+                            <span data-i18n="postJob.qualifications">Qualifications & Skills</span>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label class="form-label">Minimum Education</label>
+                                <label class="form-label" data-i18n="postJob.minEducation">Minimum Education</label>
                                 <select id="education" class="form-input">
-                                    <option>No requirement</option>
-                                    <option>High School / Secondary</option>
-                                    <option>Diploma / Associate's</option>
-                                    <option>Bachelor's Degree</option>
-                                    <option>Master's Degree</option>
-                                    <option>PhD / Doctorate</option>
+                                    <option value="No requirement" data-i18n="postJob.eduNone">No requirement</option>
+                                    <option value="High School / Secondary" data-i18n="postJob.eduHighSchool">High School / Secondary</option>
+                                    <option value="Diploma / Associate's" data-i18n="postJob.eduDiploma">Diploma / Associate's</option>
+                                    <option value="Bachelor's Degree" data-i18n="postJob.eduBachelor">Bachelor's Degree</option>
+                                    <option value="Master's Degree" data-i18n="postJob.eduMaster">Master's Degree</option>
+                                    <option value="PhD / Doctorate" data-i18n="postJob.eduPhd">PhD / Doctorate</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Years of Experience</label>
+                                <label class="form-label" data-i18n="postJob.yearsExperience">Years of Experience</label>
                                 <select id="experience" class="form-input">
-                                    <option>No experience required</option>
-                                    <option>Less than 1 year</option>
-                                    <option>1 – 3 years</option>
-                                    <option>3 – 5 years</option>
-                                    <option>5 – 10 years</option>
-                                    <option>10+ years</option>
+                                    <option value="No experience required" data-i18n="postJob.expNone">No experience required</option>
+                                    <option value="Less than 1 year" data-i18n="postJob.expLt1">Less than 1 year</option>
+                                    <option value="1 – 3 years" data-i18n="postJob.exp1to3">1 – 3 years</option>
+                                    <option value="3 – 5 years" data-i18n="postJob.exp3to5">3 – 5 years</option>
+                                    <option value="5 – 10 years" data-i18n="postJob.exp5to10">5 – 10 years</option>
+                                    <option value="10+ years" data-i18n="postJob.exp10plus">10+ years</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Language Requirements</label>
+                                <label class="form-label" data-i18n="postJob.languageReq">Language Requirements</label>
                                 <select id="language" class="form-input">
-                                    <option>No specific requirement</option>
-                                    <option>Cantonese</option>
-                                    <option>Mandarin</option>
-                                    <option>English</option>
-                                    <option>Cantonese + English</option>
-                                    <option>Mandarin + English</option>
-                                    <option>Trilingual (Cantonese / Mandarin / English)</option>
+                                    <option value="No specific requirement" data-i18n="postJob.langNone">No specific requirement</option>
+                                    <option value="Cantonese" data-i18n="postJob.langCantonese">Cantonese</option>
+                                    <option value="Mandarin" data-i18n="postJob.langMandarin">Mandarin</option>
+                                    <option value="English" data-i18n="postJob.langEnglish">English</option>
+                                    <option value="Cantonese + English" data-i18n="postJob.langCantoneseEnglish">Cantonese + English</option>
+                                    <option value="Mandarin + English" data-i18n="postJob.langMandarinEnglish">Mandarin + English</option>
+                                    <option value="Trilingual (Cantonese / Mandarin / English)" data-i18n="postJob.langTrilingual">Trilingual (Cantonese / Mandarin / English)</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Industry Background</label>
-                                <input type="text" id="industry" class="form-input" placeholder="e.g. Fintech, Manufacturing, Retail">
+                                <label class="form-label" data-i18n="postJob.industryBackground">Industry Background</label>
+                                <input type="text" id="industry" class="form-input" data-i18n-placeholder="postJob.placeholderIndustry" placeholder="e.g. Fintech, Manufacturing, Retail">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="form-label">Required Skills</label>
+                                <label class="form-label" data-i18n="postJob.requiredSkills">Required Skills</label>
                                 <div class="tag-input-wrap" id="skills-wrap">
-                                    <input type="text" id="skills-input" placeholder="Type a skill and press Enter…" autocomplete="off">
+                                    <input type="text" id="skills-input" data-i18n-placeholder="postJob.placeholderSkill" placeholder="Type a skill and press Enter…" autocomplete="off">
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1">Press Enter or comma to add each skill</p>
+                                <p class="text-xs text-gray-400 mt-1" data-i18n="postJob.skillEnterHint">Press Enter or comma to add each skill</p>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="form-label">Nice-to-have Skills</label>
+                                <label class="form-label" data-i18n="postJob.niceSkills">Nice-to-have Skills</label>
                                 <div class="tag-input-wrap" id="nice-skills-wrap">
-                                    <input type="text" id="nice-skills-input" placeholder="Type a skill and press Enter…" autocomplete="off">
+                                    <input type="text" id="nice-skills-input" data-i18n-placeholder="postJob.placeholderSkill" placeholder="Type a skill and press Enter…" autocomplete="off">
                                 </div>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="form-label">Additional Requirements</label>
-                                <textarea id="additional-req" class="form-input" rows="3" placeholder="Certifications, licences, travel requirements, etc."></textarea>
+                                <label class="form-label" data-i18n="postJob.additionalReq">Additional Requirements</label>
+                                <textarea id="additional-req" class="form-input" rows="3" data-i18n-placeholder="postJob.placeholderAdditionalReq" placeholder="Certifications, licences, travel requirements, etc."></textarea>
                             </div>
                         </div>
                     </div>
@@ -440,60 +440,60 @@
                     <div class="form-card">
                         <div class="section-title">
                             <span class="icon"><i class="fas fa-heart"></i></span>
-                            Inclusive Targeting
+                            <span data-i18n="postJob.inclusiveTargeting">Inclusive Targeting</span>
                         </div>
-                        <p class="text-sm text-gray-500 mb-4">硬性匹配：<strong>所有</strong>非「不限」条件须同时满足（AND）。勾选「优先推荐弱势群体」后岗位对全员可见，企业查看应聘者时弱势群体排序靠前。</p>
+                        <p class="text-sm text-gray-500 mb-4" data-i18n="postJob.inclusiveHint">硬性匹配：所有非「不限」条件须同时满足（AND）。勾选「优先推荐弱势群体」后岗位对全员可见，企业查看应聘者时弱势群体排序靠前。</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="form-label" for="target-age-range">Age range</label>
+                                <label class="form-label" for="target-age-range" data-i18n="postJob.targetAge">Age range</label>
                                 <select id="target-age-range" class="form-input">
-                                    <option value="any">Any age</option>
-                                    <option value="45_plus">45 years and above</option>
-                                    <option value="30_below">30 years and below</option>
+                                    <option value="any" data-i18n="postJob.ageAny">Any age</option>
+                                    <option value="45_plus" data-i18n="postJob.age45plus">45 years and above</option>
+                                    <option value="30_below" data-i18n="postJob.age30below">30 years and below</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label" for="target-gender">Gender</label>
+                                <label class="form-label" for="target-gender" data-i18n="postJob.targetGender">Gender</label>
                                 <select id="target-gender" class="form-input">
-                                    <option value="any">Any gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
+                                    <option value="any" data-i18n="postJob.genderAny">Any gender</option>
+                                    <option value="male" data-i18n="postJob.genderMale">Male</option>
+                                    <option value="female" data-i18n="postJob.genderFemale">Female</option>
+                                    <option value="other" data-i18n="postJob.genderOther">Other</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label" for="target-disability">Disability acceptance</label>
+                                <label class="form-label" for="target-disability" data-i18n="postJob.targetDisability">Disability acceptance</label>
                                 <select id="target-disability" class="form-input">
-                                    <option value="any">Any disability status</option>
-                                    <option value="open">Open to candidates with disabilities</option>
+                                    <option value="any" data-i18n="postJob.disabilityAny">Any disability status</option>
+                                    <option value="open" data-i18n="postJob.disabilityOpen">Open to candidates with disabilities</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label" for="target-career-gap">Career gap</label>
+                                <label class="form-label" for="target-career-gap" data-i18n="postJob.targetCareerGap">Career gap</label>
                                 <select id="target-career-gap" class="form-input">
-                                    <option value="any">Any career gap</option>
-                                    <option value="yes">Welcomes career gap</option>
-                                    <option value="no">No career gap required</option>
+                                    <option value="any" data-i18n="postJob.careerGapAny">Any career gap</option>
+                                    <option value="yes" data-i18n="postJob.careerGapYes">Welcomes career gap</option>
+                                    <option value="no" data-i18n="postJob.careerGapNo">No career gap required</option>
                                 </select>
                             </div>
                             <div class="md:col-span-2" id="target-disability-types-wrap" style="display:none;">
-                                <label class="form-label" for="target-disability-types">Accepted disability types (optional)</label>
+                                <label class="form-label" for="target-disability-types" data-i18n="postJob.targetDisabilityTypes">Accepted disability types (optional)</label>
                                 <select id="target-disability-types" class="form-input" multiple size="4">
-                                    <option value="physical">Physical</option>
-                                    <option value="visual">Visual</option>
-                                    <option value="hearing">Hearing</option>
-                                    <option value="intellectual">Intellectual</option>
-                                    <option value="mental">Mental</option>
-                                    <option value="other">Other</option>
+                                    <option value="physical" data-i18n="meta.disabilityTypes.physical">Physical</option>
+                                    <option value="visual" data-i18n="meta.disabilityTypes.visual">Visual</option>
+                                    <option value="hearing" data-i18n="meta.disabilityTypes.hearing">Hearing</option>
+                                    <option value="intellectual" data-i18n="meta.disabilityTypes.intellectual">Intellectual</option>
+                                    <option value="mental" data-i18n="meta.disabilityTypes.mental">Mental</option>
+                                    <option value="other" data-i18n="meta.disabilityTypes.other">Other</option>
                                 </select>
-                                <p class="text-xs text-gray-500 mt-1">Leave empty to accept all disability types.</p>
+                                <p class="text-xs text-gray-500 mt-1" data-i18n="postJob.disabilityTypesHint">Leave empty to accept all disability types.</p>
                             </div>
                             <div class="md:col-span-2 hidden rounded-xl border border-emerald-100 bg-emerald-50/60 p-4" id="prioritize-vulnerable-wrap">
                                 <label class="flex items-start gap-3 cursor-pointer">
                                     <input type="checkbox" id="prioritize-vulnerable" class="w-4 h-4 mt-1 accent-emerald-600">
                                     <span>
-                                        <span class="text-sm font-medium text-gray-800 block">优先向弱势群体推荐此岗位</span>
-                                        <span class="text-xs text-gray-500">岗位仍对所有人可见；查看应聘者时，已识别弱势群体将排在前面。</span>
+                                        <span class="text-sm font-medium text-gray-800 block" data-i18n="postJob.prioritizeVulnerable">优先向弱势群体推荐此岗位</span>
+                                        <span class="text-xs text-gray-500" data-i18n="postJob.prioritizeVulnerableHint">岗位仍对所有人可见；查看应聘者时，已识别弱势群体将排在前面。</span>
                                     </span>
                                 </label>
                             </div>
@@ -507,58 +507,58 @@
                     <div class="form-card">
                         <div class="section-title">
                             <span class="icon"><i class="fas fa-gift"></i></span>
-                            Compensation &amp; Benefits
+                            <span data-i18n="postJob.compensationBenefits">Compensation &amp; Benefits</span>
                         </div>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm" id="ben-medical-wrap">
                                 <input type="checkbox" id="ben-medical" class="accent-emerald-600">
                                 <i class="fas fa-heartbeat text-rose-400 text-sm"></i>
-                                Medical Insurance
+                                <span data-i18n="postJob.benMedical">Medical Insurance</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
                                 <input type="checkbox" id="ben-dental" class="accent-emerald-600">
                                 <i class="fas fa-tooth text-blue-400 text-sm"></i>
-                                Dental Coverage
+                                <span data-i18n="postJob.benDental">Dental Coverage</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
                                 <input type="checkbox" id="ben-remote" class="accent-emerald-600">
                                 <i class="fas fa-house-laptop text-indigo-400 text-sm"></i>
-                                Remote / Flexible
+                                <span data-i18n="postJob.benRemote">Remote / Flexible</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
                                 <input type="checkbox" id="ben-training" class="accent-emerald-600">
                                 <i class="fas fa-chalkboard-teacher text-amber-400 text-sm"></i>
-                                Training Budget
+                                <span data-i18n="postJob.benTraining">Training Budget</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
                                 <input type="checkbox" id="ben-bonus" class="accent-emerald-600">
                                 <i class="fas fa-coins text-yellow-500 text-sm"></i>
-                                Performance Bonus
+                                <span data-i18n="postJob.benBonus">Performance Bonus</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
                                 <input type="checkbox" id="ben-stock" class="accent-emerald-600">
                                 <i class="fas fa-chart-line text-green-500 text-sm"></i>
-                                Stock Options / ESOP
+                                <span data-i18n="postJob.benStock">Stock Options / ESOP</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
                                 <input type="checkbox" id="ben-childcare" class="accent-emerald-600">
                                 <i class="fas fa-child text-pink-400 text-sm"></i>
-                                Childcare Support
+                                <span data-i18n="postJob.benChildcare">Childcare Support</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
                                 <input type="checkbox" id="ben-transport" class="accent-emerald-600">
                                 <i class="fas fa-bus text-teal-400 text-sm"></i>
-                                Transport Allowance
+                                <span data-i18n="postJob.benTransport">Transport Allowance</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-sm">
                                 <input type="checkbox" id="ben-leave" class="accent-emerald-600">
                                 <i class="fas fa-umbrella-beach text-orange-400 text-sm"></i>
-                                Extra Annual Leave
+                                <span data-i18n="postJob.benLeave">Extra Annual Leave</span>
                             </label>
                         </div>
                         <div>
-                            <label class="form-label">Additional Benefits Description</label>
-                            <textarea id="benefits-extra" class="form-input" rows="3" placeholder="Describe any other perks or benefits not listed above…"></textarea>
+                            <label class="form-label" data-i18n="postJob.additionalBenefits">Additional Benefits Description</label>
+                            <textarea id="benefits-extra" class="form-input" rows="3" data-i18n-placeholder="postJob.placeholderBenefitsExtra" placeholder="Describe any other perks or benefits not listed above…"></textarea>
                         </div>
                     </div>
                 </div>
@@ -568,50 +568,50 @@
                     <div class="form-card">
                         <div class="section-title">
                             <span class="icon"><i class="fas fa-sliders"></i></span>
-                            Posting Settings
+                            <span data-i18n="postJob.postingSettings">Posting Settings</span>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label class="form-label">Posting Visibility</label>
+                                <label class="form-label" data-i18n="postJob.postingVisibility">Posting Visibility</label>
                                 <select id="visibility" class="form-input">
-                                    <option>Public – Visible to all candidates</option>
-                                    <option>Semi-public – Visible after login</option>
-                                    <option>Private – Invite only</option>
+                                    <option value="public" data-i18n="postJob.visPublic">Public – Visible to all candidates</option>
+                                    <option value="semi-public" data-i18n="postJob.visSemiPublic">Semi-public – Visible after login</option>
+                                    <option value="private" data-i18n="postJob.visPrivate">Private – Invite only</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Application Method</label>
+                                <label class="form-label" data-i18n="postJob.applicationMethod">Application Method</label>
                                 <select id="apply-method" class="form-input">
-                                    <option>Via GBA Platform</option>
-                                    <option>External URL</option>
-                                    <option>Email</option>
+                                    <option value="platform" data-i18n="postJob.applyPlatform">Via GBA Platform</option>
+                                    <option value="external" data-i18n="postJob.applyExternal">External URL</option>
+                                    <option value="email" data-i18n="postJob.applyEmail">Email</option>
                                 </select>
                             </div>
                             <div class="md:col-span-2" id="apply-url-wrap">
-                                <label class="form-label">External Application URL</label>
-                                <input type="url" id="apply-url" class="form-input" placeholder="https://your-company.com/careers/...">
+                                <label class="form-label" data-i18n="postJob.externalApplyUrl">External Application URL</label>
+                                <input type="url" id="apply-url" class="form-input" data-i18n-placeholder="postJob.placeholderApplyUrl" placeholder="https://your-company.com/careers/...">
                             </div>
                         </div>
                         <div class="mt-5 space-y-3">
                             <label class="flex items-center gap-3 cursor-pointer group">
                                 <input type="checkbox" id="blind-screening" checked class="w-4 h-4 accent-emerald-600">
                                 <div>
-                                    <span class="text-sm font-medium text-gray-800 group-hover:text-gray-900">Enable blind screening</span>
-                                    <p class="text-xs text-gray-500">Hides personal details (age, gender, photo) from initial review to reduce unconscious bias.</p>
+                                    <span class="text-sm font-medium text-gray-800 group-hover:text-gray-900" data-i18n="postJob.blindScreening">Enable blind screening</span>
+                                    <p class="text-xs text-gray-500" data-i18n="postJob.blindScreeningHint">Hides personal details (age, gender, photo) from initial review to reduce unconscious bias.</p>
                                 </div>
                             </label>
                             <label class="flex items-center gap-3 cursor-pointer group">
                                 <input type="checkbox" id="ai-match" checked class="w-4 h-4 accent-emerald-600">
                                 <div>
-                                    <span class="text-sm font-medium text-gray-800">AI candidate matching</span>
-                                    <p class="text-xs text-gray-500">Automatically rank incoming applications by skills and JD alignment score.</p>
+                                    <span class="text-sm font-medium text-gray-800" data-i18n="postJob.aiMatch">AI candidate matching</span>
+                                    <p class="text-xs text-gray-500" data-i18n="postJob.aiMatchHint">Automatically rank incoming applications by skills and JD alignment score.</p>
                                 </div>
                             </label>
                             <label class="flex items-center gap-3 cursor-pointer group">
                                 <input type="checkbox" id="notify-match" checked class="w-4 h-4 accent-emerald-600">
                                 <div>
-                                    <span class="text-sm font-medium text-gray-800">Notify me of strong matches</span>
-                                    <p class="text-xs text-gray-500">Receive email alerts when a candidate matches 90%+ of your requirements.</p>
+                                    <span class="text-sm font-medium text-gray-800" data-i18n="postJob.notifyMatch">Notify me of strong matches</span>
+                                    <p class="text-xs text-gray-500" data-i18n="postJob.notifyMatchHint">Receive email alerts when a candidate matches 90%+ of your requirements.</p>
                                 </div>
                             </label>
                         </div>
@@ -621,10 +621,10 @@
                     <div class="form-card" id="review-summary">
                         <div class="section-title">
                             <span class="icon"><i class="fas fa-check-double"></i></span>
-                            Review Summary
+                            <span data-i18n="postJob.reviewSummary">Review Summary</span>
                         </div>
                         <div id="summary-content" class="space-y-3 text-sm text-gray-700">
-                            <p class="text-gray-400 text-xs">Complete previous steps to see your summary here.</p>
+                            <p class="text-gray-400 text-xs" data-i18n="postJob.reviewEmpty">Complete previous steps to see your summary here.</p>
                         </div>
                     </div>
                 </div>
@@ -920,6 +920,23 @@
         const editJobId = new URLSearchParams(location.search).get('id');
         let isEditMode = false;
 
+        function applyPostJobHeadings() {
+            var h1 = document.getElementById('page-heading');
+            if (isEditMode) {
+                document.title = corpT('postJob.editTitle', 'Edit Job — GBA Platform');
+                if (h1) {
+                    h1.dataset.i18nDynamic = '1';
+                    h1.textContent = corpT('postJob.editHeading', 'Edit Job');
+                }
+            } else {
+                document.title = corpT('postJob.pageTitle', 'Post New Job — GBA Platform');
+                if (h1) {
+                    delete h1.dataset.i18nDynamic;
+                    h1.textContent = corpT('postJob.pageHeading', 'Post a New Job');
+                }
+            }
+        }
+
         async function loadJobForEdit() {
             if (!editJobId || typeof CorporateAPI === 'undefined') return;
             try {
@@ -955,7 +972,7 @@
                 updateTargetPreview();
                 const btn = document.getElementById('btn-submit');
                 if (btn) btn.innerHTML = '<i class="fas fa-save"></i> ' + corpT('postJob.saveChanges', 'Save Changes');
-                document.title = corpT('postJob.editTitle', 'Edit Job — GBA Platform');
+                applyPostJobHeadings();
             } catch (e) {
                 showToast(mapCorpMsg(e.message) || corpT('corporate.loadJobFailed', 'Failed to load job for editing'), 'error');
             }
@@ -1065,6 +1082,7 @@
             if (typeof window.loadJobForEdit === 'function') window.loadJobForEdit();
         });
         window.addEventListener('gba:language-changed', function () {
+            applyPostJobHeadings();
             updateTargetPreview();
             if (currentStep === totalSteps) buildSummary();
         });

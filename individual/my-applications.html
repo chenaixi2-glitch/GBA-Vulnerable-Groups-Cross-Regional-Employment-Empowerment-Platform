@@ -57,7 +57,8 @@
                 accepted: 'bg-emerald-100 text-emerald-800',
                 rejected: 'bg-red-100 text-red-800',
             };
-            return '<span class="px-2 py-0.5 rounded-full text-xs font-medium ' + (colors[status] || colors.pending) + '">' + escape(status) + '</span>';
+            var label = appsT('applications.' + status, status);
+            return '<span class="px-2 py-0.5 rounded-full text-xs font-medium ' + (colors[status] || colors.pending) + '">' + escape(label) + '</span>';
         }
 
         function sourceLabel(source) {
@@ -90,7 +91,7 @@
         async function loadApplications() {
             var list = document.getElementById('apps-list');
             if (!PlatformAPI.getToken()) {
-                list.innerHTML = '<p class="p-6 text-amber-700 text-sm">' + appsT('applications.loginFirst', 'Please sign in to view applications.') + ' <a href="../index.html" class="underline font-semibold">' + appsT('auth.login', 'Log in') + '</a></p>';
+                list.innerHTML = '<p class="p-6 text-amber-700 text-sm">' + appsT('applications.loginFirst', 'Please sign in to view applications.') + ' <a href="auth.html" class="underline font-semibold">' + appsT('auth.login', 'Log in') + '</a></p>';
                 return;
             }
             try {
@@ -136,6 +137,10 @@
             var start = function () { loadStats(); loadApplications(); };
             if (window.GBAI18n && GBAI18n.initLanguage) GBAI18n.initLanguage().then(start);
             else start();
+        });
+        window.addEventListener('gba:language-changed', function () {
+            loadStats();
+            loadApplications();
         });
     </script>
 </body>

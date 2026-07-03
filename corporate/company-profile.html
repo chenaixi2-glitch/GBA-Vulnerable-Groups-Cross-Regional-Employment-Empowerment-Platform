@@ -12,7 +12,10 @@
     <header class="bg-white border-b sticky top-0 z-40">
         <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
             <a href="portal.html" class="text-green-700 font-semibold"><i class="fas fa-arrow-left mr-2"></i><span data-i18n="companyProfile.backPortal">Back to corporate portal</span></a>
-            <span class="text-sm text-gray-500" data-i18n="companyProfile.headerLabel">Company registration</span>
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-500" data-i18n="companyProfile.headerLabel">Company registration</span>
+                <div id="header-lang-slot"></div>
+            </div>
         </div>
     </header>
 
@@ -61,7 +64,7 @@
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="companyProfile.website">Website</label>
-                        <input id="website" class="w-full border rounded-xl px-4 py-3" placeholder="https://">
+                        <input id="website" class="w-full border rounded-xl px-4 py-3" data-i18n-placeholder="companyProfile.placeholderWebsite" placeholder="https://">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="companyProfile.licenseNo">Business license no.</label>
@@ -113,13 +116,51 @@
         function cpT(key, fb, vars) {
             return (window.GBAI18n && GBAI18n.t) ? GBAI18n.t(key, fb, vars) : fb;
         }
-        document.addEventListener('DOMContentLoaded', function () {
-            PortalAuth.guardPortalAuth({ portal: 'corporate', authPage: 'auth.html' });
-            if (new URLSearchParams(location.search).get('onboard') === '1') {
-                const banner = document.getElementById('onboard-banner');
-                if (banner) banner.classList.remove('hidden');
+
+        var lastMsgs = {};
+
+        function showCpMsg(id, text, ok, store) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            if (store) {
+                if (store.clear) delete lastMsgs[id];
+                else lastMsgs[id] = Object.assign({ ok: !!ok }, store);
+            } else if (!text) {
+                delete lastMsgs[id];
             }
+            el.textContent = text || '';
+            el.className = 'text-sm ' + (ok ? 'text-green-600' : 'text-red-600');
+            el.classList.toggle('hidden', !text);
+        }
+
+        function resolveCpMsg(entry) {
+            if (!entry) return '';
+            if (entry.api) {
+                return (window.GBAI18n && GBAI18n.tApiMessage) ? GBAI18n.tApiMessage(entry.api) : entry.api;
+            }
+            return cpT(entry.key, entry.fallback, entry.vars);
+        }
+
+        function refreshCpMessages() {
+            Object.keys(lastMsgs).forEach(function (id) {
+                var entry = lastMsgs[id];
+                showCpMsg(id, resolveCpMsg(entry), entry.ok);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var boot = function () {
+                PortalAuth.guardPortalAuth({ portal: 'corporate', authPage: 'auth.html' });
+                if (new URLSearchParams(location.search).get('onboard') === '1') {
+                    const banner = document.getElementById('onboard-banner');
+                    if (banner) banner.classList.remove('hidden');
+                }
+            };
+            if (window.GBAI18n && GBAI18n.initLanguage) GBAI18n.initLanguage().then(boot);
+            else boot();
         });
+
+        window.addEventListener('gba:language-changed', refreshCpMessages);
 
         const fields = ['company_name','industry','employee_count','description','address','contact_email','contact_phone','website','license_no','inclusivity_info'];
 
@@ -142,17 +183,18 @@
         document.getElementById('company-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const btn = document.getElementById('save-btn');
-            const msg = document.getElementById('form-msg');
             btn.disabled = true;
             const body = {};
             fields.forEach(function (id) { body[id] = document.getElementById(id).value.trim(); });
             try {
                 await CorporateAPI.CompanyAPI.saveProfile(body);
-                msg.textContent = cpT('companyProfile.saved', 'Company profile saved');
-                msg.className = 'text-sm text-green-600';
+                showCpMsg('form-msg', cpT('companyProfile.saved', 'Company profile saved'), true, {
+                    key: 'companyProfile.saved',
+                    fallback: 'Company profile saved'
+                });
             } catch (err) {
-                msg.textContent = (window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(err.message) : err.message) || cpT('companyProfile.saveFailed', 'Save failed. Please sign in with a corporate account.');
-                msg.className = 'text-sm text-red-600';
+                var errText = (window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(err.message) : err.message) || cpT('companyProfile.saveFailed', 'Save failed. Please sign in with a corporate account.');
+                showCpMsg('form-msg', errText, false, { api: err.message || errText });
             } finally {
                 btn.disabled = false;
             }
@@ -162,23 +204,22 @@
 
         document.getElementById('password-form').addEventListener('submit', async function (e) {
             e.preventDefault();
-            const msg = document.getElementById('password-form-msg');
             const current = document.getElementById('password-current').value;
             const next = document.getElementById('password-new').value;
             const next2 = document.getElementById('password-new2').value;
             if (next !== next2) {
-                msg.textContent = cpT('companyProfile.passwordMismatch', 'New passwords do not match');
-                msg.className = 'text-sm text-red-600';
-                msg.classList.remove('hidden');
+                showCpMsg('password-form-msg', cpT('companyProfile.passwordMismatch', 'New passwords do not match'), false, {
+                    key: 'companyProfile.passwordMismatch',
+                    fallback: 'New passwords do not match'
+                });
                 return;
             }
             const btn = document.getElementById('password-save-btn');
             btn.disabled = true;
             try {
                 const res = await AuthAPI.changePassword(current, next);
-                msg.textContent = (window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(res.message) : res.message);
-                msg.className = 'text-sm ' + (res.success ? 'text-green-600' : 'text-red-600');
-                msg.classList.remove('hidden');
+                var pwdText = (window.GBAI18n && GBAI18n.tApiMessage ? GBAI18n.tApiMessage(res.message) : res.message);
+                showCpMsg('password-form-msg', pwdText, res.success, { api: res.message || pwdText });
                 if (res.success) {
                     document.getElementById('password-current').value = '';
                     document.getElementById('password-new').value = '';

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Matching — GBA Platform</title>
+    <title data-i18n="jobs.pageTitle">Job Matching — GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'); body{font-family:'Inter',sans-serif;}</style>
@@ -14,7 +14,10 @@
             <a href="portal.html#dashboard" class="text-blue-700 font-semibold" data-i18n="jobs.portalLink">Individual Portal</a>
             <a href="my-applications.html" class="text-emerald-700 hover:underline" data-i18n="jobs.myApplications">My Applications</a>
         </div>
-        <span id="match-status" class="text-slate-500 text-xs"></span>
+        <div class="flex items-center gap-3">
+            <span id="match-status" class="text-slate-500 text-xs"></span>
+            <div id="header-lang-slot"></div>
+        </div>
     </header>
 
     <div class="max-w-6xl mx-auto px-4 py-8">
@@ -36,7 +39,7 @@
                 </div>
                 <div id="login-hint" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
                     <span data-i18n="jobs.loginHintPrefix">Please</span>
-                    <a href="../index.html" class="underline font-semibold" data-i18n="jobs.loginHintLink">log in to your account</a>
+                    <a href="auth.html" class="underline font-semibold" data-i18n="jobs.loginHintLink">log in to your account</a>
                     <span data-i18n="jobs.loginHintSuffix">and complete your resume to see matched jobs.</span>
                 </div>
             </div>

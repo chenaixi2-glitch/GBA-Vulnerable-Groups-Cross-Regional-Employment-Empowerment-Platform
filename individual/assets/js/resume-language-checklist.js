@@ -453,6 +453,55 @@ function applyFormatCheckToProfileEditor(checklist) {
     renderOrphanFormatHints(orphaned, labels);
 }
 
+function getRequiredMissingFromDraft(draft, language) {
+    if (!draft) return [];
+    const lang = normalizeResumeLang(language);
+    const basic = draft.profile_basic || {};
+    const extras = basic.extras || {};
+    const missing = [];
+
+    const push = (field, labelKey, fallback) => {
+        missing.push({
+            field,
+            label: uiText(labelKey, fallback, null) || fallback,
+            severity: 'required',
+            missing: true,
+        });
+    };
+
+    if (lang === 'en' || lang === 'pt') {
+        if (!(basic.name || '').trim()) push('name', 'resume.checklist.name', 'Name');
+        if (!(basic.phone || '').trim()) push('phone', 'resume.checklist.phone', 'Phone');
+        if (!(basic.email || '').trim()) push('email', 'resume.checklist.email', 'Email');
+        if (!(basic.city || '').trim()) push('city', 'resume.checklist.city', 'City');
+        if ((extras.summary || '').trim().length < 10) {
+            push('summary', 'resume.checklist.summary', 'Professional Summary');
+        }
+        const hasWork = (draft.modules || []).some(
+            (m) => m.type === 'internship' && String(m.content || m.title || '').trim()
+        );
+        if (!hasWork) push('internships', 'resume.checklist.work', 'Work Experience');
+        const hasEdu = (draft.education || []).some(
+            (e) => String(e.school || e.major || e.degree || '').trim()
+        );
+        if (!hasEdu) push('education', 'resume.checklist.education', 'Education');
+    } else {
+        if (!(basic.name || '').trim()) push('name', 'resume.checklist.name', 'Name');
+        if (!(basic.phone || '').trim()) push('phone', 'resume.checklist.phone', 'Phone');
+        if (!(basic.email || '').trim()) push('email', 'resume.checklist.email', 'Email');
+        const hasEdu = (draft.education || []).some(
+            (e) => String(e.school || e.major || e.degree || '').trim()
+        );
+        if (!hasEdu) push('education', 'resume.checklist.education', 'Education');
+        const hasWork = (draft.modules || []).some(
+            (m) => m.type === 'internship' && String(m.content || m.title || '').trim()
+        );
+        if (!hasWork) push('internships', 'resume.checklist.work', 'Work / Internship');
+    }
+
+    return missing;
+}
+
 function getRequiredMissingFromChecklist(checklist) {
     const items = checklist?.items || [];
     return items.filter((item) => item.missing && item.severity === 'required');
@@ -519,15 +568,42 @@ async function refreshAndValidateRequiredFields() {
         typeof currentResumeLanguage !== 'undefined' ? currentResumeLanguage : 'zh'
     );
     const employerType = document.getElementById('employer-type-select')?.value || '';
+    const draft = (typeof ProfileEditor !== 'undefined' && ProfileEditor.collectDraftFromForm)
+        ? ProfileEditor.collectDraftFromForm()
+        : (ProfileEditor?.draft || null);
+    const localRequired = getRequiredMissingFromDraft(draft, lang);
+
     let checklist;
     try {
         checklist = await apiClient.getLanguageChecklist(lang, employerType);
     } catch (error) {
         console.warn('Checklist validation failed:', error.message);
-        return { valid: true, required: [], checklist: lastChecklistData };
+        if (localRequired.length === 0) {
+            return { valid: true, required: [], checklist: lastChecklistData };
+        }
+        return { valid: false, required: localRequired, checklist: lastChecklistData };
     }
+
     renderLanguageChecklistPanel(checklist);
-    const required = getRequiredMissingFromChecklist(checklist);
+    let required = getRequiredMissingFromChecklist(checklist);
+
+    // Backend session may lag behind the editor — trust the live form when it satisfies rules.
+    if (required.length && localRequired.length === 0) {
+        if (draft && typeof apiClient.saveResumeDraft === 'function') {
+            try {
+                await apiClient.saveResumeDraft(draft);
+                checklist = await apiClient.getLanguageChecklist(lang, employerType);
+                renderLanguageChecklistPanel(checklist);
+                required = getRequiredMissingFromChecklist(checklist);
+            } catch (retryErr) {
+                console.warn('Checklist re-validation failed:', retryErr.message);
+            }
+        }
+        if (required.length && localRequired.length === 0) {
+            required = [];
+        }
+    }
+
     updateProfileContinueUi(checklist);
     return { valid: required.length === 0, required, checklist };
 }
@@ -560,6 +636,9 @@ function syncResumeLanguageButtons() {
 }
 
 async function refreshLanguageChecklist(language) {
+    if (typeof syncDraftBeforeGenerate === 'function') {
+        await syncDraftBeforeGenerate();
+    }
     const lang = normalizeResumeLang(language || currentResumeLanguage || 'zh');
     const employerType = document.getElementById('employer-type-select')?.value || '';
     try {
@@ -600,7 +679,8 @@ async function onEmployerTypeSelected(employerType) {
     }
 }
 
-async function onResumeLanguageSelected(language) {
+/** Pre-generation: persist target resume language and refresh format checklist. */
+async function applyResumeLanguageSelection(language) {
     currentResumeLanguage = normalizeResumeLang(language);
     updateResumeLanguageBadge(currentResumeLanguage);
     if (typeof ProfileEditor !== 'undefined' && ProfileEditor.updatePhotoVisibility) {
@@ -628,9 +708,6 @@ async function onResumeLanguageSelected(language) {
     } catch (error) {
         await refreshLanguageChecklist(currentResumeLanguage);
     }
-
-    ensureEditViewForProfileNavigation();
-    document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function defaultResumeLanguageFromUi() {

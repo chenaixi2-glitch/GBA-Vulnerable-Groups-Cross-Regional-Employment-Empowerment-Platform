@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backend API Test - GBA Platform</title>
+    <title data-i18n="testApi.title">Backend API Test - GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -19,324 +19,269 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <header class="bg-white shadow-sm border-b">
-        <div class="max-w-6xl mx-auto px-4 py-4">
-            <h1 class="text-2xl font-bold text-gray-900">
-                <i class="fas fa-vial text-blue-600 mr-2"></i>
-                Backend API Test Suite
-            </h1>
-            <p class="text-gray-600 mt-1">Test resume upload, optimization, and interview simulation workflows</p>
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">
+                    <i class="fas fa-vial text-blue-600 mr-2"></i>
+                    <span data-i18n="testApi.heading">Backend API Test Suite</span>
+                </h1>
+                <p class="text-gray-600 mt-1" data-i18n="testApi.subtitle">Test resume upload, optimization, and interview simulation workflows</p>
+            </div>
+            <div id="header-lang-slot"></div>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-8">
-        <!-- Control Panel -->
         <section class="bg-white rounded-xl p-6 border shadow-sm mb-6">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-gray-900">Test Controls</h2>
+                <h2 class="text-lg font-bold text-gray-900" data-i18n="testApi.controlsTitle">Test Controls</h2>
                 <div class="flex gap-3">
                     <button onclick="runAllTests()" id="btn-run-all" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                         <i class="fas fa-play mr-2"></i>
-                        Run All Tests
+                        <span data-i18n="testApi.runAll">Run All Tests</span>
                     </button>
                     <button onclick="clearResults()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                         <i class="fas fa-trash mr-2"></i>
-                        Clear Results
+                        <span data-i18n="testApi.clearResults">Clear Results</span>
                     </button>
                 </div>
             </div>
             
             <div class="grid md:grid-cols-3 gap-4">
                 <div class="p-4 bg-gray-50 rounded-lg">
-                    <div class="text-sm text-gray-600 mb-1">API Endpoint</div>
+                    <div class="text-sm text-gray-600 mb-1" data-i18n="testApi.apiEndpoint">API Endpoint</div>
                     <div class="font-mono text-sm font-medium">http://localhost:8000/api</div>
                 </div>
                 <div class="p-4 bg-gray-50 rounded-lg">
-                    <div class="text-sm text-gray-600 mb-1">Session ID</div>
-                    <div id="session-display" class="font-mono text-sm font-medium">Not started</div>
+                    <div class="text-sm text-gray-600 mb-1" data-i18n="testApi.sessionId">Session ID</div>
+                    <div id="session-display" class="font-mono text-sm font-medium" data-i18n="testApi.notStarted">Not started</div>
                 </div>
                 <div class="p-4 bg-gray-50 rounded-lg">
-                    <div class="text-sm text-gray-600 mb-1">Status</div>
-                    <div id="status-display" class="font-medium">Ready</div>
+                    <div class="text-sm text-gray-600 mb-1" data-i18n="testApi.statusLabel">Status</div>
+                    <div id="status-display" class="font-medium" data-i18n="testApi.ready">Ready</div>
                 </div>
             </div>
         </section>
 
-        <!-- Test Results -->
-        <section id="test-results" class="space-y-4">
-            <!-- Results will be inserted here -->
-        </section>
+        <section id="test-results" class="space-y-4"></section>
 
-        <!-- Instructions -->
         <section class="bg-blue-50 border border-blue-200 rounded-xl p-6 mt-6">
             <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
                 <i class="fas fa-info-circle"></i>
-                Testing Instructions
+                <span data-i18n="testApi.instructionsTitle">Testing Instructions</span>
             </h3>
             <ol class="list-decimal list-inside space-y-2 text-sm text-blue-800">
-                <li>Ensure backend server is running: <code class="bg-blue-100 px-2 py-1 rounded">cd backend && python main.py</code></li>
-                <li>Click "Run All Tests" to execute the test suite</li>
-                <li>Review results for each test case</li>
-                <li>Check browser console (F12) for detailed logs</li>
-                <li>If tests fail, verify Redis and MySQL are running</li>
+                <li data-i18n="testApi.instruction1">Ensure backend server is running: <code class="bg-blue-100 px-2 py-1 rounded">cd backend && python main.py</code></li>
+                <li data-i18n="testApi.instruction2">Click "Run All Tests" to execute the test suite</li>
+                <li data-i18n="testApi.instruction3">Review results for each test case</li>
+                <li data-i18n="testApi.instruction4">Check browser console (F12) for detailed logs</li>
+                <li data-i18n="testApi.instruction5">If tests fail, verify Redis and MySQL are running</li>
             </ol>
         </section>
     </main>
 
+    <script src="../assets/i18n/i18n.js"></script>
     <script>
         const API_BASE_URL = 'http://localhost:8000/api';
-        const LLM_REQUEST_TIMEOUT = 300000; // SiliconFlow DeepSeek: ~60–90s per call, multi-agent up to ~3 min
-        let currentSessionId = '';
+        const LLM_REQUEST_TIMEOUT = 300000;
 
-        function updateStatus(status, color = 'gray') {
-            const statusEl = document.getElementById('status-display');
-            statusEl.textContent = status;
-            statusEl.className = `font-medium text-${color}-600`;
+        function taT(key, fallback, vars) {
+            if (window.GBAI18n && GBAI18n.t) return GBAI18n.t(key, fallback, vars);
+            var s = fallback;
+            if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+            return s;
         }
 
-        function addResult(testName, status, details, data = null) {
-            const container = document.getElementById('test-results');
-            const resultDiv = document.createElement('div');
-            
-            const statusClass = status === 'pass' ? 'test-pass' : status === 'fail' ? 'test-fail' : 'test-running';
-            const icon = status === 'pass' ? 'check-circle' : status === 'fail' ? 'times-circle' : 'spinner fa-spin';
-            const color = status === 'pass' ? 'green' : status === 'fail' ? 'red' : 'blue';
-            
-            resultDiv.className = `test-result ${statusClass}`;
-            resultDiv.innerHTML = `
-                <div class="flex items-start justify-between mb-2">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-${icon} text-${color}-600 text-xl"></i>
-                        <h3 class="font-bold text-gray-900">${testName}</h3>
-                    </div>
-                    <span class="text-xs font-medium text-${color}-600 uppercase">${status}</span>
-                </div>
-                <div class="text-sm text-gray-700 mb-2">${details}</div>
-                ${data ? `<pre class="text-xs">${JSON.stringify(data, null, 2)}</pre>` : ''}
-            `;
-            
+        function statusLabel(status) {
+            return taT('testApi.status.' + status, status);
+        }
+
+        let currentSessionId = '';
+
+        function updateStatus(statusKey, color) {
+            color = color || 'gray';
+            var statusEl = document.getElementById('status-display');
+            statusEl.textContent = statusLabel(statusKey);
+            statusEl.className = 'font-medium text-' + color + '-600';
+        }
+
+        function addResult(testName, status, details, data) {
+            var container = document.getElementById('test-results');
+            var resultDiv = document.createElement('div');
+            var statusClass = status === 'pass' ? 'test-pass' : status === 'fail' ? 'test-fail' : 'test-running';
+            var icon = status === 'pass' ? 'check-circle' : status === 'fail' ? 'times-circle' : 'spinner fa-spin';
+            var color = status === 'pass' ? 'green' : status === 'fail' ? 'red' : 'blue';
+            resultDiv.className = 'test-result ' + statusClass;
+            resultDiv.innerHTML =
+                '<div class="flex items-start justify-between mb-2">' +
+                '<div class="flex items-center gap-3">' +
+                '<i class="fas fa-' + icon + ' text-' + color + '-600 text-xl"></i>' +
+                '<h3 class="font-bold text-gray-900">' + testName + '</h3></div>' +
+                '<span class="text-xs font-medium text-' + color + '-600 uppercase">' + statusLabel(status) + '</span></div>' +
+                '<div class="text-sm text-gray-700 mb-2">' + details + '</div>' +
+                (data ? '<pre class="text-xs">' + JSON.stringify(data, null, 2) + '</pre>' : '');
             container.appendChild(resultDiv);
         }
 
         function clearResults() {
             document.getElementById('test-results').innerHTML = '';
             currentSessionId = '';
-            document.getElementById('session-display').textContent = 'Not started';
-            updateStatus('Ready', 'gray');
+            document.getElementById('session-display').textContent = taT('testApi.notStarted', 'Not started');
+            updateStatus('ready', 'gray');
         }
 
         async function testHealthCheck() {
-            addResult('Test 1: Health Check', 'running', 'Checking if backend is running...');
-            
+            addResult(taT('testApi.test1Name', 'Test 1: Health Check'), 'running', taT('testApi.test1Running', 'Checking if backend is running...'));
             try {
-                const response = await axios.get('http://localhost:8000/health', { timeout: 5000 });
-                
+                var response = await axios.get('http://localhost:8000/health', { timeout: 5000 });
                 if (response.status === 200 && response.data.status === 'ok') {
-                    addResult('Test 1: Health Check', 'pass', 
-                        '✓ Backend is running and healthy', 
-                        response.data);
-                    updateStatus('Connected', 'green');
+                    addResult(taT('testApi.test1Name', 'Test 1: Health Check'), 'pass',
+                        taT('testApi.test1Pass', '✓ Backend is running and healthy'), response.data);
+                    updateStatus('connected', 'green');
                     return true;
-                } else {
-                    throw new Error('Invalid health check response');
                 }
+                throw new Error('Invalid health check response');
             } catch (error) {
-                addResult('Test 1: Health Check', 'fail', 
-                    `✗ Backend is not running or unreachable: ${error.message}`,
+                addResult(taT('testApi.test1Name', 'Test 1: Health Check'), 'fail',
+                    taT('testApi.test1Fail', '✗ Backend is not running or unreachable: {msg}', { msg: error.message }),
                     { error: error.message });
-                updateStatus('Disconnected', 'red');
+                updateStatus('disconnected', 'red');
                 return false;
             }
         }
 
         async function testResumeWorkflow() {
-            addResult('Test 2: Resume Workflow', 'running', 'Testing resume upload and optimization...');
-            
+            addResult(taT('testApi.test2Name', 'Test 2: Resume Workflow'), 'running', taT('testApi.test2Running', 'Testing resume upload and optimization...'));
             try {
-                // Step 1: Upload resume
-                console.log('[Test] Step 1: Uploading resume...');
-                const uploadPayload = {
+                var uploadPayload = {
                     session_id: '',
-                    message: `John Doe
-Email: john.doe@example.com
-Phone: +86 138-0000-0000
-
-EXPERIENCE:
-Senior Software Engineer at Tech Corp (2020-Present)
-- Led development of microservices architecture
-- Implemented CI/CD pipelines using Docker and Kubernetes
-- Mentored junior developers and conducted code reviews
-
-SKILLS:
-Python, JavaScript, React, Node.js, Docker, Kubernetes, AWS, Git
-
-EDUCATION:
-Bachelor of Science in Computer Science
-University of Technology, 2019`,
+                    message: 'John Doe\nEmail: john.doe@example.com\nPhone: +86 138-0000-0000\n\nEXPERIENCE:\nSenior Software Engineer at Tech Corp (2020-Present)\n- Led development of microservices architecture\n\nSKILLS:\nPython, JavaScript, React, Node.js\n\nEDUCATION:\nBachelor of Science in Computer Science, 2019',
                     attachments: []
                 };
-
-                const uploadResponse = await axios.post(`${API_BASE_URL}/chat`, uploadPayload, { timeout: LLM_REQUEST_TIMEOUT });
+                var uploadResponse = await axios.post(API_BASE_URL + '/chat', uploadPayload, { timeout: LLM_REQUEST_TIMEOUT });
                 currentSessionId = uploadResponse.data.session_id;
                 document.getElementById('session-display').textContent = currentSessionId.substr(-8);
-                
-                console.log('[Test] Upload response:', uploadResponse.data);
-                
-                const hasProfile = uploadResponse.data.resume_content_json !== null;
-                const triggeredAgents = uploadResponse.data.triggered_agents || [];
-                
-                addResult('Test 2a: Resume Upload', 'pass',
-                    `✓ Profile extracted | Session: ${currentSessionId.substr(-8)} | Agents: ${triggeredAgents.join(', ')}`,
+                var triggeredAgents = uploadResponse.data.triggered_agents || [];
+                addResult(taT('testApi.test2aName', 'Test 2a: Resume Upload'), 'pass',
+                    taT('testApi.test2aPass', '✓ Profile extracted | Session: {sid} | Agents: {agents}', {
+                        sid: currentSessionId.substr(-8),
+                        agents: triggeredAgents.join(', ')
+                    }),
                     { session_id: currentSessionId, agents: triggeredAgents });
 
-                // Step 2: Submit JD
-                console.log('[Test] Step 2: Submitting job description...');
-                const jdPayload = {
+                var jdPayload = {
                     session_id: currentSessionId,
-                    message: `Job Title: Senior Full Stack Developer
-
-Requirements:
-- 5+ years of experience in web development
-- Strong proficiency in Python and JavaScript
-- Experience with React and Node.js
-- Knowledge of containerization (Docker, Kubernetes)
-- Cloud platform experience (AWS/Azure/GCP)`,
+                    message: 'Job Title: Senior Full Stack Developer\nRequirements:\n- 5+ years of experience\n- Python and JavaScript',
                     attachments: []
                 };
-
-                const jdResponse = await axios.post(`${API_BASE_URL}/chat`, jdPayload, { timeout: LLM_REQUEST_TIMEOUT });
-                console.log('[Test] JD response:', jdResponse.data);
-                
-                const gaps = jdResponse.data.gaps || [];
-                addResult('Test 2b: JD Analysis', 'pass',
-                    `✓ JD analyzed | Gaps found: ${gaps.length} | Agents: ${(jdResponse.data.triggered_agents || []).join(', ')}`,
+                var jdResponse = await axios.post(API_BASE_URL + '/chat', jdPayload, { timeout: LLM_REQUEST_TIMEOUT });
+                var gaps = jdResponse.data.gaps || [];
+                addResult(taT('testApi.test2bName', 'Test 2b: JD Analysis'), 'pass',
+                    taT('testApi.test2bPass', '✓ JD analyzed | Gaps found: {count} | Agents: {agents}', {
+                        count: gaps.length,
+                        agents: (jdResponse.data.triggered_agents || []).join(', ')
+                    }),
                     { gaps_count: gaps.length, gaps: gaps.slice(0, 2) });
 
-                // Step 3: Generate resume
-                console.log('[Test] Step 3: Generating optimized resume...');
-                const generatePayload = {
+                var generatePayload = {
                     session_id: currentSessionId,
                     message: 'Please generate an optimized resume tailored for this Senior Full Stack Developer position',
                     attachments: []
                 };
-
-                const generateResponse = await axios.post(`${API_BASE_URL}/chat`, generatePayload, { timeout: LLM_REQUEST_TIMEOUT });
-                console.log('[Test] Generate response:', generateResponse.data);
-                
-                const hasHtml = generateResponse.data.resume_html && generateResponse.data.resume_html.html;
-                const htmlLength = hasHtml ? generateResponse.data.resume_html.html.length : 0;
-                
-                addResult('Test 2c: Resume Generation', 'pass',
-                    `✓ Resume generated | HTML length: ${htmlLength} chars | Agents: ${(generateResponse.data.triggered_agents || []).join(', ')}`,
+                var generateResponse = await axios.post(API_BASE_URL + '/chat', generatePayload, { timeout: LLM_REQUEST_TIMEOUT });
+                var hasHtml = generateResponse.data.resume_html && generateResponse.data.resume_html.html;
+                var htmlLength = hasHtml ? generateResponse.data.resume_html.html.length : 0;
+                addResult(taT('testApi.test2cName', 'Test 2c: Resume Generation'), 'pass',
+                    taT('testApi.test2cPass', '✓ Resume generated | HTML length: {len} chars | Agents: {agents}', {
+                        len: htmlLength,
+                        agents: (generateResponse.data.triggered_agents || []).join(', ')
+                    }),
                     { has_html: hasHtml, html_length: htmlLength });
 
-                addResult('Test 2: Resume Workflow', 'pass',
-                    '✓ Complete resume workflow executed successfully');
-                
-                updateStatus('Resume Test Passed', 'green');
+                addResult(taT('testApi.test2Name', 'Test 2: Resume Workflow'), 'pass',
+                    taT('testApi.test2Done', '✓ Complete resume workflow executed successfully'));
+                updateStatus('resumePassed', 'green');
                 return true;
-                
             } catch (error) {
-                addResult('Test 2: Resume Workflow', 'fail',
-                    `✗ Resume workflow failed: ${error.message}`,
-                    { error: error.message, response: error.response?.data });
-                updateStatus('Resume Test Failed', 'red');
+                addResult(taT('testApi.test2Name', 'Test 2: Resume Workflow'), 'fail',
+                    taT('testApi.test2Fail', '✗ Resume workflow failed: {msg}', { msg: error.message }),
+                    { error: error.message, response: error.response && error.response.data });
+                updateStatus('resumeFailed', 'red');
                 return false;
             }
         }
 
         async function testInterviewWorkflow() {
-            addResult('Test 3: Interview Workflow', 'running', 'Testing interview simulation...');
-            
+            addResult(taT('testApi.test3Name', 'Test 3: Interview Workflow'), 'running', taT('testApi.test3Running', 'Testing interview simulation...'));
             try {
-                // Step 1: Start interview session
-                console.log('[Test] Step 1: Starting interview session...');
-                const startPayload = {
+                var startPayload = {
                     session_id: '',
                     message: 'Generate interview questions for a Senior Software Engineer position in the technology industry. Use a professional tone.',
                     attachments: []
                 };
-
-                const startResponse = await axios.post(`${API_BASE_URL}/chat`, startPayload, { timeout: LLM_REQUEST_TIMEOUT });
-                const sessionId = startResponse.data.session_id;
-                const questions = startResponse.data.interview_qa || [];
-                
-                console.log('[Test] Interview start response:', startResponse.data);
-                
-                addResult('Test 3a: Interview Session Start', 'pass',
-                    `✓ Session started | Questions generated: ${questions.length} | Agents: ${(startResponse.data.triggered_agents || []).join(', ')}`,
+                var startResponse = await axios.post(API_BASE_URL + '/chat', startPayload, { timeout: LLM_REQUEST_TIMEOUT });
+                var sessionId = startResponse.data.session_id;
+                var questions = startResponse.data.interview_qa || [];
+                addResult(taT('testApi.test3aName', 'Test 3a: Interview Session Start'), 'pass',
+                    taT('testApi.test3aPass', '✓ Session started | Questions generated: {count} | Agents: {agents}', {
+                        count: questions.length,
+                        agents: (startResponse.data.triggered_agents || []).join(', ')
+                    }),
                     { session_id: sessionId, question_count: questions.length, questions: questions.slice(0, 2) });
 
-                // Step 2: Submit answer
                 if (questions.length > 0) {
-                    console.log('[Test] Step 2: Submitting answer...');
-                    const answerPayload = {
+                    var answerPayload = {
                         session_id: sessionId,
-                        message: 'Evaluate my answer: I have 5 years of experience with Python and JavaScript. I led a team of 3 developers and implemented microservices architecture using Docker and Kubernetes.',
+                        message: 'Evaluate my answer: I have 5 years of experience with Python and JavaScript.',
                         attachments: []
                     };
-
-                    const answerResponse = await axios.post(`${API_BASE_URL}/chat`, answerPayload, { timeout: LLM_REQUEST_TIMEOUT });
-                    console.log('[Test] Answer response:', answerResponse.data);
-                    
-                    addResult('Test 3b: Answer Evaluation', 'pass',
-                        `✓ Answer evaluated | Agents: ${(answerResponse.data.triggered_agents || []).join(', ')}`,
-                        { reply: answerResponse.data.reply_message?.substring(0, 200) });
+                    var answerResponse = await axios.post(API_BASE_URL + '/chat', answerPayload, { timeout: LLM_REQUEST_TIMEOUT });
+                    addResult(taT('testApi.test3bName', 'Test 3b: Answer Evaluation'), 'pass',
+                        taT('testApi.test3bPass', '✓ Answer evaluated | Agents: {agents}', {
+                            agents: (answerResponse.data.triggered_agents || []).join(', ')
+                        }),
+                        { reply: answerResponse.data.reply_message && answerResponse.data.reply_message.substring(0, 200) });
                 }
 
-                addResult('Test 3: Interview Workflow', 'pass',
-                    '✓ Complete interview workflow executed successfully');
-                
-                updateStatus('Interview Test Passed', 'green');
+                addResult(taT('testApi.test3Name', 'Test 3: Interview Workflow'), 'pass',
+                    taT('testApi.test3Done', '✓ Complete interview workflow executed successfully'));
+                updateStatus('interviewPassed', 'green');
                 return true;
-                
             } catch (error) {
-                addResult('Test 3: Interview Workflow', 'fail',
-                    `✗ Interview workflow failed: ${error.message}`,
-                    { error: error.message, response: error.response?.data });
-                updateStatus('Interview Test Failed', 'red');
+                addResult(taT('testApi.test3Name', 'Test 3: Interview Workflow'), 'fail',
+                    taT('testApi.test3Fail', '✗ Interview workflow failed: {msg}', { msg: error.message }),
+                    { error: error.message, response: error.response && error.response.data });
+                updateStatus('interviewFailed', 'red');
                 return false;
             }
         }
 
         async function runAllTests() {
             clearResults();
-            updateStatus('Running tests...', 'blue');
+            updateStatus('running', 'blue');
             document.getElementById('btn-run-all').disabled = true;
-            
             try {
-                // Test 1: Health Check
-                const healthPassed = await testHealthCheck();
-                
+                var healthPassed = await testHealthCheck();
                 if (!healthPassed) {
-                    updateStatus('Tests aborted - backend not running', 'red');
+                    updateStatus('aborted', 'red');
                     return;
                 }
-                
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Test 2: Resume Workflow
+                await new Promise(function (resolve) { setTimeout(resolve, 1000); });
                 await testResumeWorkflow();
-                
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Test 3: Interview Workflow
+                await new Promise(function (resolve) { setTimeout(resolve, 1000); });
                 await testInterviewWorkflow();
-                
-                updateStatus('All tests completed', 'green');
-                
+                updateStatus('completed', 'green');
             } catch (error) {
                 console.error('[Test] Unexpected error:', error);
-                updateStatus('Test error occurred', 'red');
+                updateStatus('error', 'red');
             } finally {
                 document.getElementById('btn-run-all').disabled = false;
             }
         }
 
-        // Auto-run health check on page load
-        window.addEventListener('load', () => {
-            console.log('[Test] Page loaded, ready to test');
+        window.addEventListener('load', function () {
+            if (window.GBAI18n && GBAI18n.initLanguage) GBAI18n.initLanguage();
         });
     </script>
-    <script src="../assets/i18n/i18n.js"></script>
 </body>
 </html>

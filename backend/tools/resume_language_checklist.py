@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Any
 
@@ -171,6 +172,111 @@ def _has_profile_photo(state: CopilotState, resume: ResumeContent | None, text: 
     if _profile_extra(state, resume, "has_photo") == "true":
         return True
     return _has_pattern(text, [r"证件照", r"profile photo", r"headshot", r"\.jpg", r"\.png", r"照片"])
+
+
+def _parse_education_fact_content(content: str) -> dict[str, str]:
+    text = (content or "").strip()
+    empty = {"school": "", "major": "", "degree": ""}
+    if not text:
+        return empty
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, dict):
+            return {
+                "school": str(parsed.get("school") or parsed.get("name") or ""),
+                "major": str(parsed.get("major") or ""),
+                "degree": str(parsed.get("degree") or ""),
+            }
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return {"school": text.split("\n", 1)[0].strip(), "major": "", "degree": ""}
+
+
+def _candidate_has_education(state: CopilotState) -> bool:
+    cp = state.candidate_profile
+    if not cp:
+        return False
+    if cp.profile_basic.school.strip():
+        return True
+    for fact in cp.facts:
+        if fact.type != "education":
+            continue
+        parsed = _parse_education_fact_content(fact.content)
+        if any(parsed.get(k) for k in ("school", "major", "degree")):
+            return True
+    return False
+
+
+def _candidate_has_internship(state: CopilotState) -> bool:
+    cp = state.candidate_profile
+    if not cp:
+        return False
+    return any(f.type == "internship" and (f.content or "").strip() for f in cp.facts)
+
+
+def _candidate_has_skills(state: CopilotState) -> bool:
+    cp = state.candidate_profile
+    if not cp:
+        return False
+    return any(f.type == "skill" and (f.content or "").strip() for f in cp.facts)
+
+
+def _has_education(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
+    profile = resume.profile if resume else None
+    if profile and profile.education:
+        return True
+    if _candidate_has_education(state):
+        return True
+    return _has_pattern(text, [r"university|college|bachelor|master|b\.s\.|b\.a\.|m\.s\.|education", r"大学|学院|本科|硕士|博士"])
+
+
+def _has_work_experience(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
+    if resume and resume.internships:
+        return True
+    if _candidate_has_internship(state):
+        return True
+    return _has_pattern(
+        text,
+        [
+            r"intern|work experience|employment|present|20\d{2}[-–]|company| ltd| inc\.| co\.",
+            r"实习|工作|任职|公司",
+        ],
+    )
+
+
+def _has_professional_summary(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
+    if resume and resume.summary:
+        summary_len = len(resume.summary.strip())
+        if 30 <= summary_len <= 400:
+            return True
+    summary_extra = _profile_extra(state, resume, "summary")
+    extra_len = len(summary_extra.strip())
+    # Profile-editor summary lives in extras — accept any non-trivial user input (≥10 chars).
+    if 10 <= extra_len <= 400:
+        return True
+    if _has_pattern(
+        text,
+        [r"professional summary", r"profile summary", r"自我评价", r"personal summary", r"career summary", r"个人总结"],
+    ):
+        return True
+    if state.candidate_profile:
+        for mat in state.candidate_profile.materials:
+            content = mat.content or ""
+            if re.search(
+                r"(?:professional summary|profile summary|自我评价|个人总结)[:\s\n]+.{20,}",
+                content,
+                re.I | re.S,
+            ):
+                return True
+    return False
+
+
+def _has_skills_section(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
+    if resume and resume.skills:
+        return True
+    if _candidate_has_skills(state):
+        return True
+    return _has_pattern(text, [r"skills|skill set|technical skills", r"技能|skill|python|java|cet"])
 
 
 def _item(
@@ -351,12 +457,12 @@ def _check_chinese_resume(
                        "党员 / 团员 / 群众", has_political))
 
     # 教育经历
-    has_edu = bool(profile and profile.education) or _has_pattern(text, [r"大学|学院|本科|硕士|博士|education"])
+    has_edu = _has_education(state, resume, text)
     items.append(_item("zh_education", "content", "education", "教育经历", "required",
                       "中文简历教育经历通常紧跟个人信息", "学校、专业、学位、起止时间", has_edu))
 
     # 实习/工作
-    has_work = bool(resume and resume.internships) or _has_pattern(text, [r"实习|工作|任职|公司|intern"])
+    has_work = _has_work_experience(state, resume, text)
     items.append(_item("zh_experience", "content", "internships", "实习/工作经历", "required",
                       "中文简历需有实习或工作经历模块", "按时间倒序，描述职责与成果", has_work))
 
@@ -366,7 +472,7 @@ def _check_chinese_resume(
                       "技术/互联网岗位中文简历强烈建议有项目经历", "突出技术栈与个人贡献", has_proj))
 
     # 技能证书
-    has_skills = bool(resume and resume.skills) or _has_pattern(text, [r"技能|skill|python|java|cet", r"四六级|计算机"])
+    has_skills = _has_skills_section(state, resume, text)
     items.append(_item("zh_skills", "content", "skills", "技能/证书", "recommended",
                       "中文简历需列技能与证书（四六级、计算机、资格证等）", "如：CET-6、计算机二级、Python", has_skills))
 
@@ -376,12 +482,9 @@ def _check_chinese_resume(
                       "中文简历可含奖学金、竞赛、荣誉称号", "按重要性列出 2-4 项", has_awards))
 
     # 自我评价
-    has_summary = bool(resume and resume.summary and len(resume.summary.strip()) >= 20)
-    if not has_summary:
-        summary_extra = _profile_extra(state, resume, "summary")
-        has_summary = len(summary_extra.strip()) >= 20
-    if not has_summary:
-        has_summary = _has_pattern(text, [r"自我评价", r"professional summary", r"个人总结"])
+    has_summary = _has_professional_summary(state, resume, text) or (
+        len(_profile_extra(state, resume, "summary").strip()) >= 20
+    )
     items.append(_item("zh_summary", "content", "summary", "自我评价", "recommended",
                       "中文简历通常有自我评价段落", "2-4 句，突出优势与岗位匹配，避免空泛形容词堆砌", has_summary))
 
@@ -462,10 +565,7 @@ def _check_english_resume(
             ))
 
     # Professional Summary
-    has_summary = bool(resume and resume.summary and 30 <= len(resume.summary.strip()) <= 400)
-    if not has_summary:
-        summary_extra = _profile_extra(state, resume, "summary")
-        has_summary = 30 <= len(summary_extra.strip()) <= 400
+    has_summary = _has_professional_summary(state, resume, text)
     items.append(_item("en_summary", "content", "summary", "Professional Summary", "required",
                       "英文 Resume 用 3-4 行 Professional Summary 替代中文大段自我评价",
                       "精简概括核心技能与成果，不用 'hardworking, outgoing' 等空泛形容词", has_summary))
@@ -476,7 +576,7 @@ def _check_english_resume(
                                 f"删减至核心卖点，整份简历保持 {page_limit} 页以内"))
 
     # Work Experience before Education
-    has_work = bool(resume and resume.internships)
+    has_work = _has_work_experience(state, resume, text)
     items.append(_item("en_experience", "content", "internships", "Work Experience", "required",
                       "英文 Resume 工作经历优先于教育背景", "动词开头 + 量化结果，如：Led X, improved Y by 20%", has_work))
 
@@ -485,11 +585,11 @@ def _check_english_resume(
     items.append(_item("en_quantified", "content", "metrics", "Quantified results", "recommended",
                       "英文经历描述需动词开头并含量化数据", "Action verb + task + measurable result", has_quant))
 
-    has_edu = bool(profile and profile.education) if profile else False
+    has_edu = _has_education(state, resume, text)
     items.append(_item("en_education", "content", "education", "Education", "required",
                       "教育背景放在 Work Experience 之后", "Degree in English, e.g. B.S. in Computer Science", has_edu))
 
-    has_skills = bool(resume and resume.skills)
+    has_skills = _has_skills_section(state, resume, text)
     items.append(_item("en_skills", "content", "skills", "Skills", "recommended",
                       "Skills 放在经历之后，紧凑列表", "Group by category, comma-separated", has_skills))
 

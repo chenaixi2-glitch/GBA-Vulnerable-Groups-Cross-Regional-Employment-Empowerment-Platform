@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBA Policy Dividend Navigator — GBA Platform</title>
+    <title data-i18n="policy.pageTitle">GBA Policy Dividend Navigator — GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); body{font-family:'Inter',system-ui,sans-serif;}</style>
 </head>
 <body class="bg-amber-50/40 min-h-screen" data-page="individual">
-    <header class="bg-white border-b px-4 py-3 flex justify-between flex-wrap gap-2">
+    <header class="bg-white border-b px-4 py-3 flex justify-between flex-wrap gap-2 items-center">
         <nav class="text-sm"><a href="portal.html#ai-features" class="text-blue-700 font-medium" data-i18n="policy.navTools">Interactive tools</a> · <strong data-i18n="policy.navTitle">Policy navigator</strong></nav>
-        <span class="text-xs text-slate-500" data-i18n="policy.disclaimer">Illustrative only — confirm with accountants & bureaus</span>
+        <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-500" data-i18n="policy.disclaimer">Illustrative only — confirm with accountants & bureaus</span>
+            <div id="header-lang-slot"></div>
+        </div>
     </header>
 
     <div class="max-w-4xl mx-auto px-4 py-8 space-y-8">

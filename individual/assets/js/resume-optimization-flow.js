@@ -35,7 +35,7 @@ function showJdConfirmationModal(payload) {
         const hintEl = document.getElementById('jd-confirmation-hint');
 
         if (!modal || !textarea) {
-            resolve(false);
+            resolve({ confirmed: false });
             return;
         }
 
@@ -65,6 +65,7 @@ function showJdConfirmationModal(payload) {
         }
 
         modal.classList.remove('hidden');
+        modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 }
 
@@ -273,6 +274,7 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
         }
 
         modal.classList.remove('hidden');
+        modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 }
 
@@ -351,6 +353,9 @@ async function ensureJdConfirmedBeforeProceed(jdText, options = {}) {
         try {
             const ctx = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : {};
             payload = await apiClient.generateJdFromTitle(jdText, ctx);
+        } catch (error) {
+            Utils.hideLoading();
+            throw error;
         } finally {
             Utils.hideLoading();
         }

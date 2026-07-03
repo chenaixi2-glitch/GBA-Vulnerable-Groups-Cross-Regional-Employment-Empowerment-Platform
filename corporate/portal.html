@@ -496,7 +496,7 @@
                 <div class="flex items-center shrink-0 mr-6">
                     <a href="../index.html" class="flex items-center">
                         <i class="fas fa-handshake text-2xl text-green-600 mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800">GBA Platform</span>
+                        <span class="text-xl font-bold text-gray-800" data-i18n="home.brandName">GBA Platform</span>
                     </a>
                 </div>
 
@@ -557,7 +557,7 @@
                             <div id="portal-user-email" class="text-xs text-gray-500"></div>
                         </div>
                         <a href="company-profile.html" class="text-sm text-green-700 hover:text-green-800 font-medium hidden md:inline" data-i18n="corpPortal.companyProfile">企业信息</a>
-                        <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600">退出</button>
+                        <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600" data-i18n="corpPortal.logout">退出</button>
                     </div>
                 </div>
 
@@ -571,10 +571,10 @@
             
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
-                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">Dashboard</a>
-                <a href="#ai-features" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">HR Tools</a>
-                <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors">My Jobs</a>
-                <a href="donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i>爱心捐款箱</a>
+                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navDashboard">Dashboard</a>
+                <a href="#ai-features" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navHrTools">HR Tools</a>
+                <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navMyJobs">My Jobs</a>
+                <a href="donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
             </div>
         </div>
     </nav>
@@ -583,8 +583,8 @@
     <section class="hero-section flex items-center justify-center relative">
         <canvas id="hero-bg-canvas"></canvas>
         <div class="container mx-auto px-4 z-10 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6" data-i18n="hero-title">Corporate User Dashboard</h1>
-            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="hero-subtitle">Connect with diverse talent across the Greater Bay Area through our AI-powered recruitment platform</p>
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6" data-i18n="corpPortal.heroTitle">Corporate User Dashboard</h1>
+            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="corpPortal.heroSubtitle">Connect with diverse talent across the Greater Bay Area through our AI-powered recruitment platform</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4 items-center">
                 <a href="#dashboard" class="btn-primary text-lg">
@@ -593,14 +593,12 @@
                 </a>
                 <a href="#ai-features" class="inline-flex items-center justify-center gap-2 text-lg font-medium px-8 py-3 rounded-lg border-2 border-white/90 text-white hover:bg-white/10 transition-colors">
                     <i class="fas fa-layer-group"></i>
-                    <span data-i18n="hero-open-demos">Open interactive tools</span>
+                    <span data-i18n="corpPortal.heroOpenDemos">Open interactive tools</span>
                 </a>
             </div>
             <p class="text-white/90 text-sm mt-6 max-w-2xl mx-auto">
-                AI-powered tools — Resume Screening, Interview Preparation &amp; Learning Path — available in
-                <a href="#ai-features" class="underline underline-offset-2 decoration-white/50 font-semibold hover:text-white">HR Tools</a>,
-                same intelligence layer as
-                <a href="../individual/portal.html" class="underline decoration-white/40 hover:text-white">the candidate portal</a>.
+                <span data-i18n="corpPortal.heroToolsLead">AI-powered tools — Resume Screening, Interview Preparation &amp; Learning Path — available in</span>
+                <a href="#ai-features" class="underline underline-offset-2 decoration-white/50 font-semibold hover:text-white" data-i18n="corpPortal.heroHrToolsLink">HR Tools</a><span data-i18n="corpPortal.heroToolsMid">, same intelligence layer as </span><a href="../individual/portal.html" class="underline decoration-white/40 hover:text-white" data-i18n="corpPortal.heroCandidatePortalLink">the candidate portal</a><span data-i18n="corpPortal.heroToolsEnd">.</span>
             </p>
             
             <div class="mt-12 flex flex-wrap justify-center gap-4">
@@ -608,7 +606,7 @@
                     <i class="fas fa-users text-2xl text-white mr-3"></i>
                     <div class="text-left">
                         <div class="text-white font-bold">250+</div>
-                        <div class="text-white text-sm">Candidate Matches</div>
+                        <div class="text-white text-sm" data-i18n="corpPortal.statMatches">Candidate Matches</div>
                     </div>
                 </div>
                 
@@ -616,7 +614,7 @@
                     <i class="fas fa-file-alt text-2xl text-white mr-3"></i>
                     <div class="text-left">
                         <div class="text-white font-bold">15</div>
-                        <div class="text-white text-sm">Active Job Postings</div>
+                        <div class="text-white text-sm" data-i18n="corpPortal.statPostings">Active Job Postings</div>
                     </div>
                 </div>
                 
@@ -624,7 +622,7 @@
                     <i class="fas fa-handshake text-2xl text-white mr-3"></i>
                     <div class="text-left">
                         <div class="text-white font-bold">45</div>
-                        <div class="text-white text-sm">Interviews Scheduled</div>
+                        <div class="text-white text-sm" data-i18n="corpPortal.statInterviews">Interviews Scheduled</div>
                     </div>
                 </div>
             </div>
@@ -659,22 +657,22 @@
                 <div class="stat-card">
                     <div class="text-3xl font-bold text-green-600 mb-1 counter" data-target="15">0</div>
                     <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.activeJobs">Active Jobs</div>
-                    <div class="text-xs text-green-600 mt-1">↑ 3 this week</div>
+                    <div class="text-xs text-green-600 mt-1" data-i18n="corpPortal.kpiJobsUpWeek">↑ 3 this week</div>
                 </div>
                 <div class="stat-card" style="border-left-color:#2563eb">
                     <div class="text-3xl font-bold text-blue-600 mb-1 counter" data-target="254">0</div>
                     <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.applications">Applications</div>
-                    <div class="text-xs text-blue-600 mt-1">↑ 18 today</div>
+                    <div class="text-xs text-blue-600 mt-1" data-i18n="corpPortal.kpiAppsUpToday">↑ 18 today</div>
                 </div>
                 <div class="stat-card" style="border-left-color:#7c3aed">
                     <div class="text-3xl font-bold text-purple-600 mb-1 counter" data-target="45">0</div>
                     <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.interviews">Interviews</div>
-                    <div class="text-xs text-purple-600 mt-1">12 this week</div>
+                    <div class="text-xs text-purple-600 mt-1" data-i18n="corpPortal.kpiInterviewsWeek">12 this week</div>
                 </div>
                 <div class="stat-card" style="border-left-color:#f97316">
                     <div class="text-3xl font-bold text-orange-600 mb-1 counter" data-target="12">0</div>
                     <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.hiresThisMonth">Hires This Month</div>
-                    <div class="text-xs text-orange-600 mt-1">↑ 4 vs last month</div>
+                    <div class="text-xs text-orange-600 mt-1" data-i18n="corpPortal.kpiHiresVsLast">↑ 4 vs last month</div>
                 </div>
                 <div class="stat-card">
                     <div class="text-3xl font-bold text-green-600 mb-1">85%</div>
@@ -684,7 +682,7 @@
                 <div class="stat-card" style="border-left-color:#2563eb">
                     <div class="text-3xl font-bold text-blue-600 mb-1 counter" data-target="18">0</div>
                     <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.daysToHire">Days to Hire</div>
-                    <div class="text-xs text-blue-600 mt-1">↓ 2 vs last month</div>
+                    <div class="text-xs text-blue-600 mt-1" data-i18n="corpPortal.kpiDaysDown">↓ 2 vs last month</div>
                 </div>
             </div>
 
@@ -697,25 +695,25 @@
                     </div>
                     <div id="hr-team-meta" class="text-xs text-gray-500 text-right hidden">
                         <span id="hr-org-name" class="font-medium text-gray-700"></span>
-                        <span id="hr-invite-wrap" class="hidden"> · 邀请码: <code id="hr-invite-code" class="bg-gray-100 px-2 py-0.5 rounded font-mono text-green-700"></code></span>
+                        <span id="hr-invite-wrap" class="hidden"> · <span data-i18n="corpPortal.inviteCodeLabel">Invite code:</span> <code id="hr-invite-code" class="bg-gray-100 px-2 py-0.5 rounded font-mono text-green-700"></code></span>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead>
                             <tr class="text-left text-gray-500 border-b">
-                                <th class="py-2 pr-4 font-medium">HR</th>
-                                <th class="py-2 pr-4 font-medium">角色</th>
-                                <th class="py-2 pr-4 font-medium">发布岗位</th>
-                                <th class="py-2 pr-4 font-medium">收到投递</th>
-                                <th class="py-2 pr-4 font-medium">处理数</th>
-                                <th class="py-2 pr-4 font-medium">录用</th>
-                                <th class="py-2 pr-4 font-medium">录用率</th>
-                                <th class="py-2 font-medium">均匹配分</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColName">HR</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColRole">角色</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColPosted">发布岗位</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColReceived">收到投递</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHandled">处理数</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHires">录用</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHireRate">录用率</th>
+                                <th class="py-2 font-medium" data-i18n="corpPortal.hrColMatchScore">均匹配分</th>
                             </tr>
                         </thead>
                         <tbody id="hr-team-table-body">
-                            <tr><td colspan="8" class="py-6 text-center text-gray-400">加载 HR 绩效…</td></tr>
+                            <tr><td colspan="8" class="py-6 text-center text-gray-400" data-i18n="corpPortal.hrLoadingPerformance">Loading HR performance…</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -744,13 +742,13 @@
                 <!-- Right column: Funnel + Source -->
                 <div class="xl:col-span-1 flex flex-col gap-5">
                     <div class="analytics-card bg-white rounded-xl shadow-sm p-5 flex-1">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Application Funnel</h4>
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3" data-i18n="corpPortal.applicationFunnel">Application Funnel</h4>
                         <div class="chart-container" style="height:155px;">
                             <canvas id="funnelChart"></canvas>
                         </div>
                     </div>
                     <div class="analytics-card bg-white rounded-xl shadow-sm p-5 flex-1">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Source of Hire</h4>
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3" data-i18n="corpPortal.sourceOfHire">Source of Hire</h4>
                         <div class="chart-container" style="height:155px;">
                             <canvas id="sourceChart"></canvas>
                         </div>
@@ -761,13 +759,13 @@
             <!-- Bottom row: Diversity + Time to Hire -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="analytics-card bg-white rounded-xl shadow-sm p-6">
-                    <h3 class="text-base font-semibold text-gray-800 mb-4">Diversity Metrics</h3>
+                    <h3 class="text-base font-semibold text-gray-800 mb-4" data-i18n="corpPortal.diversityMetrics">Diversity Metrics</h3>
                     <div class="chart-container" style="height:220px;">
                         <canvas id="diversityChart"></canvas>
                     </div>
                 </div>
                 <div class="analytics-card bg-white rounded-xl shadow-sm p-6">
-                    <h3 class="text-base font-semibold text-gray-800 mb-4">Time to Hire (Days)</h3>
+                    <h3 class="text-base font-semibold text-gray-800 mb-4" data-i18n="corpPortal.timeToHire">Time to Hire (Days)</h3>
                     <div class="chart-container" style="height:220px;">
                         <canvas id="timeToHireChart"></canvas>
                     </div>
@@ -780,14 +778,14 @@
     <section id="donation-fund" class="py-16 bg-gradient-to-b from-amber-50 to-white scroll-mt-20">
         <div class="container mx-auto px-4">
             <div class="max-w-4xl mx-auto text-center mb-10">
-                <h2 class="text-3xl font-bold text-gray-900 mb-3"><i class="fas fa-hand-holding-heart text-amber-500 mr-2"></i>爱心捐款箱 · 弱势群体法律服务</h2>
-                <p class="text-gray-600">招聘发布、岗位匹配与法律帮助<strong class="text-green-700">免费使用</strong>。面试模拟、HR 绩效统计等高级功能需向捐款箱捐款（金额不限）。募集到的资金将<strong class="text-amber-700">全额</strong>用于为弱势求职者提供免费法律服务。</p>
+                <h2 class="text-3xl font-bold text-gray-900 mb-3"><i class="fas fa-hand-holding-heart text-amber-500 mr-2"></i><span data-i18n="corpPortal.donationSectionTitle">爱心捐款箱 · 弱势群体法律服务</span></h2>
+                <p class="text-gray-600" data-i18n="corpPortal.donationSectionDesc">招聘发布、岗位匹配与法律帮助免费使用。面试模拟、HR 绩效统计等高级功能需向捐款箱捐款（金额不限）。募集到的资金将全额用于为弱势求职者提供免费法律服务。</p>
             </div>
             <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-lg border p-6 md:p-8">
                 <div id="corporate-donation-mini"></div>
                 <div class="mt-6 text-center">
                     <a href="donation-legal.html" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:opacity-90">
-                        <i class="fas fa-scale-balanced"></i> 查看法律服务详情并捐款
+                        <i class="fas fa-scale-balanced"></i> <span data-i18n="corpPortal.donationLearnMore">查看法律服务详情并捐款</span>
                     </a>
                 </div>
             </div>
@@ -807,9 +805,9 @@
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
                         <i class="fas fa-file-lines"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900">Smart Resume Generator</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-5">Upload and analyse candidate CVs with AI-powered JD alignment, skills gap detection, and blind-screening export for inclusive hiring.</p>
-                    <a href="../individual/demo-resume-generator.html" class="hr-tool-start">Start <i class="fas fa-arrow-right text-sm"></i></a>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolResumeTitle">Smart Resume Generator</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolResumeDesc">Upload and analyse candidate CVs with AI-powered JD alignment, skills gap detection, and blind-screening export for inclusive hiring.</p>
+                    <a href="../individual/demo-resume-generator.html" class="hr-tool-start"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
                 <!-- Tool 2: Interview Prep -->
@@ -817,9 +815,9 @@
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-600 to-purple-500 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
                         <i class="fas fa-comments"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900">Interview Preparation</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-5">Generate structured question packs, calibrate tone &amp; scoring rubrics, and simulate inclusive interview panels for your hiring managers.</p>
-                    <a href="../individual/demo-interview.html" class="hr-tool-start" data-require-premium-access>Start <i class="fas fa-arrow-right text-sm"></i></a>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolInterviewTitle">Interview Preparation</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolInterviewDesc">Generate structured question packs, calibrate tone &amp; scoring rubrics, and simulate inclusive interview panels for your hiring managers.</p>
+                    <a href="../individual/demo-interview.html" class="hr-tool-start" data-require-premium-access><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
                 <!-- Tool 3: Learning Path -->
@@ -827,9 +825,9 @@
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-500 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
                         <i class="fas fa-route"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900">Personalized Learning Path</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-5">Preview role-specific upskilling curricula generated for candidates from their declared experience—helping you close talent gaps faster.</p>
-                    <a href="../individual/demo-learning-path.html" class="hr-tool-start">Start <i class="fas fa-arrow-right text-sm"></i></a>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolLearningTitle">Personalized Learning Path</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolLearningDescLong">Preview role-specific upskilling curricula generated for candidates from their declared experience—helping you close talent gaps faster.</p>
+                    <a href="../individual/demo-learning-path.html" class="hr-tool-start"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
                 <!-- Tool 4: Accessible Workplace Audit -->
@@ -837,15 +835,15 @@
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-400 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
                         <i class="fas fa-universal-access"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900">Accessible Workplace Audit</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-3">Check remote-tool readiness, screen-reader support, flexible scheduling and equipment needs before onboarding diverse talent.</p>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolAuditTitleLong">Accessible Workplace Audit</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-3" data-i18n="corpPortal.toolAuditDesc">Check remote-tool readiness, screen-reader support, flexible scheduling and equipment needs before onboarding diverse talent.</p>
                     <!-- Animated visual -->
                     <div class="corp-tool-visual" aria-hidden="true">
                         <span class="audit-bubble bg-sky-500" style="left:1.25rem;top:1.5rem;"><i class="fas fa-desktop"></i></span>
                         <span class="audit-bubble bg-emerald-500" style="left:5.5rem;top:2.5rem;"><i class="fas fa-universal-access"></i></span>
                         <span class="audit-bubble bg-indigo-500" style="right:1.25rem;top:1.5rem;"><i class="fas fa-headset"></i></span>
                     </div>
-                    <a href="audit.html" class="hr-tool-start mt-4">Start <i class="fas fa-arrow-right text-sm"></i></a>
+                    <a href="audit.html" class="hr-tool-start mt-4"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
                 <!-- Tool 5: Inclusive Employer Certification -->
@@ -853,15 +851,15 @@
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-lime-500 to-green-500 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
                         <i class="fas fa-award"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900">Inclusive Employer Certification</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-3">Prepare evidence for equal-pay commitments, remote-work accords, DEI metrics and hiring process transparency.</p>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolCertTitleLong">Inclusive Employer Certification</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-3" data-i18n="corpPortal.toolCertDesc">Prepare evidence for equal-pay commitments, remote-work accords, DEI metrics and hiring process transparency.</p>
                     <!-- Animated visual -->
                     <div class="corp-tool-visual" aria-hidden="true">
                         <span class="cert-badge" style="left:1.25rem;top:1.5rem;"><i class="fas fa-scale-balanced mr-1"></i>PAY</span>
                         <span class="cert-badge" style="left:6rem;top:2.75rem;"><i class="fas fa-house-laptop mr-1"></i>REMOTE</span>
                         <span class="cert-badge" style="right:1rem;top:1.5rem;"><i class="fas fa-chart-pie mr-1"></i>DEI</span>
                     </div>
-                    <a href="certification.html" class="hr-tool-start mt-4">Start <i class="fas fa-arrow-right text-sm"></i></a>
+                    <a href="certification.html" class="hr-tool-start mt-4"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
                 <!-- Tool 6: Employer Feedback -->
@@ -869,8 +867,8 @@
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
                         <i class="fas fa-star"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900">Employer Feedback</h3>
-                    <p class="text-gray-500 text-sm mb-4 leading-relaxed">Rate the corporate experience — helps us tune HR workflows and compliance copy for the GBA market.</p>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolFeedbackTitle">Employer Feedback</h3>
+                    <p class="text-gray-500 text-sm mb-4 leading-relaxed" data-i18n="corpPortal.toolFeedbackDesc">Rate the corporate experience — helps us tune HR workflows and compliance copy for the GBA market.</p>
                     <div id="corp-stars" class="flex gap-1 mb-4 text-2xl text-amber-400 cursor-pointer" role="radiogroup" aria-label="Rating">
                         <span data-val="1" class="opacity-40 hover:opacity-100 transition-opacity">&starf;</span>
                         <span data-val="2" class="opacity-40 hover:opacity-100 transition-opacity">&starf;</span>
@@ -878,9 +876,9 @@
                         <span data-val="4" class="opacity-40 hover:opacity-100 transition-opacity">&starf;</span>
                         <span data-val="5" class="opacity-40 hover:opacity-100 transition-opacity">&starf;</span>
                     </div>
-                    <textarea id="corp-fb-text" rows="2" class="w-full border border-gray-200 rounded-lg p-3 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-emerald-300" placeholder="What should we improve for HR teams?"></textarea>
-                    <button type="button" id="corp-fb-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">Submit Feedback</button>
-                    <p id="corp-fb-msg" class="mt-3 text-sm text-emerald-700 hidden" role="status"><i class="fas fa-check-circle mr-1"></i>Thanks — feedback saved in this browser.</p>
+                    <textarea id="corp-fb-text" rows="2" class="w-full border border-gray-200 rounded-lg p-3 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-emerald-300" data-i18n-placeholder="corpPortal.toolFeedbackPlaceholder" placeholder="What should we improve for HR teams?"></textarea>
+                    <button type="button" id="corp-fb-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors" data-i18n="corpPortal.toolFeedbackSubmit">Submit Feedback</button>
+                    <p id="corp-fb-msg" class="mt-3 text-sm text-emerald-700 hidden" role="status"><i class="fas fa-check-circle mr-1"></i><span data-i18n="corpPortal.toolFeedbackThanks">Thanks — feedback saved in this browser.</span></p>
                 </div>
 
             </div>
@@ -890,8 +888,8 @@
     <!-- Jobs Section -->
     <section id="jobs" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="nav-jobs">My Job Postings</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Manage your job postings and track applications</p>
+            <h2 class="text-3xl font-bold text-center mb-4" data-i18n="corpPortal.jobsSectionTitle">My Job Postings</h2>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto" data-i18n="corpPortal.jobsSectionDesc">Manage your job postings and track applications</p>
             
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
                 <!-- Left: post + search + location -->
@@ -901,7 +899,7 @@
                         <span data-i18n="corpPortal.postNewJob">Post New Job</span>
                     </a>
                     <a href="company-profile.html" class="px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium">
-                        <i class="fas fa-building mr-1"></i>企业信息
+                        <i class="fas fa-building mr-1"></i><span data-i18n="corpPortal.companyProfile">企业信息</span>
                     </a>
                     <div class="relative">
                         <input id="jobs-search-input" type="text" data-i18n-placeholder="corpPortal.searchJobs" placeholder="Search jobs..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
@@ -910,18 +908,18 @@
                     <!-- Location filter -->
                     <div class="relative">
                         <select id="jobs-location-filter" class="pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-700 appearance-none bg-white cursor-pointer">
-                            <option value="">All Locations</option>
-                            <option value="Hong Kong">Hong Kong</option>
-                            <option value="Macau">Macau</option>
-                            <option value="Shenzhen">Shenzhen 深圳</option>
-                            <option value="Guangzhou">Guangzhou 广州</option>
-                            <option value="Foshan">Foshan 佛山</option>
-                            <option value="Dongguan">Dongguan 东莞</option>
-                            <option value="Zhuhai">Zhuhai 珠海</option>
-                            <option value="Zhongshan">Zhongshan 中山</option>
-                            <option value="Jiangmen">Jiangmen 江门</option>
-                            <option value="Huizhou">Huizhou 惠州</option>
-                            <option value="Remote">Remote / 远程</option>
+                            <option value="" data-i18n="corpPortal.allLocations">All Locations</option>
+                            <option value="Hong Kong" data-i18n="postJob.locHongKong">Hong Kong</option>
+                            <option value="Macau" data-i18n="postJob.locMacau">Macau</option>
+                            <option value="Shenzhen" data-i18n="postJob.locShenzhen">Shenzhen</option>
+                            <option value="Guangzhou" data-i18n="postJob.locGuangzhou">Guangzhou</option>
+                            <option value="Foshan" data-i18n="postJob.locFoshan">Foshan</option>
+                            <option value="Dongguan" data-i18n="postJob.locDongguan">Dongguan</option>
+                            <option value="Zhuhai" data-i18n="postJob.locZhuhai">Zhuhai</option>
+                            <option value="Zhongshan" data-i18n="postJob.locZhongshan">Zhongshan</option>
+                            <option value="Jiangmen" data-i18n="postJob.locJiangmen">Jiangmen</option>
+                            <option value="Huizhou" data-i18n="postJob.locHuizhou">Huizhou</option>
+                            <option value="Remote" data-i18n="postJob.modeRemote">Remote</option>
                         </select>
                         <i class="fas fa-map-marker-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
                         <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
@@ -929,21 +927,21 @@
                 </div>
                 <!-- Right: status filter -->
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-gray-400 font-medium mr-1">Status:</span>
-                    <button data-jobs-filter data-status="all" class="px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-lg font-medium">All</button>
-                    <button data-jobs-filter data-status="active" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Active</button>
-                    <button data-jobs-filter data-status="interviewing" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Interviewing</button>
-                    <button data-jobs-filter data-status="closed" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Closed</button>
+                    <span class="text-xs text-gray-400 font-medium mr-1" data-i18n="corpPortal.statusFilter">Status:</span>
+                    <button data-jobs-filter data-status="all" class="px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-lg font-medium" data-i18n="corpPortal.filterAll">All</button>
+                    <button data-jobs-filter data-status="active" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium" data-i18n="corpPortal.filterActive">Active</button>
+                    <button data-jobs-filter data-status="interviewing" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium" data-i18n="corpPortal.filterInterviewing">Interviewing</button>
+                    <button data-jobs-filter data-status="closed" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg font-medium" data-i18n="corpPortal.filterClosed">Closed</button>
                 </div>
             </div>
 
             <!-- Active filters indicator -->
             <div id="jobs-active-filters" class="hidden mb-4 flex items-center gap-2 text-sm">
-                <span class="text-gray-500">Filtered by:</span>
+                <span class="text-gray-500" data-i18n="corpPortal.filteredBy">Filtered by:</span>
                 <span id="jobs-filter-tag" class="inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full px-3 py-1 text-xs font-medium">
                     <i class="fas fa-map-marker-alt"></i>
                     <span id="jobs-filter-tag-text"></span>
-                    <button id="jobs-clear-location" class="text-green-500 hover:text-red-500 ml-1 text-xs" aria-label="Clear filter">×</button>
+                    <button id="jobs-clear-location" class="text-green-500 hover:text-red-500 ml-1 text-xs" data-i18n-title="corpPortal.clearFilter" aria-label="Clear filter">×</button>
                 </span>
             </div>
             
@@ -951,18 +949,18 @@
                 <table class="w-full min-w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Title</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Post Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applications</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-i18n="corpPortal.colJobTitle">Job Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-i18n="corpPortal.colLocation">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-i18n="corpPortal.colPostDate">Post Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-i18n="corpPortal.colApplicationsShort">Applications</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-i18n="corpPortal.colStatus">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-i18n="corpPortal.colActions">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="jobs-table-body" class="bg-white divide-y divide-gray-200">
                         <tr>
                             <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                                <i class="fas fa-spinner fa-spin mr-2"></i> Loading jobs...
+                                <i class="fas fa-spinner fa-spin mr-2"></i> <span data-i18n="corpPortal.loadingPlaceholder">Loading jobs...</span>
                             </td>
                         </tr>
                     </tbody>
@@ -970,7 +968,7 @@
             </div>
             
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
-                <div id="jobs-page-summary" class="text-sm text-gray-600">Loading...</div>
+                <div id="jobs-page-summary" class="text-sm text-gray-600" data-i18n="corpPortal.jobsSummaryLoading">Loading...</div>
                 <div id="jobs-pagination" class="flex flex-wrap gap-2"></div>
             </div>
         </div>
@@ -980,8 +978,8 @@
     <div id="job-detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
         <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
             <div class="flex justify-between items-start mb-4">
-                <h3 id="job-detail-title" class="text-xl font-bold text-gray-900">Job Details</h3>
-                <button id="job-detail-close" type="button" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Close">&times;</button>
+                <h3 id="job-detail-title" class="text-xl font-bold text-gray-900" data-i18n="corpPortal.jobDetailTitle">Job Details</h3>
+                <button id="job-detail-close" type="button" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" data-i18n-title="corpPortal.closeModal" aria-label="Close">&times;</button>
             </div>
             <div id="job-detail-body" class="text-sm text-gray-700 space-y-2"></div>
         </div>
@@ -994,87 +992,87 @@
     <div id="talent-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">Talent Matching</h3>
+                <h3 class="text-2xl font-bold" data-i18n="corpPortal.talentModalTitle">Talent Matching</h3>
                 <button onclick="closeModal('talent-modal')" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="mb-6">
-                <p class="text-gray-600 mb-4">Find qualified candidates that match your job requirements.</p>
+                <p class="text-gray-600 mb-4" data-i18n="corpPortal.talentModalDesc">Find qualified candidates that match your job requirements.</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div class="form-group">
-                        <label class="form-label">Job Category</label>
+                        <label class="form-label" data-i18n="corpPortal.talentJobCategory">Job Category</label>
                         <select class="form-control">
-                            <option>All Categories</option>
-                            <option>Technology</option>
-                            <option>Finance</option>
-                            <option>Marketing</option>
-                            <option>Customer Service</option>
-                            <option>Healthcare</option>
-                            <option>Education</option>
+                            <option data-i18n="corpPortal.talentCatAll">All Categories</option>
+                            <option data-i18n="corpPortal.talentCatTechnology">Technology</option>
+                            <option data-i18n="corpPortal.talentCatFinance">Finance</option>
+                            <option data-i18n="corpPortal.talentCatMarketing">Marketing</option>
+                            <option data-i18n="corpPortal.talentCatCustomerService">Customer Service</option>
+                            <option data-i18n="corpPortal.talentCatHealthcare">Healthcare</option>
+                            <option data-i18n="corpPortal.talentCatEducation">Education</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Location</label>
+                        <label class="form-label" data-i18n="corpPortal.talentLocation">Location</label>
                         <select class="form-control">
-                            <option>All GBA Regions</option>
-                            <option>Hong Kong</option>
-                            <option>Macau</option>
-                            <option>Shenzhen</option>
-                            <option>Guangzhou</option>
-                            <option>Other GBA Cities</option>
+                            <option data-i18n="corpPortal.talentLocAllGba">All GBA Regions</option>
+                            <option data-i18n="postJob.locHongKong">Hong Kong</option>
+                            <option data-i18n="postJob.locMacau">Macau</option>
+                            <option data-i18n="postJob.locShenzhen">Shenzhen</option>
+                            <option data-i18n="postJob.locGuangzhou">Guangzhou</option>
+                            <option data-i18n="corpPortal.talentLocOtherGba">Other GBA Cities</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Experience Level</label>
+                        <label class="form-label" data-i18n="corpPortal.talentExperience">Experience Level</label>
                         <select class="form-control">
-                            <option>Any Experience</option>
-                            <option>Entry Level (0-2 years)</option>
-                            <option>Mid Level (2-5 years)</option>
-                            <option>Senior Level (5-10 years)</option>
-                            <option>Executive Level (10+ years)</option>
+                            <option data-i18n="corpPortal.talentExpAny">Any Experience</option>
+                            <option data-i18n="corpPortal.talentExpEntry">Entry Level (0-2 years)</option>
+                            <option data-i18n="corpPortal.talentExpMid">Mid Level (2-5 years)</option>
+                            <option data-i18n="corpPortal.talentExpSenior">Senior Level (5-10 years)</option>
+                            <option data-i18n="corpPortal.talentExpExecutive">Executive Level (10+ years)</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Education Level</label>
+                        <label class="form-label" data-i18n="corpPortal.talentEducation">Education Level</label>
                         <select class="form-control">
-                            <option>Any Education</option>
-                            <option>High School</option>
-                            <option>Associate's Degree</option>
-                            <option>Bachelor's Degree</option>
-                            <option>Master's Degree</option>
-                            <option>PhD</option>
+                            <option data-i18n="corpPortal.talentEduAny">Any Education</option>
+                            <option data-i18n="corpPortal.talentEduHighSchool">High School</option>
+                            <option data-i18n="corpPortal.talentEduAssociate">Associate's Degree</option>
+                            <option data-i18n="corpPortal.talentEduBachelor">Bachelor's Degree</option>
+                            <option data-i18n="corpPortal.talentEduMaster">Master's Degree</option>
+                            <option data-i18n="corpPortal.talentEduPhd">PhD</option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="form-group mb-6">
-                    <label class="form-label">Key Skills (separated by commas)</label>
-                    <input type="text" class="form-control" placeholder="e.g., JavaScript, Python, Project Management, Customer Service">
+                    <label class="form-label" data-i18n="corpPortal.talentSkills">Key Skills (separated by commas)</label>
+                    <input type="text" class="form-control" data-i18n-placeholder="corpPortal.talentSkillsPlaceholder" placeholder="e.g., JavaScript, Python, Project Management, Customer Service">
                 </div>
                 
                 <div class="form-group mb-6">
-                    <label class="form-label">Enable Blind Recruitment</label>
+                    <label class="form-label" data-i18n="corpPortal.talentBlindRecruitment">Enable Blind Recruitment</label>
                     <div class="flex items-center">
                         <input type="checkbox" id="blind-recruitment" class="mr-2" checked>
-                        <label for="blind-recruitment">Hide personal information (age, gender, disability status) to reduce bias</label>
+                        <label for="blind-recruitment" data-i18n="corpPortal.talentBlindHint">Hide personal information (age, gender, disability status) to reduce bias</label>
                     </div>
                 </div>
                 
                 <div class="flex justify-end mb-6">
                     <button class="btn-primary">
                         <i class="fas fa-search mr-2"></i>
-                        <span>Find Candidates</span>
+                        <span data-i18n="corpPortal.talentFindCandidates">Find Candidates</span>
                     </button>
                 </div>
                 
                 <!-- Results Preview -->
                 <div class="border-t pt-6">
-                    <h4 class="text-xl font-semibold mb-4">Matching Candidates (24)</h4>
+                    <h4 class="text-xl font-semibold mb-4"><span data-i18n="corpPortal.talentResultsTitle">Matching Candidates</span> (24)</h4>
                     
                     <div class="space-y-4">
                         <!-- Candidate 1 -->
@@ -1085,19 +1083,19 @@
                                         <i class="fas fa-user text-gray-500 text-xl"></i>
                                     </div>
                                     <div>
-                                        <h5 class="font-semibold text-gray-800">Candidate A</h5>
-                                        <p class="text-gray-600">Software Developer with 5 years experience</p>
+                                        <h5 class="font-semibold text-gray-800" data-i18n="corpPortal.talentDemoCandidateA">Candidate A</h5>
+                                        <p class="text-gray-600" data-i18n="corpPortal.talentDemoDescA">Software Developer with 5 years experience</p>
                                         <div class="flex items-center mt-2">
-                                            <span class="tag tag-primary">95% Match</span>
-                                            <span class="tag tag-secondary">Shenzhen</span>
-                                            <span class="tag tag-accent">5 years exp</span>
+                                            <span class="tag tag-primary" data-i18n="corpPortal.talentMatch95">95% Match</span>
+                                            <span class="tag tag-secondary" data-i18n="postJob.locShenzhen">Shenzhen</span>
+                                            <span class="tag tag-accent" data-i18n="corpPortal.talentYears5">5 years exp</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="flex flex-col space-y-2">
-                                        <button class="btn-primary text-sm py-1">View Profile</button>
-                                        <button class="btn-secondary text-sm py-1">Send Message</button>
+                                        <button class="btn-primary text-sm py-1" data-i18n="corpPortal.talentViewProfile">View Profile</button>
+                                        <button class="btn-secondary text-sm py-1" data-i18n="corpPortal.talentSendMessage">Send Message</button>
                                     </div>
                                 </div>
                             </div>
@@ -1111,19 +1109,19 @@
                                         <i class="fas fa-user text-gray-500 text-xl"></i>
                                     </div>
                                     <div>
-                                        <h5 class="font-semibold text-gray-800">Candidate B</h5>
-                                        <p class="text-gray-600">Frontend Developer with 3 years experience</p>
+                                        <h5 class="font-semibold text-gray-800" data-i18n="corpPortal.talentDemoCandidateB">Candidate B</h5>
+                                        <p class="text-gray-600" data-i18n="corpPortal.talentDemoDescB">Frontend Developer with 3 years experience</p>
                                         <div class="flex items-center mt-2">
-                                            <span class="tag tag-primary">92% Match</span>
-                                            <span class="tag tag-secondary">Hong Kong</span>
-                                            <span class="tag tag-accent">3 years exp</span>
+                                            <span class="tag tag-primary" data-i18n="corpPortal.talentMatch92">92% Match</span>
+                                            <span class="tag tag-secondary" data-i18n="postJob.locHongKong">Hong Kong</span>
+                                            <span class="tag tag-accent" data-i18n="corpPortal.talentYears3">3 years exp</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="flex flex-col space-y-2">
-                                        <button class="btn-primary text-sm py-1">View Profile</button>
-                                        <button class="btn-secondary text-sm py-1">Send Message</button>
+                                        <button class="btn-primary text-sm py-1" data-i18n="corpPortal.talentViewProfile">View Profile</button>
+                                        <button class="btn-secondary text-sm py-1" data-i18n="corpPortal.talentSendMessage">Send Message</button>
                                     </div>
                                 </div>
                             </div>
@@ -1138,69 +1136,69 @@
     <div id="policy-calculator-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">Policy Calculator</h3>
+                <h3 class="text-2xl font-bold" data-i18n="corpPortal.policyModalTitle">Policy Calculator</h3>
                 <button onclick="closeModal('policy-calculator-modal')" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="mb-6">
-                <p class="text-gray-600 mb-4">Calculate cross-border employment costs and compliance requirements.</p>
+                <p class="text-gray-600 mb-4" data-i18n="corpPortal.policyModalDesc">Calculate cross-border employment costs and compliance requirements.</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div class="form-group">
-                        <label class="form-label">Employee Location</label>
+                        <label class="form-label" data-i18n="corpPortal.policyEmpLocation">Employee Location</label>
                         <select class="form-control">
-                            <option>Mainland China</option>
-                            <option>Hong Kong</option>
-                            <option>Macau</option>
-                            <option>Other</option>
+                            <option data-i18n="corpPortal.policyOptMainland">Mainland China</option>
+                            <option data-i18n="postJob.locHongKong">Hong Kong</option>
+                            <option data-i18n="postJob.locMacau">Macau</option>
+                            <option data-i18n="corpPortal.policyOptOther">Other</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Work Location</label>
+                        <label class="form-label" data-i18n="corpPortal.policyWorkLocation">Work Location</label>
                         <select class="form-control">
-                            <option>Hong Kong</option>
-                            <option>Macau</option>
-                            <option>Shenzhen</option>
-                            <option>Guangzhou</option>
-                            <option>Other GBA City</option>
+                            <option data-i18n="postJob.locHongKong">Hong Kong</option>
+                            <option data-i18n="postJob.locMacau">Macau</option>
+                            <option data-i18n="postJob.locShenzhen">Shenzhen</option>
+                            <option data-i18n="postJob.locGuangzhou">Guangzhou</option>
+                            <option data-i18n="corpPortal.policyOptOtherGbaCity">Other GBA City</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Employment Type</label>
+                        <label class="form-label" data-i18n="corpPortal.policyEmpType">Employment Type</label>
                         <select class="form-control">
-                            <option>Full-time</option>
-                            <option>Part-time</option>
-                            <option>Contract</option>
-                            <option>Remote</option>
+                            <option data-i18n="postJob.empFullTime">Full-time</option>
+                            <option data-i18n="postJob.empPartTime">Part-time</option>
+                            <option data-i18n="postJob.empContract">Contract</option>
+                            <option data-i18n="postJob.modeRemote">Remote</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Monthly Salary (CNY)</label>
+                        <label class="form-label" data-i18n="corpPortal.policyMonthlySalary">Monthly Salary (CNY)</label>
                         <input type="number" class="form-control" placeholder="30000">
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Employee Category</label>
+                        <label class="form-label" data-i18n="corpPortal.policyEmpCategory">Employee Category</label>
                         <select class="form-control">
-                            <option>Professional/Technical</option>
-                            <option>Management</option>
-                            <option>Administrative</option>
-                            <option>Other</option>
+                            <option data-i18n="corpPortal.policyCatProfessional">Professional/Technical</option>
+                            <option data-i18n="corpPortal.policyCatManagement">Management</option>
+                            <option data-i18n="corpPortal.policyCatAdministrative">Administrative</option>
+                            <option data-i18n="postJob.deptOther">Other</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Work Duration</label>
+                        <label class="form-label" data-i18n="corpPortal.policyWorkDuration">Work Duration</label>
                         <select class="form-control">
-                            <option>Permanent</option>
-                            <option>6 months</option>
-                            <option>1 year</option>
-                            <option>2 years</option>
-                            <option>Other</option>
+                            <option data-i18n="corpPortal.policyDurPermanent">Permanent</option>
+                            <option data-i18n="corpPortal.policyDur6m">6 months</option>
+                            <option data-i18n="corpPortal.policyDur1y">1 year</option>
+                            <option data-i18n="corpPortal.policyDur2y">2 years</option>
+                            <option data-i18n="corpPortal.policyDurOther">Other</option>
                         </select>
                     </div>
                 </div>
@@ -1208,45 +1206,45 @@
                 <div class="flex justify-end mb-6">
                     <button class="btn-primary">
                         <i class="fas fa-calculator mr-2"></i>
-                        <span>Calculate</span>
+                        <span data-i18n="corpPortal.policyCalculate">Calculate</span>
                     </button>
                 </div>
                 
                 <!-- Results -->
                 <div class="border-t pt-6">
-                    <h4 class="text-xl font-semibold mb-4">Calculation Results</h4>
+                    <h4 class="text-xl font-semibold mb-4" data-i18n="corpPortal.policyResultsTitle">Calculation Results</h4>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Cost Breakdown -->
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <h5 class="font-semibold mb-3">Cost Breakdown (Monthly)</h5>
+                            <h5 class="font-semibold mb-3" data-i18n="corpPortal.policyCostBreakdown">Cost Breakdown (Monthly)</h5>
                             <div class="space-y-2">
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">Gross Salary</span>
+                                    <span class="text-gray-600" data-i18n="corpPortal.policyGrossSalary">Gross Salary</span>
                                     <span class="font-medium">¥30,000</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">Income Tax</span>
+                                    <span class="text-gray-600" data-i18n="corpPortal.policyIncomeTax">Income Tax</span>
                                     <span class="font-medium">¥4,200</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">Social Security (Employer)</span>
+                                    <span class="text-gray-600" data-i18n="corpPortal.policySSEmployer">Social Security (Employer)</span>
                                     <span class="font-medium">¥5,400</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">Social Security (Employee)</span>
+                                    <span class="text-gray-600" data-i18n="corpPortal.policySSEmployee">Social Security (Employee)</span>
                                     <span class="font-medium">¥2,700</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">Visa/Work Permit Fees (amortized)</span>
+                                    <span class="text-gray-600" data-i18n="corpPortal.policyVisaFees">Visa/Work Permit Fees (amortized)</span>
                                     <span class="font-medium">¥800</span>
                                 </div>
                                 <div class="border-t pt-2 flex justify-between font-bold">
-                                    <span>Total Employer Cost</span>
+                                    <span data-i18n="corpPortal.policyTotalEmployerCost">Total Employer Cost</span>
                                     <span>¥40,400</span>
                                 </div>
                                 <div class="flex justify-between font-medium text-green-600">
-                                    <span>Net Employee Salary</span>
+                                    <span data-i18n="corpPortal.policyNetEmployeeSalary">Net Employee Salary</span>
                                     <span>¥22,300</span>
                                 </div>
                             </div>
@@ -1254,34 +1252,34 @@
                         
                         <!-- Compliance Requirements -->
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <h5 class="font-semibold mb-3">Compliance Requirements</h5>
+                            <h5 class="font-semibold mb-3" data-i18n="corpPortal.policyComplianceTitle">Compliance Requirements</h5>
                             <div class="space-y-3">
                                 <div class="flex items-start">
                                     <i class="fas fa-file-alt text-green-600 mt-1 mr-2"></i>
                                     <div>
-                                        <p class="font-medium">Employment Visa</p>
-                                        <p class="text-sm text-gray-600">Required for mainland Chinese working in Hong Kong</p>
+                                        <p class="font-medium" data-i18n="corpPortal.policyVisaTitle">Employment Visa</p>
+                                        <p class="text-sm text-gray-600" data-i18n="corpPortal.policyVisaDesc">Required for mainland Chinese working in Hong Kong</p>
                                     </div>
                                 </div>
                                 <div class="flex items-start">
                                     <i class="fas fa-shield-alt text-green-600 mt-1 mr-2"></i>
                                     <div>
-                                        <p class="font-medium">Work Permit</p>
-                                        <p class="text-sm text-gray-600">Must be obtained before starting work</p>
+                                        <p class="font-medium" data-i18n="corpPortal.policyWorkPermitTitle">Work Permit</p>
+                                        <p class="text-sm text-gray-600" data-i18n="corpPortal.policyWorkPermitDesc">Must be obtained before starting work</p>
                                     </div>
                                 </div>
                                 <div class="flex items-start">
                                     <i class="fas fa-hand-holding-usd text-green-600 mt-1 mr-2"></i>
                                     <div>
-                                        <p class="font-medium">Social Security Registration</p>
-                                        <p class="text-sm text-gray-600">Both Hong Kong and mainland contributions required</p>
+                                        <p class="font-medium" data-i18n="corpPortal.policySSTitle">Social Security Registration</p>
+                                        <p class="text-sm text-gray-600" data-i18n="corpPortal.policySSDesc">Both Hong Kong and mainland contributions required</p>
                                     </div>
                                 </div>
                                 <div class="flex items-start">
                                     <i class="fas fa-file-contract text-green-600 mt-1 mr-2"></i>
                                     <div>
-                                        <p class="font-medium">Employment Contract</p>
-                                        <p class="text-sm text-gray-600">Must comply with both jurisdictions' labor laws</p>
+                                        <p class="font-medium" data-i18n="corpPortal.policyContractTitle">Employment Contract</p>
+                                        <p class="text-sm text-gray-600" data-i18n="corpPortal.policyContractDesc">Must comply with both jurisdictions' labor laws</p>
                                     </div>
                                 </div>
                             </div>
@@ -1292,12 +1290,12 @@
                         <div class="flex items-start">
                             <i class="fas fa-exclamation-triangle text-yellow-600 mt-1 mr-3"></i>
                             <div>
-                                <h5 class="font-semibold text-yellow-800">Important Notes</h5>
+                                <h5 class="font-semibold text-yellow-800" data-i18n="corpPortal.policyNotesTitle">Important Notes</h5>
                                 <ul class="list-disc pl-5 mt-2 text-yellow-700 space-y-1">
-                                    <li>This is an estimate based on current regulations</li>
-                                    <li>Individual circumstances may vary</li>
-                                    <li>Recommend consulting with tax and legal professionals</li>
-                                    <li>Regulations may change - last updated May 2026</li>
+                                    <li data-i18n="corpPortal.policyNote1">This is an estimate based on current regulations</li>
+                                    <li data-i18n="corpPortal.policyNote2">Individual circumstances may vary</li>
+                                    <li data-i18n="corpPortal.policyNote3">Recommend consulting with tax and legal professionals</li>
+                                    <li data-i18n="corpPortal.policyNote4">Regulations may change - last updated May 2026</li>
                                 </ul>
                             </div>
                         </div>
@@ -1311,127 +1309,124 @@
     <div id="interview-tools-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">HR Interview Tools</h3>
+                <h3 class="text-2xl font-bold" data-i18n="corpPortal.interviewModalTitle">HR Interview Tools</h3>
                 <button onclick="closeModal('interview-tools-modal')" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="mb-6">
-                <p class="text-gray-600 mb-4">Generate interview questions and manage the interview process.</p>
+                <p class="text-gray-600 mb-4" data-i18n="corpPortal.interviewModalDesc">Generate interview questions and manage the interview process.</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div class="form-group">
-                        <label class="form-label">Job Position</label>
+                        <label class="form-label" data-i18n="corpPortal.interviewJobPosition">Job Position</label>
                         <select class="form-control">
-                            <option>Software Developer</option>
-                            <option>Marketing Manager</option>
-                            <option>Financial Analyst</option>
-                            <option>HR Manager</option>
-                            <option>Customer Service Representative</option>
-                            <option>Other</option>
+                            <option data-i18n="corpPortal.interviewPosSoftwareDev">Software Developer</option>
+                            <option data-i18n="corpPortal.interviewPosMarketingMgr">Marketing Manager</option>
+                            <option data-i18n="corpPortal.interviewPosFinancialAnalyst">Financial Analyst</option>
+                            <option data-i18n="corpPortal.interviewPosHrMgr">HR Manager</option>
+                            <option data-i18n="corpPortal.interviewPosCustomerService">Customer Service Representative</option>
+                            <option data-i18n="postJob.deptOther">Other</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Experience Level</label>
+                        <label class="form-label" data-i18n="corpPortal.talentExperience">Experience Level</label>
                         <select class="form-control">
-                            <option>Entry Level</option>
-                            <option>Mid Level</option>
-                            <option>Senior Level</option>
-                            <option>Executive Level</option>
+                            <option data-i18n="corpPortal.interviewExpEntry">Entry Level</option>
+                            <option data-i18n="corpPortal.interviewExpMid">Mid Level</option>
+                            <option data-i18n="corpPortal.interviewExpSenior">Senior Level</option>
+                            <option data-i18n="corpPortal.interviewExpExecutive">Executive Level</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Interview Type</label>
+                        <label class="form-label" data-i18n="corpPortal.interviewTypeLabel">Interview Type</label>
                         <select class="form-control">
-                            <option>Technical</option>
-                            <option>Behavioral</option>
-                            <option>Case Study</option>
-                            <option>Mixed</option>
+                            <option data-i18n="corpPortal.interviewTypeTechnical">Technical</option>
+                            <option data-i18n="corpPortal.interviewTypeBehavioral">Behavioral</option>
+                            <option data-i18n="corpPortal.interviewTypeCaseStudy">Case Study</option>
+                            <option data-i18n="corpPortal.interviewTypeMixed">Mixed</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Interview Duration</label>
+                        <label class="form-label" data-i18n="corpPortal.interviewDurationLabel">Interview Duration</label>
                         <select class="form-control">
-                            <option>30 minutes</option>
-                            <option>45 minutes</option>
-                            <option>60 minutes</option>
-                            <option>90 minutes</option>
+                            <option data-i18n="corpPortal.interviewDur30">30 minutes</option>
+                            <option data-i18n="corpPortal.interviewDur45">45 minutes</option>
+                            <option data-i18n="corpPortal.interviewDur60">60 minutes</option>
+                            <option data-i18n="corpPortal.interviewDur90">90 minutes</option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="form-group mb-6">
-                    <label class="form-label">Key Skills to Assess</label>
+                    <label class="form-label" data-i18n="corpPortal.interviewSkillsLabel">Key Skills to Assess</label>
                     <div class="flex flex-wrap gap-2">
                         <span class="tag tag-primary flex items-center">
-                            Technical Skills
+                            <span data-i18n="corpPortal.interviewSkillTechnical">Technical Skills</span>
                             <button class="ml-2 text-xs hover:text-red-600">×</button>
                         </span>
                         <span class="tag tag-primary flex items-center">
-                            Communication
+                            <span data-i18n="corpPortal.interviewSkillCommunication">Communication</span>
                             <button class="ml-2 text-xs hover:text-red-600">×</button>
                         </span>
                         <span class="tag tag-primary flex items-center">
-                            Problem Solving
+                            <span data-i18n="corpPortal.interviewSkillProblemSolving">Problem Solving</span>
                             <button class="ml-2 text-xs hover:text-red-600">×</button>
                         </span>
-                        <input type="text" class="border border-gray-300 rounded-full px-3 py-1 text-sm" placeholder="Add skill..." style="width: 120px;">
+                        <input type="text" class="border border-gray-300 rounded-full px-3 py-1 text-sm" data-i18n-placeholder="corpPortal.interviewAddSkillPlaceholder" placeholder="Add skill..." style="width: 120px;">
                     </div>
                 </div>
                 
                 <div class="form-group mb-6">
-                    <label class="form-label">Custom Questions</label>
-                    <textarea class="form-control" rows="3" placeholder="Add any custom questions you want to include..."></textarea>
+                    <label class="form-label" data-i18n="corpPortal.interviewCustomQuestions">Custom Questions</label>
+                    <textarea class="form-control" rows="3" data-i18n-placeholder="corpPortal.interviewCustomQuestionsPlaceholder" placeholder="Add any custom questions you want to include..."></textarea>
                 </div>
                 
                 <div class="flex justify-end mb-6">
                     <button class="btn-primary">
                         <i class="fas fa-magic mr-2"></i>
-                        <span>Generate Questions</span>
+                        <span data-i18n="corpPortal.interviewGenerateQuestions">Generate Questions</span>
                     </button>
                 </div>
                 
                 <!-- Generated Questions -->
                 <div class="border-t pt-6">
-                    <h4 class="text-xl font-semibold mb-4">Generated Interview Questions</h4>
+                    <h4 class="text-xl font-semibold mb-4" data-i18n="corpPortal.interviewGeneratedTitle">Generated Interview Questions</h4>
                     
                     <div class="space-y-6">
-                        <!-- Technical Questions -->
                         <div>
-                            <h5 class="font-semibold text-gray-800 mb-3">Technical Questions</h5>
+                            <h5 class="font-semibold text-gray-800 mb-3" data-i18n="corpPortal.interviewTechnicalTitle">Technical Questions</h5>
                             <ol class="list-decimal pl-5 space-y-2 text-gray-600">
-                                <li>Can you explain the difference between REST and GraphQL APIs?</li>
-                                <li>How would you optimize a database query that's performing poorly?</li>
-                                <li>Describe your experience with microservices architecture.</li>
-                                <li>How do you ensure code security in your development process?</li>
-                                <li>Explain a complex technical problem you solved and your approach.</li>
+                                <li data-i18n="corpPortal.interviewTechQ1">Can you explain the difference between REST and GraphQL APIs?</li>
+                                <li data-i18n="corpPortal.interviewTechQ2">How would you optimize a database query that's performing poorly?</li>
+                                <li data-i18n="corpPortal.interviewTechQ3">Describe your experience with microservices architecture.</li>
+                                <li data-i18n="corpPortal.interviewTechQ4">How do you ensure code security in your development process?</li>
+                                <li data-i18n="corpPortal.interviewTechQ5">Explain a complex technical problem you solved and your approach.</li>
                             </ol>
                         </div>
                         
-                        <!-- Behavioral Questions -->
                         <div>
-                            <h5 class="font-semibold text-gray-800 mb-3">Behavioral Questions</h5>
+                            <h5 class="font-semibold text-gray-800 mb-3" data-i18n="corpPortal.interviewBehavioralTitle">Behavioral Questions</h5>
                             <ol class="list-decimal pl-5 space-y-2 text-gray-600">
-                                <li>Tell me about a time when you had to work with a difficult team member.</li>
-                                <li>Describe a situation where you had to meet a tight deadline.</li>
-                                <li>How do you handle feedback and criticism?</li>
-                                <li>Give an example of a project where you took initiative.</li>
-                                <li>How do you prioritize tasks when faced with multiple deadlines?</li>
+                                <li data-i18n="corpPortal.interviewBehavQ1">Tell me about a time when you had to work with a difficult team member.</li>
+                                <li data-i18n="corpPortal.interviewBehavQ2">Describe a situation where you had to meet a tight deadline.</li>
+                                <li data-i18n="corpPortal.interviewBehavQ3">How do you handle feedback and criticism?</li>
+                                <li data-i18n="corpPortal.interviewBehavQ4">Give an example of a project where you took initiative.</li>
+                                <li data-i18n="corpPortal.interviewBehavQ5">How do you prioritize tasks when faced with multiple deadlines?</li>
                             </ol>
                         </div>
                         
-                        <!-- Case Study -->
                         <div>
-                            <h5 class="font-semibold text-gray-800 mb-3">Case Study</h5>
-                            <p class="text-gray-600 mb-3">Our company needs to improve the performance of our customer portal, which currently has slow page load times and poor mobile responsiveness. How would you approach this problem?</p>
+                            <h5 class="font-semibold text-gray-800 mb-3" data-i18n="corpPortal.interviewCaseStudyTitle">Case Study</h5>
+                            <p class="text-gray-600 mb-3" data-i18n="corpPortal.interviewCasePrompt">Our company needs to improve the performance of our customer portal, which currently has slow page load times and poor mobile responsiveness. How would you approach this problem?</p>
                             <ul class="list-disc pl-5 space-y-1 text-gray-600">
-                                <li>What information would you gather first?</li>
-                                <li>How would you identify the root causes?</li>
-                                <li>What solutions would you propose?</li>
-                                <li>How would you prioritize implementation?</li>
+                                <li data-i18n="corpPortal.interviewCaseQ1">What information would you gather first?</li>
+                                <li data-i18n="corpPortal.interviewCaseQ2">How would you identify the root causes?</li>
+                                <li data-i18n="corpPortal.interviewCaseQ3">What solutions would you propose?</li>
+                                <li data-i18n="corpPortal.interviewCaseQ4">How would you prioritize implementation?</li>
                             </ul>
                         </div>
                     </div>
@@ -1439,11 +1434,11 @@
                     <div class="flex justify-between mt-6">
                         <button class="btn-secondary">
                             <i class="fas fa-download mr-2"></i>
-                            <span>Export Questions</span>
+                            <span data-i18n="corpPortal.interviewExportQuestions">Export Questions</span>
                         </button>
                         <button class="btn-primary">
                             <i class="fas fa-calendar-plus mr-2"></i>
-                            <span>Schedule Interview</span>
+                            <span data-i18n="corpPortal.interviewScheduleInterview">Schedule Interview</span>
                         </button>
                     </div>
                 </div>
@@ -1455,13 +1450,13 @@
     <div id="job-optimization-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">Job Posting Optimization</h3>
+                <h3 class="text-2xl font-bold" data-i18n="corpPortal.jobOptModalTitle">Job Posting Optimization</h3>
                 <button onclick="closeModal('job-optimization-modal')" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="mb-6">
-                <p class="text-gray-600 mb-4">Optimize your job posting to attract more qualified candidates.</p>
+                <p class="text-gray-600 mb-4" data-i18n="corpPortal.jobOptModalDesc">Optimize your job posting to attract more qualified candidates.</p>
                 <!-- Form content would go here -->
             </div>
         </div>
@@ -1470,13 +1465,13 @@
     <div id="screening-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">Candidate Screening</h3>
+                <h3 class="text-2xl font-bold" data-i18n="corpPortal.screeningModalTitle">Candidate Screening</h3>
                 <button onclick="closeModal('screening-modal')" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="mb-6">
-                <p class="text-gray-600 mb-4">Screen candidates based on skills and qualifications.</p>
+                <p class="text-gray-600 mb-4" data-i18n="corpPortal.screeningModalDesc">Screen candidates based on skills and qualifications.</p>
                 <!-- Form content would go here -->
             </div>
         </div>
@@ -1485,13 +1480,13 @@
     <div id="diversity-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold">Diversity Analytics</h3>
+                <h3 class="text-2xl font-bold" data-i18n="corpPortal.diversityModalTitle">Diversity Analytics</h3>
                 <button onclick="closeModal('diversity-modal')" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="mb-6">
-                <p class="text-gray-600 mb-4">View diversity metrics and analytics.</p>
+                <p class="text-gray-600 mb-4" data-i18n="corpPortal.diversityModalDesc">View diversity metrics and analytics.</p>
                 <!-- Chart content would go here -->
             </div>
         </div>
@@ -1719,8 +1714,125 @@
         };
 
         // Initialize charts
-        function initCharts() {
+        function corpT(key, fallback, vars) {
+            if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+            var s = fallback;
+            if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+            return s;
+        }
 
+        function getPortalChartLabels() {
+            return {
+                applications: corpT('corporate.chartApplications', 'Applications'),
+                interviews: corpT('corporate.chartInterviews', 'Interviews'),
+                hires: corpT('corporate.chartHires', 'Hires'),
+                screening: corpT('corporate.chartScreening', 'Screening'),
+                offers: corpT('corporate.chartOffers', 'Offers'),
+                candidates: corpT('corporate.chartCandidates', 'Candidates'),
+                avgDaysToHire: corpT('corporate.chartAvgDaysToHire', 'Avg Days to Hire'),
+                diversity: [
+                    corpT('corporate.diversityDisability', 'Persons with Disabilities'),
+                    corpT('corporate.diversityElderly', 'Elderly (45+)'),
+                    corpT('corporate.diversityWomenReturn', 'Women Returning'),
+                    corpT('corporate.diversityYouth', 'Low-income Youth'),
+                    corpT('corporate.diversityOther', 'Other'),
+                ],
+                funnel: [
+                    corpT('corporate.chartApplications', 'Applications'),
+                    corpT('corporate.chartScreening', 'Screening'),
+                    corpT('corporate.chartInterviews', 'Interviews'),
+                    corpT('corporate.chartOffers', 'Offers'),
+                    corpT('corporate.chartHires', 'Hires'),
+                ],
+                departments: [
+                    corpT('corporate.deptTech', 'Tech'),
+                    corpT('corporate.deptMarketing', 'Marketing'),
+                    corpT('corporate.deptFinance', 'Finance'),
+                    corpT('corporate.deptHr', 'HR'),
+                    corpT('corporate.deptCustService', 'Cust. Service'),
+                ],
+                sources: [
+                    corpT('corporate.sourcePlatform', 'GBA Platform'),
+                    corpT('corporate.sourceReferrals', 'Referrals'),
+                    corpT('corporate.sourceJobBoards', 'Job Boards'),
+                    corpT('corporate.sourceSocial', 'Social Media'),
+                    corpT('corporate.sourceRecruiters', 'Recruiters'),
+                    corpT('corporate.sourceOther', 'Other'),
+                ],
+                months: [
+                    corpT('corpPortal.monthJan', 'Jan'),
+                    corpT('corpPortal.monthFeb', 'Feb'),
+                    corpT('corpPortal.monthMar', 'Mar'),
+                    corpT('corpPortal.monthApr', 'Apr'),
+                    corpT('corpPortal.monthMay', 'May'),
+                    corpT('corpPortal.monthJun', 'Jun'),
+                ],
+                quarters: [
+                    corpT('corpPortal.quarterQ1', 'Q1'),
+                    corpT('corpPortal.quarterQ2', 'Q2'),
+                    corpT('corpPortal.quarterQ3', 'Q3'),
+                    corpT('corpPortal.quarterQ4', 'Q4'),
+                ],
+            };
+        }
+
+        function getRecruitmentPeriods(L) {
+            L = L || getPortalChartLabels();
+            return {
+                monthly: {
+                    labels: L.months.slice(),
+                    values: [[120,150,180,210,254,280],[30,45,55,65,45,50],[8,12,15,18,12,14]]
+                },
+                quarterly: {
+                    labels: L.quarters.slice(),
+                    values: [[450,744,810,920],[130,160,188,220],[35,44,56,68]]
+                },
+                yearly: {
+                    labels: ['2023','2024','2025','2026'],
+                    values: [[920,1450,2380,3180],[210,360,610,780],[54,98,164,236]]
+                }
+            };
+        }
+
+        window._recruitmentChartPeriod = 'monthly';
+
+        function applyPortalChartI18n() {
+            var L = getPortalChartLabels();
+            if (window.recruitmentChart) {
+                window.recruitmentChart.data.datasets[0].label = L.applications;
+                window.recruitmentChart.data.datasets[1].label = L.interviews;
+                window.recruitmentChart.data.datasets[2].label = L.hires;
+                var periods = getRecruitmentPeriods(L);
+                var current = periods[window._recruitmentChartPeriod] || periods.monthly;
+                window.recruitmentChart.data.labels = current.labels.slice();
+                window.recruitmentChart.update();
+            }
+            if (window.diversityChart) {
+                window.diversityChart.data.labels = L.diversity.slice();
+                window.diversityChart.update();
+            }
+            if (window.funnelChart) {
+                window.funnelChart.data.labels = L.funnel.slice();
+                window.funnelChart.update();
+            }
+            if (window.timeToHireChart) {
+                window.timeToHireChart.data.labels = L.departments.slice();
+                window.timeToHireChart.data.datasets[0].label = L.avgDaysToHire;
+                window.timeToHireChart.update();
+            }
+            if (window.sourceChart) {
+                window.sourceChart.data.labels = L.sources.slice();
+                window.sourceChart.update();
+            }
+            if (window.hrTeamChart) {
+                window.hrTeamChart.data.datasets[0].label = L.applications;
+                window.hrTeamChart.data.datasets[1].label = L.hires;
+                window.hrTeamChart.update();
+            }
+        }
+
+        function initCharts() {
+            var L = getPortalChartLabels();
             // ── Helper: create vertical gradient ─────────────────────────────
             function vGrad(ctx, h, r, g, b) {
                 const grad = ctx.createLinearGradient(0, 0, 0, h);
@@ -1749,7 +1861,7 @@
             const recruitmentChart = new Chart(recruitmentCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: L.months.slice(),
                     datasets: [{
                         label: 'Applications',
                         data: [120, 150, 180, 210, 254, 280],
@@ -1765,7 +1877,7 @@
                         pointBackgroundColor: '#2563eb', pointRadius: 4, pointHoverRadius: 7,
                         tension: 0.4, fill: true
                     }, {
-                        label: 'Hires',
+                        label: L.hires,
                         data: [8, 12, 15, 18, 12, 14],
                         borderColor: '#f97316', borderWidth: 2.5,
                         backgroundColor: gradHire,
@@ -1798,19 +1910,11 @@
 
             window.recruitmentChart = recruitmentChart;
 
-            const recruitmentPeriods = {
-                monthly:  { labels: ['Jan','Feb','Mar','Apr','May','Jun'],
-                    values: [[120,150,180,210,254,280],[30,45,55,65,45,50],[8,12,15,18,12,14]] },
-                quarterly:{ labels: ['Q1','Q2','Q3','Q4'],
-                    values: [[450,744,810,920],[130,160,188,220],[35,44,56,68]] },
-                yearly:   { labels: ['2023','2024','2025','2026'],
-                    values: [[920,1450,2380,3180],[210,360,610,780],[54,98,164,236]] }
-            };
-
             window.addEventListener('gba:chart-period', function (event) {
                 const period = (event.detail && event.detail.period) || 'monthly';
-                const next = recruitmentPeriods[period] || recruitmentPeriods.monthly;
-                recruitmentChart.data.labels = next.labels;
+                window._recruitmentChartPeriod = period;
+                const next = getRecruitmentPeriods()[period] || getRecruitmentPeriods().monthly;
+                recruitmentChart.data.labels = next.labels.slice();
                 recruitmentChart.data.datasets.forEach(function (ds, i) { ds.data = next.values[i]; });
                 recruitmentChart.update();
             });
@@ -1820,7 +1924,7 @@
             const diversityChart = new Chart(diversityCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Persons with Disabilities','Elderly (45+)','Women Returning','Low-income Youth','Other'],
+                    labels: L.diversity.slice(),
                     datasets: [{
                         data: [25, 20, 18, 15, 22],
                         backgroundColor: ['#10b981','#2563eb','#f97316','#8b5cf6','#94a3b8'],
@@ -1862,9 +1966,9 @@
             const funnelChart = new Chart(funnelCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Applications','Screening','Interviews','Offers','Hires'],
+                    labels: L.funnel.slice(),
                     datasets: [{
-                        label: 'Candidates',
+                        label: L.candidates,
                         data: [254, 120, 45, 20, 12],
                         backgroundColor: fColors,
                         borderRadius: 6, borderSkipped: false
@@ -1878,7 +1982,7 @@
                         legend: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(15,23,42,0.85)', padding: 10, cornerRadius: 8,
-                            callbacks: { label: function(c){ return ' ' + c.parsed.x + ' candidates'; } }
+                            callbacks: { label: function(c){ return ' ' + corpT('corporate.chartTooltipCandidates', '{count} candidates', { count: c.parsed.x }); } }
                         }
                     },
                     scales: {
@@ -1903,9 +2007,9 @@
             const timeToHireChart = new Chart(timeToHireCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Tech', 'Marketing', 'Finance', 'HR', 'Cust. Service'],
+                    labels: L.departments.slice(),
                     datasets: [{
-                        label: 'Avg Days to Hire',
+                        label: L.avgDaysToHire,
                         data: [25, 18, 22, 15, 12],
                         backgroundColor: tColors,
                         borderRadius: 8, borderSkipped: false
@@ -1918,7 +2022,7 @@
                         legend: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(15,23,42,0.85)', padding: 10, cornerRadius: 8,
-                            callbacks: { label: function(c){ return ' ' + c.parsed.y + ' days'; } }
+                            callbacks: { label: function(c){ return ' ' + corpT('corporate.chartTooltipDays', '{count} days', { count: c.parsed.y }); } }
                         }
                     },
                     scales: {
@@ -1930,12 +2034,14 @@
                 plugins: [dataLabelPlugin]
             });
 
+            window.timeToHireChart = timeToHireChart;
+
             // ── 5. Source of Hire (pie) ───────────────────────────────────────
             const sourceCtx = document.getElementById('sourceChart').getContext('2d');
             const sourceChart = new Chart(sourceCtx, {
                 type: 'pie',
                 data: {
-                    labels: ['GBA Platform','Referrals','Job Boards','Social Media','Recruiters','Other'],
+                    labels: L.sources.slice(),
                     datasets: [{
                         data: [45, 20, 15, 10, 5, 5],
                         backgroundColor: ['#10b981','#2563eb','#f97316','#8b5cf6','#ef4444','#94a3b8'],
@@ -1957,6 +2063,8 @@
                     }
                 }
             });
+
+            window.sourceChart = sourceChart;
 
             // ── Staggered scroll-triggered animation ─────────────────────────
             const animatedCharts = [
@@ -2030,12 +2138,24 @@
         (function () {
             const el = document.getElementById('dashboard-date');
             if (!el) return;
+            function dashboardLocale() {
+                const map = { en: 'en-GB', 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', pt: 'pt' };
+                try {
+                    if (window.GBAI18n && GBAI18n.getLang) return map[GBAI18n.getLang()] || 'en-GB';
+                    const stored = localStorage.getItem('gba_ui_lang');
+                    return map[stored] || 'en-GB';
+                } catch (e) {
+                    return 'en-GB';
+                }
+            }
             function update() {
                 const now = new Date();
-                el.textContent = now.toLocaleDateString('en-GB', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) + '  ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                const loc = dashboardLocale();
+                el.textContent = now.toLocaleDateString(loc, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) + '  ' + now.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
             }
             update();
             setInterval(update, 60000);
+            window.addEventListener('gba:language-changed', update);
         })();
     </script>
     <script src="../assets/i18n/i18n.js"></script>
@@ -2051,6 +2171,32 @@
     <script src="assets/js/my-jobs.js"></script>
     <script src="assets/js/dashboard-stats.js"></script>
     <script>
+        function corpT(key, fallback) {
+            return (window.GBAI18n && GBAI18n.t) ? GBAI18n.t(key, fallback) : fallback;
+        }
+
+        function renderPortalAccessBanner(access) {
+            const banner = document.getElementById('portal-access-banner');
+            if (!banner || !access) return;
+            if (access.requires_premium_donation) {
+                banner.className = 'mb-8 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex flex-wrap items-center justify-between gap-3';
+                banner.innerHTML = '<span><i class="fas fa-hand-holding-heart mr-2"></i>'
+                    + corpT('corpPortal.bannerPremiumLead', 'Recruiting and legal aid are free; ')
+                    + '<strong>' + corpT('corpPortal.bannerPremiumFeatures', 'interview simulation and HR analytics') + '</strong>'
+                    + corpT('corpPortal.bannerPremiumSuffix', ' require a donation to unlock (any amount)')
+                    + '</span><a href="donation-legal.html" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">'
+                    + corpT('corpPortal.bannerPremiumBtn', 'Go to donation box') + '</a>';
+                banner.classList.remove('hidden');
+            } else if (access.has_premium_access) {
+                banner.className = 'mb-8 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm';
+                banner.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + corpT('corpPortal.bannerPremiumUnlocked', 'Donation complete — interview simulation and HR analytics are unlocked. Thank you for your support!');
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+                banner.innerHTML = '';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             PortalAuth.initPortalAuth({ portal: 'corporate', requireAuth: false });
             PlatformAccess.guardFeatureLinks('[data-require-access]');
@@ -2061,17 +2207,15 @@
             }
             try {
                 const access = await PlatformAccess.fetchAccess();
-                const banner = document.getElementById('portal-access-banner');
-                if (!banner) return;
-                if (access.requires_premium_donation) {
-                    banner.className = 'mb-8 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex flex-wrap items-center justify-between gap-3';
-                    banner.innerHTML = '<span><i class="fas fa-hand-holding-heart mr-2"></i>招聘与法律帮助已免费开放；<strong>面试模拟、HR 绩效统计</strong>需向捐款箱捐款解锁（金额不限）</span><a href="donation-legal.html" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">前往捐款箱</a>';
-                    banner.classList.remove('hidden');
-                } else if (access.has_premium_access) {
-                    banner.className = 'mb-8 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm';
-                    banner.innerHTML = '<i class="fas fa-check-circle mr-2"></i>您已完成捐款，面试模拟与 HR 绩效统计等高级功能已解锁。感谢您的爱心支持！';
-                    banner.classList.remove('hidden');
-                }
+                renderPortalAccessBanner(access);
+            } catch (e) { /* ignore */ }
+        });
+
+        window.addEventListener('gba:language-changed', async function () {
+            applyPortalChartI18n();
+            try {
+                const access = await PlatformAccess.fetchAccess();
+                renderPortalAccessBanner(access);
             } catch (e) { /* ignore */ }
         });
     </script>

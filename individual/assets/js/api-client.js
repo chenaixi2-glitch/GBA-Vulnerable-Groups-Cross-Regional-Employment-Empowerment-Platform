@@ -4,8 +4,19 @@
  */
 
 const API_CONFIG = {
-    BASE_URL: (typeof window !== 'undefined' && window.GBA_API_BASE_URL)
-        || `http://${(typeof window !== 'undefined' && window.location && window.location.hostname) || 'localhost'}:8000/api`,
+    BASE_URL: (function resolveApiBaseUrl() {
+        if (typeof window !== 'undefined' && window.GBA_API_BASE_URL) {
+            return window.GBA_API_BASE_URL;
+        }
+        let host = 'localhost';
+        if (typeof window !== 'undefined' && window.location) {
+            const proto = window.location.protocol || '';
+            if (proto === 'http:' || proto === 'https:') {
+                host = window.location.hostname || 'localhost';
+            }
+        }
+        return `http://${host}:8000/api`;
+    })(),
     // SiliconFlow DeepSeek: single LLM call ~60–90s; multi-agent workflows may take 2–3 min
     TIMEOUT: 300000,
     HEALTH_TIMEOUT: 12000,
@@ -822,6 +833,14 @@ class MockAPIService {
             return response;
         }
 
+        if (this.state.hasResume && message.trim().length > 2) {
+            response.triggered_agents = ['content_agent', 'render_agent'];
+            response.resume_content_json = this.profilePayload();
+            response.resume_html = { html: this.mockResumeHtmlForLanguage(lang), version: (Date.now() % 9) + 2 };
+            response.reply_message = apiT('mock.resumeEditedDemo', 'Resume updated based on your edit request (demo mode).');
+            return response;
+        }
+
         if (msg.includes('translate') || msg.includes('convert to chinese') || msg.includes('convert to english') || msg.includes('中文') || msg.includes('英文')) {
             this.state.hasResume = true;
             const targetLang = /english|英文|en/i.test(message) ? 'en'
@@ -945,6 +964,47 @@ class MockAPIService {
 
     async getLanguageChecklist(sessionId, language) {
         await this.delay(400);
+        const lang = this.normalizeResumeLanguage(language);
+
+        let draft = null;
+        try {
+            const sessionRaw = localStorage.getItem(this._draftKey(sessionId));
+            if (sessionRaw) draft = JSON.parse(sessionRaw);
+            if (!draft) {
+                const userRaw = localStorage.getItem(this._userDraftKey());
+                if (userRaw) draft = JSON.parse(userRaw).draft;
+            }
+        } catch (_) { /* ignore */ }
+
+        if (draft && typeof getRequiredMissingFromDraft === 'function') {
+            const required = getRequiredMissingFromDraft(draft, lang);
+            const items = required.map((item) => ({
+                id: `mock_${item.field}`,
+                category: 'content',
+                field: item.field,
+                label: item.label,
+                severity: 'required',
+                message: '',
+                suggestion: '',
+                missing: true,
+                present: false,
+            }));
+            return {
+                language: lang,
+                language_label: lang === 'en' ? 'English Resume' : '中文简历',
+                items,
+                missing_items: items,
+                missing_count: items.length,
+                required_missing_count: items.length,
+                recommended_missing_count: 0,
+                warning_count: 0,
+                total_checks: items.length,
+                summary: items.length
+                    ? `${items.length} required field(s) remaining`
+                    : 'Core sections look complete.',
+            };
+        }
+
         return this.buildMockChecklist(language);
     }
 
@@ -1143,16 +1203,22 @@ class APIClient {
             'mock.demoModeBody',
             'Backend not connected. Resume parsing uses sample data (Alex Chen), unrelated to your upload.'
         );
-        const action = apiT(
-            'mock.demoModeAction',
-            'Start the backend and refresh, or run in the console:'
-        );
-        const code = "localStorage.removeItem('gba_api_mock_mode'); location.reload()";
+        const retryLabel = apiT('mock.demoModeRetry', 'Retry connection');
         return (
             '<strong>' + title + '</strong> '
             + body + ' '
-            + action + ' <code class="bg-amber-600/40 px-1 rounded">' + code + '</code>'
+            + '<button type="button" id="gba-mock-reconnect-btn" class="ml-2 underline font-semibold hover:text-amber-100">'
+            + retryLabel + '</button>'
         );
+    }
+
+    _bindMockModeBannerActions() {
+        const btn = document.getElementById('gba-mock-reconnect-btn');
+        if (!btn || btn.dataset.bound) return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+            this.reconnectBackend({ showToast: true });
+        });
     }
 
     _syncMockModeIndicator() {
@@ -1169,6 +1235,7 @@ class APIClient {
             document.body.prepend(banner);
         }
         banner.innerHTML = this._mockModeBannerHtml();
+        this._bindMockModeBannerActions();
     }
 
     _healthUrl() {
@@ -1176,12 +1243,29 @@ class APIClient {
     }
 
     async _probeBackendHealth() {
-        try {
-            await axios.get(this._healthUrl(), { timeout: API_CONFIG.HEALTH_TIMEOUT });
-            return true;
-        } catch (_) {
-            return false;
+        for (const url of this._healthUrls()) {
+            try {
+                await axios.get(url, { timeout: API_CONFIG.HEALTH_TIMEOUT });
+                return true;
+            } catch (_) {
+                /* try next host variant */
+            }
         }
+        return false;
+    }
+
+    _healthUrls() {
+        const primary = this._healthUrl();
+        const urls = [primary];
+        const alt = primary.includes('//localhost')
+            ? primary.replace('//localhost', '//127.0.0.1')
+            : primary.includes('//127.0.0.1')
+                ? primary.replace('//127.0.0.1', '//localhost')
+                : null;
+        if (alt && !urls.includes(alt)) {
+            urls.push(alt);
+        }
+        return urls;
     }
 
     async ensureBackendAvailable() {
@@ -1192,8 +1276,8 @@ class APIClient {
 
         const wasMockCached = localStorage.getItem(API_CONFIG.MOCK_MODE_KEY) === 'true';
 
-        try {
-            await axios.get(this._healthUrl(), { timeout: API_CONFIG.HEALTH_TIMEOUT });
+        const backendUp = await this._probeBackendHealth();
+        if (backendUp) {
             this.useMockMode = false;
             localStorage.removeItem(API_CONFIG.MOCK_MODE_KEY);
             this._syncMockModeIndicator();
@@ -1201,16 +1285,23 @@ class APIClient {
                 Utils.showToast(apiT('mock.backendRestored', 'Connected to live backend — please re-upload your resume to parse it'));
             }
             return true;
-        } catch (error) {
-            this.useMockMode = true;
-            localStorage.setItem(API_CONFIG.MOCK_MODE_KEY, 'true');
-            this._syncMockModeIndicator();
-            console.warn('[API] Backend unavailable, using demo mode:', error.message);
-            if (typeof Utils !== 'undefined') {
-                Utils.showToast(apiT('mock.backendOfflineDemo', 'Backend offline — running in demo mode with sample data'));
-            }
-            return false;
         }
+
+        this.useMockMode = true;
+        localStorage.setItem(API_CONFIG.MOCK_MODE_KEY, 'true');
+        this._syncMockModeIndicator();
+        console.warn('[API] Backend unavailable, using demo mode');
+        if (typeof Utils !== 'undefined') {
+            Utils.showToast(apiT('mock.backendOfflineDemo', 'Backend offline — running in demo mode with sample data'));
+        }
+        return false;
+    }
+
+    /**
+     * Re-probe backend availability (e.g. after a network error invalidated the cached result).
+     */
+    invalidateBackendProbe() {
+        this.backendChecked = false;
     }
 
     /**
@@ -1219,21 +1310,56 @@ class APIClient {
      */
     async _enableMockModeIfBackendDown(options = {}) {
         const { showToast = true } = options;
-        const backendUp = await this._probeBackendHealth();
-        if (backendUp) {
+        this.invalidateBackendProbe();
+        await this.ensureBackendAvailable();
+        if (!this.useMockMode) {
             return false;
         }
-        this.enableMockMode();
         if (showToast && typeof Utils !== 'undefined') {
             Utils.showToast(apiT('mock.backendUnreachableDemo', 'Backend unreachable — switched to demo mode'));
         }
         return true;
     }
 
-    enableMockMode() {
+    /**
+     * Try demo/mock fallback after an API failure.
+     * @param {object} [error] - axios error
+     * @param {{ showToast?: boolean, forceOnNetworkError?: boolean }} [options]
+     */
+    async _attemptMockFallback(error, options = {}) {
+        const { showToast = true, forceOnNetworkError = false } = options;
+        if (this.useMockMode) {
+            return true;
+        }
+
+        const switched = await this._enableMockModeIfBackendDown({ showToast: false });
+        if (switched) {
+            if (showToast && typeof Utils !== 'undefined') {
+                Utils.showToast(apiT('mock.backendUnreachableDemo', 'Backend unreachable — switched to demo mode'));
+            }
+            return true;
+        }
+
+        if (forceOnNetworkError && error && !error.response) {
+            this.enableMockMode({ persist: false });
+            if (showToast && typeof Utils !== 'undefined') {
+                Utils.showToast(apiT('mock.backendUnreachableDemo', 'Backend unreachable — switched to demo mode'));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param {{ persist?: boolean }} [options] - persist=false keeps demo mode for this page only (not localStorage)
+     */
+    enableMockMode(options = {}) {
+        const { persist = true } = options;
         this.useMockMode = true;
         this.backendChecked = true;
-        localStorage.setItem(API_CONFIG.MOCK_MODE_KEY, 'true');
+        if (persist) {
+            localStorage.setItem(API_CONFIG.MOCK_MODE_KEY, 'true');
+        }
         this._syncMockModeIndicator();
     }
 
@@ -1242,6 +1368,20 @@ class APIClient {
         this.backendChecked = false;
         localStorage.removeItem(API_CONFIG.MOCK_MODE_KEY);
         this._syncMockModeIndicator();
+    }
+
+    async reconnectBackend(options = {}) {
+        const { showToast = true } = options;
+        this.disableMockMode();
+        await this.ensureBackendAvailable();
+        if (showToast && typeof Utils !== 'undefined') {
+            if (!this.useMockMode) {
+                Utils.showToast(apiT('mock.backendRestored', 'Connected to live backend — please re-upload your resume to parse it'));
+            } else {
+                Utils.showToast(apiT('mock.backendOfflineDemo', 'Backend offline — running in demo mode with sample data'));
+            }
+        }
+        return !this.useMockMode;
     }
 
     /**
@@ -1255,11 +1395,22 @@ class APIClient {
         return 'en';
     }
 
+    normalizeResumeLanguage(targetLanguage) {
+        return this.mockService.normalizeResumeLanguage(targetLanguage);
+    }
+
     /**
      * Language for optimization Q&A (gap analysis, JD confirmation hints): follow page UI locale.
      */
     getPageLanguage() {
         return this.normalizeResumeLanguage(this.getApiLanguage());
+    }
+
+    /**
+     * Output language for JD generation — follows interface locale, not resume target language.
+     */
+    getJdLanguage() {
+        return this.getPageLanguage();
     }
 
     /**
@@ -1395,7 +1546,7 @@ class APIClient {
                 return this.chat(message, attachments, { retryOnAccessDenied: false, allowMockFallback, language: chatLanguage, languageScope: options.languageScope });
             }
             if (allowMockFallback && this._shouldUseMockFallback(error)) {
-                const switched = await this._enableMockModeIfBackendDown();
+                const switched = await this._attemptMockFallback(error, { forceOnNetworkError: true });
                 if (switched) {
                     return this._applyChatResponseSession(
                         await this.mockService.chat(this.sessionId, message, attachments, { language: chatLanguage })
@@ -1453,19 +1604,29 @@ class APIClient {
         const ctx = this._resolveTargetJobContext(context, jdTextOverride);
         if (!ctx || !this.sessionId) return null;
 
+        await this.ensureBackendAvailable();
         if (this.useMockMode) {
             return { ok: true, target_context: ctx };
         }
 
-        await this.ensureBackendAvailable();
-        const response = await this.client.put('/resume/target-context', {
-            session_id: this.sessionId,
-            jd_text: ctx.jd_text || '',
-            industry: ctx.industryLabel || ctx.industry || '',
-            employer_type: ctx.employer_type || '',
-            experience_level: ctx.experienceLevelLabel || ctx.experience_level || '',
-        });
-        return response.data;
+        try {
+            const response = await this.client.put('/resume/target-context', {
+                session_id: this.sessionId,
+                jd_text: ctx.jd_text || '',
+                industry: ctx.industryLabel || ctx.industry || '',
+                employer_type: ctx.employer_type || '',
+                experience_level: ctx.experienceLevelLabel || ctx.experience_level || '',
+            });
+            return response.data;
+        } catch (error) {
+            console.warn('[API] Target context sync skipped:', error.message);
+            const status = error.response?.status;
+            if (!error.response || status === 404 || status >= 500) {
+                await this._attemptMockFallback(error, { showToast: false, forceOnNetworkError: !error.response });
+            }
+            // Non-fatal: JD and context are still included in the chat message body.
+            return { ok: false, target_context: ctx, skipped: true };
+        }
     }
 
     _appendTargetContextToInstruction(instruction, context) {
@@ -1507,7 +1668,7 @@ class APIClient {
                 throw new Error(apiT('errors.selectIndustryLevel', 'Please select industry and experience level'));
             }
 
-            const outputLanguage = language || this.getChatLanguage();
+            const outputLanguage = language || this.getJdLanguage();
 
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
@@ -1526,8 +1687,8 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('JD generation error:', error);
-            if (!error.response && !this.useMockMode && await this._enableMockModeIfBackendDown()) {
-                const outputLanguage = language || this.getChatLanguage();
+            if (!error.response && !this.useMockMode && await this._attemptMockFallback(error, { forceOnNetworkError: true })) {
+                const outputLanguage = language || this.getJdLanguage();
                 return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private', jdDraft, outputLanguage);
             }
             throw this.handleError(error);
@@ -1628,7 +1789,8 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('Save draft error:', error);
-            if (!error.response && !this.useMockMode) {
+            const status = error.response?.status;
+            if ((!error.response && !this.useMockMode) || status === 404) {
                 console.warn('[API] Draft save failed, keeping edits in local fallback:', error.message);
                 return this.mockService.saveResumeDraft(this.sessionId, draft, this.isLoggedIn());
             }
@@ -1707,7 +1869,7 @@ class APIClient {
             }
             const ctx = this._resolveTargetJobContext(targetContext, jobTitle);
             await this.ensureBackendAvailable();
-            const outputLanguage = this.getChatLanguage();
+            const outputLanguage = this.getJdLanguage();
             if (this.useMockMode) {
                 return this.mockService.buildMockJd(
                     ctx.industry || 'tech',
@@ -1728,6 +1890,16 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('Generate JD from title error:', error);
+            if (!error.response && !this.useMockMode && await this._attemptMockFallback(error, { forceOnNetworkError: true })) {
+                const ctx = this._resolveTargetJobContext(targetContext, jobTitle);
+                return this.mockService.buildMockJd(
+                    ctx.industry || 'tech',
+                    ctx.experience_level || 'mid',
+                    ctx.employer_type || 'private',
+                    jobTitle,
+                    this.getJdLanguage()
+                );
+            }
             throw this.handleError(error);
         }
     }
@@ -1811,7 +1983,10 @@ class APIClient {
         }
         try {
             await this.ensureBackendAvailable();
-            return await this.setResumeLanguage(this.getChatLanguage());
+            const lang = typeof currentResumeLanguage !== 'undefined' && currentResumeLanguage
+                ? this.normalizeResumeLanguage(currentResumeLanguage)
+                : this.getApiLanguage();
+            return await this.setResumeLanguage(lang);
         } catch (error) {
             console.warn('Resume language session sync skipped:', error.message);
             return null;
@@ -1868,6 +2043,45 @@ class APIClient {
                 return this.mockService.getResumeHtml(this.sessionId, this.getChatLanguage());
             }
             throw error;
+        }
+    }
+
+    /**
+     * Restore resume session to a prior snapshot (undo/redo)
+     */
+    async restoreResumeSnapshot(snapshot) {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+            if (!snapshot) {
+                throw new Error(apiT('errors.invalidSnapshot', 'Invalid resume snapshot'));
+            }
+
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                return {
+                    ok: true,
+                    language: snapshot.language || this.getChatLanguage(),
+                    resume_content_json: snapshot.resume_content_json || null,
+                    render_config: snapshot.render_config || null,
+                    resume_html: snapshot.resume_html || (snapshot.html ? { html: snapshot.html, version: 1 } : null),
+                };
+            }
+
+            const response = await this.client.post('/resume/restore-snapshot', {
+                session_id: this.sessionId,
+                resume_content_json: snapshot.resume_content_json || null,
+                render_config: snapshot.render_config || null,
+                resume_html: snapshot.resume_html || (snapshot.html ? { html: snapshot.html, version: 1 } : null),
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Restore resume snapshot error:', error);
+            if (!error.response && !this.useMockMode && await this._enableMockModeIfBackendDown()) {
+                return this.restoreResumeSnapshot(snapshot);
+            }
+            throw this.handleError(error);
         }
     }
 
@@ -1960,7 +2174,8 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('Language checklist error:', error);
-            if (!error.response && !this.useMockMode) {
+            const status = error.response?.status;
+            if ((!error.response && !this.useMockMode) || status === 404) {
                 console.warn('[API] Language checklist failed, using local fallback:', error.message);
                 return this.mockService.getLanguageChecklist(this.sessionId, language);
             }
@@ -2647,6 +2862,15 @@ if (typeof window !== 'undefined') {
             apiClient._syncMockModeIndicator();
         }
     });
+
+    const probeBackendOnLoad = () => {
+        apiClient.reconnectBackend({ showToast: false }).catch(() => {});
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', probeBackendOnLoad);
+    } else {
+        probeBackendOnLoad();
+    }
 }
 
 // Utility functions

@@ -10,6 +10,14 @@
         pt: 'Português'
     };
 
+    /** Language names shown in the switcher (English fallbacks when UI is English) */
+    var LANG_NAMES_FB = {
+        en: 'English',
+        'zh-CN': 'Simplified Chinese',
+        'zh-TW': 'Traditional Chinese',
+        pt: 'Portuguese'
+    };
+
     /** UI locale → resume/API language code */
     var UI_TO_API = {
         en: 'en',
@@ -333,11 +341,20 @@
         setText('[data-i18n="home.navMyApplications"]', pageText('[data-i18n="home.navMyApplications"]', 'navMyApplications'));
     }
 
+    function applyLangDropdownLabels() {
+        document.querySelectorAll('[data-i18n-lang]').forEach(function (node) {
+            var code = node.getAttribute('data-i18n-lang');
+            if (!code) return;
+            var fb = LANG_NAMES_FB[code] || code;
+            var text = t('lang.' + code, fb);
+            if (text) node.textContent = text;
+        });
+    }
+
     function applyDataI18n(lang) {
         document.querySelectorAll('[data-i18n]').forEach(function (node) {
             var key = node.getAttribute('data-i18n');
             if (!key || key.indexOf('.') === -1) return;
-            if (/^(home|individual|corporate)\./.test(key)) return;
             if (node.id === 'session-id' || node.dataset.i18nDynamic === '1') return;
             if (!node.dataset.i18nDefault) {
                 var raw = (node.textContent || '').trim();
@@ -428,6 +445,7 @@
         if (sel) sel.value = lang === 'zh-CN' ? 'zh-CN' : lang;
         applyPageCopy(lang);
         applyDataI18n(lang);
+        applyLangDropdownLabels();
         applyStaticStrings(lang);
         applyResumeLangButtonLabels();
     }
@@ -468,10 +486,10 @@
             '<button type="button" class="flex items-center gap-2 text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-50" aria-haspopup="listbox" aria-expanded="false">' +
             '<i class="fas fa-globe" aria-hidden="true"></i><span id="current-language">English</span><span aria-hidden="true">▾</span></button>' +
             '<div class="language-dropdown" role="listbox">' +
-            '<a href="#" role="option" data-lang="en">English</a>' +
-            '<a href="#" role="option" data-lang="zh-CN">简体中文</a>' +
-            '<a href="#" role="option" data-lang="zh-TW">繁體中文</a>' +
-            '<a href="#" role="option" data-lang="pt">Português</a>' +
+            '<a href="#" role="option" data-lang="en" data-i18n-lang="en">English</a>' +
+            '<a href="#" role="option" data-lang="zh-CN" data-i18n-lang="zh-CN">Simplified Chinese</a>' +
+            '<a href="#" role="option" data-lang="zh-TW" data-i18n-lang="zh-TW">Traditional Chinese</a>' +
+            '<a href="#" role="option" data-lang="pt" data-i18n-lang="pt">Portuguese</a>' +
             '</div>'
         );
     }

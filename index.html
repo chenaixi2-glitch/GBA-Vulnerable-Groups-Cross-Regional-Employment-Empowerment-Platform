@@ -422,8 +422,8 @@
                 <div class="flex items-center min-w-0">
                     <a href="./#top-hero" class="flex items-center shrink-0" id="nav-brand-link">
                         <i class="fas fa-handshake text-2xl text-blue-600 mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800 hidden sm:inline">GBA Platform</span>
-                        <span class="text-xl font-bold text-gray-800 sm:hidden">GBA</span>
+                        <span class="text-xl font-bold text-gray-800 hidden sm:inline" data-i18n="home.brandName">GBA Platform</span>
+                        <span class="text-xl font-bold text-gray-800 sm:hidden" data-i18n="home.brandShort">GBA</span>
                     </a>
                 </div>
                 
@@ -444,10 +444,10 @@
                             <i class="fas fa-chevron-down text-xs"></i>
                         </button>
                         <div class="language-dropdown" id="language-dropdown">
-                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="en">English</a>
-                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-CN">Simplified Chinese</a>
-                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-TW">Traditional Chinese</a>
-                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="en" data-i18n-lang="en">English</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-CN" data-i18n-lang="zh-CN">Simplified Chinese</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="zh-TW" data-i18n-lang="zh-TW">Traditional Chinese</a>
+                            <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt" data-i18n-lang="pt">Portuguese</a>
                         </div>
                     </div>
 
@@ -464,8 +464,8 @@
                     
                     <div id="nav-auth-user" class="hidden md:flex items-center gap-2 lg:gap-3">
                         <span id="nav-user-greeting" class="text-gray-700 text-sm max-w-[140px] truncate lg:max-w-[200px]"></span>
-                        <a id="nav-portal-link" href="individual/index.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap">My portal</a>
-                        <button type="button" id="nav-logout-btn" class="text-gray-600 hover:text-red-600 text-sm font-medium px-2">Log out</button>
+                        <a id="nav-portal-link" href="individual/index.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap" data-i18n="home.myPortal">My portal</a>
+                        <button type="button" id="nav-logout-btn" class="text-gray-600 hover:text-red-600 text-sm font-medium px-2" data-i18n="home.logOut">Log out</button>
                     </div>
                     
                     <button id="mobile-menu-button" type="button" class="md:hidden text-gray-600 hover:text-blue-600 transition-colors p-2" aria-expanded="false" aria-controls="mobile-menu">
@@ -478,7 +478,7 @@
             <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2 border-t border-gray-100 mt-3">
                 <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-features">Features</a>
                 <a href="#how-it-works" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="home.howItWorks">How It Works</a>
-                <a href="#benefits" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors">Benefits</a>
+                <a href="#benefits" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="section-benefits-title">Benefits</a>
                 <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
                 <a href="individual/demo-jobs-database.html?friendly=1" class="block py-2 text-emerald-700 font-medium" data-i18n="home.navFriendlyJobs">Inclusive jobs</a>
                 <a href="individual/friendly-employers.html" class="block py-2 text-emerald-700 font-medium" data-i18n="home.navFriendlyEmployers">Inclusive employers</a>
@@ -486,12 +486,12 @@
                 <a href="individual/donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 font-medium"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
                 <div class="py-3 border-t border-gray-100 mt-2 space-y-2">
                     <div id="nav-mobile-auth-guest">
-                        <button type="button" class="nav-mobile-login w-full text-left py-2 text-gray-600 hover:text-blue-600 font-medium">Log in</button>
-                        <button type="button" class="nav-mobile-signup w-full text-left py-2 text-blue-600 font-semibold">Sign up</button>
+                        <button type="button" class="nav-mobile-login w-full text-left py-2 text-gray-600 hover:text-blue-600 font-medium" data-i18n="home.login">Log in</button>
+                        <button type="button" class="nav-mobile-signup w-full text-left py-2 text-blue-600 font-semibold" data-i18n="home.signup">Sign up</button>
                     </div>
                     <span id="nav-mobile-user-line" class="hidden block text-gray-700 text-sm py-1"></span>
-                    <a id="nav-mobile-portal-link" href="individual/index.html" class="hidden text-blue-600 font-medium py-2 block">Go to portal</a>
-                    <button type="button" id="nav-mobile-logout-btn" class="hidden w-full text-left py-2 text-gray-600 hover:text-red-600">Log out</button>
+                    <a id="nav-mobile-portal-link" href="individual/index.html" class="hidden text-blue-600 font-medium py-2 block" data-i18n="home.goToPortal">Go to portal</a>
+                    <button type="button" id="nav-mobile-logout-btn" class="hidden w-full text-left py-2 text-gray-600 hover:text-red-600" data-i18n="home.logOut">Log out</button>
                 </div>
             </div>
         </div>
@@ -504,28 +504,28 @@
     
     <!-- Accessibility Panel -->
     <div class="accessibility-panel" id="accessibility-panel">
-        <h3 class="font-bold mb-3">Accessibility Options</h3>
+        <h3 class="font-bold mb-3" data-i18n="home.a11yTitle">Accessibility Options</h3>
         <div class="space-y-3">
             <div class="flex items-center justify-between">
-                <label for="high-contrast" class="text-sm">High Contrast</label>
+                <label for="high-contrast" class="text-sm" data-i18n="home.a11yHighContrast">High Contrast</label>
                 <button id="high-contrast" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
                     <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
                 </button>
             </div>
             <div class="flex items-center justify-between">
-                <label for="large-text" class="text-sm">Large Text</label>
+                <label for="large-text" class="text-sm" data-i18n="home.a11yLargeText">Large Text</label>
                 <button id="large-text" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
                     <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
                 </button>
             </div>
             <div class="flex items-center justify-between">
-                <label for="screen-reader" class="text-sm">Screen Reader</label>
+                <label for="screen-reader" class="text-sm" data-i18n="home.a11yScreenReader">Screen Reader</label>
                 <button id="screen-reader" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
                     <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
                 </button>
             </div>
             <div class="flex items-center justify-between">
-                <label for="keyboard-nav" class="text-sm">Keyboard Navigation</label>
+                <label for="keyboard-nav" class="text-sm" data-i18n="home.a11yKeyboardNav">Keyboard Navigation</label>
                 <button id="keyboard-nav" class="w-10 h-6 bg-gray-200 rounded-full relative focus:outline-none transition-colors" role="switch" aria-checked="false">
                     <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
                 </button>
@@ -568,7 +568,7 @@
                     <i class="fas fa-users text-2xl text-white mr-3"></i>
                     <div class="text-left">
                         <div class="text-white font-bold" id="hero-stat-users">—</div>
-                        <div class="text-white text-sm">Registered Job Seekers</div>
+                        <div class="text-white text-sm" data-i18n="home.heroStatUsers">Registered Job Seekers</div>
                     </div>
                 </div>
                 
@@ -576,7 +576,7 @@
                     <i class="fas fa-building text-2xl text-white mr-3"></i>
                     <div class="text-left">
                         <div class="text-white font-bold" id="hero-stat-companies">—</div>
-                        <div class="text-white text-sm">Registered Companies</div>
+                        <div class="text-white text-sm" data-i18n="home.heroStatCompanies">Registered Companies</div>
                     </div>
                 </div>
                 
@@ -584,7 +584,7 @@
                     <i class="fas fa-briefcase text-2xl text-white mr-3"></i>
                     <div class="text-left">
                         <div class="text-white font-bold" id="hero-stat-jobs">—</div>
-                        <div class="text-white text-sm">Active Job Openings</div>
+                        <div class="text-white text-sm" data-i18n="home.heroStatJobs">Active Job Openings</div>
                     </div>
                 </div>
             </div>
@@ -605,10 +605,10 @@
                         <i class="fas fa-file-alt"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3" data-i18n="home.featureResumeTitle">Smart Resume Generator</h3>
-                    <p class="text-gray-600 mb-4">Upload your resume and target job description — AI helps refine skills highlighting and formatting before you apply to matched roles.</p>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureResumeDesc">Upload your resume and target job description — AI helps refine skills highlighting and formatting before you apply to matched roles.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="individual/demo-resume-generator.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Learn more</span>
+                            <span data-i18n="home.learnMore">Learn more</span>
                             <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -618,11 +618,11 @@
                     <div class="ai-feature-icon">
                         <i class="fas fa-graduation-cap"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Personalized Learning Path</h3>
-                    <p class="text-gray-600 mb-4">Get a tailored skill upgrade plan alongside real job matching and application tracking.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureLearningTitle">Personalized Learning Path</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureLearningDesc">Get a tailored skill upgrade plan alongside real job matching and application tracking.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="individual/demo-learning-path.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Learn more</span>
+                            <span data-i18n="home.learnMore">Learn more</span>
                             <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -632,11 +632,11 @@
                     <div class="ai-feature-icon">
                         <i class="fas fa-comments"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Interview Preparation</h3>
-                    <p class="text-gray-600 mb-4">Practice with AI-powered mock interviews and receive feedback to build confidence before real interviews.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureInterviewTitle">Interview Preparation</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureInterviewDesc">Practice with AI-powered mock interviews and receive feedback to build confidence before real interviews.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="individual/demo-interview.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Learn more</span>
+                            <span data-i18n="home.learnMore">Learn more</span>
                             <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -646,11 +646,11 @@
                     <div class="ai-feature-icon">
                         <i class="fas fa-briefcase"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Job Posting & Applicant Scoring</h3>
-                    <p class="text-gray-600 mb-4">Publish internal roles with target criteria for vulnerable groups, then review applicants ranked by match score and reasons.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureJobsTitle">Job Posting & Applicant Scoring</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureJobsDesc">Publish internal roles with target criteria for vulnerable groups, then review applicants ranked by match score and reasons.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="corporate/post-job.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Post a job</span>
+                            <span data-i18n="home.postJobCta">Post a job</span>
                             <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -660,11 +660,11 @@
                     <div class="ai-feature-icon">
                         <i class="fas fa-id-card"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Company Profile</h3>
-                    <p class="text-gray-600 mb-4">Maintain your company profile and inclusivity information; friendly employers are highlighted when posting vulnerable-group roles.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureCompanyTitle">Company Profile</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureCompanyDesc">Maintain your company profile and inclusivity information; friendly employers are highlighted when posting vulnerable-group roles.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="corporate/company-profile.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Manage profile</span>
+                            <span data-i18n="home.manageProfile">Manage profile</span>
                             <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -674,11 +674,11 @@
                     <div class="ai-feature-icon">
                         <i class="fas fa-search"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Skills-Based Job Matching</h3>
-                    <p class="text-gray-600 mb-4">After registration, the platform infers your group type from profile data and surfaces matched jobs with scores and application tracking.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureMatchingTitle">Skills-Based Job Matching</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureMatchingDesc">After registration, the platform infers your group type from profile data and surfaces matched jobs with scores and application tracking.</p>
                     <div class="flex items-center text-blue-600 font-medium">
                         <a href="individual/demo-jobs-database.html" class="flex items-center hover:text-blue-800 transition-colors">
-                            <span>Browse jobs</span>
+                            <span data-i18n="home.browseJobs">Browse jobs</span>
                             <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -688,24 +688,24 @@
                     <div class="ai-feature-icon">
                         <i class="fas fa-language"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Multi-Language Support</h3>
-                    <p class="text-gray-600 mb-4">Full support for Simplified Chinese, Traditional Chinese, English, and Portuguese to serve the diverse GBA population.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureI18nTitle">Multi-Language Support</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureI18nDesc">Full support for Simplified Chinese, Traditional Chinese, English, and Portuguese to serve the diverse GBA population.</p>
                 </div>
                 
                 <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
                     <div class="ai-feature-icon">
                         <i class="fas fa-shield-alt"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Data Security & Compliance</h3>
-                    <p class="text-gray-600 mb-4">Your account, resume, and application data are protected with secure login, encrypted storage, and role-based access controls.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureSecurityTitle">Data Security & Compliance</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureSecurityDesc">Your account, resume, and application data are protected with secure login, encrypted storage, and role-based access controls.</p>
                 </div>
                 
                 <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
                     <div class="ai-feature-icon">
                         <i class="fas fa-universal-access"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Accessibility</h3>
-                    <p class="text-gray-600 mb-4">Built-in accessibility widget with high-contrast mode, larger text, keyboard-friendly navigation, and screen-reader hints — plus multi-language UI support.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureA11yTitle">Accessibility</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureA11yDesc">Built-in accessibility widget with high-contrast mode, larger text, keyboard-friendly navigation, and screen-reader hints — plus multi-language UI support.</p>
                 </div>
             </div>
         </div>
@@ -725,8 +725,8 @@
                                 <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">1</div>
                             </div>
                             <div class="ml-6">
-                                <h3 class="text-xl font-bold mb-2">Create Your Profile</h3>
-                                <p class="text-gray-600">Register as an individual (with age, gender, income, and career-gap profile) or as a corporate account, then complete your resume or company profile.</p>
+                                <h3 class="text-xl font-bold mb-2" data-i18n="home.step1Title">Create Your Profile</h3>
+                                <p class="text-gray-600" data-i18n="home.step1Desc">Register as an individual (with age, gender, income, and career-gap profile) or as a corporate account, then complete your resume or company profile.</p>
                             </div>
                         </div>
                         
@@ -736,8 +736,8 @@
                                 <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">2</div>
                             </div>
                             <div class="ml-6">
-                                <h3 class="text-xl font-bold mb-2">AI Matching Process</h3>
-                                <p class="text-gray-600">The matching service scores jobs against your resume and profile, considering skills, group types, and employer target criteria.</p>
+                                <h3 class="text-xl font-bold mb-2" data-i18n="home.step2Title">AI Matching Process</h3>
+                                <p class="text-gray-600" data-i18n="home.step2Desc">The matching service scores jobs against your resume and profile, considering skills, group types, and employer target criteria.</p>
                             </div>
                         </div>
                         
@@ -747,8 +747,8 @@
                                 <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">3</div>
                             </div>
                             <div class="ml-6">
-                                <h3 class="text-xl font-bold mb-2">Review & Connect</h3>
-                                <p class="text-gray-600">Individuals apply to jobs and track applications; employers review ranked applicants and manage posting status from the corporate portal.</p>
+                                <h3 class="text-xl font-bold mb-2" data-i18n="home.step3Title">Review & Connect</h3>
+                                <p class="text-gray-600" data-i18n="home.step3Desc">Individuals apply to jobs and track applications; employers review ranked applicants and manage posting status from the corporate portal.</p>
                             </div>
                         </div>
                         
@@ -758,8 +758,8 @@
                                 <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">4</div>
                             </div>
                             <div class="ml-6">
-                                <h3 class="text-xl font-bold mb-2">Support Throughout</h3>
-                                <p class="text-gray-600">Use AI career tools — resume optimization, interview practice, learning paths, and policy guidance — from the individual or corporate portals, plus community donation and legal-aid services where available.</p>
+                                <h3 class="text-xl font-bold mb-2" data-i18n="home.step4Title">Support Throughout</h3>
+                                <p class="text-gray-600" data-i18n="home.step4Desc">Use AI career tools — resume optimization, interview practice, learning paths, and policy guidance — from the individual or corporate portals, plus community donation and legal-aid services where available.</p>
                             </div>
                         </div>
                     </div>
@@ -767,7 +767,7 @@
                 
                 <div class="relative">
                     <div class="bg-white rounded-xl shadow-lg p-8 relative z-10">
-                        <h3 class="text-2xl font-bold mb-6 text-center">Platform Benefits</h3>
+                        <h3 class="text-2xl font-bold mb-6 text-center" data-i18n="home.platformBenefitsTitle">Platform Benefits</h3>
                         
                         <div class="space-y-4">
                             <div class="benefit-item flex items-center">
@@ -775,8 +775,8 @@
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold">For Individuals</h4>
-                                    <p class="text-gray-600">Browse matched internal and external jobs, apply with scored applications, and use AI tools for resume, interview, and learning support.</p>
+                                    <h4 class="font-semibold" data-i18n="home.benefitIndividualsShort">For Individuals</h4>
+                                    <p class="text-gray-600" data-i18n="home.benefitIndividualsShortDesc">Browse matched internal and external jobs, apply with scored applications, and use AI tools for resume, interview, and learning support.</p>
                                 </div>
                             </div>
                             
@@ -785,8 +785,8 @@
                                     <i class="fas fa-building text-blue-600"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold">For Companies</h4>
-                                    <p class="text-gray-600">Post roles with target criteria, review ranked applicants, manage company profiles, and access recruitment stats from the corporate dashboard.</p>
+                                    <h4 class="font-semibold" data-i18n="home.benefitCompaniesShort">For Companies</h4>
+                                    <p class="text-gray-600" data-i18n="home.benefitCompaniesShortDesc">Post roles with target criteria, review ranked applicants, manage company profiles, and access recruitment stats from the corporate dashboard.</p>
                                 </div>
                             </div>
                             
@@ -795,8 +795,8 @@
                                     <i class="fas fa-shield-alt text-purple-600"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold">Data Security</h4>
-                                    <p class="text-gray-600">Industry-standard encryption, secure authentication, and strict privacy controls keep your personal data safe across borders.</p>
+                                    <h4 class="font-semibold" data-i18n="home.benefitSecurityShort">Data Security</h4>
+                                    <p class="text-gray-600" data-i18n="home.benefitSecurityShortDesc">Industry-standard encryption, secure authentication, and strict privacy controls keep your personal data safe across borders.</p>
                                 </div>
                             </div>
                             
@@ -805,8 +805,8 @@
                                     <i class="fas fa-heart text-orange-600"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold">Social Impact</h4>
-                                    <p class="text-gray-600">Promoting inclusive employment, reducing barriers for vulnerable groups, and supporting GBA economic integration.</p>
+                                    <h4 class="font-semibold" data-i18n="home.benefitImpactShort">Social Impact</h4>
+                                    <p class="text-gray-600" data-i18n="home.benefitImpactShortDesc">Promoting inclusive employment, reducing barriers for vulnerable groups, and supporting GBA economic integration.</p>
                                 </div>
                             </div>
                         </div>
@@ -832,7 +832,7 @@
                         <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
                             <i class="fas fa-user text-white text-xl"></i>
                         </div>
-                        <h3 class="text-2xl font-bold">For Individuals</h3>
+                        <h3 class="text-2xl font-bold" data-i18n="home.benefitsIndividualsHeading">For Individuals</h3>
                     </div>
                     
                     <ul class="space-y-4">
@@ -840,50 +840,50 @@
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Resume storage plus AI tools for résumé, interview, and learning-path practice</span>
+                            <span class="text-gray-700" data-i18n="home.benefitInd1">Resume storage plus AI tools for résumé, interview, and learning-path practice</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Matched job listings (internal + external sources) with scores and match reasons</span>
+                            <span class="text-gray-700" data-i18n="home.benefitInd2">Matched job listings (internal + external sources) with scores and match reasons</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">One-click apply with resume snapshot and application status tracking</span>
+                            <span class="text-gray-700" data-i18n="home.benefitInd3">One-click apply with resume snapshot and application status tracking</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Personalized learning paths to enhance employability</span>
+                            <span class="text-gray-700" data-i18n="home.benefitInd4">Personalized learning paths to enhance employability</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Vulnerable-group friendly job filter and friendly-employer directory</span>
+                            <span class="text-gray-700" data-i18n="home.benefitInd5">Vulnerable-group friendly job filter and friendly-employer directory</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Donation and legal-aid entry points for community support</span>
+                            <span class="text-gray-700" data-i18n="home.benefitInd6">Donation and legal-aid entry points for community support</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-blue-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Multi-language support and accessibility features</span>
+                            <span class="text-gray-700" data-i18n="home.benefitInd7">Multi-language support and accessibility features</span>
                         </li>
                     </ul>
                     
-                    <p class="text-sm text-gray-600 mt-6">Access job matching, applications, resume tools, interview practice, and learning paths from the <strong>Individual Portal</strong>.</p>
+                    <p class="text-sm text-gray-600 mt-6" data-i18n="home.individualPortalNote">Access job matching, applications, resume tools, interview practice, and learning paths from the Individual Portal.</p>
                     <a href="individual/index.html" class="btn-primary mt-8 w-full justify-center" data-portal-target="individual">
                         <i class="fas fa-user"></i>
-                        <span>Individual Access</span>
+                        <span data-i18n="home.individualAccess">Individual Access</span>
                     </a>
                 </div>
                 
@@ -893,7 +893,7 @@
                         <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
                             <i class="fas fa-building text-white text-xl"></i>
                         </div>
-                        <h3 class="text-2xl font-bold">For Companies</h3>
+                        <h3 class="text-2xl font-bold" data-i18n="home.benefitsCompaniesHeading">For Companies</h3>
                     </div>
                     
                     <ul class="space-y-4">
@@ -901,44 +901,44 @@
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Post jobs with target criteria (age, gender, disability, career gap) and vulnerable-group tags</span>
+                            <span class="text-gray-700" data-i18n="home.benefitCorp1">Post jobs with target criteria (age, gender, disability, career gap) and vulnerable-group tags</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">View applicants ranked by match score with resume snapshots</span>
+                            <span class="text-gray-700" data-i18n="home.benefitCorp2">View applicants ranked by match score with resume snapshots</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Manage job status (active, interviewing, closed) and clone postings</span>
+                            <span class="text-gray-700" data-i18n="home.benefitCorp3">Manage job status (active, interviewing, closed) and clone postings</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Company profile with inclusivity information and friendly-employer flag</span>
+                            <span class="text-gray-700" data-i18n="home.benefitCorp4">Company profile with inclusivity information and friendly-employer flag</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Optional blind-screening settings when publishing roles</span>
+                            <span class="text-gray-700" data-i18n="home.benefitCorp5">Optional blind-screening settings when publishing roles</span>
                         </li>
                         <li class="flex items-start">
                             <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                                 <i class="fas fa-check text-green-600 text-sm"></i>
                             </div>
-                            <span class="text-gray-700">Recruitment dashboard with live stats (applications, match scores, diversity breakdown)</span>
+                            <span class="text-gray-700" data-i18n="home.benefitCorp6">Recruitment dashboard with live stats (applications, match scores, diversity breakdown)</span>
                         </li>
                     </ul>
                     
-                    <p class="text-sm text-gray-600 mt-6">Post jobs, review applicants, and manage your company profile from the <strong>Corporate Portal</strong> or <a href="corporate/portal.html#ai-features" class="text-green-700 font-medium hover:underline">HR interactive tools</a>.</p>
+                    <p class="text-sm text-gray-600 mt-6" data-i18n="home.corporatePortalNote">Post jobs, review applicants, and manage your company profile from the Corporate Portal or HR interactive tools.</p>
                     <a href="corporate/index.html" class="btn-primary mt-8 w-full justify-center" style="background-color: #10b981;" data-portal-target="corporate">
                         <i class="fas fa-building"></i>
-                        <span>Corporate Access</span>
+                        <span data-i18n="home.corporateAccessBtn">Corporate Access</span>
                     </a>
                 </div>
             </div>
@@ -949,7 +949,7 @@
     <section id="success-stories" class="py-20 bg-gray-50 hidden" hidden aria-hidden="true">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-4" data-i18n="section-stories-title">Success Stories</h2>
-            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">Illustrative scenarios showing how matching, applications, employer workflows, and AI career tools work together — not live user testimonials.</p>
+            <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto" data-i18n="home.storiesLead">Illustrative scenarios showing how matching, applications, employer workflows, and AI career tools work together — not live user testimonials.</p>
             
             <div class="stories-marquee">
             <div class="stories-track">
@@ -959,13 +959,13 @@
                         <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="Zhang Wei" class="w-12 h-12 rounded-full mr-4">
                         <div>
                             <h4 class="font-semibold text-gray-800">Zhang Wei</h4>
-                            <p class="text-gray-600 text-sm">Software Developer</p>
+                            <p class="text-gray-600 text-sm" data-i18n="home.story1.role">Software Developer</p>
                         </div>
                     </div>
-                    <p class="text-gray-600 mb-4">"As someone with a physical disability, I struggled to find employers who valued my skills rather than focusing on my disability. The blind screening feature gave me a fair chance, and I'm now working at a tech company in Hong Kong."</p>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story1.quote">"As someone with a physical disability, I struggled to find employers who valued my skills rather than focusing on my disability. The blind screening feature gave me a fair chance, and I'm now working at a tech company in Hong Kong."</p>
                     <div class="flex items-center text-sm text-gray-500">
                         <i class="fas fa-map-marker-alt mr-2"></i>
-                        <span>Shenzhen → Hong Kong</span>
+                        <span data-i18n="home.story1.meta">Shenzhen → Hong Kong</span>
                     </div>
                 </div>
                 
@@ -975,13 +975,13 @@
                         <img src="https://ui-avatars.com/api/?name=Tech+Solutions+Ltd&background=10b981&color=fff" alt="Tech Solutions Ltd" class="w-12 h-12 rounded-full mr-4">
                         <div>
                             <h4 class="font-semibold text-gray-800">Tech Solutions Ltd</h4>
-                            <p class="text-gray-600 text-sm">Hong Kong Company</p>
+                            <p class="text-gray-600 text-sm" data-i18n="home.story2.role">Hong Kong Company</p>
                         </div>
                     </div>
-                    <p class="text-gray-600 mb-4">"We needed diverse GBA talent. Posting with target criteria and reviewing applicants by match score helped us hire five cross-border team members efficiently."</p>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story2.quote">"We needed diverse GBA talent. Posting with target criteria and reviewing applicants by match score helped us hire five cross-border team members efficiently."</p>
                     <div class="flex items-center text-sm text-gray-500">
                         <i class="fas fa-users mr-2"></i>
-                        <span>Hired 5 cross-border employees</span>
+                        <span data-i18n="home.story2.meta">Hired 5 cross-border employees</span>
                     </div>
                 </div>
                 
@@ -991,13 +991,13 @@
                         <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=f97316&color=fff" alt="Maria Chen" class="w-12 h-12 rounded-full mr-4">
                         <div>
                             <h4 class="font-semibold text-gray-800">Maria Chen</h4>
-                            <p class="text-gray-600 text-sm">Marketing Specialist</p>
+                            <p class="text-gray-600 text-sm" data-i18n="home.story3.role">Marketing Specialist</p>
                         </div>
                     </div>
-                    <p class="text-gray-600 mb-4">"After taking time off to care for my family, I was worried about re-entering the workforce. The AI resume optimization and interview coaching gave me confidence, and I landed a great job in Macau."</p>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story3.quote">"After taking time off to care for my family, I was worried about re-entering the workforce. The AI resume optimization and interview coaching gave me confidence, and I landed a great job in Macau."</p>
                     <div class="flex items-center text-sm text-gray-500">
                         <i class="fas fa-map-marker-alt mr-2"></i>
-                        <span>Guangzhou → Macau</span>
+                        <span data-i18n="home.story3.meta">Guangzhou → Macau</span>
                     </div>
                 </div>
                 
@@ -1007,13 +1007,13 @@
                         <img src="https://ui-avatars.com/api/?name=Mr+Lau&background=8b5cf6&color=fff" alt="Mr Lau" class="w-12 h-12 rounded-full mr-4">
                         <div>
                             <h4 class="font-semibold text-gray-800">Mr. Lau</h4>
-                            <p class="text-gray-600 text-sm">Silver-haired Product Advisor</p>
+                            <p class="text-gray-600 text-sm" data-i18n="home.story4.role">Silver-haired Product Advisor</p>
                         </div>
                     </div>
-                    <p class="text-gray-600 mb-4">"The light-digital learning path helped me turn retail experience into e-commerce product selection skills. I now support a remote marketplace team three mornings a week."</p>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story4.quote">"The light-digital learning path helped me turn retail experience into e-commerce product selection skills. I now support a remote marketplace team three mornings a week."</p>
                     <div class="flex items-center text-sm text-gray-500">
                         <i class="fas fa-map-marker-alt mr-2"></i>
-                        <span>Hong Kong → Remote GBA role</span>
+                        <span data-i18n="home.story4.meta">Hong Kong → Remote GBA role</span>
                     </div>
                 </div>
                 
@@ -1023,13 +1023,13 @@
                         <img src="https://ui-avatars.com/api/?name=Hengqin+Commerce&background=0ea5e9&color=fff" alt="Hengqin Commerce" class="w-12 h-12 rounded-full mr-4">
                         <div>
                             <h4 class="font-semibold text-gray-800">Hengqin Commerce</h4>
-                            <p class="text-gray-600 text-sm">Inclusive Partner Employer</p>
+                            <p class="text-gray-600 text-sm" data-i18n="home.story5.role">Inclusive Partner Employer</p>
                         </div>
                     </div>
-                    <p class="text-gray-600 mb-4">"After completing our company profile and posting inclusive roles, we built a remote customer-care team across Zhuhai and Macau with clear match scoring for every applicant."</p>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story5.quote">"After completing our company profile and posting inclusive roles, we built a remote customer-care team across Zhuhai and Macau with clear match scoring for every applicant."</p>
                     <div class="flex items-center text-sm text-gray-500">
                         <i class="fas fa-briefcase mr-2"></i>
-                        <span>Created 18 flexible service roles</span>
+                        <span data-i18n="home.story5.meta">Created 18 flexible service roles</span>
                     </div>
                 </div>
                 
@@ -1039,62 +1039,62 @@
                         <img src="https://ui-avatars.com/api/?name=Lin+Qiao&background=14b8a6&color=fff" alt="Lin Qiao" class="w-12 h-12 rounded-full mr-4">
                         <div>
                             <h4 class="font-semibold text-gray-800">Lin Qiao</h4>
-                            <p class="text-gray-600 text-sm">Data Annotation Trainee</p>
+                            <p class="text-gray-600 text-sm" data-i18n="home.story6.role">Data Annotation Trainee</p>
                         </div>
                     </div>
-                    <p class="text-gray-600 mb-4">"I did not have a degree, but the skills assessment showed my attention to detail. The learning path helped me earn a micro-credential and join an AI data team."</p>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story6.quote">"I did not have a degree, but the skills assessment showed my attention to detail. The learning path helped me earn a micro-credential and join an AI data team."</p>
                     <div class="flex items-center text-sm text-gray-500">
                         <i class="fas fa-certificate mr-2"></i>
-                        <span>Micro-credential → Data labeling role</span>
+                        <span data-i18n="home.story6.meta">Micro-credential → Data labeling role</span>
                     </div>
                 </div>
                 <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Zhang+Wei&background=2563eb&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                        <div><h4 class="font-semibold text-gray-800">Zhang Wei</h4><p class="text-gray-600 text-sm">Software Developer</p></div>
+                        <div><h4 class="font-semibold text-gray-800">Zhang Wei</h4><p class="text-gray-600 text-sm" data-i18n="home.story1.role">Software Developer</p></div>
                     </div>
-                    <p class="text-gray-600 mb-4">"The blind screening feature gave me a fair chance, and I'm now working at a tech company in Hong Kong."</p>
-                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Shenzhen → Hong Kong</span></div>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story1.quoteShort">"The blind screening feature gave me a fair chance, and I'm now working at a tech company in Hong Kong."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span data-i18n="home.story1.meta">Shenzhen → Hong Kong</span></div>
                 </div>
                 <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Tech+Solutions+Ltd&background=10b981&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                        <div><h4 class="font-semibold text-gray-800">Tech Solutions Ltd</h4><p class="text-gray-600 text-sm">Hong Kong Company</p></div>
+                        <div><h4 class="font-semibold text-gray-800">Tech Solutions Ltd</h4><p class="text-gray-600 text-sm" data-i18n="home.story2.role">Hong Kong Company</p></div>
                     </div>
-                    <p class="text-gray-600 mb-4">"Posting with target criteria and reviewing applicants by match score helped us hire across the GBA."</p>
-                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-users mr-2"></i><span>Hired 5 cross-border employees</span></div>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story2.quoteShort">"Posting with target criteria and reviewing applicants by match score helped us hire across the GBA."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-users mr-2"></i><span data-i18n="home.story2.meta">Hired 5 cross-border employees</span></div>
                 </div>
                 <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Maria+Chen&background=f97316&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                        <div><h4 class="font-semibold text-gray-800">Maria Chen</h4><p class="text-gray-600 text-sm">Marketing Specialist</p></div>
+                        <div><h4 class="font-semibold text-gray-800">Maria Chen</h4><p class="text-gray-600 text-sm" data-i18n="home.story3.role">Marketing Specialist</p></div>
                     </div>
-                    <p class="text-gray-600 mb-4">"AI resume optimization and interview coaching gave me confidence to re-enter the workforce."</p>
-                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Guangzhou → Macau</span></div>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story3.quoteShort">"AI resume optimization and interview coaching gave me confidence to re-enter the workforce."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span data-i18n="home.story3.meta">Guangzhou → Macau</span></div>
                 </div>
                 <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Mr+Lau&background=8b5cf6&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                        <div><h4 class="font-semibold text-gray-800">Mr. Lau</h4><p class="text-gray-600 text-sm">Silver-haired Product Advisor</p></div>
+                        <div><h4 class="font-semibold text-gray-800">Mr. Lau</h4><p class="text-gray-600 text-sm" data-i18n="home.story4.role">Silver-haired Product Advisor</p></div>
                     </div>
-                    <p class="text-gray-600 mb-4">"The learning path helped me turn retail experience into e-commerce product selection skills."</p>
-                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span>Hong Kong → Remote GBA role</span></div>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story4.quoteShort">"The learning path helped me turn retail experience into e-commerce product selection skills."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i><span data-i18n="home.story4.meta">Hong Kong → Remote GBA role</span></div>
                 </div>
                 <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Hengqin+Commerce&background=0ea5e9&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                        <div><h4 class="font-semibold text-gray-800">Hengqin Commerce</h4><p class="text-gray-600 text-sm">Inclusive Partner Employer</p></div>
+                        <div><h4 class="font-semibold text-gray-800">Hengqin Commerce</h4><p class="text-gray-600 text-sm" data-i18n="home.story5.role">Inclusive Partner Employer</p></div>
                     </div>
-                    <p class="text-gray-600 mb-4">"After posting inclusive roles, we built a remote team with clear match scoring for every applicant."</p>
-                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-briefcase mr-2"></i><span>Created 18 flexible service roles</span></div>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story5.quoteShort">"After posting inclusive roles, we built a remote team with clear match scoring for every applicant."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-briefcase mr-2"></i><span data-i18n="home.story5.meta">Created 18 flexible service roles</span></div>
                 </div>
                 <div class="story-card bg-white rounded-lg shadow-sm p-6" aria-hidden="true">
                     <div class="flex items-center mb-4">
                         <img src="https://ui-avatars.com/api/?name=Lin+Qiao&background=14b8a6&color=fff" alt="" class="w-12 h-12 rounded-full mr-4">
-                        <div><h4 class="font-semibold text-gray-800">Lin Qiao</h4><p class="text-gray-600 text-sm">Data Annotation Trainee</p></div>
+                        <div><h4 class="font-semibold text-gray-800">Lin Qiao</h4><p class="text-gray-600 text-sm" data-i18n="home.story6.role">Data Annotation Trainee</p></div>
                     </div>
-                    <p class="text-gray-600 mb-4">"The skills assessment showed my attention to detail and opened a data labeling pathway."</p>
-                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span>Micro-credential → Data labeling role</span></div>
+                    <p class="text-gray-600 mb-4" data-i18n="home.story6.quoteShort">"The skills assessment showed my attention to detail and opened a data labeling pathway."</p>
+                    <div class="flex items-center text-sm text-gray-500"><i class="fas fa-certificate mr-2"></i><span data-i18n="home.story6.meta">Micro-credential → Data labeling role</span></div>
                 </div>
             </div>
             </div>
@@ -1110,99 +1110,99 @@
                 <!-- Question 1 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">What is the GBA Cross-Border Employment Empowerment Platform?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ1">What is the GBA Cross-Border Employment Empowerment Platform?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">The GBA Cross-Border Employment Empowerment Platform connects vulnerable groups — including people with disabilities, career returners, older workers, and low-income youth — with inclusive employers across Hong Kong, Macau, and mainland GBA cities. It offers smart job matching, online applications, AI career tools, and employer hiring workflows in one integrated experience.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA1">The GBA Cross-Border Employment Empowerment Platform connects vulnerable groups — including people with disabilities, career returners, older workers, and low-income youth — with inclusive employers across Hong Kong, Macau, and mainland GBA cities. It offers smart job matching, online applications, AI career tools, and employer hiring workflows in one integrated experience.</p>
                     </div>
                 </div>
                 
                 <!-- Question 2 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">How does the "blind screening" feature work?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ2">How does the "blind screening" feature work?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">When posting a job, employers can enable blind screening so personal identifiers are de-emphasised in hiring workflows. On the applicant side, profiles are matched primarily on skills, resume content, and declared target criteria (age range, disability openness, career gap). Corporate users review applicants with match scores rather than browsing raw demographic fields first.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA2">When posting a job, employers can enable blind screening so personal identifiers are de-emphasised in hiring workflows. On the applicant side, profiles are matched primarily on skills, resume content, and declared target criteria (age range, disability openness, career gap). Corporate users review applicants with match scores rather than browsing raw demographic fields first.</p>
                     </div>
                 </div>
                 
                 <!-- Question 3 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">Is the platform accessible for users with disabilities?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ3">Is the platform accessible for users with disabilities?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Yes. The site includes an accessibility widget with high-contrast mode, larger text, keyboard-friendly navigation, and screen-reader hints. Multi-language UI labels are also supported. Full WCAG certification has not been formally audited, but inclusive design is a core goal.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA3">Yes. The site includes an accessibility widget with high-contrast mode, larger text, keyboard-friendly navigation, and screen-reader hints. Multi-language UI labels are also supported. Full WCAG certification has not been formally audited, but inclusive design is a core goal.</p>
                     </div>
                 </div>
                 
                 <!-- Question 4 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">How does the platform ensure data security?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ4">How does the platform ensure data security?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">We protect your personal information with secure account authentication, encrypted data storage, and strict role-based permissions. Individuals control their own profiles and applications; employers only access data relevant to their own job postings.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA4">We protect your personal information with secure account authentication, encrypted data storage, and strict role-based permissions. Individuals control their own profiles and applications; employers only access data relevant to their own job postings.</p>
                     </div>
                 </div>
                 
                 <!-- Question 5 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">How do I get started with the platform?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ5">How do I get started with the platform?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Sign up from this page as an individual or corporate user. Individuals must provide age, gender, and monthly income so the system can infer group types and run matching. After login, use <strong>My portal</strong> to enter your dedicated workspace — job seekers browse matched roles and apply; employers post jobs, manage company profiles, and review scored applicants.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA5">Sign up from this page as an individual or corporate user. Individuals must provide age, gender, and monthly income so the system can infer group types and run matching. After login, use My portal to enter your dedicated workspace — job seekers browse matched roles and apply; employers post jobs, manage company profiles, and review scored applicants.</p>
                     </div>
                 </div>
                 
                 <!-- Question 6 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">How does group-type matching work?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ6">How does group-type matching work?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">The system automatically tags individuals into groups such as disability, 45+ workers, career returners, and low-income youth based on registration profile data. Jobs can declare matching target criteria, and both sides receive a match score (0–100) with human-readable reasons when applying or reviewing candidates.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA6">The system automatically tags individuals into groups such as disability, 45+ workers, career returners, and low-income youth based on registration profile data. Jobs can declare matching target criteria, and both sides receive a match score (0–100) with human-readable reasons when applying or reviewing candidates.</p>
                     </div>
                 </div>
                 
                 <!-- Question 7 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">What statistics are shown on the home page?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ7">What statistics are shown on the home page?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">The hero and signup sections display live platform statistics — registered job seekers, partner companies, active job openings, and strong match rates — updated regularly from our database. If data is temporarily unavailable, placeholders are shown.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA7">The hero and signup sections display live platform statistics — registered job seekers, partner companies, active job openings, and strong match rates — updated regularly from our database. If data is temporarily unavailable, placeholders are shown.</p>
                     </div>
                 </div>
                 
                 <!-- Question 8 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">What languages does the platform support?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ8">What languages does the platform support?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA8">The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.</p>
                     </div>
                 </div>
                 
                 <!-- Question 9 -->
                 <div class="mb-4">
                     <button class="faq-question w-full flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-                        <span class="font-medium text-gray-800">What are vulnerable-group friendly jobs and friendly employers?</span>
+                        <span class="font-medium text-gray-800" data-i18n="home.faqQ9">What are vulnerable-group friendly jobs and friendly employers?</span>
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600">Jobs marked as vulnerable-group friendly appear in a dedicated filter for inclusive roles. Employers with inclusivity profiles or friendly postings are listed on the friendly-employers directory. Individuals can also access community donation and legal-aid services from the portal for additional support.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA9">Jobs marked as vulnerable-group friendly appear in a dedicated filter for inclusive roles. Employers with inclusivity profiles or friendly postings are listed on the friendly-employers directory. Individuals can also access community donation and legal-aid services from the portal for additional support.</p>
                     </div>
                 </div>
             </div>
@@ -1213,35 +1213,35 @@
     <section class="py-20 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div class="container mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold mb-6" data-i18n="section-cta-title">Join the GBA Employment Revolution</h2>
-            <p class="text-xl mb-8 max-w-3xl mx-auto">Join thousands of job seekers and inclusive employers building cross-border careers across the Greater Bay Area.</p>
+            <p class="text-xl mb-8 max-w-3xl mx-auto" data-i18n="home.ctaSubtitle">Join thousands of job seekers and inclusive employers building cross-border careers across the Greater Bay Area.</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12" id="cta-signup-row">
                 <button type="button" class="btn-hero auth-cta-register cursor-pointer border-0" style="background-color: white; color: #2563eb;" data-auth-portal="individual" data-portal-target="individual">
                     <i class="fas fa-user"></i>
-                    <span>Individual Sign Up</span>
+                    <span data-i18n="home.individualSignup">Individual Sign Up</span>
                 </button>
                 <button type="button" class="btn-hero auth-cta-register cursor-pointer border-0" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white !important;" data-auth-portal="corporate" data-portal-target="corporate">
                     <i class="fas fa-building"></i>
-                    <span>Corporate Sign Up</span>
+                    <span data-i18n="home.corporateSignup">Corporate Sign Up</span>
                 </button>
             </div>
             
             <div class="flex flex-wrap justify-center gap-8">
                 <div class="text-center">
                     <div class="text-3xl font-bold mb-2" id="cta-stat-users">—</div>
-                    <div class="text-blue-100">Registered Job Seekers</div>
+                    <div class="text-blue-100" data-i18n="home.heroStatUsers">Registered Job Seekers</div>
                 </div>
                 <div class="text-center">
                     <div class="text-3xl font-bold mb-2" id="cta-stat-companies">—</div>
-                    <div class="text-blue-100">Registered Companies</div>
+                    <div class="text-blue-100" data-i18n="home.heroStatCompanies">Registered Companies</div>
                 </div>
                 <div class="text-center">
                     <div class="text-3xl font-bold mb-2" id="cta-stat-jobs">—</div>
-                    <div class="text-blue-100">Active Job Openings</div>
+                    <div class="text-blue-100" data-i18n="home.heroStatJobs">Active Job Openings</div>
                 </div>
                 <div class="text-center">
                     <div class="text-3xl font-bold mb-2" id="cta-stat-match">—</div>
-                    <div class="text-blue-100">Strong Match Rate</div>
+                    <div class="text-blue-100" data-i18n="home.heroStatMatch">Strong Match Rate</div>
                 </div>
             </div>
         </div>
@@ -1252,8 +1252,8 @@
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-xl font-bold mb-4">GBA Platform</h3>
-                    <p class="text-gray-400 mb-4">Empowering vulnerable groups with inclusive employment opportunities, smart matching, and AI career tools across the Greater Bay Area.</p>
+                    <h3 class="text-xl font-bold mb-4" data-i18n="home.brandName">GBA Platform</h3>
+                    <p class="text-gray-400 mb-4" data-i18n="home.footerTagline">Empowering vulnerable groups with inclusive employment opportunities, smart matching, and AI career tools across the Greater Bay Area.</p>
                     <div class="flex space-x-4">
                         <a href="https://www.facebook.com/" class="text-gray-400 hover:text-white transition-colors">
                             <i class="fab fa-facebook-f"></i>
@@ -1271,47 +1271,47 @@
                 </div>
                 
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <h3 class="text-lg font-semibold mb-4" data-i18n="home.footerQuickLinks">Quick Links</h3>
                     <ul class="space-y-2">
-                        <li><a href="#features" class="text-gray-400 hover:text-white transition-colors">Features</a></li>
-                        <li><a href="#how-it-works" class="text-gray-400 hover:text-white transition-colors">How It Works</a></li>
-                        <li><a href="#benefits" class="text-gray-400 hover:text-white transition-colors">Benefits</a></li>
-                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
+                        <li><a href="#features" class="text-gray-400 hover:text-white transition-colors" data-i18n="nav-features">Features</a></li>
+                        <li><a href="#how-it-works" class="text-gray-400 hover:text-white transition-colors" data-i18n="home.howItWorks">How It Works</a></li>
+                        <li><a href="#benefits" class="text-gray-400 hover:text-white transition-colors" data-i18n="section-benefits-title">Benefits</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors" data-i18n="nav-faq">FAQ</a></li>
                     </ul>
                 </div>
                 
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">User Access</h3>
+                    <h3 class="text-lg font-semibold mb-4" data-i18n="home.footerUserAccess">User Access</h3>
                     <ul class="space-y-2">
-                        <li><a href="individual/index.html" class="text-gray-400 hover:text-white transition-colors" data-portal-target="individual">Individual Portal</a></li>
-                        <li><a href="corporate/index.html" class="text-gray-400 hover:text-white transition-colors" data-portal-target="corporate">Corporate Portal</a></li>
-                        <li><a href="corporate/portal.html#ai-features" class="text-gray-400 hover:text-white transition-colors" data-portal-target="corporate">HR interactive tools</a></li>
-                        <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="login">Log in</button></li>
-                        <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="register">Sign up</button></li>
+                        <li><a href="individual/index.html" class="text-gray-400 hover:text-white transition-colors" data-portal-target="individual" data-i18n="home.footerIndividualPortal">Individual Portal</a></li>
+                        <li><a href="corporate/index.html" class="text-gray-400 hover:text-white transition-colors" data-portal-target="corporate" data-i18n="home.footerCorporatePortal">Corporate Portal</a></li>
+                        <li><a href="corporate/portal.html#ai-features" class="text-gray-400 hover:text-white transition-colors" data-portal-target="corporate" data-i18n="home.footerHrTools">HR interactive tools</a></li>
+                        <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="login" data-i18n="home.login">Log in</button></li>
+                        <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="register" data-i18n="home.signup">Sign up</button></li>
                     </ul>
                 </div>
                 
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
+                    <h3 class="text-lg font-semibold mb-4" data-i18n="home.footerContact">Contact Us</h3>
                     <ul class="space-y-2 text-gray-400">
                         <li class="flex items-start">
                             <i class="fas fa-map-marker-alt mt-1 mr-3"></i>
-                            <span>GBA Innovation Center, 123 Bay Area Blvd, Shenzhen, China</span>
+                            <span data-i18n="home.footerAddress">GBA Innovation Center, 123 Bay Area Blvd, Shenzhen, China</span>
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-phone mr-3"></i>
-                            <span>+86 400-123-4567</span>
+                            <span data-i18n="home.footerPhone">+86 400-123-4567</span>
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-envelope mr-3"></i>
-                            <span>info@gba-platform.com</span>
+                            <span data-i18n="home.footerEmail">info@gba-platform.com</span>
                         </li>
                     </ul>
                 </div>
             </div>
             
             <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2026 GBA Cross-Border Employment Empowerment Platform. All rights reserved.</p>
+                <p data-i18n="home.footerCopyright">&copy; 2026 GBA Cross-Border Employment Empowerment Platform. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -1319,101 +1319,101 @@
     <div id="auth-overlay" class="auth-overlay" aria-hidden="true">
         <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-heading">
             <div class="flex justify-between items-center px-5 py-3 border-b border-gray-100 bg-slate-50">
-                <h2 id="auth-heading" class="text-lg font-bold text-gray-900">Sign in</h2>
-                <button type="button" id="auth-close-btn" class="text-gray-500 hover:text-gray-900 text-2xl leading-none w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors" aria-label="Close">&times;</button>
+                <h2 id="auth-heading" class="text-lg font-bold text-gray-900" data-i18n-dynamic="1">Sign in</h2>
+                <button type="button" id="auth-close-btn" class="text-gray-500 hover:text-gray-900 text-2xl leading-none w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors" data-i18n-title="auth.closeLabel" aria-label="Close">&times;</button>
             </div>
             <div class="flex border-b border-gray-200" id="auth-tabs-row">
-                <button type="button" class="auth-tab active" data-auth-tab="login">Log in</button>
-                <button type="button" class="auth-tab" data-auth-tab="register">Sign up</button>
+                <button type="button" class="auth-tab active" data-auth-tab="login" data-i18n="auth.login">Log in</button>
+                <button type="button" class="auth-tab" data-auth-tab="register" data-i18n="auth.register">Sign up</button>
             </div>
             <div class="p-6">
-                <p class="text-sm text-gray-500 mb-4" id="auth-demo-hint">Sign in or create an account to access job matching, applications, and career tools. Individual registration requires basic profile information for group-type matching.</p>
+                <p class="text-sm text-gray-500 mb-4" id="auth-demo-hint" data-i18n="auth.homeModalHint">Sign in or create an account to access job matching, applications, and career tools. Individual registration requires basic profile information for group-type matching.</p>
                 
                 <div id="auth-panel-login" class="auth-panel space-y-4">
                     <fieldset class="space-y-2 border-0 p-0 m-0">
-                        <legend class="text-sm font-medium text-gray-800 mb-2">Account type</legend>
-                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-login" value="individual" class="text-blue-600" checked /> Individual</label>
-                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-login" value="corporate" class="text-blue-600" /> Corporate</label>
+                        <legend class="text-sm font-medium text-gray-800 mb-2" data-i18n="auth.accountType">Account type</legend>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-login" value="individual" class="text-blue-600" checked /> <span data-i18n="auth.accountIndividual">Individual</span></label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-login" value="corporate" class="text-blue-600" /> <span data-i18n="auth.accountCorporate">Corporate</span></label>
                     </fieldset>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-email">Email</label>
-                        <input type="email" id="auth-login-email" autocomplete="username" placeholder="you@example.com" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow" />
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-email" data-i18n="auth.email">Email</label>
+                        <input type="email" id="auth-login-email" autocomplete="username" data-i18n-placeholder="auth.placeholderEmail" placeholder="you@example.com" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-password">Password</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-login-password" data-i18n="auth.password">Password</label>
                         <input type="password" id="auth-login-password" autocomplete="current-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow" />
                     </div>
                     <p id="auth-login-error" class="text-red-600 text-sm hidden"></p>
-                    <button type="button" id="auth-login-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm">Log in</button>
+                    <button type="button" id="auth-login-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm" data-i18n="auth.login">Log in</button>
                 </div>
                 
                 <div id="auth-panel-register" class="auth-panel space-y-4" hidden>
                     <fieldset class="space-y-2 border-0 p-0 m-0">
-                        <legend class="text-sm font-medium text-gray-800 mb-2">Account type</legend>
-                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-register" value="individual" class="text-blue-600" checked /> Individual</label>
-                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-register" value="corporate" class="text-blue-600" /> Corporate</label>
+                        <legend class="text-sm font-medium text-gray-800 mb-2" data-i18n="auth.accountType">Account type</legend>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-register" value="individual" class="text-blue-600" checked /> <span data-i18n="auth.accountIndividual">Individual</span></label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth-portal-register" value="corporate" class="text-blue-600" /> <span data-i18n="auth.accountCorporate">Corporate</span></label>
                     </fieldset>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-name">Display name <span class="text-gray-400 font-normal">(optional)</span></label>
-                        <input type="text" id="auth-register-name" autocomplete="name" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Jane Lee" />
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-name"><span data-i18n="auth.displayName">Display name</span> <span class="text-gray-400 font-normal" data-i18n="auth.optional">(optional)</span></label>
+                        <input type="text" id="auth-register-name" autocomplete="name" data-i18n-placeholder="auth.placeholderName" placeholder="Jane Lee" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-email">Email</label>
-                        <input type="email" id="auth-register-email" autocomplete="email" placeholder="you@company.com" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-email" data-i18n="auth.email">Email</label>
+                        <input type="email" id="auth-register-email" autocomplete="email" data-i18n-placeholder="auth.placeholderEmailCorp" placeholder="you@company.com" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password">Password</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password" data-i18n="auth.password">Password</label>
                         <input type="password" id="auth-register-password" autocomplete="new-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password2">Confirm password</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="auth-register-password2" data-i18n="auth.confirmPassword">Confirm password</label>
                         <input type="password" id="auth-register-password2" autocomplete="new-password" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
                     <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>Password recovery is not available. Please choose a password you will remember.
+                        <i class="fas fa-exclamation-triangle mr-1"></i><span data-i18n="auth.noPasswordRecovery">Password recovery is not available. Please choose a password you will remember.</span>
                     </p>
                     <div id="auth-register-profile-wrap" class="space-y-3">
-                        <p class="text-sm font-medium text-gray-700">Profile for group matching <span class="text-red-500">*</span></p>
-                        <p class="text-xs text-gray-500 -mt-2">We infer your vulnerable group types from age, disability, gender, career gap and income.</p>
+                        <p class="text-sm font-medium text-gray-700"><span data-i18n="auth.profileForMatching">Profile for group matching</span> <span class="text-red-500">*</span></p>
+                        <p class="text-xs text-gray-500 -mt-2" data-i18n="auth.profileInferHint">We infer your vulnerable group types from age, disability, gender, career gap and income.</p>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-age">Age</label>
-                                <input type="number" id="auth-register-age" min="16" max="100" placeholder="e.g. 28" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-age" data-i18n="auth.age">Age</label>
+                                <input type="number" id="auth-register-age" min="16" max="100" data-i18n-placeholder="auth.placeholderAge" placeholder="e.g. 28" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-gender">Gender</label>
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-gender" data-i18n="auth.gender">Gender</label>
                                 <select id="auth-register-gender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                    <option value="">Select</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
-                                    <option value="prefer_not_say">Prefer not to say</option>
+                                    <option value="" data-i18n="auth.selectGender">Select</option>
+                                    <option value="male" data-i18n="meta.gender.male">Male</option>
+                                    <option value="female" data-i18n="meta.gender.female">Female</option>
+                                    <option value="other" data-i18n="meta.gender.other">Other</option>
+                                    <option value="prefer_not_say" data-i18n="auth.preferNotSay">Prefer not to say</option>
                                 </select>
                             </div>
                             <div class="col-span-2">
-                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-disability">Disability type</label>
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-disability" data-i18n="auth.disabilityType">Disability type</label>
                                 <select id="auth-register-disability" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                    <option value="none">None</option>
-                                    <option value="physical">Physical</option>
-                                    <option value="visual">Visual</option>
-                                    <option value="hearing">Hearing</option>
-                                    <option value="intellectual">Intellectual</option>
-                                    <option value="mental">Mental</option>
-                                    <option value="other">Other</option>
+                                    <option value="none" data-i18n="meta.disabilityTypes.none">None</option>
+                                    <option value="physical" data-i18n="meta.disabilityTypes.physical">Physical</option>
+                                    <option value="visual" data-i18n="meta.disabilityTypes.visual">Visual</option>
+                                    <option value="hearing" data-i18n="meta.disabilityTypes.hearing">Hearing</option>
+                                    <option value="intellectual" data-i18n="meta.disabilityTypes.intellectual">Intellectual</option>
+                                    <option value="mental" data-i18n="meta.disabilityTypes.mental">Mental</option>
+                                    <option value="other" data-i18n="meta.disabilityTypes.other">Other</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-gap">Career gap (years)</label>
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-gap" data-i18n="auth.careerGap">Career gap (years)</label>
                                 <input type="number" id="auth-register-gap" min="0" max="50" step="0.5" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-income">Monthly income (CNY)</label>
-                                <input type="number" id="auth-register-income" min="0" step="100" placeholder="e.g. 6000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                <label class="block text-xs font-medium text-gray-600 mb-1" for="auth-register-income" data-i18n="auth.monthlyIncome">Monthly income (CNY)</label>
+                                <input type="number" id="auth-register-income" min="0" step="100" data-i18n-placeholder="auth.placeholderIncome" placeholder="e.g. 6000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                             </div>
                         </div>
                     </div>
                     <p id="auth-register-error" class="text-red-600 text-sm hidden"></p>
-                    <button type="button" id="auth-register-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm">Create account</button>
+                    <button type="button" id="auth-register-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm" data-i18n="auth.createAccountBtn">Create account</button>
                 </div>
             </div>
         </div>
@@ -1437,6 +1437,17 @@
             try { initMobileMenu(); } catch (e) { console.warn('[home] Mobile menu skipped:', e); }
             try { initFaqAccordion(); } catch (e) { console.warn('[home] FAQ accordion skipped:', e); }
             try { bindPortalHeroLinks(); } catch (e) { console.warn('[home] Portal hero links skipped:', e); }
+
+            document.addEventListener('gba:language-changed', function () {
+                refreshNavAuth();
+                var activeTab = document.querySelector('.auth-tab.active');
+                if (activeTab) {
+                    var tab = activeTab.getAttribute('data-auth-tab');
+                    if (tab === 'login' || tab === 'register') {
+                        refreshAuthHeading(tab);
+                    }
+                }
+            });
         });
 
         function getLoggedInPortalRole() {
@@ -1572,7 +1583,8 @@
             if (userDesk)
                 userDesk.className = logged ? 'hidden md:flex items-center gap-2 lg:gap-3' : 'hidden';
 
-            if (greet && session) greet.textContent = 'Hi, ' + session.displayName;
+            if (greet && session)
+                greet.textContent = homeT('home.navGreeting', 'Hi, {name}', { name: session.displayName });
             if (portalA && typeof API !== 'undefined' && session) {
                 portalA.href = API.portalEntryHref(session.portal);
             }
@@ -1580,7 +1592,10 @@
             if (mobGuest) mobGuest.classList.toggle('hidden', logged);
             if (mobLine) {
                 mobLine.classList.toggle('hidden', !logged);
-                mobLine.textContent = logged && session ? 'Signed in as ' + session.email : '';
+                mobLine.textContent =
+                    logged && session
+                        ? homeT('home.signedInAs', 'Signed in as {email}', { email: session.email })
+                        : '';
             }
             if (mobPortal && session) mobPortal.href = API.portalEntryHref(session.portal);
             if (mobPortal) mobPortal.classList.toggle('hidden', !logged);
@@ -1613,17 +1628,28 @@
             });
         }
 
+        function homeT(key, fallback, vars) {
+            return window.GBAI18n && GBAI18n.t ? GBAI18n.t(key, fallback, vars || {}) : fallback;
+        }
+
+        function refreshAuthHeading(view) {
+            var heading = document.getElementById('auth-heading');
+            if (!heading) return;
+            heading.textContent =
+                view === 'register'
+                    ? homeT('auth.createAccountHeading', 'Create account')
+                    : homeT('auth.signInHeading', 'Sign in');
+        }
+
         function showAuthPanels(view) {
             var loginPanel = document.getElementById('auth-panel-login');
             var regPanel = document.getElementById('auth-panel-register');
             var tabsRow = document.getElementById('auth-tabs-row');
             var hint = document.getElementById('auth-demo-hint');
-            var heading = document.getElementById('auth-heading');
 
             if (tabsRow) tabsRow.hidden = false;
             if (hint) hint.hidden = false;
-            if (heading)
-                heading.textContent = view === 'register' ? 'Create account' : 'Sign in';
+            refreshAuthHeading(view);
 
             document.querySelectorAll('.auth-tab').forEach(function (t) {
                 t.classList.toggle('active', t.getAttribute('data-auth-tab') === view);
@@ -1780,7 +1806,7 @@
                     showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.welcomeBack', 'Welcome back, {name}!', { name: res.data.displayName }) : 'Welcome back, ' + res.data.displayName + '!'));
                     window.location.href = portal === 'corporate' ? 'corporate/portal.html' : 'individual/portal.html';
                 } catch (e) {
-                    errEl.textContent = '无法连接认证服务，请确认后端已启动（在 server 目录运行 npm start）。';
+                    errEl.textContent = homeT('auth.errors.networkDetailed', 'Cannot reach auth service. Ensure the backend is running (npm start in server/).');
                     errEl.classList.remove('hidden');
                 } finally {
                     btn.disabled = false;
@@ -1802,7 +1828,7 @@
 
                     errEl.classList.add('hidden');
                     if (pw !== pw2) {
-                        errEl.textContent = 'Passwords do not match.';
+                        errEl.textContent = homeT('auth.passwordsMismatch', 'Passwords do not match.');
                         errEl.classList.remove('hidden');
                         return;
                     }
@@ -1815,7 +1841,7 @@
                         var gap = document.getElementById('auth-register-gap').value;
                         var income = document.getElementById('auth-register-income').value;
                         if (!age || !gender || income === '') {
-                            errEl.textContent = 'Please complete age, gender and monthly income.';
+                            errEl.textContent = homeT('auth.errors.completeProfileFields', 'Please complete age, gender and monthly income.');
                             errEl.classList.remove('hidden');
                             return;
                         }
@@ -1850,7 +1876,7 @@
                         showToast((window.GBAI18n && GBAI18n.t ? GBAI18n.t('site.individualRegistered', 'Account created. Explore your portal!') : 'Account created. Explore your portal!'));
                         window.location.href = 'individual/portal.html';
                     } catch (e) {
-                        errEl.textContent = '无法连接认证服务，请确认后端已启动（在 server 目录运行 npm start）。';
+                        errEl.textContent = homeT('auth.errors.networkDetailed', 'Cannot reach auth service. Ensure the backend is running (npm start in server/).');
                         errEl.classList.remove('hidden');
                     } finally {
                         btn.disabled = false;

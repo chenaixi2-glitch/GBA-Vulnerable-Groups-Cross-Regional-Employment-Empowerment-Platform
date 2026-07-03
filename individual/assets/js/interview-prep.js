@@ -1212,7 +1212,7 @@ function toggleReferenceAnswer() {
 
     const isHidden = content.classList.contains('hidden');
     content.classList.toggle('hidden', !isHidden);
-    btn.textContent = isHidden ? 'Hide' : 'Show';
+    btn.textContent = isHidden ? uiT('interview.hide', 'Hide') : uiT('interview.show', 'Show');
 }
 
 function updateReferenceAnswerDisplay(question) {
@@ -1225,7 +1225,7 @@ function updateReferenceAnswerDisplay(question) {
         section.classList.remove('hidden');
         content.textContent = question.answer;
         content.classList.add('hidden');
-        if (btn) btn.textContent = 'Show';
+        if (btn) btn.textContent = uiT('interview.show', 'Show');
     } else {
         section.classList.add('hidden');
         content.textContent = '';

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Resume Generator - GBA Platform</title>
+    <title data-i18n="resume.pageTitle">Smart Resume Generator - GBA Platform</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -97,6 +97,28 @@
             padding: 2rem;
             min-height: 600px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .resume-chat-scroll {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .resume-chat-bubble {
+            max-width: 92%;
+            word-break: break-word;
+        }
+
+        .resume-chat-bubble.user {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+            border-radius: 1rem 1rem 0.25rem 1rem;
+        }
+
+        .resume-chat-bubble.assistant {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            border-radius: 1rem 1rem 1rem 0.25rem;
         }
         
         .gap-analysis-card {
@@ -327,29 +349,8 @@
                         </div>
                     </div>
 
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="resume.languageLabel">Resume Language</label>
-                        <p class="text-xs text-gray-500 mb-2" data-i18n="resume.selectHint">After selection, we check missing items for that resume format.</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button type="button" data-resume-lang="zh" onclick="onResumeLanguageSelected('zh')"
-                                class="px-3 py-2.5 border border-red-300 rounded-lg text-sm font-medium text-red-800 hover:bg-red-50 ring-2 ring-blue-500 bg-blue-50">
-                                <i class="fas fa-file-alt mr-1"></i><span class="resume-lang-label">Simplified Chinese</span>
-                            </button>
-                            <button type="button" data-resume-lang="zh-TW" onclick="onResumeLanguageSelected('zh-TW')"
-                                class="px-3 py-2.5 border border-rose-300 rounded-lg text-sm font-medium text-rose-800 hover:bg-rose-50">
-                                <i class="fas fa-file-alt mr-1"></i><span class="resume-lang-label">Traditional Chinese</span>
-                            </button>
-                            <button type="button" data-resume-lang="en" onclick="onResumeLanguageSelected('en')"
-                                class="px-3 py-2.5 border border-blue-300 rounded-lg text-sm font-medium text-blue-800 hover:bg-blue-50">
-                                <i class="fas fa-globe mr-1"></i><span class="resume-lang-label">English</span>
-                            </button>
-                            <button type="button" data-resume-lang="pt" onclick="onResumeLanguageSelected('pt')"
-                                class="px-3 py-2.5 border border-emerald-300 rounded-lg text-sm font-medium text-emerald-800 hover:bg-emerald-50">
-                                <i class="fas fa-globe-europe mr-1"></i><span class="resume-lang-label">Portuguese</span>
-                            </button>
-                        </div>
-                    </div>
-                    
+                    <p class="mt-4 text-xs text-gray-500" data-i18n="resume.jdLanguageHint">Suggested JD uses your current interface language (top-right switcher), independent of resume language.</p>
+
                     <button id="btn-generate-jd" type="button" onclick="generateSuggestedJd()" class="mt-4 w-full border border-green-600 text-green-700 py-2.5 rounded-lg font-medium hover:bg-green-50 transition-colors">
                         <i class="fas fa-wand-magic-sparkles mr-2"></i>
                         <span data-i18n="resume.generateJd">Generate Suggested Job Description</span>
@@ -528,10 +529,71 @@
                         </div>
                     </div>
                     
-                    <div class="resume-preview-container" id="resume-preview">
-                        <div class="text-center text-gray-400 py-20">
-                            <i class="fas fa-file-alt text-6xl mb-4"></i>
-                            <p data-i18n="resume.previewEmpty">Your generated resume will appear here</p>
+                    <div id="resume-preview-layout" class="grid lg:grid-cols-[1fr_minmax(280px,360px)] gap-4 items-start">
+                        <div class="resume-preview-container" id="resume-preview">
+                            <div class="text-center text-gray-400 py-20">
+                                <i class="fas fa-file-alt text-6xl mb-4"></i>
+                                <p data-i18n="resume.previewEmpty">Your generated resume will appear here</p>
+                            </div>
+                        </div>
+
+                        <div id="resume-chat-panel" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden lg:sticky lg:top-4">
+                            <div class="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-blue-50">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <h4 class="font-semibold text-gray-900 flex items-center gap-2 text-sm">
+                                            <i class="fas fa-comments text-purple-600"></i>
+                                            <span data-i18n="resume.chatTitle">AI Resume Editor</span>
+                                        </h4>
+                                        <p class="text-xs text-gray-500 mt-1" data-i18n="resume.chatDesc">Describe changes in natural language — the preview updates automatically.</p>
+                                    </div>
+                                    <div class="flex shrink-0 gap-1">
+                                        <button
+                                            type="button"
+                                            id="resume-chat-undo"
+                                            onclick="undoResumeEdit()"
+                                            disabled
+                                            class="px-2 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                            title="Undo"
+                                            data-i18n-title="resume.chatUndoTitle"
+                                        >
+                                            <i class="fas fa-undo mr-1"></i><span data-i18n="resume.chatUndo">Undo</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            id="resume-chat-redo"
+                                            onclick="redoResumeEdit()"
+                                            disabled
+                                            class="px-2 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                            title="Redo"
+                                            data-i18n-title="resume.chatRedoTitle"
+                                        >
+                                            <i class="fas fa-redo mr-1"></i><span data-i18n="resume.chatRedo">Redo</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="resume-chat-messages" class="resume-chat-scroll px-4 py-3 space-y-3 flex-1 min-h-[200px]" aria-live="polite"></div>
+                            <div id="resume-chat-suggestions" class="px-4 pb-2 flex flex-wrap gap-1.5"></div>
+                            <div class="p-3 border-t border-gray-100 bg-gray-50">
+                                <div class="flex gap-2">
+                                    <textarea
+                                        id="resume-chat-input"
+                                        rows="2"
+                                        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                        data-i18n-placeholder="resume.chatPlaceholder"
+                                        placeholder="e.g. Highlight my project experience, shorten the summary…"
+                                    ></textarea>
+                                    <button
+                                        type="button"
+                                        id="resume-chat-send"
+                                        class="self-end px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label="Send"
+                                    >
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -570,6 +632,30 @@
                         <i class="fas fa-circle-exclamation text-amber-600 mr-1"></i>
                         <span data-i18n="resume.profileRequiredHint">Please complete all fields marked as required below before continuing to Step 2.</span>
                         <span id="profile-required-count" class="ml-1 font-medium"></span>
+                    </div>
+
+                    <div id="resume-language-section" class="mb-6 p-4 border border-blue-100 bg-blue-50/40 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="resume.languageLabel">Resume Language</label>
+                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.selectHint">After selection, we check missing items for that resume format.</p>
+                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.languageActionHint">After generating, switching language converts the resume and enables export in the preview panel.</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" data-resume-lang="zh" onclick="onResumeLanguageSelected('zh')"
+                                class="px-3 py-2.5 border border-red-300 rounded-lg text-sm font-medium text-red-800 hover:bg-red-50 ring-2 ring-blue-500 bg-blue-50">
+                                <i class="fas fa-file-alt mr-1"></i><span class="resume-lang-label">Simplified Chinese</span>
+                            </button>
+                            <button type="button" data-resume-lang="zh-TW" onclick="onResumeLanguageSelected('zh-TW')"
+                                class="px-3 py-2.5 border border-rose-300 rounded-lg text-sm font-medium text-rose-800 hover:bg-rose-50">
+                                <i class="fas fa-file-alt mr-1"></i><span class="resume-lang-label">Traditional Chinese</span>
+                            </button>
+                            <button type="button" data-resume-lang="en" onclick="onResumeLanguageSelected('en')"
+                                class="px-3 py-2.5 border border-blue-300 rounded-lg text-sm font-medium text-blue-800 hover:bg-blue-50">
+                                <i class="fas fa-globe mr-1"></i><span class="resume-lang-label">English</span>
+                            </button>
+                            <button type="button" data-resume-lang="pt" onclick="onResumeLanguageSelected('pt')"
+                                class="px-3 py-2.5 border border-emerald-300 rounded-lg text-sm font-medium text-emerald-800 hover:bg-emerald-50">
+                                <i class="fas fa-globe-europe mr-1"></i><span class="resume-lang-label">Portuguese</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div id="profile-format-hints" class="hidden mb-4" aria-live="polite"></div>
