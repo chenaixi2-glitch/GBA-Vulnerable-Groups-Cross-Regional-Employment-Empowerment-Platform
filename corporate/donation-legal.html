@@ -92,7 +92,9 @@
             LegalAidUI.init(document.getElementById('legal-aid-root'), { portal: 'corporate', allowSubmit: false });
             try {
                 const res = await CorporateAPI.DonationsAPI.getLegalServices();
-                const data = res.data || {};
+                const data = (window.GBAI18n && GBAI18n.translateLegalServicesData)
+                    ? GBAI18n.translateLegalServicesData(res.data || {})
+                    : (res.data || {});
                 document.getElementById('legal-subtitle').textContent = data.subtitle || '';
                 DonationBox.renderLegalServices(document.getElementById('legal-services-grid'), data.services || []);
                 if (data.contact) {
@@ -108,7 +110,13 @@
                 document.getElementById('legal-subtitle').textContent = dlT('donationLegal.legalLoadFailed', 'Failed to load legal services. Please ensure the backend is running.');
             }
         }
-        document.addEventListener('DOMContentLoaded', initDonationLegal);
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.GBAI18n && GBAI18n.initLanguage) {
+                GBAI18n.initLanguage().then(initDonationLegal);
+            } else {
+                initDonationLegal();
+            }
+        });
         window.addEventListener('gba:language-changed', initDonationLegal);
     </script>
 </body>

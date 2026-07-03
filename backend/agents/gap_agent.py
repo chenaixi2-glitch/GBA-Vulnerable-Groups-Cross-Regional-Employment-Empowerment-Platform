@@ -22,6 +22,7 @@ async def gap_node_async(state: CopilotState) -> dict[str, Any]:
         return {
             "gaps": [],
             "questions_to_ask": [],
+            "experiences_to_remove": [],
             "workflow_trace": append_trace(
                 state,
                 node="gap_agent",
@@ -37,12 +38,13 @@ async def gap_node_async(state: CopilotState) -> dict[str, Any]:
         }
 
     try:
-        gaps, questions = await run_gap_analysis(state, resolution_source="gap_analysis")
+        gaps, questions, removals = await run_gap_analysis(state, resolution_source="gap_analysis")
     except RuntimeError as exc:
         logger.error("Gap Analysis Agent failed: %s", exc)
         return {
             "gaps": [],
             "questions_to_ask": [],
+            "experiences_to_remove": [],
             "workflow_trace": append_trace(
                 state,
                 node="gap_agent",
@@ -53,19 +55,28 @@ async def gap_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    logger.info("Gap Analysis generated %d gaps and %d questions", len(gaps), len(questions))
+    logger.info(
+        "Gap Analysis generated %d gaps, %d questions, %d removal proposals",
+        len(gaps), len(questions), len(removals),
+    )
 
     return {
         "gaps": gaps,
         "questions_to_ask": questions,
+        "experiences_to_remove": removals,
         "workflow_trace": append_trace(
             state,
             node="gap_agent",
             input_summary="读取岗位和候选人画像用于缺口分析。",
-            output_summary=f"缺失信息分析已完成，发现 {len(gaps)} 项缺口，生成 {len(questions)} 个待追问问题。",
+            output_summary=(
+                f"缺失信息分析已完成，发现 {len(gaps)} 项缺口，"
+                f"生成 {len(questions)} 个待追问问题，"
+                f"建议精简 {len(removals)} 段经历。"
+            ),
             artifacts={
                 "gap_count": len(gaps),
                 "question_count": len(questions),
+                "removal_proposal_count": len(removals),
                 "high_severity_gap_count": sum(1 for gap in gaps if gap.severity == "high"),
             },
         ),

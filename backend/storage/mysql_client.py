@@ -139,6 +139,33 @@ class MySQLStore:
     async def get_candidate_profile(self, session_id: str) -> dict | None:
         return await self._get_by_session("candidate_profiles", session_id)
 
+    async def get_latest_candidate_profile_for_user(
+        self, user_id: int | str,
+    ) -> dict[str, Any] | None:
+        """Return the most recently updated candidate profile for a logged-in user."""
+        sql = """
+            SELECT cp.data, cp.session_id, cp.updated_at
+            FROM candidate_profiles cp
+            INNER JOIN sessions s ON cp.session_id = s.session_id
+            WHERE s.user_id = %s
+            ORDER BY cp.updated_at DESC
+            LIMIT 1
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (int(user_id),))
+                row = await cur.fetchone()
+        if row is None:
+            return None
+        data = row["data"]
+        if isinstance(data, str):
+            data = json.loads(data)
+        return {
+            "data": data,
+            "session_id": row["session_id"],
+            "updated_at": row.get("updated_at"),
+        }
+
     async def save_resume_content(self, row_id: str, session_id: str, data: dict, version: int = 1,
                                   content_hash: str = "") -> None:
         await self._upsert_json("resume_contents", row_id, session_id, data, version,

@@ -17,7 +17,7 @@ from workflow.state import CopilotState
 from storage.redis_client import get_redis_client, RedisSessionStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
 from services.llm_queue import SessionBusyError, llm_queue_slot
-from tools.output_language import apply_session_language
+from tools.output_language import apply_chat_output_language
 from log import get_logger
 
 logger = get_logger("api")
@@ -62,6 +62,7 @@ class ChatResponse(BaseModel):
     job: dict | None = None
     gaps: list[dict] = Field(default_factory=list)
     questions_to_ask: list[dict] = Field(default_factory=list)
+    experiences_to_remove: list[dict] = Field(default_factory=list)
     resume_content_json: dict | None = None
     render_config: dict | None = None
     resume_html: dict | None = None
@@ -88,8 +89,13 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     await ensure_session_access(session_id, user)
     if user:
         await bind_session_owner(session_id, user)
-    logger.info("Chat request: session=%s, msg_len=%d, authenticated=%s",
-                session_id, len(req.message), user is not None)
+    logger.info(
+        "Chat request: session=%s, msg_len=%d, language=%s, authenticated=%s",
+        session_id,
+        len(req.message),
+        req.language or "(empty)",
+        user is not None,
+    )
 
     # 从 Redis 加载或创建状态
     redis_client = await get_redis_client()
@@ -101,7 +107,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     else:
         state = CopilotState(session_id=session_id)
 
-    apply_session_language(state, req.language)
+    apply_chat_output_language(state, req.language)
 
     # 注入用户输入
     prepared_input = prepare_chat_input(req.message, req.attachments)
@@ -127,7 +133,8 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     # 持久化到 Redis
     persist_data = final_state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
                                                      "execution_plan", "reply_message", "triggered_agents",
-                                                     "workflow_trace", "resume_language_target"})
+                                                     "workflow_trace", "resume_language_target",
+                                                     "chat_output_language"})
     await _asave_state(store, persist_data)
 
     # 草稿暂存 Redis；数据库持久化仅在用户确认保存（POST /api/resume/save）时执行
@@ -140,6 +147,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         job=final_state.job.model_dump() if final_state.job else None,
         gaps=[g.model_dump() for g in final_state.gaps],
         questions_to_ask=[q.model_dump() for q in final_state.questions_to_ask],
+        experiences_to_remove=[r.model_dump() for r in final_state.experiences_to_remove],
         resume_content_json=final_state.resume_content_json.model_dump() if final_state.resume_content_json else None,
         render_config=final_state.render_config.model_dump(),
         resume_html=final_state.resume_html.model_dump(),

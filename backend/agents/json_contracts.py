@@ -79,9 +79,19 @@ class QuestionOutput(BaseModel):
     answer_ref: str = ""
 
 
+class ExperienceRemovalOutput(BaseModel):
+    id: str = ""
+    fact_id: str = ""
+    section_type: str = ""  # internship | project | award | paper | skill | education
+    title: str = ""
+    reason: str = ""
+    priority: str = "recommended"  # recommended | optional
+
+
 class GapAnalysisOutput(BaseModel):
     gaps: list[GapOutput] = Field(default_factory=list)
     questions_to_ask: list[QuestionOutput] = Field(default_factory=list)
+    experiences_to_remove: list[ExperienceRemovalOutput] = Field(default_factory=list)
 
 
 class EducationOutput(BaseModel):

@@ -173,36 +173,38 @@ def resume_output_language_instruction(language: str) -> str:
         return (
             f"Write ALL resume body text in English ({label}). "
             "This includes summary, item titles, bullet content, skill descriptions, "
-            "education major/degree wording, and date formatting. "
+            "education major/degree wording, role titles, and date formatting. "
             "Do NOT leave Chinese sentences or phrases in any field. "
             "If candidate profile facts are in Chinese, translate them into English first. "
-            "Proper nouns (company/school names) may stay unchanged; "
-            "technical terms (Python, AWS) stay in English. JSON keys remain English."
+            "Only keep untranslated: proper nouns (company/school names) and "
+            "standard technical/professional terms (Python, AWS, Spring Boot). "
+            "JSON keys remain English."
         )
     if lang == "pt":
         return (
             f"Escreva TODO o texto do currículo em português ({label}). "
-            "Inclui resumo, títulos, bullets, competências, formação e datas. "
+            "Inclui resumo, títulos, bullets, competências, formação, cargos e datas. "
             "Não deixe frases em chinês ou inglês nos campos de texto. "
             "Traduza factos do perfil para português quando necessário. "
-            "Nomes próprios podem manter-se; termos técnicos (Python, AWS) em inglês. "
+            "Mantenha sem tradução apenas nomes próprios e termos técnicos/profissionais "
+            "consagrados (Python, AWS, Spring Boot). "
             "As chaves JSON permanecem em inglês."
         )
     if lang == "zh-TW":
         return (
             f"請使用繁體中文（{label}）撰寫簡歷全部正文，"
-            "含個人總結、各模組標題、要點描述、技能說明、專業/學位表述及日期格式。"
+            "含個人總結、各模組標題、要點描述、技能說明、專業/學位/職位表述及日期格式。"
             "禁止在同一字段或相鄰句子中中英混用（如「負責 developed 後端」）。"
             "若候選人畫像為英文，須先翻譯為繁體中文再寫入，不得直接複製英文句子。"
-            "專有名詞（公司名、學校名）可保留原文；技能列表中的通用技術名（Python、React）可保留英文。"
+            "僅保留不譯內容：專有名詞（公司名、學校名）及通用技術/專業術語（Python、React、AWS）。"
             "JSON 的 key 仍使用英文。"
         )
     return (
         f"请使用简体中文（{label}）撰写简历全部正文，"
-        "包括个人总结、各模块标题、要点描述、技能说明、专业/学位表述及日期格式。"
+        "包括个人总结、各模块标题、要点描述、技能说明、专业/学位/职位表述及日期格式。"
         "禁止在同一字段或相邻句子中中英混用（如「负责 developed 后端」）。"
         "若候选人画像为英文，须先翻译为简体中文再写入，不得直接复制英文句子。"
-        "专有名词（公司名、学校名）可保留原文；技能列表中的通用技术名（Python、React）可保留英文。"
+        "仅保留不译内容：专有名词（公司名、学校名）及通用技术/专业术语（Python、React、AWS）。"
         "JSON 的 key 仍使用英文。"
     )
 

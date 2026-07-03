@@ -3,6 +3,14 @@
  */
 (function (global) {
   let meta = { gender_options: {}, disability_types: {}, group_types: {} };
+  let currentUser = null;
+
+  function tOption(category, key, serverLabel) {
+    if (global.GBAI18n && global.GBAI18n.tMetaOption) {
+      return global.GBAI18n.tMetaOption(category, key, serverLabel);
+    }
+    return serverLabel || key;
+  }
 
   function showMsg(id, text, ok) {
     const el = document.getElementById(id);
@@ -21,20 +29,27 @@
       return;
     }
     wrap.innerHTML = types.map(function (key) {
-      const label = meta.group_types[key] || key;
+      const label = tOption('groupTypes', key, meta.group_types[key] || key);
       return '<span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">' + label + '</span>';
     }).join('');
   }
 
-  function fillSelect(id, options, selected) {
+  function fillSelect(id, options, selected, category) {
     const el = document.getElementById(id);
     if (!el || !options) return;
     el.innerHTML = Object.entries(options).map(function (entry) {
       const val = entry[0];
-      const label = entry[1];
+      const label = category ? tOption(category, val, entry[1]) : entry[1];
       const sel = val === selected ? ' selected' : '';
       return '<option value="' + val + '"' + sel + '>' + label + '</option>';
     }).join('');
+  }
+
+  function refreshLocalizedFields() {
+    if (!currentUser) return;
+    fillSelect('profile-gender', meta.gender_options, currentUser.gender || '', 'gender');
+    fillSelect('profile-disability', meta.disability_types, currentUser.disability_type || 'none', 'disabilityTypes');
+    renderGroupTags(currentUser);
   }
 
   function fillForm(user) {
@@ -43,8 +58,8 @@
     document.getElementById('profile-phone').value = user.phone || '';
     if (user.role === 'individual') {
       document.getElementById('profile-age').value = user.age != null ? user.age : '';
-      fillSelect('profile-gender', meta.gender_options, user.gender || '');
-      fillSelect('profile-disability', meta.disability_types, user.disability_type || 'none');
+      fillSelect('profile-gender', meta.gender_options, user.gender || '', 'gender');
+      fillSelect('profile-disability', meta.disability_types, user.disability_type || 'none', 'disabilityTypes');
       document.getElementById('profile-gap').value = user.career_gap_years != null ? user.career_gap_years : 0;
       document.getElementById('profile-income').value = user.current_income != null ? user.current_income : '';
     }
@@ -69,9 +84,10 @@
       throw new Error(window.GBAI18n && GBAI18n.t ? GBAI18n.t('errors.individualOnlyProfile', 'Only individual accounts can edit this page') : 'Only individual accounts can edit this page');
     }
 
-    fillSelect('profile-gender', meta.gender_options, user.gender || '');
-    fillSelect('profile-disability', meta.disability_types, user.disability_type || 'none');
+    fillSelect('profile-gender', meta.gender_options, user.gender || '', 'gender');
+    fillSelect('profile-disability', meta.disability_types, user.disability_type || 'none', 'disabilityTypes');
     fillForm(user);
+    currentUser = user;
     return user;
   }
 
@@ -98,6 +114,7 @@
         return;
       }
       fillForm(res.data.user);
+      currentUser = res.data.user;
       showMsg('profile-form-msg', (window.GBAI18n && GBAI18n.t ? GBAI18n.t('profile.saved', 'Profile updated') : 'Profile updated'), true);
       if (typeof PortalAuth !== 'undefined') {
         PortalAuth.refreshPortalAuthNav('individual');
@@ -139,6 +156,7 @@
   function init() {
     document.getElementById('profile-form').addEventListener('submit', saveProfile);
     document.getElementById('password-form').addEventListener('submit', savePassword);
+    window.addEventListener('gba:language-changed', refreshLocalizedFields);
 
     PortalAuth.guardPortalAuth({ portal: 'individual', authPage: 'auth.html' })
       .then(function (guard) {

@@ -12,6 +12,7 @@ let interviewSession = {
     tone: 'professional',
     programVersion: 'quick',
     programLabel: '',
+    interviewLanguage: '',
 };
 
 /** 交互式多轮模拟面试状态 */
@@ -83,7 +84,58 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeInterviewPrep();
     setupInteractiveSaveModal();
     selectProgramVersion('quick');
+    initInterviewLanguage();
 });
+
+function normalizeInterviewLang(code) {
+    if (typeof normalizeResumeLang === 'function') return normalizeResumeLang(code);
+    return String(code || 'zh');
+}
+
+function resumeLangDisplayLabel(code) {
+    if (typeof window.GBAI18n !== 'undefined' && GBAI18n.resumeLangLabel) {
+        return GBAI18n.resumeLangLabel(code);
+    }
+    return code;
+}
+
+function getDefaultInterviewLanguage() {
+    if (typeof apiClient !== 'undefined' && apiClient.getPageLanguage) {
+        return apiClient.getPageLanguage();
+    }
+    if (typeof window.GBAI18n !== 'undefined' && GBAI18n.uiLangToApiLang) {
+        return normalizeInterviewLang(GBAI18n.uiLangToApiLang(GBAI18n.getLang()));
+    }
+    return 'en';
+}
+
+function initInterviewLanguage() {
+    interviewSession.interviewLanguage = getDefaultInterviewLanguage();
+    syncInterviewLanguageButtons();
+    window.addEventListener('gba:language-changed', () => syncInterviewLanguageButtons());
+}
+
+function selectInterviewLanguage(language) {
+    interviewSession.interviewLanguage = normalizeInterviewLang(language);
+    syncInterviewLanguageButtons();
+}
+
+function syncInterviewLanguageButtons() {
+    const active = normalizeInterviewLang(interviewSession.interviewLanguage || getDefaultInterviewLanguage());
+    document.querySelectorAll('[data-interview-lang]').forEach((btn) => {
+        const code = normalizeInterviewLang(btn.dataset.interviewLang);
+        const labelEl = btn.querySelector('.interview-lang-label');
+        if (labelEl) labelEl.textContent = resumeLangDisplayLabel(code);
+        const isActive = code === active;
+        btn.classList.toggle('ring-2', isActive);
+        btn.classList.toggle('ring-purple-500', isActive);
+        btn.classList.toggle('bg-purple-50', isActive);
+    });
+}
+
+function getSelectedInterviewLanguage() {
+    return normalizeInterviewLang(interviewSession.interviewLanguage || getDefaultInterviewLanguage());
+}
 
 function initializeInterviewPrep() {
     apiClient.ensureSessionStarted();
@@ -445,7 +497,8 @@ async function loadInterviewQuestions() {
         const { programVersion, specializedFocus } = getSelectedProgramOptions();
 
         const response = await apiClient.startInterviewSession(
-            jobTitle, industry, interviewSession.tone, targetContext, programVersion, specializedFocus
+            jobTitle, industry, interviewSession.tone, targetContext, programVersion, specializedFocus,
+            getSelectedInterviewLanguage()
         );
 
         if (response.interview_qa && response.interview_qa.length > 0) {
@@ -551,7 +604,9 @@ async function loadCustomInterviewQuestions() {
             },
         }) : null;
 
-        const response = await apiClient.generateCustomInterviewAnswers(questions, targetContext);
+        const response = await apiClient.generateCustomInterviewAnswers(
+            questions, targetContext, getSelectedInterviewLanguage()
+        );
 
         if (response.interview_qa && response.interview_qa.length > 0) {
             interviewSession.questions = response.interview_qa.map((qa, index) => ({
@@ -629,6 +684,7 @@ async function startInteractiveInterview() {
             programVersion,
             specializedFocus,
             targetContext,
+            language: getSelectedInterviewLanguage(),
         });
 
         const session = response.interactive_interview;
@@ -782,7 +838,7 @@ async function submitInteractiveAnswer() {
         Utils.showLoading('Interviewer is thinking...');
         input.disabled = true;
 
-        const response = await apiClient.submitInteractiveTurn(answer);
+        const response = await apiClient.submitInteractiveTurn(answer, getSelectedInterviewLanguage());
         const session = response.interactive_interview;
 
         interactiveSession.status = session.status;
@@ -831,7 +887,7 @@ async function endInteractiveInterview() {
         Utils.showLoading('Generating debrief report...');
         document.getElementById('interactive-input-section').classList.add('hidden');
 
-        const response = await apiClient.endInteractiveInterview(true);
+        const response = await apiClient.endInteractiveInterview(true, getSelectedInterviewLanguage());
         const session = response.interactive_interview;
 
         interactiveSession.status = 'completed';
@@ -852,7 +908,7 @@ async function endInteractiveInterview() {
 
 async function loadInteractiveDebrief() {
     try {
-        const response = await apiClient.endInteractiveInterview(true);
+        const response = await apiClient.endInteractiveInterview(true, getSelectedInterviewLanguage());
         const session = response.interactive_interview;
         interactiveSession.debrief = session.debrief;
         renderInteractiveDebrief(session.debrief);
@@ -1206,7 +1262,9 @@ async function submitAnswer() {
         Utils.showLoading('Analyzing your answer...');
 
         const currentQuestion = interviewSession.questions[interviewSession.currentQuestionIndex];
-        const feedbackResponse = await apiClient.submitAnswer(currentQuestion.id, answer);
+        const feedbackResponse = await apiClient.submitAnswer(
+            currentQuestion.id, answer, getSelectedInterviewLanguage()
+        );
 
         Utils.hideLoading();
         displayFeedback(feedbackResponse);
@@ -1436,6 +1494,7 @@ function restartSession() {
             tone: 'professional',
             programVersion: 'quick',
             programLabel: '',
+            interviewLanguage: getDefaultInterviewLanguage(),
         };
 
         interactiveSession = {
@@ -1490,6 +1549,7 @@ function restartSession() {
         updatePrerequisiteStatus();
         updateProgress();
         selectTone('professional');
+        syncInterviewLanguageButtons();
 
         document.getElementById('btn-load-questions').disabled = true;
         selectInterviewMode(interviewMode);

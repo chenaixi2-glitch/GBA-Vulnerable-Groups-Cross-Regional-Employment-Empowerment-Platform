@@ -8,6 +8,56 @@
     "retry": "请重试",
     "openSourceSite": "打开源站"
   },
+  "meta": {
+    "listSeparator": "、",
+    "groupTypes": {
+      "disability": "残疾人士",
+      "elderly_45plus": "45岁以上劳动者",
+      "career_returner": "职场回归女性",
+      "youth": "低收入青年"
+    },
+    "gender": {
+      "male": "男",
+      "female": "女",
+      "other": "其他",
+      "prefer_not_say": "不愿透露"
+    },
+    "disabilityTypes": {
+      "none": "无",
+      "physical": "肢体残疾",
+      "visual": "视力残疾",
+      "hearing": "听力残疾",
+      "intellectual": "智力残疾",
+      "mental": "精神残疾",
+      "other": "其他残疾"
+    }
+  },
+  "legalServices": {
+    "title": "弱势群体法律服务",
+    "subtitle": "由平台捐款箱全额资助。用户可上传法律诉求申请，律师/志愿者接单或平台协助联系",
+    "fundPromise": "捐款箱募集到的资金将全额用于该服务，不收取任何管理费用。",
+    "contactHours": "周一至周五 9:00–18:00",
+    "labor_rights": {
+      "title": "劳动权益咨询",
+      "description": "为弱势群体提供劳动合同、工资福利、工伤认定等基础劳动法律咨询与维权指引。"
+    },
+    "cross_border": {
+      "title": "跨境就业法律指导",
+      "description": "粤港澳大湾区跨境就业签证、工作许可、社保衔接等合规问题专项解答。"
+    },
+    "anti_discrimination": {
+      "title": "反就业歧视法律援助",
+      "description": "针对年龄、残疾、性别等就业歧视情形，提供投诉渠道与法律支持对接。"
+    },
+    "disability_employment": {
+      "title": "残疾人士就业权益",
+      "description": "合理便利申请、无障碍就业环境、残疾证相关权益等专项服务。"
+    },
+    "career_return": {
+      "title": "职场回归女性支持",
+      "description": "职业空窗期再就业相关的法律权益保护与协商指导。"
+    }
+  },
   "home": {
     "title": "粤港澳大湾区跨区域就业赋能",
     "subtitle": "连接大湾区弱势群体与包容型雇主，提供智能岗位匹配、职业工具与一站式在线投递服务。",
@@ -19,7 +69,11 @@
     "benefits": "服务对象",
     "stories": "成功案例",
     "faq": "常见问题",
-    "cta": "开启跨区域就业赋能之旅"
+    "cta": "开启跨区域就业赋能之旅",
+    "navFriendlyJobs": "友好岗位",
+    "navFriendlyEmployers": "友好企业",
+    "heroFriendlyJobs": "弱势群体友好岗位",
+    "navMyApplications": "我的投递"
   },
   "individual": {
     "title": "个人就业赋能门户",
@@ -91,6 +145,7 @@
     "pasteLabel": "或粘贴简历文本",
     "pastePlaceholder": "在此粘贴当前简历内容...",
     "continueStep2": "继续到步骤 2",
+    "analyzeResume": "解析简历",
     "step2Title": "步骤 2：目标岗位描述",
     "jdLabel": "粘贴你目标岗位的描述",
     "jdOptionalHint": "可选 — 在上方文本框填写岗位名称或 JD 草稿，选择行业、单位性质与经验等级后点击生成；留空则仅根据选项生成。",
@@ -141,13 +196,25 @@
     "checklistTitle": "简历格式检查",
     "checklistDesc": "根据中/英文简历规范对比照片、排版、模块、用词等差异，提醒补充缺失内容",
     "gapAnalysisTitle": "技能差距分析",
+    "viewEdit": "编辑资料",
+    "viewPreview": "生成预览",
+    "viewSwitcherHint": "可在编辑解析数据与查看生成简历之间切换。修改资料后需重新生成以更新预览。",
     "previewTitle": "生成的简历预览",
     "a4Badge": "A4 单页",
     "optimizeA4": "优化（A4）",
     "previewEmpty": "生成的简历将显示在此处",
     "profileEditorTitle": "简历分析结果",
     "profileEditorDesc": "每项单独解析存储。可在下方添加或编辑条目。",
+    "profileRequiredHint": "请补全下方标有「必填」的字段后再进入步骤 2。",
+    "profileRequiredCount": "（还剩 {count} 项）",
+    "profileContinueStep2": "确认并继续到步骤 2",
+    "profileContinueHint": "必填项在上方编辑区以红色标记显示。",
     "draftRestored": "已从上次会话恢复草稿（登录状态下保留 12 小时）。",
+    "draftRestoredMysql": "已从您的账户恢复上次保存的简历资料，刷新后仍可查看。",
+    "saveProfileToAccount": "保存到账户",
+    "profileSavedAccount": "已保存到账户（刷新后仍可恢复）",
+    "profileSaveLoginHint": "登录后可将资料永久保存到账户，刷新页面后仍可恢复。",
+    "profileSaveLoginLink": "去登录",
     "name": "姓名",
     "email": "邮箱",
     "phone": "电话",
@@ -319,7 +386,7 @@
     "regenerate": "重新生成",
     "cancel": "取消",
     "optModalTitle": "简历优化 · 补充信息",
-    "optModalDesc": "请回答以下问题，以便更精准地优化简历（标 * 为必填）。",
+    "optModalDesc": "请回答以下问题，以便更精准地优化简历。若经历缺少量化数据，可补充真实数字；若无相关数据可留空（标 * 为必填）。",
     "submitGenerate": "提交并生成简历",
     "saveModalTitle": "是否保存简历到账户？",
     "saveModalBody": "导出前可将此简历保存至 GBA 平台。数据加密传输、安全存储，仅用于职业服务，绝不出售个人信息。",
@@ -341,6 +408,11 @@
       "fileUploaded": "文件上传成功",
       "uploadOrPaste": "请上传文件或粘贴简历文本",
       "analyzed": "简历分析完成",
+      "analyzedWithRequired": "简历已解析 — 请补全下方 {count} 项必填内容",
+      "validatingProfile": "正在检查必填项…",
+      "requiredFieldsMissing": "请先补全必填项：{labels}",
+      "profileReadyForStep2": "资料已完整，可继续填写目标岗位",
+      "validateProfileFailed": "资料校验失败：{msg}",
       "uploadFailed": "上传简历失败：{msg}",
       "pasteOrSelectJd": "请粘贴岗位描述，或选择行业、单位性质与经验等级以自动生成",
       "jdGenerateRetry": "无法生成岗位描述，请重试或手动粘贴",
@@ -386,6 +458,10 @@
       "exportFailed": "导出失败：{msg}",
       "pdfFallbackConfirm": "服务端 PDF 导出暂不可用。\n\n是否改用浏览器打印？\n请在打印对话框中选择「另存为 PDF」或「Microsoft Print to PDF」。",
       "savingToAccount": "正在保存到您的账户…",
+      "savingProfile": "正在保存资料到您的账户…",
+      "profileSaved": "简历资料已保存到您的账户",
+      "profileSaveFailed": "保存失败：{msg}",
+      "noProfileToSave": "暂无可保存的简历资料",
       "generatingJd": "正在生成建议岗位描述…",
       "uploadingResume": "正在上传简历…",
       "analyzingJd": "正在分析岗位描述…",
@@ -408,6 +484,8 @@
       "jobTitleRequired": "请先输入目标岗位名称",
       "regenerateFailed": "重新生成失败：{msg}",
       "requiredQuestions": "请先回答标有 * 的必填问题",
+      "quantHint": "部分经历缺少量化描述。若您有真实可验证的数据（如服务用户数、性能提升比例、团队规模等），请在下方补充；若无相关数据可留空，系统不会编造数字。",
+      "quantAnswerPlaceholder": "如有真实数据请填写（如：服务 1 万用户、响应速度提升 30%）；无则留空",
       "regeneratingJd": "正在根据您的简历重新生成岗位描述…",
       "analyzingForJd": "正在分析您的简历并生成针对性岗位描述…"
     },
@@ -577,7 +655,8 @@
     "terms": "服务条款",
     "contact": "联系支持",
     "bannerVulnerablePrefix": "弱势群体用户",
-    "bannerVulnerableSuffix": "，平台功能",
+    "bannerVulnerableMiddle": "：您已识别为「",
+    "bannerVulnerableSuffix": "」，平台功能",
     "bannerVulnerableFree": "免费",
     "bannerVulnerableUse": "使用。",
     "bannerDonation": "使用平台功能需向",
@@ -608,6 +687,8 @@
     "generateResume": "生成简历内容",
     "settingsTitle": "面试官设置",
     "interviewStyle": "面试风格",
+    "languageLabel": "面试语言",
+    "languageHint": "面试题与反馈将使用该语言，可与页面语言不同。",
     "toneProfessional": "专业",
     "toneFriendly": "友好",
     "tonePressure": "压力",
@@ -915,6 +996,7 @@
     "noInterviewSession": "未找到面试会话。",
     "draftNotFound": "草稿未找到。",
     "loginToSaveResume": "请先登录后再保存简历到网站。",
+    "loginToSaveProfile": "请先登录后再保存简历资料到网站。",
     "loginToSaveInterview": "请先登录后再保存模拟面试。",
     "loginToViewInterviews": "请先登录后查看已保存的模拟面试。",
     "loginToSaveLearningPath": "请先登录后保存学习路径。",

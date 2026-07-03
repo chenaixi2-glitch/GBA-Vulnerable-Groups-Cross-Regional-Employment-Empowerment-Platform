@@ -141,6 +141,35 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        .resume-view-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .resume-view-tab:hover:not(:disabled) {
+            color: #374151;
+            background-color: #f9fafb;
+        }
+
+        .resume-view-tab.active {
+            color: #1e40af;
+            background-color: #dbeafe;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .resume-view-tab:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="bg-gray-50" data-page="individual">
@@ -239,8 +268,8 @@
                     </div>
                     
                     <button type="button" id="btn-upload-resume" onclick="uploadResume()" class="mt-4 w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled aria-disabled="true">
-                        <i class="fas fa-arrow-right mr-2"></i>
-                        <span data-i18n="resume.continueStep2">Continue to Step 2</span>
+                        <i class="fas fa-search mr-2"></i>
+                        <span data-i18n="resume.analyzeResume">Analyze Resume</span>
                     </button>
                 </section>
 
@@ -413,6 +442,24 @@
                     </div>
                 </div>
 
+                <!-- Edit / Preview View Switcher -->
+                <div id="resume-view-switcher" class="hidden mb-4">
+                    <div class="bg-white rounded-xl p-1.5 border shadow-sm inline-flex flex-wrap gap-1" role="tablist" aria-label="Resume view">
+                        <button type="button" id="btn-view-edit" role="tab" aria-selected="true" onclick="switchResumeView('edit')" class="resume-view-tab active">
+                            <i class="fas fa-user-edit"></i>
+                            <span data-i18n="resume.viewEdit">Edit Profile</span>
+                        </button>
+                        <button type="button" id="btn-view-preview" role="tab" aria-selected="false" onclick="switchResumeView('preview')" class="resume-view-tab" disabled>
+                            <i class="fas fa-eye"></i>
+                            <span data-i18n="resume.viewPreview">Generated Preview</span>
+                        </button>
+                    </div>
+                    <p id="resume-view-switcher-hint" class="hidden mt-2 text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <span data-i18n="resume.viewSwitcherHint">Switch between editing parsed data and viewing the generated resume. Re-generate after edits to update the preview.</span>
+                    </p>
+                </div>
+
                 <!-- Language Format Checklist (integrated into profile editor) -->
                 <div id="language-checklist-section" class="hidden" aria-hidden="true">
                     <div id="language-checklist-content"></div>
@@ -499,12 +546,30 @@
                             </h3>
                             <p class="text-sm text-gray-500 mt-1" data-i18n="resume.profileEditorDesc">Each item is parsed and stored separately. Add or edit entries below.</p>
                         </div>
-                        <span id="draft-save-status" class="text-xs text-gray-400"></span>
+                        <div class="flex flex-col items-end gap-2 shrink-0">
+                            <button type="button" id="btn-save-profile" onclick="ProfileEditor.saveToAccount()" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-save mr-1"></i>
+                                <span data-i18n="resume.saveProfileToAccount">Save to account</span>
+                            </button>
+                            <span id="draft-save-status" class="text-xs text-gray-400"></span>
+                        </div>
                     </div>
+
+                    <p id="profile-save-login-hint" class="hidden mb-4 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <span data-i18n="resume.profileSaveLoginHint">Log in to permanently save your profile — data will persist after refresh.</span>
+                        <a href="auth.html" class="ml-1 underline font-medium" data-i18n="resume.profileSaveLoginLink">Log in</a>
+                    </p>
 
                     <div id="profile-restored-hint" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
                         <i class="fas fa-history mr-1"></i>
-                        <span data-i18n="resume.draftRestored">Your draft was restored from your last session (available for 12 hours while logged in).</span>
+                        <span id="profile-restored-hint-text" data-i18n="resume.draftRestored">Your draft was restored from your last session (available for 12 hours while logged in).</span>
+                    </div>
+
+                    <div id="profile-required-banner" class="hidden mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
+                        <i class="fas fa-circle-exclamation text-amber-600 mr-1"></i>
+                        <span data-i18n="resume.profileRequiredHint">Please complete all fields marked as required below before continuing to Step 2.</span>
+                        <span id="profile-required-count" class="ml-1 font-medium"></span>
                     </div>
 
                     <div id="profile-format-hints" class="hidden mb-4" aria-live="polite"></div>
@@ -563,6 +628,17 @@
                         <h4 class="font-semibold text-gray-800"><span data-i18n="resume.parsedEntries">Parsed Entries</span> (<span id="profile-module-count">0</span>)</h4>
                     </div>
                     <div id="profile-editor-body"></div>
+
+                    <div id="profile-continue-section" class="hidden mt-6 pt-4 border-t border-gray-200">
+                        <button type="button" id="btn-profile-continue" onclick="proceedToJdStep()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors">
+                            <i class="fas fa-arrow-right mr-2"></i>
+                            <span data-i18n="resume.profileContinueStep2">Confirm and continue to Step 2</span>
+                        </button>
+                        <p class="mt-2 text-xs text-gray-500 text-center">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <span data-i18n="resume.profileContinueHint">Required fields are marked in red in the editor above.</span>
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Empty State -->
@@ -633,6 +709,7 @@
             <p class="text-xs text-gray-500 mb-3" data-i18n="resume.optModalDesc">Answer the questions below for more precise optimization (* required).</p>
             <p id="optimization-hint" class="hidden text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded p-2 mb-3"></p>
             <div id="optimization-gaps-summary" class="mb-4 hidden"></div>
+            <div id="optimization-removals" class="mb-4 hidden"></div>
             <div id="optimization-questions" class="space-y-2"></div>
             <div class="flex flex-col sm:flex-row gap-2 mt-4">
                 <button type="button" onclick="submitOptimizationDialog()" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700" data-i18n="resume.submitGenerate">

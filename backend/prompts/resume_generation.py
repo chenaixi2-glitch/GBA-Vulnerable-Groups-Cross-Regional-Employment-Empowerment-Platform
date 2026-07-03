@@ -1,6 +1,9 @@
 """简历内容生成 Prompt。"""
 
-from prompts.resume_constraints import RESUME_A4_ONE_PAGE_CONSTRAINTS
+from prompts.resume_constraints import (
+    RESUME_A4_ONE_PAGE_CONSTRAINTS,
+    RESUME_EXPERIENCE_POLISH_GUIDELINES,
+)
 
 RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。根据岗位需求和候选人画像，生成针对性的简历内容 JSON。
 
@@ -9,6 +12,8 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 {resume_output_language_instruction}
 
 {RESUME_A4_ONE_PAGE_CONSTRAINTS}
+
+{RESUME_EXPERIENCE_POLISH_GUIDELINES}
 
 语言与格式要求：
 - 简体中文简历（zh）：章节用简体中文标题；日期 YYYY.MM；教育信息放在 profile.education；若候选人画像 profile_basic.extras 含 photo_url，须在 profile.extras 中原样保留
@@ -63,7 +68,7 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
         {{
             "id": "intern_1",
             "title": "公司名称 — 岗位名称（时间）",
-            "content": "STAR 格式描述：情境、任务、行动、结果。用量化数据增强说服力。",
+            "content": "STAR 格式描述：情境、任务、行动、结果。仅使用画像中已有的量化数据增强说服力，无数据时用客观描述。",
             "source_refs": [],
             "updated_at": ""
         }}
@@ -91,9 +96,9 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 }}
 
 注意：
-1. 不得捏造用户未提供的事实
-2. 根据 JD 的技术栈和关键词优化内容排序和措辞
-3. 项目和实习描述使用 STAR 格式，突出与目标岗位相关的技能
+1. 不得捏造用户未提供的事实；量化数据必须来自候选人画像，缺数据时用客观描述替代，禁止编造数字
+2. 根据 JD 的技术栈和关键词优化经历排序与措辞，使每段经历更贴合目标岗位
+3. 项目和实习描述使用 STAR 格式，在画像有据时补充量化成果，突出与目标岗位相关的技能与产出
 4. 技能根据 JD 要求的优先级排序
 5. 篇幅须严格符合上文 A4 页数约束，宁可精简内容也不要超长
 6. 所有正文字段须统一使用目标语言，禁止中英混用
@@ -103,6 +108,8 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用户的修改指令，只更新简历中受影响的部分。
 
 {RESUME_A4_ONE_PAGE_CONSTRAINTS}
+
+{RESUME_EXPERIENCE_POLISH_GUIDELINES}
 
 当前简历语言：{target_language_label}
 
@@ -126,9 +133,10 @@ RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用�
 请返回完整的简历内容 JSON（与原格式一致），只修改受影响的 section。
 
 注意：
-1. 不得捏造用户未提供的事实
-2. 保持未修改部分不变
-3. 优化或修改后仍须符合上文 A4 页数约束，必要时缩减文字或合并条目
-4. 修改后的内容须保持目标语言一致，禁止中英混用
-5. 即使指令不明确，也必须返回合法 JSON 对象
+1. 不得捏造用户未提供的事实；优化经历时仅使用画像中已有的量化信息，禁止编造数字
+2. 若指令涉及经历润色，须结合目标岗位 JD 调整措辞与排序，按行业惯用标准补充有据可查的量化表述
+3. 保持未修改部分不变
+4. 优化或修改后仍须符合上文 A4 页数约束，必要时缩减文字或合并条目
+5. 修改后的内容须保持目标语言一致，禁止中英混用
+6. 即使指令不明确，也必须返回合法 JSON 对象
 """

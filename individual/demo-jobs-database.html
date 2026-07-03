@@ -92,7 +92,10 @@
                 ? jobsT('hasResume', 'Resume linked')
                 : jobsT('suggestResume', 'Complete your resume');
             if (meta.user_group_types && meta.user_group_types.length) {
-                return jobsT('groupTypes', 'Group types') + '：' + meta.user_group_types.join('、') + ' · ' + resumePart;
+                var typesLabel = (window.GBAI18n && GBAI18n.formatGroupTypes)
+                    ? GBAI18n.formatGroupTypes(meta.user_group_types)
+                    : meta.user_group_types.join(', ');
+                return jobsT('groupTypes', 'Group types') + ': ' + typesLabel + ' · ' + resumePart;
             }
             return jobsT('noVulnerableGroup', 'No vulnerable group type matched') + ' · ' + resumePart;
         }

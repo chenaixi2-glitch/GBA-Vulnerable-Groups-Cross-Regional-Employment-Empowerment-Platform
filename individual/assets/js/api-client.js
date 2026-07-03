@@ -100,6 +100,11 @@ class MockAPIService {
 
     async getResumeDraft(sessionId) {
         await this.delay(200);
+        const mysqlDraft = localStorage.getItem(`${this._userDraftKey()}_mysql`);
+        if (mysqlDraft) {
+            const parsed = JSON.parse(mysqlDraft);
+            return { session_id: parsed.session_id || sessionId, draft: parsed.draft, source: 'mysql', restored: true };
+        }
         const userDraft = localStorage.getItem(this._userDraftKey());
         if (userDraft) {
             const parsed = JSON.parse(userDraft);
@@ -147,6 +152,20 @@ class MockAPIService {
     async saveResumeToAccount(sessionId) {
         await this.delay(400);
         return { ok: true, message: apiT('mock.resumeSavedDemo', 'Resume saved securely to your account (demo mode).'), session_id: sessionId };
+    }
+
+    async saveProfileToAccount(sessionId, draft) {
+        await this.delay(400);
+        const payload = { ...draft, updated_at: draft.updated_at || new Date().toISOString() };
+        localStorage.setItem(this._draftKey(sessionId), JSON.stringify(payload));
+        localStorage.setItem(this._userDraftKey(), JSON.stringify({ session_id: sessionId, draft: payload }));
+        localStorage.setItem(`${this._userDraftKey()}_mysql`, JSON.stringify({ session_id: sessionId, draft: payload }));
+        return {
+            ok: true,
+            message: apiT('mock.profileSavedDemo', 'Profile saved to your account (demo mode).'),
+            session_id: sessionId,
+            updated_at: payload.updated_at,
+        };
     }
 
     async saveInteractiveInterview(sessionId, recordId = '') {
@@ -1191,30 +1210,23 @@ class APIClient {
         if (typeof window !== 'undefined' && window.GBAI18n && typeof GBAI18n.uiLangToApiLang === 'function') {
             return GBAI18n.uiLangToApiLang(GBAI18n.getLang());
         }
-        return 'zh';
+        // Keep in sync with assets/i18n/i18n.js default UI locale (en)
+        return 'en';
     }
 
     /**
      * Language for optimization Q&A (gap analysis, JD confirmation hints): follow page UI locale.
      */
     getPageLanguage() {
-        return this.getApiLanguage();
+        return this.normalizeResumeLanguage(this.getApiLanguage());
     }
 
     /**
-     * Sync session render language to current page UI language (gap / optimization prompts).
+     * Page UI locale is passed per chat request only (gap/JD hints).
+     * Do not overwrite the user-selected resume target language in session.
      */
     async syncPageLanguageToSession() {
-        if (!this.sessionId || this.useMockMode) {
-            return null;
-        }
-        try {
-            await this.ensureBackendAvailable();
-            return await this.setResumeLanguage(this.getPageLanguage());
-        } catch (error) {
-            console.warn('Page language sync skipped:', error.message);
-            return null;
-        }
+        return null;
     }
 
     /**
@@ -1310,7 +1322,9 @@ class APIClient {
     async chat(message, attachments = [], options = {}) {
         const retryOnAccessDenied = options.retryOnAccessDenied !== false;
         const allowMockFallback = options.allowMockFallback !== false;
-        const chatLanguage = options.language || this.getChatLanguage();
+        const chatLanguage = this.normalizeResumeLanguage(
+            options.language || (options.usePageLanguage ? this.getPageLanguage() : this.getChatLanguage())
+        );
         try {
             this.ensureSessionStarted();
 
@@ -1429,7 +1443,7 @@ class APIClient {
             const message = typeof buildJdSubmissionText === 'function'
                 ? buildJdSubmissionText(jdText, ctx)
                 : jdText;
-            const response = await this.chat(message, [], { language: pageLang });
+            const response = await this.chat(message, [], { language: pageLang, usePageLanguage: true });
             return response;
         } catch (error) {
             console.error('JD submission error:', error);
@@ -1606,6 +1620,40 @@ class APIClient {
     }
 
     /**
+     * Save parsed/edited profile draft to user account (MySQL) — survives page refresh
+     */
+    async saveProfileToAccount(draft) {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+            if (!this.isLoggedIn()) {
+                throw new Error(apiT('errors.loginToSaveProfile', 'Please log in to save your profile to the website'));
+            }
+
+            const payload = {
+                ...draft,
+                updated_at: new Date().toISOString(),
+            };
+
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                await this.mockService.saveResumeDraft(this.sessionId, payload, true);
+                return this.mockService.saveProfileToAccount(this.sessionId, payload);
+            }
+
+            const response = await this.client.post('/resume/profile/save', {
+                session_id: this.sessionId,
+                draft: payload,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Save profile error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
      * Generate profile-aware JD from job title only (user must confirm before optimize)
      */
     async generateJdFromTitle(jobTitle, targetContext = null) {
@@ -1615,8 +1663,7 @@ class APIClient {
             }
             const ctx = this._resolveTargetJobContext(targetContext, jobTitle);
             await this.ensureBackendAvailable();
-            const outputLanguage = this.getPageLanguage();
-            await this.syncPageLanguageToSession();
+            const outputLanguage = this.getChatLanguage();
             if (this.useMockMode) {
                 return this.mockService.buildMockJd(
                     ctx.industry || 'tech',
@@ -1649,7 +1696,8 @@ class APIClient {
         const lines = answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
         const message = [
             'Please incorporate the following clarifications into my candidate profile for resume optimization.',
-            'These answers clarify my primary tech stack, project details, or role fit:',
+            'These answers clarify my primary tech stack, project details, quantified results, or role fit.',
+            'Use only the facts I provide below — do not invent numbers or achievements.',
             '',
             lines,
         ].join('\n');
@@ -1661,7 +1709,10 @@ class APIClient {
      */
     async submitProfileText(profileText) {
         try {
-            const response = await this.chat(profileText, []);
+            const response = await this.chat(profileText, [], {
+                language: this.getPageLanguage(),
+                usePageLanguage: true,
+            });
             return response;
         } catch (error) {
             console.error('Profile submission error:', error);
@@ -1679,7 +1730,7 @@ class APIClient {
             const response = await this.chat(
                 'Please analyze skill gaps and missing competencies between my profile and the target job.',
                 [],
-                { language: pageLang }
+                { language: pageLang, usePageLanguage: true }
             );
             return response;
         } catch (error) {
@@ -1689,9 +1740,9 @@ class APIClient {
     }
 
     /**
-     * Sync session render language with current UI language (resume checklist / next generation).
+     * Persist user-selected resume target language to session (render_config.language).
      */
-    async syncSessionLanguageFromUi() {
+    async syncResumeLanguageToSession() {
         if (!this.sessionId || this.useMockMode) {
             return null;
         }
@@ -1699,20 +1750,28 @@ class APIClient {
             await this.ensureBackendAvailable();
             return await this.setResumeLanguage(this.getChatLanguage());
         } catch (error) {
-            console.warn('Session language sync skipped:', error.message);
+            console.warn('Resume language session sync skipped:', error.message);
             return null;
         }
+    }
+
+    /** @deprecated Use syncResumeLanguageToSession — page UI locale must not change resume target. */
+    async syncSessionLanguageFromUi() {
+        return this.syncResumeLanguageToSession();
     }
 
     /**
      * Generate customized resume - triggers content_agent + render_agent
      */
-    async generateResume(instruction = 'Please generate a customized resume based on my experience and target position. Keep all content within one A4 page.', targetContext = null) {
+    async generateResume(instruction = 'Please generate a customized resume based on my experience and target position. Polish each experience entry to align with the target job, add quantified results only when supported by my profile facts, follow industry-standard resume conventions, and never fabricate numbers or achievements. Keep all content within one A4 page.', targetContext = null) {
         try {
             await this.syncTargetJobContext(targetContext);
-            await this.syncSessionLanguageFromUi();
+            await this.syncResumeLanguageToSession();
             const fullInstruction = this._appendTargetContextToInstruction(instruction, targetContext);
-            const response = await this.chat(fullInstruction, []);
+            const response = await this.chat(fullInstruction, [], {
+                language: this.getPageLanguage(),
+                usePageLanguage: true,
+            });
             return response;
         } catch (error) {
             console.error('Resume generation error:', error);
@@ -1878,7 +1937,7 @@ class APIClient {
     /**
      * Optimize resume content via chat (A4 one-page constraint)
      */
-    async optimizeResume(instruction = 'Optimize my resume for the target job. Shorten content to fit one A4 page while keeping key achievements.', targetContext = null) {
+    async optimizeResume(instruction = 'Optimize my resume for the target job. Polish experience entries to highlight role-relevant achievements, add quantified results only when supported by my profile facts, follow industry-standard conventions, and never fabricate numbers. Shorten content to fit one A4 page while keeping key achievements.', targetContext = null) {
         try {
             await this.syncTargetJobContext(targetContext);
             const fullInstruction = this._appendTargetContextToInstruction(instruction, targetContext);
@@ -2069,10 +2128,11 @@ class APIClient {
     /**
      * Start interview session - triggers interview_agent (requires job, profile, resume in session)
      */
-    async startInterviewSession(jobTitle, industry = '', tone = 'professional', targetContext = null, programVersion = 'quick', specializedFocus = '') {
+    async startInterviewSession(jobTitle, industry = '', tone = 'professional', targetContext = null, programVersion = 'quick', specializedFocus = '', language = null) {
         try {
             const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
             await this.syncTargetJobContext(ctx);
+            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
             const message = [
                 'Please generate interview questions based on my job description, candidate profile, and resume content.',
                 `Target role: ${jobTitle || ctx?.jd_text?.split('\n')[0] || 'target position'}.`,
@@ -2083,7 +2143,7 @@ class APIClient {
                 `Program version: ${programVersion}.`,
                 specializedFocus ? `Specialized focus: ${specializedFocus}.` : '',
             ].filter(Boolean).join(' ');
-            const response = await this.chat(message, []);
+            const response = await this.chat(message, [], { language: interviewLang });
             return response;
         } catch (error) {
             console.error('Interview session error:', error);
@@ -2094,7 +2154,7 @@ class APIClient {
     /**
      * Generate reference answers for user-uploaded custom interview questions
      */
-    async generateCustomInterviewAnswers(questions, targetContext = null) {
+    async generateCustomInterviewAnswers(questions, targetContext = null, language = null) {
         try {
             if (!this.sessionId) {
                 this.generateSessionId();
@@ -2102,6 +2162,7 @@ class APIClient {
             const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
             await this.syncTargetJobContext(ctx);
             await this.ensureBackendAvailable();
+            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
             if (this.useMockMode) {
                 await this.mockService.delay(1200);
                 return {
@@ -2113,7 +2174,7 @@ class APIClient {
             const response = await this.client.post('/interview/custom/generate-answers', {
                 session_id: this.sessionId,
                 questions,
-                language: this.getApiLanguage(),
+                language: interviewLang,
             });
             if (response.data.session_id) {
                 this.saveSessionId(response.data.session_id);
@@ -2128,10 +2189,11 @@ class APIClient {
     /**
      * Submit answer and get feedback - triggers question_agent
      */
-    async submitAnswer(questionId, answer) {
+    async submitAnswer(questionId, answer, language = null) {
         try {
+            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
             const message = `Evaluate my answer to question ${questionId}: ${answer}`;
-            const response = await this.chat(message, []);
+            const response = await this.chat(message, [], { language: interviewLang });
             return response;
         } catch (error) {
             console.error('Submit answer error:', error);
@@ -2142,7 +2204,7 @@ class APIClient {
     /**
      * Start interactive multi-turn mock interview
      */
-    async startInteractiveInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 0, programVersion = 'quick', specializedFocus = '', targetContext = null } = {}) {
+    async startInteractiveInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 0, programVersion = 'quick', specializedFocus = '', targetContext = null, language = null } = {}) {
         try {
             if (!this.sessionId) {
                 this.generateSessionId();
@@ -2150,6 +2212,7 @@ class APIClient {
             const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
             await this.syncTargetJobContext(ctx);
             await this.ensureBackendAvailable();
+            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
             if (this.useMockMode) {
                 return await this.mockService.startInteractiveInterview(
                     this.sessionId, tone, jobTitle, industry, maxRounds, programVersion, specializedFocus
@@ -2163,7 +2226,7 @@ class APIClient {
                 max_rounds: maxRounds,
                 program_version: programVersion,
                 specialized_focus: specializedFocus,
-                language: this.getApiLanguage(),
+                language: interviewLang,
             });
             if (response.data.session_id) {
                 this.saveSessionId(response.data.session_id);
@@ -2178,19 +2241,20 @@ class APIClient {
     /**
      * Submit answer in interactive interview, get follow-up question
      */
-    async submitInteractiveTurn(answer) {
+    async submitInteractiveTurn(answer, language = null) {
         try {
             if (!this.sessionId) {
                 throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             await this.ensureBackendAvailable();
+            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
             if (this.useMockMode) {
                 return await this.mockService.submitInteractiveTurn(this.sessionId, answer);
             }
             const response = await this.client.post('/interview/interactive/turn', {
                 session_id: this.sessionId,
                 answer,
-                language: this.getApiLanguage(),
+                language: interviewLang,
             });
             return response.data;
         } catch (error) {
@@ -2202,19 +2266,20 @@ class APIClient {
     /**
      * End interactive interview and generate debrief
      */
-    async endInteractiveInterview(generateDebrief = true) {
+    async endInteractiveInterview(generateDebrief = true, language = null) {
         try {
             if (!this.sessionId) {
                 throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             await this.ensureBackendAvailable();
+            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
             if (this.useMockMode) {
                 return await this.mockService.endInteractiveInterview(this.sessionId, generateDebrief);
             }
             const response = await this.client.post('/interview/interactive/end', {
                 session_id: this.sessionId,
                 generate_debrief: generateDebrief,
-                language: this.getApiLanguage(),
+                language: interviewLang,
             });
             return response.data;
         } catch (error) {
@@ -2335,7 +2400,8 @@ class APIClient {
 
             const response = await this.chat(
                 'Please analyze my skill gaps against the target job and recommend learning resources with estimated study hours. Do not generate a timeline yet.',
-                []
+                [],
+                { usePageLanguage: true }
             );
             return response;
         } catch (error) {
@@ -2357,7 +2423,8 @@ class APIClient {
             await this.syncTargetJobContext(targetContext);
             const response = await this.chat(
                 `Generate my learning timeline with ${dailyHours} hours per day based on the analyzed gaps and resources.`,
-                []
+                [],
+                { usePageLanguage: true }
             );
             return response;
         } catch (error) {

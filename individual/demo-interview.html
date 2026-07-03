@@ -286,6 +286,29 @@
                             <div class="text-xs font-medium" data-i18n="interview.tonePressure">Pressure</div>
                         </div>
                     </div>
+
+                    <div class="mt-5 pt-5 border-t border-gray-100">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.languageLabel">Interview Language</label>
+                        <p class="text-xs text-gray-500 mb-2" data-i18n="interview.languageHint">Questions and feedback will be in this language. Can differ from page language.</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" data-interview-lang="zh" onclick="selectInterviewLanguage('zh')"
+                                class="px-2 py-2 border border-red-300 rounded-lg text-xs font-medium text-red-800 hover:bg-red-50">
+                                <i class="fas fa-comments mr-1"></i><span class="interview-lang-label">Simplified Chinese</span>
+                            </button>
+                            <button type="button" data-interview-lang="zh-TW" onclick="selectInterviewLanguage('zh-TW')"
+                                class="px-2 py-2 border border-rose-300 rounded-lg text-xs font-medium text-rose-800 hover:bg-rose-50">
+                                <i class="fas fa-comments mr-1"></i><span class="interview-lang-label">Traditional Chinese</span>
+                            </button>
+                            <button type="button" data-interview-lang="en" onclick="selectInterviewLanguage('en')"
+                                class="px-2 py-2 border border-blue-300 rounded-lg text-xs font-medium text-blue-800 hover:bg-blue-50">
+                                <i class="fas fa-globe mr-1"></i><span class="interview-lang-label">English</span>
+                            </button>
+                            <button type="button" data-interview-lang="pt" onclick="selectInterviewLanguage('pt')"
+                                class="px-2 py-2 border border-emerald-300 rounded-lg text-xs font-medium text-emerald-800 hover:bg-emerald-50">
+                                <i class="fas fa-globe mr-1"></i><span class="interview-lang-label">Portuguese</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Job Information -->

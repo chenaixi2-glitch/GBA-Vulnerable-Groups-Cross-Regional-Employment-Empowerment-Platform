@@ -12,7 +12,7 @@ from agents.json_contracts import ResumeGenerationOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.resume_generation import RESUME_GENERATION_PROMPT, RESUME_SECTION_UPDATE_PROMPT
 from prompts.resume_language_convert import RESUME_LANGUAGE_CONVERT_PROMPT
-from prompts.resume_constraints import RESUME_PAGE_COMPRESS_PROMPT
+from prompts.resume_constraints import RESUME_PAGE_COMPRESS_PROMPT, RESUME_EXPERIENCE_POLISH_GUIDELINES
 from tools.resume_page_policy import (
     apply_render_config_for_experience,
     page_limit_label,
@@ -26,6 +26,7 @@ from tools.resume_layout import (
     is_cjk_resume_language,
     resume_output_language_instruction,
 )
+from tools.output_language import resolve_resume_target_language
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import (
     CopilotState, ResumeContent, ResumeProfile, ResumeContentMeta,
@@ -38,13 +39,9 @@ logger = get_logger("agent")
 
 
 def _resolve_target_language(state: CopilotState) -> str:
-    if state.resume_language_target:
+    if state.current_intent == "language_convert" and state.resume_language_target:
         return normalize_language(state.resume_language_target)
-    if state.render_config and state.render_config.language:
-        return normalize_language(state.render_config.language)
-    if state.resume_content_json and state.resume_content_json.meta.language:
-        return normalize_language(state.resume_content_json.meta.language)
-    return "zh"
+    return resolve_resume_target_language(state)
 
 
 def _merge_profile_extras_from_candidate(
@@ -185,9 +182,10 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             RESUME_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
         )
     elif intent == "content_edit" and state.resume_content_json:
-        lang = normalize_language(state.resume_content_json.meta.language)
+        lang = _resolve_target_language(state)
         prompt = RESUME_SECTION_UPDATE_PROMPT.format(
             RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
+            RESUME_EXPERIENCE_POLISH_GUIDELINES=RESUME_EXPERIENCE_POLISH_GUIDELINES,
             target_language_label=language_label(lang),
             resume_output_language_instruction=resume_output_language_instruction(lang),
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
@@ -208,6 +206,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             target_language_label=language_label(lang),
             resume_output_language_instruction=resume_output_language_instruction(lang),
             RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
+            RESUME_EXPERIENCE_POLISH_GUIDELINES=RESUME_EXPERIENCE_POLISH_GUIDELINES,
             job_json=job_json,
             profile_json=profile_json,
             edit_instruction=edit_instruction,
@@ -230,8 +229,14 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
 
     target_lang = normalize_language(
         state.resume_language_target
-        or parsed.language
-        or (state.resume_content_json.meta.language if state.resume_content_json else "zh")
+        if state.current_intent == "language_convert" and state.resume_language_target
+        else _resolve_target_language(state)
+    )
+    logger.info(
+        "Resume target language: %s (render_config=%s, chat_output=%s)",
+        target_lang,
+        state.render_config.language if state.render_config else "-",
+        state.chat_output_language or "-",
     )
     resume_content = _build_resume_from_parsed(parsed, state, language=target_lang)
     resume_content = _merge_profile_extras_from_candidate(resume_content, state)

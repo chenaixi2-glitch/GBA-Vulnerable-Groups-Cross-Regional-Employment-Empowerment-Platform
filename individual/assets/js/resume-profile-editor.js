@@ -117,6 +117,7 @@ const ProfileEditor = {
     init() {
         this.bindEvents();
         this.updatePhotoVisibility(typeof currentResumeLanguage !== 'undefined' ? currentResumeLanguage : 'zh');
+        this.updateSaveUi();
     },
 
     bindEvents() {
@@ -509,8 +510,11 @@ const ProfileEditor = {
             this.draft = draft;
             await apiClient.saveResumeDraft(draft);
             this.setSaveStatus(apiClient.isLoggedIn()
-                ? profileUiText('resume.draftSaved', 'Saved (restorable for 12h)')
-                : profileUiText('resume.draftSavedSession', 'Saved for this session'));
+                ? profileUiText('resume.draftSaved', 'Auto-saved (session)')
+                : profileUiText('resume.draftSavedSession', 'Auto-saved for this session'));
+            if (typeof onProfileDraftSaved === 'function') {
+                onProfileDraftSaved();
+            }
         } catch (error) {
             console.error('Draft save failed:', error);
             this.setSaveStatus(profileUiText('resume.draftSaveFailed', 'Save failed — edits kept locally'));
@@ -520,6 +524,64 @@ const ProfileEditor = {
     setSaveStatus(text) {
         const el = document.getElementById('draft-save-status');
         if (el) el.textContent = text;
+    },
+
+    updateSaveUi() {
+        const loggedIn = typeof apiClient !== 'undefined' && apiClient.isLoggedIn();
+        const loginHint = document.getElementById('profile-save-login-hint');
+        const saveBtn = document.getElementById('btn-save-profile');
+        if (loginHint) loginHint.classList.toggle('hidden', loggedIn);
+        if (saveBtn) {
+            saveBtn.disabled = !loggedIn;
+            saveBtn.classList.toggle('opacity-50', !loggedIn);
+            saveBtn.classList.toggle('cursor-not-allowed', !loggedIn);
+        }
+    },
+
+    applyRestoredHint(source) {
+        const hint = document.getElementById('profile-restored-hint');
+        const textEl = document.getElementById('profile-restored-hint-text');
+        if (!hint || !textEl) return;
+        if (source === 'mysql') {
+            textEl.textContent = profileUiText(
+                'resume.draftRestoredMysql',
+                'Restored from your saved account profile — persists after refresh.'
+            );
+        } else {
+            textEl.textContent = profileUiText(
+                'resume.draftRestored',
+                'Your draft was restored from your last session (available for 12 hours while logged in).'
+            );
+        }
+    },
+
+    async saveToAccount() {
+        if (!apiClient.isLoggedIn()) {
+            Utils.showToast(profileUiText('errors.loginToSaveProfile', 'Please log in to save your profile to the website'));
+            return;
+        }
+        if (!document.getElementById('profile-editor-section') || document.getElementById('profile-editor-section').classList.contains('hidden')) {
+            Utils.showToast(profileUiText('resume.toast.noProfileToSave', 'No profile data to save yet'));
+            return;
+        }
+
+        try {
+            Utils.showLoading(profileUiText('resume.toast.savingProfile', 'Saving profile to your account...'));
+            const draft = this.collectDraftFromForm();
+            this.draft = draft;
+            const result = await apiClient.saveProfileToAccount(draft);
+            this.setSaveStatus(profileUiText('resume.profileSavedAccount', 'Saved to account — persists after refresh'));
+            Utils.hideLoading();
+            Utils.showToast(profileUiText('resume.toast.profileSaved', 'Profile saved to your account'));
+            if (typeof onProfileDraftSaved === 'function') {
+                onProfileDraftSaved();
+            }
+            return result;
+        } catch (error) {
+            Utils.hideLoading();
+            Utils.showToast(profileUiText('resume.toast.profileSaveFailed', 'Save failed: {msg}', { msg: error.message }));
+            console.error('Profile save error:', error);
+        }
     },
 
     escapeHtml(str) {
@@ -722,10 +784,18 @@ const ProfileEditor = {
 
     show(restored = false) {
         document.getElementById('empty-state')?.classList.add('hidden');
-        document.getElementById('profile-editor-section')?.classList.remove('hidden');
         const hint = document.getElementById('profile-restored-hint');
         if (hint) hint.classList.toggle('hidden', !restored);
-        document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        this.updateSaveUi();
+        if (typeof setResumeView === 'function') {
+            setResumeView(typeof currentResumeView !== 'undefined' ? currentResumeView : 'edit', { scroll: true });
+        } else {
+            document.getElementById('profile-editor-section')?.classList.remove('hidden');
+            document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (typeof updateResumeViewSwitcher === 'function') {
+            updateResumeViewSwitcher();
+        }
     },
 
     ensureDraftShape(draft) {
@@ -751,7 +821,9 @@ const ProfileEditor = {
             }
             this.draft = this.ensureDraftShape(result.draft);
             this.render();
+            this.applyRestoredHint(result.source);
             this.show(result.restored);
+            this.updateSaveUi();
             return true;
         } catch (error) {
             if (error.message && error.message.includes('404')) return false;
@@ -773,11 +845,10 @@ const ProfileEditor = {
         this.draft = draft;
         this.render();
         this.show(false);
+        this.updateSaveUi();
 
-        document.getElementById('jd-section')?.classList.remove('hidden');
-        if (typeof updateStepIndicator === 'function') {
-            updateStepIndicator(1, 'completed');
-            updateStepIndicator(2, 'active');
+        if (typeof updateProfileContinueUi === 'function') {
+            updateProfileContinueUi(typeof lastChecklistData !== 'undefined' ? lastChecklistData : null);
         }
 
         try {

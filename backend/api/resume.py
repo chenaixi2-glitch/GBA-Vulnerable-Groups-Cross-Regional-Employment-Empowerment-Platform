@@ -120,16 +120,20 @@ class SaveResumeRequest(BaseModel):
     session_id: str
 
 
+class SaveProfileRequest(BaseModel):
+    session_id: str
+    draft: ResumeDraftPayload | None = None
+
+
 @router.get("/draft")
 async def get_resume_draft(request: Request, session_id: str = ""):
-    """获取简历编辑草稿；已登录用户可无 session_id 恢复 12h 内草稿。"""
+    """获取简历编辑草稿；已登录用户可无 session_id 恢复 12h 内草稿或 MySQL 持久化资料。"""
     from api.chat import _aload_state
     from api.draft_utils import profile_to_draft
-    from datetime import datetime, timezone
+    from storage.mysql_client import get_mysql_pool, MySQLStore
+    from workflow.state import CandidateProfile
 
     user = get_optional_user(request)
-    if user:
-        await bind_session_owner(req.session_id, user)
 
     client = await get_redis_client()
 
@@ -140,14 +144,37 @@ async def get_resume_draft(request: Request, session_id: str = ""):
         user_id = user.get("sub")
         if not resolved_session_id:
             resolved_session_id = await RedisDraftStore.get_user_session_id(client, user_id) or ""
+        if resolved_session_id:
+            await bind_session_owner(resolved_session_id, user)
         user_draft = await RedisDraftStore.load_user_draft(client, user_id)
         if user_draft:
             return {
-                "session_id": resolved_session_id,
+                "session_id": resolved_session_id or session_id,
                 "draft": user_draft,
                 "source": "redis_user",
                 "restored": True,
             }
+
+        try:
+            pool = await get_mysql_pool()
+            db = MySQLStore(pool)
+            mysql_row = await db.get_latest_candidate_profile_for_user(user_id)
+            if mysql_row and mysql_row.get("data"):
+                mysql_session_id = mysql_row.get("session_id") or resolved_session_id or session_id
+                if mysql_session_id:
+                    await bind_session_owner(mysql_session_id, user)
+                draft = profile_to_draft(CandidateProfile.model_validate(mysql_row["data"]))
+                if mysql_session_id:
+                    draft_store = RedisDraftStore(client, mysql_session_id, user_id)
+                    await draft_store.save_draft(draft, logged_in=True)
+                return {
+                    "session_id": mysql_session_id,
+                    "draft": draft,
+                    "source": "mysql",
+                    "restored": True,
+                }
+        except Exception as exc:
+            logger.warning("MySQL profile restore failed for user %s: %s", user_id, exc)
 
     if not resolved_session_id:
         raise HTTPException(status_code=404, detail="未找到可恢复的简历草稿")
@@ -198,6 +225,58 @@ async def save_resume_draft(req: SaveDraftRequest, request: Request):
     await sync_draft_to_session(store, req.session_id, draft)
 
     return {"ok": True, "updated_at": draft["updated_at"]}
+
+
+@router.post("/profile/save")
+async def save_profile_to_account(req: SaveProfileRequest, request: Request):
+    """用户确认后将简历编辑资料持久化到 MySQL（同时写入 Redis 草稿）。"""
+    from api.chat import _aload_state, _persist_to_mysql_safe
+    from api.draft_utils import sync_draft_to_session
+    from datetime import datetime, timezone
+
+    user = get_optional_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="请先登录后再保存到网站")
+
+    await bind_session_owner(req.session_id, user)
+    await ensure_session_access(req.session_id, user)
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    saved = await store.load_state()
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    user_id = user.get("sub")
+    draft_store = RedisDraftStore(client, req.session_id, user_id)
+
+    if req.draft is not None:
+        draft = req.draft.model_dump()
+        draft["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await draft_store.save_draft(draft, logged_in=True)
+        await sync_draft_to_session(store, req.session_id, draft)
+    else:
+        draft = await draft_store.load_draft()
+        if draft:
+            await sync_draft_to_session(store, req.session_id, draft)
+
+    saved = await _aload_state(store)
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    state = CopilotState.model_validate(saved)
+    if state.candidate_profile is None:
+        raise HTTPException(status_code=400, detail="没有可保存的简历资料，请先上传并解析简历")
+
+    await _persist_to_mysql_safe(state, user_id)
+
+    updated_at = (req.draft.updated_at if req.draft else None) or datetime.now(timezone.utc).isoformat()
+    return {
+        "ok": True,
+        "message": "Profile saved securely to your account.",
+        "session_id": req.session_id,
+        "updated_at": updated_at,
+    }
 
 
 @router.post("/save")

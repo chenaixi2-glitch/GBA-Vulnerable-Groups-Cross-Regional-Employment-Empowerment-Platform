@@ -292,17 +292,20 @@
         function renderPortalAccessBanner(access) {
             const banner = document.getElementById('portal-access-banner');
             if (!banner || !access) return;
+            const typesLabel = (window.GBAI18n && GBAI18n.formatGroupTypes)
+                ? GBAI18n.formatGroupTypes(access.group_types || [])
+                : (access.group_types_label || portalT('portal.bannerVulnerablePrefix', 'Vulnerable-group user'));
             if (access.is_vulnerable) {
                 banner.className = 'mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm';
-                banner.innerHTML = '<i class="fas fa-gift mr-2"></i><strong>' + portalT('portal.bannerVulnerablePrefix', '弱势群体用户') + '</strong>：您已识别为「' + (access.group_types_label || portalT('portal.bannerVulnerablePrefix', '弱势群体')) + '」' + portalT('portal.bannerVulnerableSuffix', '，平台功能') + '<strong>' + portalT('portal.bannerVulnerableFree', '免费') + '</strong>' + portalT('portal.bannerVulnerableUse', '使用。');
+                banner.innerHTML = '<i class="fas fa-gift mr-2"></i><strong>' + portalT('portal.bannerVulnerablePrefix', 'Vulnerable-group user') + '</strong>' + portalT('portal.bannerVulnerableMiddle', ': you are identified as「') + typesLabel + '」' + portalT('portal.bannerVulnerableSuffix', ', platform features are ') + '<strong>' + portalT('portal.bannerVulnerableFree', 'free') + '</strong>' + portalT('portal.bannerVulnerableUse', '.');
                 banner.classList.remove('hidden');
             } else if (access.requires_donation) {
                 banner.className = 'mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex flex-wrap items-center justify-between gap-3';
-                banner.innerHTML = '<span><i class="fas fa-hand-holding-heart mr-2"></i>' + portalT('portal.bannerDonation', '使用平台功能需向') + '<strong>' + portalT('portal.bannerDonationStrong', '弱势群体法律服务') + '</strong>' + portalT('portal.bannerDonationSuffix', '捐款箱捐款（金额不限）') + '</span><a href="donation-legal.html" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">' + portalT('portal.goDonation', '前往捐款箱') + '</a>';
+                banner.innerHTML = '<span><i class="fas fa-hand-holding-heart mr-2"></i>' + portalT('portal.bannerDonation', 'Using platform features requires a donation to') + '<strong>' + portalT('portal.bannerDonationStrong', 'Legal Aid for Vulnerable Groups') + '</strong>' + portalT('portal.bannerDonationSuffix', ' (any amount)') + '</span><a href="donation-legal.html" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">' + portalT('portal.goDonation', 'Go to donation box') + '</a>';
                 banner.classList.remove('hidden');
             } else if (access.has_access) {
                 banner.className = 'mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm';
-                banner.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + portalT('portal.bannerUnlocked', '您已完成捐款，平台功能已解锁。感谢您的爱心支持！');
+                banner.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + portalT('portal.bannerUnlocked', 'Donation complete — platform features are unlocked. Thank you for your support!');
                 banner.classList.remove('hidden');
             } else {
                 banner.classList.add('hidden');
@@ -315,7 +318,7 @@
             el.classList.remove('hidden');
             el.textContent = portalT(
                 'portal.statsLine',
-                '已投递 {apps} 个 · 合作网站投递 {ext} 次',
+                '{apps} applications · {ext} external site visits',
                 {
                     apps: stats.data.total_applications || 0,
                     ext: stats.data.external_interests || 0

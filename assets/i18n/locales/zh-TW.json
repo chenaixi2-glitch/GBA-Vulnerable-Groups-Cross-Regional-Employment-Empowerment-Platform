@@ -8,6 +8,56 @@
     "retry": "請重试",
     "openSourceSite": "打开源站"
   },
+  "meta": {
+    "listSeparator": "、",
+    "groupTypes": {
+      "disability": "殘疾人士",
+      "elderly_45plus": "45歲以上勞動者",
+      "career_returner": "職場回歸女性",
+      "youth": "低收入青年"
+    },
+    "gender": {
+      "male": "男",
+      "female": "女",
+      "other": "其他",
+      "prefer_not_say": "不願透露"
+    },
+    "disabilityTypes": {
+      "none": "無",
+      "physical": "肢體殘疾",
+      "visual": "視力殘疾",
+      "hearing": "聽力殘疾",
+      "intellectual": "智力殘疾",
+      "mental": "精神殘疾",
+      "other": "其他殘疾"
+    }
+  },
+  "legalServices": {
+    "title": "弱勢群體法律服務",
+    "subtitle": "由平台捐款箱全額資助。用戶可上傳法律訴求申請，律師/志願者接單或平台協助聯繫",
+    "fundPromise": "捐款箱募集到的資金將全額用於該服務，不收取任何管理費用。",
+    "contactHours": "週一至週五 9:00–18:00",
+    "labor_rights": {
+      "title": "勞動權益諮詢",
+      "description": "為弱勢群體提供勞動合同、工資福利、工傷認定等基礎勞動法律諮詢與維權指引。"
+    },
+    "cross_border": {
+      "title": "跨境就業法律指導",
+      "description": "粵港澳大灣區跨境就業簽證、工作許可、社保銜接等合規問題專項解答。"
+    },
+    "anti_discrimination": {
+      "title": "反就業歧視法律援助",
+      "description": "針對年齡、殘疾、性別等就業歧視情形，提供投訴渠道與法律支持對接。"
+    },
+    "disability_employment": {
+      "title": "殘疾人士就業權益",
+      "description": "合理便利申請、無障礙就業環境、殘疾證相關權益等專項服務。"
+    },
+    "career_return": {
+      "title": "職場回歸女性支持",
+      "description": "職業空窗期再就業相關的法律權益保護與協商指導。"
+    }
+  },
   "home": {
     "title": "粵港澳大灣區跨區域就業賦能",
     "subtitle": "連接大灣區弱勢群體與包容型僱主，提供智能崗位匹配、職業工具與一站式在線投遞服務。",
@@ -19,7 +69,11 @@
     "benefits": "服務對象",
     "stories": "成功案例",
     "faq": "常見問題",
-    "cta": "開啟跨區域就業賦能之旅"
+    "cta": "開啟跨區域就業賦能之旅",
+    "navFriendlyJobs": "友好崗位",
+    "navFriendlyEmployers": "友好企業",
+    "heroFriendlyJobs": "弱勢群體友好崗位",
+    "navMyApplications": "我的投遞"
   },
   "individual": {
     "title": "個人就業賦能門戶",
@@ -91,6 +145,7 @@
     "pasteLabel": "或貼上履歷文本",
     "pastePlaceholder": "在此貼上當前履歷內容...",
     "continueStep2": "繼續到步驟 2",
+    "analyzeResume": "解析履歷",
     "step2Title": "步驟 2：目標職位描述",
     "jdLabel": "貼上你目標職位的描述",
     "jdOptionalHint": "可選 — 在上方文本框填寫職位名稱或 JD 草稿，選擇行業、單位性質與經驗等級後點擊生成；留空則僅根據選項生成。",
@@ -136,13 +191,25 @@
     "checklistTitle": "履歷格式檢查",
     "checklistDesc": "根據中/英文履歷規範對比照片、排版、模組、用詞等差異，提醒補充缺失內容",
     "gapAnalysisTitle": "技能差距分析",
+    "viewEdit": "編輯資料",
+    "viewPreview": "生成預覽",
+    "viewSwitcherHint": "可在編輯解析資料與查看生成履歷之間切換。修改資料後需重新生成以更新預覽。",
     "previewTitle": "生成的履歷預覽",
     "a4Badge": "A4 單頁",
     "optimizeA4": "優化（A4）",
     "previewEmpty": "生成的履歷將顯示在此處",
     "profileEditorTitle": "履歷分析結果",
     "profileEditorDesc": "每項單獨解析存儲。可在下方添加或編輯條目。",
+    "profileRequiredHint": "請補全下方標有「必填」的欄位後再進入步驟 2。",
+    "profileRequiredCount": "（還剩 {count} 項）",
+    "profileContinueStep2": "確認並繼續到步驟 2",
+    "profileContinueHint": "必填項在上方編輯區以紅色標記顯示。",
     "draftRestored": "已從上次會話恢復草稿（登入狀態下保留 12 小時）。",
+    "draftRestoredMysql": "已從您的帳戶恢復上次保存的履歷資料，刷新後仍可查看。",
+    "saveProfileToAccount": "保存到帳戶",
+    "profileSavedAccount": "已保存到帳戶（刷新後仍可恢復）",
+    "profileSaveLoginHint": "登入後可將資料永久保存到帳戶，刷新頁面後仍可恢復。",
+    "profileSaveLoginLink": "去登入",
     "name": "姓名",
     "email": "郵箱",
     "phone": "電話",
@@ -314,7 +381,7 @@
     "regenerate": "重新生成",
     "cancel": "取消",
     "optModalTitle": "履歷優化 · 補充信息",
-    "optModalDesc": "請回答以下問題，以便更精準地優化履歷（標 * 為必填）。",
+    "optModalDesc": "請回答以下問題，以便更精準地優化履歷。若經歷缺少量化數據，可補充真實數字；若無相關數據可留空（標 * 為必填）。",
     "submitGenerate": "提交並生成履歷",
     "saveModalTitle": "是否保存履歷到賬戶？",
     "saveModalBody": "導出前可將此履歷保存至 GBA 平台。數據加密傳輸、安全存儲，僅用於職業服務，絕不出售個人信息。",
@@ -336,6 +403,11 @@
       "fileUploaded": "文件上傳成功",
       "uploadOrPaste": "請上傳文件或粘贴履歷文本",
       "analyzed": "履歷分析完成",
+      "analyzedWithRequired": "履歷已解析 — 請補全下方 {count} 項必填內容",
+      "validatingProfile": "正在檢查必填項…",
+      "requiredFieldsMissing": "請先補全必填項：{labels}",
+      "profileReadyForStep2": "資料已完整，可繼續填寫目標崗位",
+      "validateProfileFailed": "資料校驗失敗：{msg}",
       "uploadFailed": "上傳履歷失敗：{msg}",
       "pasteOrSelectJd": "請粘贴崗位描述，或选择行业、单位性质与经验等级以自动生成",
       "jdGenerateRetry": "无法生成崗位描述，請重试或手动粘贴",
@@ -381,6 +453,10 @@
       "exportFailed": "匯出失敗：{msg}",
       "pdfFallbackConfirm": "服务端 PDF 匯出暂不可用。\n\n是否改用浏览器打印？\n請在打印对话框中选择「另存为 PDF」或「Microsoft Print to PDF」。",
       "savingToAccount": "正在保存到您的帳戶…",
+      "savingProfile": "正在保存資料到您的帳戶…",
+      "profileSaved": "履歷資料已保存到您的帳戶",
+      "profileSaveFailed": "保存失敗：{msg}",
+      "noProfileToSave": "暫無可保存的履歷資料",
       "generatingJd": "正在生成建议崗位描述…",
       "uploadingResume": "正在上傳履歷…",
       "analyzingJd": "正在分析崗位描述…",
@@ -403,6 +479,8 @@
       "jobTitleRequired": "請先输入目标崗位名称",
       "regenerateFailed": "重新生成失敗：{msg}",
       "requiredQuestions": "請先回答标有 * 的必填问题",
+      "quantHint": "部分經歷缺少量化描述。若您有真實可驗證的數據（如服務用戶數、性能提升比例、團隊規模等），請在下方補充；若無相關數據可留空，系統不會編造數字。",
+      "quantAnswerPlaceholder": "如有真實數據請填寫（如：服務 1 萬用戶、響應速度提升 30%）；無則留空",
       "regeneratingJd": "正在根据您的履歷重新生成崗位描述…",
       "analyzingForJd": "正在分析您的履歷并生成针对性崗位描述…"
     },
@@ -545,7 +623,8 @@
     "terms": "服務條款",
     "contact": "聯繫支持",
     "bannerVulnerablePrefix": "弱勢群體用戶",
-    "bannerVulnerableSuffix": "，平台功能",
+    "bannerVulnerableMiddle": "：您已識別為「",
+    "bannerVulnerableSuffix": "」，平台功能",
     "bannerVulnerableFree": "免費",
     "bannerVulnerableUse": "使用。",
     "bannerDonation": "使用平台功能需向",
@@ -576,6 +655,8 @@
     "generateResume": "生成履歷內容",
     "settingsTitle": "面試官設置",
     "interviewStyle": "面試風格",
+    "languageLabel": "面試語言",
+    "languageHint": "面試題與回饋將使用此語言，可與頁面語言不同。",
     "toneProfessional": "專業",
     "toneFriendly": "友好",
     "tonePressure": "壓力",
@@ -883,6 +964,7 @@
     "noInterviewSession": "未找到面試工作階段。",
     "draftNotFound": "草稿未找到。",
     "loginToSaveResume": "請先登入后再保存履歷到網站。",
+    "loginToSaveProfile": "請先登入后再保存履歷資料到網站。",
     "loginToSaveInterview": "請先登入后再保存模擬面試。",
     "loginToViewInterviews": "請先登入后查看已保存的模擬面試。",
     "loginToSaveLearningPath": "請先登入后保存學習路徑。",

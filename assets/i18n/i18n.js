@@ -37,6 +37,68 @@
     var localeCache = {};
     var currentLang = 'en';
 
+    /** English fallbacks for server-side meta keys (no en.json locale file) */
+    var META_FB = {
+        groupTypes: {
+            disability: 'People with disabilities',
+            elderly_45plus: 'Workers aged 45+',
+            career_returner: 'Career-returning women',
+            youth: 'Low-income youth'
+        },
+        gender: {
+            male: 'Male',
+            female: 'Female',
+            other: 'Other',
+            prefer_not_say: 'Prefer not to say'
+        },
+        disabilityTypes: {
+            none: 'None',
+            physical: 'Physical disability',
+            visual: 'Visual disability',
+            hearing: 'Hearing disability',
+            intellectual: 'Intellectual disability',
+            mental: 'Mental disability',
+            other: 'Other disability'
+        }
+    };
+
+    var LEGAL_SERVICES_FB = {
+        title: 'Legal aid for vulnerable groups',
+        subtitle: 'Fully funded by the platform donation box. Users can submit legal requests; lawyers, volunteers or the platform can assist.',
+        fundPromise: '100% of donations fund this service — no administrative fees.',
+        contactHours: 'Mon–Fri 9:00–18:00',
+        labor_rights: {
+            title: 'Labor rights consultation',
+            description: 'Basic labor law advice on contracts, pay, benefits, workplace injury recognition and rights guidance for vulnerable groups.'
+        },
+        cross_border: {
+            title: 'Cross-border employment guidance',
+            description: 'Visa, work permits and social insurance continuity for Greater Bay Area cross-border employment.'
+        },
+        anti_discrimination: {
+            title: 'Anti-discrimination legal aid',
+            description: 'Complaint channels and legal support for age, disability, gender and other employment discrimination.'
+        },
+        disability_employment: {
+            title: 'Disability employment rights',
+            description: 'Reasonable accommodation, accessible workplaces and disability certificate related rights.'
+        },
+        career_return: {
+            title: 'Career-returning women support',
+            description: 'Legal rights and negotiation guidance for re-employment after career gaps.'
+        }
+    };
+
+    /** Map Chinese API messages → English when UI language is English */
+    var EN_API_MESSAGES = {
+        '您属于弱势群体，平台各项功能免费使用，无需捐款': 'You belong to a vulnerable group — platform features are free; no donation required.',
+        '感谢您的爱心捐款！资金将全额用于弱势群体法律服务。': 'Thank you for your donation! All funds go to legal aid for vulnerable groups.',
+        '请输入有效的捐款金额（大于 0，不限上限）': 'Please enter a valid donation amount (greater than 0).',
+        '单次捐款金额超出上限': 'Donation amount exceeds the maximum limit.',
+        '用户不存在': 'User not found.',
+        '请先完善个人资料（年龄、性别、收入等）': 'Please complete your profile (age, gender, income, etc.) first.'
+    };
+
     function getLang() {
         try {
             var saved = localStorage.getItem(LANG_KEY);
@@ -120,14 +182,61 @@
         return raw.replace(trimmed, translated);
     }
 
+    function tMetaOption(category, key, serverLabel) {
+        if (!key) return serverLabel || '';
+        var fbMap = META_FB[category] || {};
+        var fb = fbMap[key] || serverLabel || key;
+        return t('meta.' + category + '.' + key, fb);
+    }
+
+    function formatGroupTypes(types) {
+        var list = Array.isArray(types) ? types : [];
+        if (!list.length) return '';
+        var sep = t('meta.listSeparator', ', ');
+        return list.map(function (key) {
+            return tMetaOption('groupTypes', key, key);
+        }).join(sep);
+    }
+
+    function translateOptionMap(options, category) {
+        if (!options || typeof options !== 'object') return options || {};
+        var out = {};
+        Object.keys(options).forEach(function (key) {
+            out[key] = tMetaOption(category, key, options[key]);
+        });
+        return out;
+    }
+
+    function translateLegalServicesData(data) {
+        if (!data) return data;
+        var translated = Object.assign({}, data);
+        translated.title = t('legalServices.title', LEGAL_SERVICES_FB.title);
+        translated.subtitle = t('legalServices.subtitle', LEGAL_SERVICES_FB.subtitle);
+        translated.fund_promise = t('legalServices.fundPromise', LEGAL_SERVICES_FB.fundPromise);
+        translated.services = (data.services || []).map(function (s) {
+            var svcFb = LEGAL_SERVICES_FB[s.id] || {};
+            return Object.assign({}, s, {
+                title: t('legalServices.' + s.id + '.title', svcFb.title || s.title),
+                description: t('legalServices.' + s.id + '.description', svcFb.description || s.description)
+            });
+        });
+        if (data.contact) {
+            translated.contact = Object.assign({}, data.contact, {
+                hours: t('legalServices.contactHours', LEGAL_SERVICES_FB.contactHours)
+            });
+        }
+        return translated;
+    }
+
     /** Translate API / backend / thrown Error messages shown to users */
     function tApiMessage(raw) {
         if (raw == null) return '';
         var text = String(raw);
-        if (!text || currentLang === 'en') return text;
+        if (!text) return text;
+        var trimmed = text.trim();
+        if (currentLang === 'en' && EN_API_MESSAGES[trimmed]) return EN_API_MESSAGES[trimmed];
         var data = localeCache[currentLang];
         if (!data) return text;
-        var trimmed = text.trim();
         if (data.apiMessages && data.apiMessages[trimmed]) return data.apiMessages[trimmed];
         if (data.strings && data.strings[trimmed]) return data.strings[trimmed];
         var prefixes = [
@@ -218,6 +327,10 @@
         setText('[data-i18n="section-faq-title"]', pageText('[data-i18n="section-faq-title"]', 'faq'));
         setText('[data-i18n="section-cta-title"]', pageText('[data-i18n="section-cta-title"]', 'cta'));
         setText('[data-i18n="hero-open-demos"]', pageText('[data-i18n="hero-open-demos"]', 'open'));
+        setText('[data-i18n="home.navFriendlyJobs"]', pageText('[data-i18n="home.navFriendlyJobs"]', 'navFriendlyJobs'));
+        setText('[data-i18n="home.navFriendlyEmployers"]', pageText('[data-i18n="home.navFriendlyEmployers"]', 'navFriendlyEmployers'));
+        setText('[data-i18n="home.heroFriendlyJobs"]', pageText('[data-i18n="home.heroFriendlyJobs"]', 'heroFriendlyJobs'));
+        setText('[data-i18n="home.navMyApplications"]', pageText('[data-i18n="home.navMyApplications"]', 'navMyApplications'));
     }
 
     function applyDataI18n(lang) {
@@ -515,6 +628,10 @@
         t: t,
         uiText: uiText,
         tApiMessage: tApiMessage,
+        tMetaOption: tMetaOption,
+        formatGroupTypes: formatGroupTypes,
+        translateOptionMap: translateOptionMap,
+        translateLegalServicesData: translateLegalServicesData,
         initLanguage: initLanguage,
         uiLangToApiLang: uiLangToApiLang,
         apiLangToUiLang: apiLangToUiLang,

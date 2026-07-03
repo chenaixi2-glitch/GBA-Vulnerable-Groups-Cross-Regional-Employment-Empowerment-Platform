@@ -5,12 +5,13 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from agents.json_contracts import GapAnalysisOutput, GapOutput, QuestionOutput
+from agents.json_contracts import GapAnalysisOutput, GapOutput, QuestionOutput, ExperienceRemovalOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.gap_analysis import GAP_ANALYSIS_PROMPT
-from tools.output_language import prompt_language_kwargs
+from tools.output_language import gap_prompt_language_kwargs
+from tools.quantification_questions import supplement_quantification_gaps_and_questions
 from tools.target_job_context import build_enriched_job_json
-from workflow.state import CopilotState, Gap, Question
+from workflow.state import CopilotState, Gap, Question, ExperienceRemoval
 from log import get_logger
 
 logger = get_logger("agent")
@@ -57,19 +58,43 @@ def build_questions(items: list[QuestionOutput]) -> list[Question]:
     return questions
 
 
+def build_experience_removals(items: list[ExperienceRemovalOutput]) -> list[ExperienceRemoval]:
+    removals: list[ExperienceRemoval] = []
+    for item in items:
+        removals.append(ExperienceRemoval(
+            id=item.id or f"rem_{uuid.uuid4().hex[:12]}",
+            fact_id=item.fact_id,
+            section_type=item.section_type,
+            title=item.title,
+            reason=item.reason,
+            priority=item.priority or "recommended",
+            user_confirmed=False,
+        ))
+    return removals
+
+
 async def run_gap_analysis(
     state: CopilotState,
     *,
     resolution_source: str = "gap_analysis",
-) -> tuple[list[Gap], list[Question]]:
-    """Run shared JD vs profile gap analysis (gaps + follow-up questions)."""
+) -> tuple[list[Gap], list[Question], list[ExperienceRemoval]]:
+    """Run shared JD vs profile gap analysis (gaps + follow-up questions + removal proposals)."""
     if not has_gap_analysis_context(state):
-        return [], []
+        return [], [], []
+
+    lang_kwargs = gap_prompt_language_kwargs(state)
+    logger.info(
+        "Gap analysis output language: %s (chat=%s, ui=%s, render=%s)",
+        lang_kwargs["output_language"],
+        state.chat_output_language or "-",
+        (state.meta.ui_output_language if state.meta else "") or "-",
+        state.render_config.language if state.render_config else "-",
+    )
 
     prompt = GAP_ANALYSIS_PROMPT.format(
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
-        **prompt_language_kwargs(state),
+        **lang_kwargs,
     )
     llm = get_llm()
     parsed = await ainvoke_json_with_schema(
@@ -77,5 +102,15 @@ async def run_gap_analysis(
     )
     gaps = build_gaps(parsed.gaps, resolution_source=resolution_source)
     questions = build_questions(parsed.questions_to_ask)
-    logger.info("Shared gap analysis: %d gaps, %d questions", len(gaps), len(questions))
-    return gaps, questions
+    removals = build_experience_removals(parsed.experiences_to_remove)
+    gaps, questions = supplement_quantification_gaps_and_questions(
+        state.candidate_profile,
+        gaps,
+        questions,
+        language=lang_kwargs.get("output_language"),
+    )
+    logger.info(
+        "Shared gap analysis: %d gaps, %d questions, %d removal proposals",
+        len(gaps), len(questions), len(removals),
+    )
+    return gaps, questions, removals

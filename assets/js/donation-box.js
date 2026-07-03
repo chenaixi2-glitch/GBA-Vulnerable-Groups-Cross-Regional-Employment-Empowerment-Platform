@@ -246,7 +246,11 @@
       if (access.is_vulnerable) {
         vulnNotice.classList.remove('hidden');
         const labelEl = container.querySelector('#vulnerable-types-label');
-        if (labelEl) labelEl.textContent = access.group_types_label || dT('donation.identified', 'Identified');
+        if (labelEl) {
+          labelEl.textContent = (global.GBAI18n && global.GBAI18n.formatGroupTypes)
+            ? global.GBAI18n.formatGroupTypes(access.group_types || [])
+            : (access.group_types_label || dT('donation.identified', 'Identified'));
+        }
         form.classList.add('hidden');
         banner.classList.add('bg-green-50', 'border', 'border-green-200', 'text-green-800');
         banner.innerHTML = '<i class="fas fa-gift mr-1"></i>' + dT('donation.vulnerableFree', 'Vulnerable group users: platform features are permanently free');

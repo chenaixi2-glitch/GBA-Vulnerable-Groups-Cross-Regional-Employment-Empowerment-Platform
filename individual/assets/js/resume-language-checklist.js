@@ -453,12 +453,92 @@ function applyFormatCheckToProfileEditor(checklist) {
     renderOrphanFormatHints(orphaned, labels);
 }
 
+function getRequiredMissingFromChecklist(checklist) {
+    const items = checklist?.items || [];
+    return items.filter((item) => item.missing && item.severity === 'required');
+}
+
+function ensureEditViewForProfileNavigation() {
+    if (typeof currentResumeView !== 'undefined' && currentResumeView === 'edit') return false;
+    if (typeof setResumeView === 'function') {
+        setResumeView('edit');
+        return true;
+    }
+    document.getElementById('profile-editor-section')?.classList.remove('hidden');
+    document.getElementById('resume-preview-section')?.classList.add('hidden');
+    return true;
+}
+
+function scrollToChecklistField(item) {
+    ensureEditViewForProfileNavigation();
+    const selector = resolveFormatCheckTarget(item);
+    if (!selector) {
+        document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    const container = getFormatCheckContainer(selector);
+    if (!container) {
+        document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const focusable = container.querySelector('input:not([type="file"]), textarea, select, button');
+    if (focusable && typeof focusable.focus === 'function') {
+        setTimeout(() => focusable.focus({ preventScroll: true }), 300);
+    }
+}
+
+function updateProfileContinueUi(checklist) {
+    const section = document.getElementById('profile-continue-section');
+    const banner = document.getElementById('profile-required-banner');
+    const countEl = document.getElementById('profile-required-count');
+    if (!section) return;
+
+    const profileVisible = !document.getElementById('profile-editor-section')?.classList.contains('hidden');
+    const jdHidden = document.getElementById('jd-section')?.classList.contains('hidden');
+    section.classList.toggle('hidden', !profileVisible || !jdHidden);
+
+    const required = getRequiredMissingFromChecklist(checklist || lastChecklistData);
+    const missingCount = required.length;
+
+    if (banner) {
+        banner.classList.toggle('hidden', !profileVisible || !jdHidden || missingCount === 0);
+    }
+    if (countEl) {
+        countEl.textContent = missingCount > 0
+            ? uiText('resume.profileRequiredCount', '({count} remaining)', { count: missingCount })
+            : '';
+    }
+}
+
+async function refreshAndValidateRequiredFields() {
+    if (typeof syncDraftBeforeGenerate === 'function') {
+        await syncDraftBeforeGenerate();
+    }
+    const lang = normalizeResumeLang(
+        typeof currentResumeLanguage !== 'undefined' ? currentResumeLanguage : 'zh'
+    );
+    const employerType = document.getElementById('employer-type-select')?.value || '';
+    let checklist;
+    try {
+        checklist = await apiClient.getLanguageChecklist(lang, employerType);
+    } catch (error) {
+        console.warn('Checklist validation failed:', error.message);
+        return { valid: true, required: [], checklist: lastChecklistData };
+    }
+    renderLanguageChecklistPanel(checklist);
+    const required = getRequiredMissingFromChecklist(checklist);
+    updateProfileContinueUi(checklist);
+    return { valid: required.length === 0, required, checklist };
+}
+
 function renderLanguageChecklistPanel(checklist) {
     lastRawChecklistData = checklist || null;
     const localized = localizeChecklist(checklist);
     lastChecklistData = localized || null;
     document.getElementById('language-checklist-section')?.classList.add('hidden');
     applyFormatCheckToProfileEditor(localized);
+    updateProfileContinueUi(localized);
 }
 
 function syncResumeLanguageButtons() {
@@ -549,6 +629,7 @@ async function onResumeLanguageSelected(language) {
         await refreshLanguageChecklist(currentResumeLanguage);
     }
 
+    ensureEditViewForProfileNavigation();
     document.getElementById('profile-editor-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -557,50 +638,15 @@ function defaultResumeLanguageFromUi() {
     return GBAI18n.uiLangToApiLang(GBAI18n.getLang());
 }
 
-async function syncResumeLanguageFromUi(options = {}) {
-    const { silent = true } = options;
+/** Refresh resume-language UI labels when page locale changes — never overwrite user-selected resume target. */
+function refreshResumeLanguageUiOnPageLangChange() {
     if (typeof currentResumeLanguage === 'undefined') return;
-
-    const uiLang = defaultResumeLanguageFromUi();
-    if (normalizeResumeLang(uiLang) === normalizeResumeLang(currentResumeLanguage)) {
-        return;
-    }
-
-    currentResumeLanguage = uiLang;
     updateResumeLanguageBadge(currentResumeLanguage);
-    if (typeof ProfileEditor !== 'undefined' && ProfileEditor.updatePhotoVisibility) {
-        ProfileEditor.updatePhotoVisibility(currentResumeLanguage);
-    }
-    if (typeof ProfileEditor !== 'undefined' && ProfileEditor.draft) {
-        ProfileEditor.render();
-    }
     syncResumeLanguageButtons();
-
-    try {
-        if (typeof apiClient !== 'undefined' && apiClient.sessionId) {
-            const result = await apiClient.syncSessionLanguageFromUi();
-            if (result?.language_checklist) {
-                renderLanguageChecklistPanel(result.language_checklist);
-            } else {
-                await refreshLanguageChecklist(currentResumeLanguage);
-            }
-        }
-    } catch (error) {
-        if (!silent) {
-            console.warn('Resume language sync failed:', error.message);
-        }
-    }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof currentResumeLanguage === 'undefined') return;
-    currentResumeLanguage = defaultResumeLanguageFromUi();
-    updateResumeLanguageBadge(currentResumeLanguage);
-    syncResumeLanguageButtons();
-});
-
 window.addEventListener('gba:language-changed', () => {
-    syncResumeLanguageFromUi({ silent: true });
+    refreshResumeLanguageUiOnPageLangChange();
     syncResumeLanguageButtons();
     if (typeof updateResumeLanguageBadge === 'function' && typeof currentResumeLanguage !== 'undefined') {
         updateResumeLanguageBadge(currentResumeLanguage);
