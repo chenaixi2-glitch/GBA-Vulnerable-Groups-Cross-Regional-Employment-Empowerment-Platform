@@ -2,6 +2,7 @@
 
 from tools.jd_cache import (
     extract_title_from_jd,
+    ensure_title_in_jd_text,
     is_title_only,
     jd_text_hash,
     normalize_job_title,
@@ -37,3 +38,22 @@ def test_params_cache_key():
     k1 = params_cache_key("Technology", "private", "Mid Level")
     k2 = params_cache_key("technology", "private", "mid level")
     assert k1 == k2
+
+
+def test_ensure_title_in_jd_text_prepends_when_missing():
+    body = "岗位职责：\n- 开发后端服务\n\n任职要求：\n- 3年以上经验"
+    result = ensure_title_in_jd_text("Java 开发工程师", body, "zh")
+    assert result.startswith("岗位名称：Java 开发工程师")
+    assert "岗位职责：" in result
+
+
+def test_ensure_title_in_jd_text_keeps_existing_title_line():
+    body = "岗位名称：产品经理\n\n岗位职责：\n- 负责需求"
+    result = ensure_title_in_jd_text("产品经理", body, "zh")
+    assert result == body
+
+
+def test_ensure_title_in_jd_text_english():
+    body = "Key Responsibilities:\n- Build APIs"
+    result = ensure_title_in_jd_text("Backend Engineer", body, "en")
+    assert result.startswith("Job Title: Backend Engineer")

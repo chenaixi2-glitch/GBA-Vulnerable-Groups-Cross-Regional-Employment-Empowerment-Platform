@@ -103,7 +103,7 @@ def _job_result(
     }
 
 
-async def _parse_jd_with_llm(jd_text: str) -> JDAnalysisOutput:
+async def _parse_jd_with_llm(jd_text: str, state: CopilotState) -> JDAnalysisOutput:
     prompt = JD_ANALYSIS_PROMPT.format(
         jd_text=jd_text,
         **prompt_language_kwargs(state),
@@ -152,7 +152,7 @@ async def jd_node_async(state: CopilotState) -> dict[str, Any]:
             if cached.get("parsed_job"):
                 job = _build_job(state, source=effective_jd, parsed_dict=cached["parsed_job"])
             else:
-                parsed = await _parse_jd_with_llm(effective_jd)
+                parsed = await _parse_jd_with_llm(effective_jd, state)
                 await save_jd_cache(
                     jd_text=effective_jd,
                     title=parsed.title,
@@ -193,7 +193,7 @@ async def jd_node_async(state: CopilotState) -> dict[str, Any]:
 
     # 4) LLM 解析 JD
     try:
-        parsed = await _parse_jd_with_llm(jd_text)
+        parsed = await _parse_jd_with_llm(jd_text, state)
     except RuntimeError as exc:
         logger.error("JD Agent failed: %s", exc)
         return {

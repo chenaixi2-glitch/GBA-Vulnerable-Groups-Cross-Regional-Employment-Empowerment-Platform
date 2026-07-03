@@ -24,6 +24,7 @@ from tools.resume_layout import (
     normalize_language,
     opposite_language,
     is_cjk_resume_language,
+    resume_output_language_instruction,
 )
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import (
@@ -178,6 +179,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             source_language_label=language_label(source_lang),
             target_language_label=language_label(target_lang),
             target_language=target_lang,
+            resume_output_language_instruction=resume_output_language_instruction(target_lang),
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
             job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
             RESUME_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
@@ -187,6 +189,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
         prompt = RESUME_SECTION_UPDATE_PROMPT.format(
             RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
             target_language_label=language_label(lang),
+            resume_output_language_instruction=resume_output_language_instruction(lang),
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
             job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
             edit_instruction=state.user_message,
@@ -203,6 +206,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
         prompt = RESUME_GENERATION_PROMPT.format(
             target_language=lang,
             target_language_label=language_label(lang),
+            resume_output_language_instruction=resume_output_language_instruction(lang),
             RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
             job_json=job_json,
             profile_json=profile_json,
@@ -298,10 +302,12 @@ async def compress_resume_for_page_limit_async(
     from tools.resume_page_policy import resume_constraints_for_state
 
     llm = get_llm()
+    lang = resume_content.meta.language
     prompt = RESUME_PAGE_COMPRESS_PROMPT.format(
         current_pages=current_pages,
         page_limit=page_limit,
         resume_page_constraints=resume_constraints_for_state(state),
+        resume_output_language_instruction=resume_output_language_instruction(lang),
         current_resume_json=resume_content.model_dump_json(indent=2),
         job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
     )

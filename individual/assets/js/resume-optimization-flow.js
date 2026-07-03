@@ -131,6 +131,12 @@ async function regenerateJdInModal() {
 }
 
 function showOptimizationDialog({ gaps = [], questions = [], alignmentHint = '' } = {}) {
+    const qs = (questions || []).filter(Boolean);
+    // No follow-up questions: skip modal so it cannot block preview/export controls
+    if (!qs.length && !alignmentHint) {
+        return Promise.resolve({ proceed: true, answers: [] });
+    }
+
     return new Promise((resolve) => {
         _optimizationResolver = resolve;
         const modal = document.getElementById('resume-optimization-dialog');
@@ -161,7 +167,6 @@ function showOptimizationDialog({ gaps = [], questions = [], alignmentHint = '' 
             hintEl.classList.toggle('hidden', !alignmentHint);
         }
 
-        const qs = (questions || []).length ? questions : [];
         if (!qs.length) {
             questionsEl.innerHTML = '<p class="text-sm text-gray-500">' + uiT('resume.opt.noExtraQuestions', 'No extra questions — you can generate the resume directly.') + '</p>';
         } else {

@@ -31,6 +31,34 @@ JD_DETAIL_MARKERS = (
     "任职",
 )
 
+TITLE_LINE_PATTERN = re.compile(
+    r"(?:岗位名称|职位名称|崗位名稱|job title|position|cargo)\s*[:：]",
+    re.IGNORECASE,
+)
+
+SECTION_START_MARKERS = (
+    "岗位职责",
+    "崗位職責",
+    "任职要求",
+    "任職要求",
+    "加分项",
+    "加分項",
+    "key responsibilit",
+    "requirements",
+    "responsibilities",
+    "preferred qualification",
+    "requisitos",
+    "responsabilidades",
+    "preferencial",
+)
+
+TITLE_PREFIX_BY_LANG = {
+    "zh": "岗位名称：{title}",
+    "zh-TW": "崗位名稱：{title}",
+    "en": "Job Title: {title}",
+    "pt": "Cargo: {title}",
+}
+
 
 def normalize_job_title(title: str) -> str:
     """归一化岗位名称，便于相似岗位匹配。"""
@@ -67,6 +95,62 @@ def is_title_only(jd_text: str) -> bool:
     if any(marker in lower for marker in JD_DETAIL_MARKERS):
         return False
     return True
+
+
+def jd_has_explicit_title_line(jd_text: str) -> bool:
+    """JD 正文是否已含「岗位名称：」等显式标题行。"""
+    head = (jd_text or "")[:600]
+    return bool(TITLE_LINE_PATTERN.search(head))
+
+
+def _jd_first_line_starts_with_section(jd_text: str) -> bool:
+    lines = [ln.strip() for ln in (jd_text or "").strip().splitlines() if ln.strip()]
+    if not lines:
+        return False
+    first = lines[0].lower()
+    return any(marker in first for marker in SECTION_START_MARKERS)
+
+
+def _normalize_lang_key(language: str) -> str:
+    lang = (language or "zh").strip()
+    if lang.lower().startswith("zh-tw") or lang in ("zh_TW", "zh-Hant"):
+        return "zh-TW"
+    if lang.lower().startswith("zh"):
+        return "zh"
+    if lang.lower().startswith("pt"):
+        return "pt"
+    if lang.lower().startswith("en"):
+        return "en"
+    return "zh"
+
+
+def ensure_title_in_jd_text(title: str, jd_text: str, language: str = "zh") -> str:
+    """若 jd_text 缺少岗位名称行，则在正文开头补上 title。"""
+    text = (jd_text or "").strip()
+    if not text:
+        return text
+
+    resolved_title = (title or "").strip() or extract_title_from_jd(text)
+    if not resolved_title:
+        return text
+
+    if jd_has_explicit_title_line(text):
+        return text
+
+    first_line = text.splitlines()[0].strip()
+    if not _jd_first_line_starts_with_section(text) and len(first_line) <= 120:
+        if (
+            first_line == resolved_title
+            or resolved_title in first_line
+            or first_line in resolved_title
+        ):
+            return text
+
+    lang_key = _normalize_lang_key(language)
+    prefix = TITLE_PREFIX_BY_LANG.get(lang_key, TITLE_PREFIX_BY_LANG["zh"]).format(
+        title=resolved_title
+    )
+    return f"{prefix}\n\n{text}"
 
 
 def extract_title_from_jd(jd_text: str) -> str:

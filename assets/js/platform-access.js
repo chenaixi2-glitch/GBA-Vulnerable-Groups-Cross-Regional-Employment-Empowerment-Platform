@@ -71,6 +71,19 @@
     cachedAccess = null;
   }
 
+  function paT(key, fallback, vars) {
+    if (global.GBAI18n && global.GBAI18n.t) {
+      return global.GBAI18n.t(key, fallback, vars);
+    }
+    let s = fallback || key;
+    if (vars && s) {
+      Object.keys(vars).forEach((k) => {
+        s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+      });
+    }
+    return s;
+  }
+
   function showAccessModal(access, options) {
     const opts = options || {};
     const premium = opts.premium === true;
@@ -80,18 +93,28 @@
     const isCorp = isCorporatePortal();
     const donationUrl = getDonationPageUrl() || 'donation-legal.html';
     const loginUrl = getLoginPageUrl();
-    const loginLabel = isCorp ? '前往企业登录' : '前往个人登录';
+    const loginLabel = isCorp
+      ? paT('platformAccess.btnLoginCorporate', 'Go to corporate login')
+      : paT('platformAccess.btnLoginIndividual', 'Go to individual login');
 
-    let message = '使用本平台功能需向「弱势群体法律服务」捐款箱捐款，金额不限，资金将全额用于法律服务。';
+    let messageKey = 'platformAccess.msgDefault';
+    let messageFallback = 'Using platform features requires a donation to the Legal Aid for Vulnerable Groups fund (any amount). All funds go to legal services.';
     if (access.reason === 'not_logged_in') {
-      message = isCorp
-        ? '请先登录企业账号。面试模拟、HR 绩效统计等高级功能需向捐款箱捐款后解锁。'
-        : '请先登录账号。非弱势群体用户需向捐款箱捐款后方可使用平台功能。';
+      messageKey = isCorp ? 'platformAccess.msgNotLoggedInCorporate' : 'platformAccess.msgNotLoggedInIndividual';
+      messageFallback = isCorp
+        ? 'Please log in with a corporate account. Interview simulation and HR analytics require a donation to unlock.'
+        : 'Please log in. Non-vulnerable users must donate before using platform features.';
     } else if (premium && isCorp) {
-      message = '面试模拟、HR 团队绩效统计等高级功能需向「弱势群体法律服务」捐款箱捐款后解锁（金额不限）。招聘发布、岗位匹配与法律帮助功能可免费使用。';
+      messageKey = 'platformAccess.msgPremiumCorporate';
+      messageFallback = 'Interview simulation and HR team analytics require a donation to the Legal Aid fund (any amount). Job posting, matching, and legal help remain free.';
     } else if (isCorp) {
-      message = '企业用户使用平台功能需向「弱势群体法律服务」捐款箱捐款，金额不限，资金将全额用于对弱势群体的法律帮扶。';
+      messageKey = 'platformAccess.msgCorporateDefault';
+      messageFallback = 'Corporate users must donate to the Legal Aid for Vulnerable Groups fund (any amount) before using platform features.';
     }
+    const message = paT(messageKey, messageFallback);
+    const title = paT('platformAccess.title', 'Donation box');
+    const btnDonation = paT('platformAccess.btnDonation', 'Go to donation box · Legal services');
+    const btnLater = paT('platformAccess.btnLater', 'Maybe later');
 
     const overlay = document.createElement('div');
     overlay.id = 'gba-access-modal';
@@ -102,17 +125,17 @@
           <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-100 flex items-center justify-center">
             <i class="fas fa-hand-holding-heart text-3xl text-amber-600"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-900">爱心捐款箱</h3>
+          <h3 class="text-xl font-bold text-gray-900">${title}</h3>
           <p class="text-sm text-gray-600 mt-2">${message}</p>
         </div>
         <div class="flex flex-col gap-2">
           <a href="${donationUrl}" class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold text-center hover:opacity-90">
-            前往捐款箱 · 了解法律服务
+            ${btnDonation}
           </a>
           <a href="${loginUrl}" class="w-full py-3 px-4 border-2 ${isCorp ? 'border-green-600 text-green-700 hover:bg-green-50' : 'border-blue-600 text-blue-700 hover:bg-blue-50'} rounded-xl font-semibold text-center">
             ${loginLabel}
           </a>
-          <button type="button" id="gba-access-modal-close" class="w-full py-2 text-gray-500 hover:text-gray-700 text-sm">稍后再说</button>
+          <button type="button" id="gba-access-modal-close" class="w-full py-2 text-gray-500 hover:text-gray-700 text-sm">${btnLater}</button>
         </div>
       </div>`;
     document.body.appendChild(overlay);

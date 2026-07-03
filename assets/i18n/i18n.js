@@ -81,28 +81,28 @@
         return typeof cur === 'string' ? cur : '';
     }
 
+    function applyVars(text, vars) {
+        if (!text || !vars) return text;
+        var result = String(text);
+        Object.keys(vars).forEach(function (k) {
+            result = result.replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        });
+        return result;
+    }
+
     function t(key, fallback, vars) {
         if (currentLang === 'en') {
-            var enVal = fallback || key;
-            if (vars && enVal) {
-                Object.keys(vars).forEach(function (k) {
-                    enVal = String(enVal).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
-                });
-            }
-            return enVal;
+            return applyVars(fallback || key, vars);
         }
         var val = resolveKey(localeCache[currentLang], key);
         if (val) {
-            if (vars) {
-                Object.keys(vars).forEach(function (k) {
-                    val = String(val).replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
-                });
-            }
-            return val;
+            return applyVars(val, vars);
         }
         var strings = localeCache[currentLang] && localeCache[currentLang].strings;
-        if (strings && strings[fallback || key]) return strings[fallback || key];
-        return fallback || key;
+        if (strings && strings[fallback || key]) {
+            return applyVars(strings[fallback || key], vars);
+        }
+        return applyVars(fallback || key, vars);
     }
 
     function translateString(raw, lang) {

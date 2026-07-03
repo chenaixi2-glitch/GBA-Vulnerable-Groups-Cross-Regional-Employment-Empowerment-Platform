@@ -507,7 +507,7 @@
                         <span data-i18n="resume.draftRestored">Your draft was restored from your last session (available for 12 hours while logged in).</span>
                     </div>
 
-                    <div id="profile-format-hints" class="hidden mb-4"></div>
+                    <div id="profile-format-hints" class="hidden mb-4" aria-live="polite"></div>
 
                     <div id="profile-basic-grid" class="grid sm:grid-cols-2 gap-3 mb-6">
                         <div>
@@ -527,6 +527,8 @@
                             <input id="profile-city" type="text" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                         </div>
                     </div>
+
+                    <div id="profile-supplement-section" class="mb-6"></div>
 
                     <div id="profile-photo-section" class="mb-6 p-4 border border-red-100 bg-red-50/50 rounded-lg">
                         <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
@@ -552,7 +554,7 @@
                                 <button type="button" id="profile-photo-remove-btn" class="px-3 py-2 text-sm text-red-600 hover:text-red-800 hidden">
                                     <i class="fas fa-trash-alt mr-1"></i><span data-i18n="resume.removePhoto">Remove photo</span>
                                 </button>
-                                <p class="text-xs text-gray-400" data-i18n="resume.photoFormats">JPG / PNG / WebP, max 2MB</p>
+                                <p class="text-xs text-gray-400" data-i18n="resume.photoFormats">JPG / PNG / WebP, max 5MB</p>
                             </div>
                         </div>
                     </div>

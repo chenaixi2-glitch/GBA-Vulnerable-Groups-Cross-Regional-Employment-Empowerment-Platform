@@ -6,6 +6,8 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 
 目标语言：{target_language_label}（language 字段设为 "{target_language}"）
 
+{resume_output_language_instruction}
+
 {RESUME_A4_ONE_PAGE_CONSTRAINTS}
 
 语言与格式要求：
@@ -28,7 +30,7 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 - 所有 key 必须使用双引号
 - 所有字符串中的双引号必须转义
 
-返回格式如下：
+返回格式如下（仅为 JSON schema 示例，占位符语言不代表输出语言；实际所有正文字段须符合目标语言）：
 {{
     "profile": {{
         "name": "姓名",
@@ -94,7 +96,8 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 3. 项目和实习描述使用 STAR 格式，突出与目标岗位相关的技能
 4. 技能根据 JD 要求的优先级排序
 5. 篇幅须严格符合上文 A4 页数约束，宁可精简内容也不要超长
-6. 即使部分字段为空，也必须返回合法 JSON 对象
+6. 所有正文字段须统一使用目标语言，禁止中英混用
+7. 即使部分字段为空，也必须返回合法 JSON 对象
 """
 
 RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用户的修改指令，只更新简历中受影响的部分。
@@ -102,6 +105,8 @@ RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用�
 {RESUME_A4_ONE_PAGE_CONSTRAINTS}
 
 当前简历语言：{target_language_label}
+
+{resume_output_language_instruction}
 
 当前简历内容：
 {current_resume_json}
@@ -124,5 +129,6 @@ RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用�
 1. 不得捏造用户未提供的事实
 2. 保持未修改部分不变
 3. 优化或修改后仍须符合上文 A4 页数约束，必要时缩减文字或合并条目
-4. 即使指令不明确，也必须返回合法 JSON 对象
+4. 修改后的内容须保持目标语言一致，禁止中英混用
+5. 即使指令不明确，也必须返回合法 JSON 对象
 """

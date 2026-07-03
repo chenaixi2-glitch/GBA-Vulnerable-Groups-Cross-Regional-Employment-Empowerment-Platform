@@ -4,6 +4,8 @@ from prompts.resume_constraints import RESUME_A4_ONE_PAGE_CONSTRAINTS
 
 RESUME_LANGUAGE_CONVERT_PROMPT = """你是跨境就业简历本地化专家。请将当前简历从 {source_language_label} 转换为 {target_language_label}，并严格遵循目标语言的简历惯例。
 
+{resume_output_language_instruction}
+
 当前简历内容（JSON）：
 {current_resume_json}
 
@@ -53,8 +55,9 @@ RESUME_LANGUAGE_CONVERT_PROMPT = """你是跨境就业简历本地化专家。�
 ## 转换原则
 1. 忠实转换已有事实，不得捏造
 2. 根据目标语言调整结构、措辞、字段可见性，非逐字翻译
-3. 转换后 language 设为 "{target_language}"
-4. 缺失字段保持为空，并在 extras 中保留已知扩展信息
+3. 转换后全部正文字段须统一使用目标语言，禁止中英混用
+4. 转换后 language 设为 "{target_language}"
+5. 缺失字段保持为空，并在 extras 中保留已知扩展信息
 
 机器协议：
 - 返回且仅返回合法 JSON

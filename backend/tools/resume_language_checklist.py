@@ -13,6 +13,101 @@ from workflow.state import CandidateProfile, CopilotState, ResumeContent
 
 CheckItem = dict[str, Any]
 
+_CJK_RE = re.compile(r"[\u4e00-\u9fff\u3400-\u4dbf]")
+_LATIN_WORD_RE = re.compile(r"[a-zA-Z]{3,}")
+_ENGLISH_VERB_RE = re.compile(
+    r"\b(developed|implemented|designed|managed|led|built|created|responsible|achieved|improved|maintained)\b",
+    re.IGNORECASE,
+)
+_TECH_TERMS = frozenset({
+    "python", "java", "react", "mysql", "linux", "github", "spring", "docker", "kubernetes",
+    "aws", "azure", "redis", "nginx", "vue", "node", "typescript", "javascript", "golang",
+    "postgresql", "mongodb", "flutter", "swift", "kotlin", "pandas", "numpy", "tensorflow",
+    "pytorch", "spark", "hadoop", "excel", "office", "html", "css", "api", "sql", "rest",
+    "boot", "cloud", "linux", "unix", "macos", "windows", "android", "ios", "gitlab",
+})
+
+
+def _resume_body_lines(resume: ResumeContent | None) -> list[str]:
+    lines: list[str] = []
+    if not resume:
+        return lines
+    if resume.summary:
+        lines.append(resume.summary)
+    for section in (resume.skills, resume.internships, resume.projects, resume.awards, resume.papers):
+        for item in section:
+            if item.title:
+                lines.append(item.title)
+            if item.content:
+                for chunk in re.split(r"[\n；;•·]", item.content):
+                    chunk = chunk.strip()
+                    if chunk:
+                        lines.append(chunk)
+    if resume.profile:
+        for edu in resume.profile.education:
+            for field in (edu.major, edu.degree):
+                if field:
+                    lines.append(field)
+    return lines
+
+
+def _line_has_cjk(text: str) -> bool:
+    return bool(_CJK_RE.search(text))
+
+
+def _line_has_english_prose(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped:
+        return False
+    if _ENGLISH_VERB_RE.search(stripped):
+        return True
+    if not _line_has_cjk(stripped):
+        return bool(_LATIN_WORD_RE.search(stripped))
+    for chunk in _LATIN_WORD_RE.findall(stripped):
+        if len(chunk) >= 5 and chunk.lower() not in _TECH_TERMS:
+            return True
+    return False
+
+
+def _detect_language_mixing(resume: ResumeContent | None, lang: str) -> list[str]:
+    if not resume:
+        return []
+    mixed: list[str] = []
+    for line in _resume_body_lines(resume):
+        if is_cjk_resume_language(lang):
+            if _line_has_cjk(line) and _line_has_english_prose(line):
+                mixed.append(line[:80])
+        elif _line_has_cjk(line):
+            mixed.append(line[:80])
+    return mixed
+
+
+def _check_language_mixing(resume: ResumeContent | None, lang: str) -> CheckItem:
+    samples = _detect_language_mixing(resume, lang)
+    if not samples:
+        if is_cjk_resume_language(lang):
+            return _ok_item(
+                "lang_monolingual", "format", "language_consistency", "语言一致性",
+                "正文语言与目标语言一致",
+            )
+        return _ok_item(
+            "lang_monolingual", "format", "language_consistency", "Language consistency",
+            "Body text matches target language",
+        )
+    preview = samples[0] + ("…" if len(samples[0]) >= 80 else "")
+    if is_cjk_resume_language(lang):
+        label = language_label(lang)
+        return _warn_item(
+            "lang_monolingual", "format", "language_consistency", "语言一致性",
+            f"检测到 {len(samples)} 处中英文混用",
+            f"请统一为{label}表述，例如：{preview}",
+        )
+    return _warn_item(
+        "lang_monolingual", "format", "language_consistency", "Language consistency",
+        f"Found {len(samples)} line(s) with Chinese in {language_label(lang)} resume",
+        f"Translate or remove Chinese text, e.g.: {preview}",
+    )
+
 
 def _text_blob(state: CopilotState, resume: ResumeContent | None) -> str:
     parts: list[str] = []
@@ -143,6 +238,8 @@ def check_resume_language_requirements(
     resume = resume or state.resume_content_json
     text = _text_blob(state, resume)
     items: list[CheckItem] = []
+
+    items.append(_check_language_mixing(resume, lang))
 
     if is_cjk_resume_language(lang):
         items.extend(_check_chinese_resume(state, resume, text))
@@ -280,6 +377,11 @@ def _check_chinese_resume(
 
     # 自我评价
     has_summary = bool(resume and resume.summary and len(resume.summary.strip()) >= 20)
+    if not has_summary:
+        summary_extra = _profile_extra(state, resume, "summary")
+        has_summary = len(summary_extra.strip()) >= 20
+    if not has_summary:
+        has_summary = _has_pattern(text, [r"自我评价", r"professional summary", r"个人总结"])
     items.append(_item("zh_summary", "content", "summary", "自我评价", "recommended",
                       "中文简历通常有自我评价段落", "2-4 句，突出优势与岗位匹配，避免空泛形容词堆砌", has_summary))
 
@@ -344,23 +446,26 @@ def _check_english_resume(
 
     # 禁止隐私字段
     forbidden_patterns = [
-        (r"\d{1,2}\s*岁|年龄|age\s*[:：]\s*\d{1,2}|years old", "年龄/Age"),
-        (r"性别|gender|male|female|男|女", "性别/Gender"),
-        (r"婚姻|marital|married|single|离异", "婚姻状况/Marital status"),
-        (r"籍贯|民族|ethnicity|height|身高", "籍贯/民族/身高"),
-        (r"政治面貌|党员|party member|身份证号", "政治身份/身份证号"),
-        (r"birthday|出生|date of birth|dob", "生日/Date of birth"),
+        (r"\d{1,2}\s*岁|年龄|age\s*[:：]\s*\d{1,2}|years old", "en_forbid_age", "age"),
+        (r"性别|gender|male|female|男|女", "en_forbid_gender", "gender"),
+        (r"婚姻|marital|married|single|离异", "en_forbid_marital", "marital_status"),
+        (r"籍贯|民族|ethnicity|height|身高", "en_forbid_ethnicity", "ethnicity"),
+        (r"政治面貌|党员|party member|身份证号", "en_forbid_political", "political_id"),
+        (r"birthday|出生|date of birth|dob", "en_forbid_dob", "date_of_birth"),
     ]
-    for pat, label in forbidden_patterns:
+    for pat, item_id, field in forbidden_patterns:
         if _has_pattern(text, [pat]):
             items.append(_warn_item(
-                f"en_forbid_{label[:8]}", "forbidden", label, label,
-                f"英文 Resume 不应出现{label}（欧美职场反歧视规范）",
-                "请从简历中删除该信息",
+                item_id, "forbidden", field, field,
+                "",
+                "",
             ))
 
     # Professional Summary
     has_summary = bool(resume and resume.summary and 30 <= len(resume.summary.strip()) <= 400)
+    if not has_summary:
+        summary_extra = _profile_extra(state, resume, "summary")
+        has_summary = 30 <= len(summary_extra.strip()) <= 400
     items.append(_item("en_summary", "content", "summary", "Professional Summary", "required",
                       "英文 Resume 用 3-4 行 Professional Summary 替代中文大段自我评价",
                       "精简概括核心技能与成果，不用 'hardworking, outgoing' 等空泛形容词", has_summary))

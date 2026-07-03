@@ -79,6 +79,7 @@ class GenerateJdRequest(BaseModel):
     experience_level: str
     employer_type: str = ""
     jd_draft: str = ""
+    language: str = ""
 
 
 class GenerateJdFromTitleRequest(BaseModel):
@@ -87,6 +88,7 @@ class GenerateJdFromTitleRequest(BaseModel):
     industry: str = ""
     employer_type: str = ""
     experience_level: str = ""
+    language: str = ""
 
 
 class SetEmployerTypeRequest(BaseModel):
@@ -245,7 +247,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     from services.llm_queue import SessionBusyError, llm_queue_slot
     from prompts.jd_generation import JD_GENERATION_PROMPT
     from services.jd_cache_service import lookup_jd_cache_by_params, save_jd_cache
-    from tools.jd_cache import params_cache_key
+    from tools.jd_cache import params_cache_key, ensure_title_in_jd_text, extract_title_from_jd
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -261,11 +263,12 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     if not req.industry.strip() or not req.experience_level.strip():
         raise HTTPException(status_code=422, detail="请选择行业与经验等级")
 
-    from tools.resume_layout import employer_type_label, normalize_employer_type
+    from tools.resume_layout import employer_type_label, normalize_employer_type, normalize_language, jd_output_language_instruction
 
     employer_type = normalize_employer_type(req.employer_type)
     employer_type_text = employer_type_label(employer_type) or "未指定"
     jd_draft = req.jd_draft.strip()
+    output_lang = normalize_language(req.language or state.render_config.language or state.resume_language_target or "zh")
     p_key = params_cache_key(req.industry.strip(), employer_type, req.experience_level.strip())
     use_cache = not jd_draft
 
@@ -278,7 +281,11 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
         )
     if cached and cached.get("jd_text"):
         logger.info("JD generate-jd cache hit params=%s title=%s", p_key[:12], cached.get("title"))
-        cached_jd = cached.get("jd_text") or ""
+        cached_jd = ensure_title_in_jd_text(
+            cached.get("title") or "",
+            cached.get("jd_text") or "",
+            output_lang,
+        )
         state.meta = state.meta.model_copy(update={
             "target_jd_text": cached_jd,
             "target_industry": req.industry.strip(),
@@ -301,6 +308,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
         employer_type=employer_type_text,
         experience_level=req.experience_level.strip(),
         jd_draft=jd_draft or "（用户尚未填写，请根据行业、单位性质、经验等级生成通用岗位描述）",
+        output_language_instruction=jd_output_language_instruction(output_lang),
     )
 
     llm = get_llm()
@@ -313,11 +321,15 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
         logger.error("JD generation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"岗位描述生成失败: {e}")
 
-    jd_text = (parsed.jd_text or "").strip()
+    jd_text = ensure_title_in_jd_text(
+        (parsed.title or "").strip(),
+        (parsed.jd_text or "").strip(),
+        output_lang,
+    )
     if not jd_text:
         raise HTTPException(status_code=500, detail="岗位描述生成结果为空")
 
-    title = (parsed.title or "").strip()
+    title = (parsed.title or "").strip() or extract_title_from_jd(jd_text)
     await save_jd_cache(
         jd_text=jd_text,
         title=title,
@@ -354,7 +366,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
     from api.chat import _aload_state, _asave_state
     from services.jd_title_service import generate_jd_from_title_for_profile
     from services.llm_queue import SessionBusyError, llm_queue_slot
-    from tools.resume_layout import normalize_employer_type
+    from tools.resume_layout import normalize_employer_type, normalize_language
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -374,6 +386,9 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
         raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
 
     employer_type = normalize_employer_type(req.employer_type or state.meta.employer_type)
+    output_lang = normalize_language(
+        req.language or state.render_config.language or state.resume_language_target or "zh"
+    )
     try:
         async with llm_queue_slot(req.session_id):
             parsed = await generate_jd_from_title_for_profile(
@@ -382,6 +397,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
                 industry=req.industry.strip(),
                 employer_type=employer_type,
                 experience_level=req.experience_level.strip(),
+                language=output_lang,
             )
     except SessionBusyError:
         raise HTTPException(status_code=409, detail="该会话已有 AI 任务正在处理，请稍候完成后再试")
@@ -392,6 +408,9 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
         raise HTTPException(status_code=500, detail=f"岗位描述生成失败: {exc}")
 
     jd_text = (parsed.jd_text or "").strip()
+    if not jd_text:
+        raise HTTPException(status_code=500, detail="岗位描述生成结果为空")
+    resolved_title = (parsed.title or job_title).strip()
     state.meta = state.meta.model_copy(update={
         "target_jd_text": jd_text,
         "target_industry": req.industry.strip() or state.meta.target_industry,
@@ -404,7 +423,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
     await _asave_state(store, persist_data)
 
     return {
-        "title": parsed.title or job_title,
+        "title": resolved_title,
         "jd_text": jd_text,
         "primary_tech_stack": list(parsed.primary_tech_stack or []),
         "alignment_note": parsed.alignment_note or "",

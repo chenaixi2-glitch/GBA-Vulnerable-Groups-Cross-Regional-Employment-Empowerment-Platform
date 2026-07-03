@@ -27,6 +27,8 @@ RESUME_A4_MULTI_PAGE_CONSTRAINTS = """
 RESUME_PAGE_COMPRESS_PROMPT = """你是简历篇幅优化专家。当前简历经 PDF 渲染后为 {current_pages} 页，超出允许上限 {page_limit} 页。
 请精简内容使其排版后不超过 {page_limit} 页 A4，同时保留与目标岗位最相关的核心成就与量化结果。
 
+{resume_output_language_instruction}
+
 {resume_page_constraints}
 
 当前简历内容：
@@ -46,4 +48,5 @@ RESUME_PAGE_COMPRESS_PROMPT = """你是简历篇幅优化专家。当前简历�
 3. 每条经历减少 bullet 数量，保留最强成果
 4. 合并技能分组，删除重复项
 5. 不得捏造用户未提供的事实
+6. 精简时须保持当前目标语言一致，禁止引入中英混用
 """

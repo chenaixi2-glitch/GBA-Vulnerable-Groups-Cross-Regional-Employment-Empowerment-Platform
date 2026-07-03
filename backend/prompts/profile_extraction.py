@@ -34,6 +34,11 @@ PROFILE_EXTRACTION_PROMPT = """你是一个候选人画像构建专家。请从�
     ]
 }}
 
+语言要求：
+- facts 中 content 字段须与用户材料保持同一语言，禁止在同一字段内中英混用
+- 若材料为中文则 content 用中文；若为英文则 content 用英文；不要擅自翻译
+- JSON 的 key 仍使用英文
+
 注意：
 1. type 只能是: education, skill, project, internship, award, paper 之一
 2. **每条经历/技能/项目必须单独一条 fact**，禁止合并多条为一条

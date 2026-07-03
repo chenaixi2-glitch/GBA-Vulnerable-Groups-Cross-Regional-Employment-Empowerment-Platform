@@ -198,8 +198,217 @@ class MockAPIService {
         return alexChenMock().profilePayload;
     }
 
-    gapPayload() {
-        return alexChenMock().gaps;
+    gapPayload(language = 'zh') {
+        return this.buildMockGaps(language);
+    }
+
+    buildMockGaps(language = 'zh') {
+        const lang = this.normalizeResumeLanguage(language);
+        const tables = {
+            zh: [
+                {
+                    type: 'missing_skill',
+                    description: '高级 Excel / 数据报表能力',
+                    severity: 'medium',
+                    suggestion: '建议完成一门 Excel 商务应用短课',
+                },
+                {
+                    type: 'missing_skill',
+                    description: '跨境支付与结算流程经验',
+                    severity: 'high',
+                    suggestion: '了解主流跨境电商平台的结算与退款政策',
+                },
+                {
+                    type: 'experience_gap',
+                    description: '在线客服 SLA 指标管理经验',
+                    severity: 'low',
+                    suggestion: '练习限时响应场景并记录处理时效',
+                },
+            ],
+            'zh-TW': [
+                {
+                    type: 'missing_skill',
+                    description: '進階 Excel / 數據報表能力',
+                    severity: 'medium',
+                    suggestion: '建議完成一門 Excel 商務應用短課',
+                },
+                {
+                    type: 'missing_skill',
+                    description: '跨境支付與結算流程經驗',
+                    severity: 'high',
+                    suggestion: '了解主流跨境電商平台的結算與退款政策',
+                },
+                {
+                    type: 'experience_gap',
+                    description: '線上客服 SLA 指標管理經驗',
+                    severity: 'low',
+                    suggestion: '練習限時回應場景並記錄處理時效',
+                },
+            ],
+            en: [
+                {
+                    type: 'missing_skill',
+                    description: 'Advanced Excel / data reporting',
+                    severity: 'medium',
+                    suggestion: 'Complete a short Excel for business course',
+                },
+                {
+                    type: 'missing_skill',
+                    description: 'Cross-border payment workflows',
+                    severity: 'high',
+                    suggestion: 'Study marketplace settlement and refund policies',
+                },
+                {
+                    type: 'experience_gap',
+                    description: 'Live chat SLA metrics',
+                    severity: 'low',
+                    suggestion: 'Practice timed response drills',
+                },
+            ],
+            pt: [
+                {
+                    type: 'missing_skill',
+                    description: 'Excel avançado / relatórios de dados',
+                    severity: 'medium',
+                    suggestion: 'Conclua um curso curto de Excel para negócios',
+                },
+                {
+                    type: 'missing_skill',
+                    description: 'Fluxos de pagamento transfronteiriços',
+                    severity: 'high',
+                    suggestion: 'Estude políticas de liquidação e reembolso de marketplaces',
+                },
+                {
+                    type: 'experience_gap',
+                    description: 'Métricas SLA de chat ao vivo',
+                    severity: 'low',
+                    suggestion: 'Pratique respostas cronometradas e registe tempos de resolução',
+                },
+            ],
+        };
+        return (tables[lang] || tables.en).map((gap) => ({ ...gap }));
+    }
+
+    buildMockAnswerEvaluation(language = 'zh') {
+        const lang = this.normalizeResumeLanguage(language);
+        const tables = {
+            zh: {
+                reply_message: '您的回答结构清晰。建议补充具体量化成果以增强说服力。',
+                strengths: ['表达清楚', '案例选择贴合'],
+                improvements: ['尽量量化结果', '可补充跨境业务背景'],
+                suggestions: ['尝试用 STAR 结构并给出可衡量结果', '提及使用的工具或制度流程'],
+                judge_scores: { relevance: 82, groundedness: 74, actionability: 79, rationale: '演示评分标准。' },
+            },
+            'zh-TW': {
+                reply_message: '您的回答結構清晰。建議補充具體量化成果以增強說服力。',
+                strengths: ['表達清楚', '案例選擇貼合'],
+                improvements: ['盡量量化結果', '可補充跨境業務背景'],
+                suggestions: ['嘗試用 STAR 結構並給出可衡量結果', '提及使用的工具或制度流程'],
+                judge_scores: { relevance: 82, groundedness: 74, actionability: 79, rationale: '演示評分標準。' },
+            },
+            en: {
+                reply_message: 'Your answer shows good structure. Add a concrete metric or outcome to strengthen impact.',
+                strengths: ['Clear communication', 'Relevant example chosen'],
+                improvements: ['Quantify results where possible', 'Mention cross-border context explicitly'],
+                suggestions: ['Try the STAR format with a measurable result', 'Reference tools or policies you used'],
+                judge_scores: { relevance: 82, groundedness: 74, actionability: 79, rationale: 'Demo rubric scores.' },
+            },
+            pt: {
+                reply_message: 'A sua resposta tem boa estrutura. Acrescente uma métrica ou resultado concreto para reforçar o impacto.',
+                strengths: ['Comunicação clara', 'Exemplo relevante escolhido'],
+                improvements: ['Quantifique resultados quando possível', 'Mencione explicitamente o contexto transfronteiriço'],
+                suggestions: ['Use o formato STAR com um resultado mensurável', 'Referencie ferramentas ou políticas utilizadas'],
+                judge_scores: { relevance: 82, groundedness: 74, actionability: 79, rationale: 'Pontuação de rubrica de demonstração.' },
+            },
+        };
+        const payload = tables[lang] || tables.en;
+        return {
+            triggered_agents: ['answer_evaluation_agent'],
+            score: 78,
+            ...payload,
+        };
+    }
+
+    buildMockGapQuestions(language = 'zh') {
+        const lang = this.normalizeResumeLanguage(language);
+        const tables = {
+            zh: [
+                {
+                    id: 'q_1',
+                    question: '您是否有跨境电商平台卖家后台的操作经验？',
+                    reason: '跨境电商客服岗位常见要求，需确认实操细节',
+                    priority: 'high',
+                },
+                {
+                    id: 'q_2',
+                    question: '您是否处理过跨区域的退款或纠纷案例？',
+                    reason: '用于验证跨境运营与合规处理经验',
+                    priority: 'medium',
+                },
+            ],
+            'zh-TW': [
+                {
+                    id: 'q_1',
+                    question: '您是否有跨境電商平台賣家後台的操作經驗？',
+                    reason: '跨境電商客服崗位常見要求，需確認實操細節',
+                    priority: 'high',
+                },
+                {
+                    id: 'q_2',
+                    question: '您是否處理過跨區域的退款或糾紛案例？',
+                    reason: '用於驗證跨境運營與合規處理經驗',
+                    priority: 'medium',
+                },
+            ],
+            en: [
+                {
+                    id: 'q_1',
+                    question: 'Do you have experience with marketplace seller dashboards?',
+                    reason: 'Common requirement for cross-border customer service roles',
+                    priority: 'high',
+                },
+                {
+                    id: 'q_2',
+                    question: 'Have you handled refund disputes across regions?',
+                    reason: 'Validates cross-border operational knowledge',
+                    priority: 'medium',
+                },
+            ],
+            pt: [
+                {
+                    id: 'q_1',
+                    question: 'Tem experiência com painéis de vendedores em marketplaces?',
+                    reason: 'Requisito frequente em funções de apoio ao cliente transfronteiriço',
+                    priority: 'high',
+                },
+                {
+                    id: 'q_2',
+                    question: 'Já tratou de disputas de reembolso entre regiões?',
+                    reason: 'Valida conhecimento operacional transfronteiriço',
+                    priority: 'medium',
+                },
+            ],
+        };
+        return (tables[lang] || tables.en).map((q) => ({ ...q }));
+    }
+
+    mockResumeHtmlForLanguage(language = 'zh') {
+        const lang = this.normalizeResumeLanguage(language);
+        if (lang === 'en' || lang === 'pt') {
+            return mockResumeEnHtml();
+        }
+        return mockResumeZhHtml();
+    }
+
+    mockJobTitleForLanguage(language = 'zh') {
+        const lang = this.normalizeResumeLanguage(language);
+        const titles = {
+            zh: '跨境客户服务专员',
+            'zh-TW': '跨境客戶服務專員',
+            en: 'Cross-border Customer Service Specialist',
+            pt: 'Especialista de Apoio ao Cliente Transfronteiriço',
+        };
+        return titles[lang] || titles.en;
     }
 
     interviewPayload(tone = 'professional', programVersion = 'quick', specializedFocus = '') {
@@ -487,10 +696,11 @@ class MockAPIService {
         };
     }
 
-    async chat(sessionId, message, attachments = []) {
+    async chat(sessionId, message, attachments = [], options = {}) {
         await this.delay();
         const response = this.baseResponse(sessionId);
         const msg = (message || '').toLowerCase();
+        const lang = this.normalizeResumeLanguage(options.language || 'zh');
 
         if (attachments.length > 0 || (!this.state.hasProfile && message.trim().length > 20 && !msg.includes('job title'))) {
             this.state.hasProfile = true;
@@ -504,12 +714,9 @@ class MockAPIService {
         if (msg.includes('skill gaps') || msg.includes('missing competencies')) {
             this.state.hasJob = true;
             response.triggered_agents = ['gap_agent'];
-            response.gaps = this.gapPayload();
-            response.questions_to_ask = [
-                { question: 'Do you have experience with marketplace seller dashboards?', reason: 'Common requirement for cross-border CS roles', priority: 'High' },
-                { question: 'Have you handled refund disputes across regions?', reason: 'Validates cross-border operational knowledge', priority: 'Medium' },
-            ];
-            response.reply_message = 'Skill gap analysis completed (demo mode).';
+            response.gaps = this.buildMockGaps(lang);
+            response.questions_to_ask = this.buildMockGapQuestions(lang);
+            response.reply_message = apiT('mock.gapAnalysisDone', 'Skill gap analysis completed (demo mode).');
             return response;
         }
 
@@ -523,18 +730,17 @@ class MockAPIService {
             this.state.tone = tone;
             response.triggered_agents = ['interview_agent'];
             response.interview_qa = this.interviewPayload(tone, programVersion, specializedFocus);
-            response.reply_message = `Generated ${response.interview_qa.length} staged interview questions (demo mode).`;
+            response.reply_message = apiT(
+                'mock.interviewQuestionsGenerated',
+                'Generated {count} staged interview questions (demo mode).',
+                { count: response.interview_qa.length }
+            );
             return response;
         }
 
         if (msg.includes('evaluate my answer')) {
-            response.triggered_agents = ['answer_evaluation_agent'];
-            response.reply_message = 'Your answer shows good structure. Add a concrete metric or outcome to strengthen impact.';
-            response.score = 78;
-            response.strengths = ['Clear communication', 'Relevant example chosen'];
-            response.improvements = ['Quantify results where possible', 'Mention cross-border context explicitly'];
-            response.suggestions = ['Try the STAR format with a measurable result', 'Reference tools or policies you used'];
-            response.judge_scores = { relevance: 82, groundedness: 74, actionability: 79, rationale: 'Demo rubric scores.' };
+            const evalPayload = this.buildMockAnswerEvaluation(lang);
+            Object.assign(response, evalPayload);
             return response;
         }
 
@@ -542,29 +748,44 @@ class MockAPIService {
             this.state.hasResume = true;
             response.triggered_agents = ['content_agent', 'render_agent'];
             response.resume_content_json = this.profilePayload();
-            response.resume_html = { html: mockResumeEnHtml(), version: 1 };
-            response.reply_message = 'Customized resume generated (demo mode).';
+            response.resume_html = { html: this.mockResumeHtmlForLanguage(lang), version: 1 };
+            response.reply_message = apiT('mock.resumeGeneratedDemo', 'Customized resume generated (demo mode).');
+            return response;
+        }
+
+        if (msg.includes('optimize') && (msg.includes('a4') || msg.includes('one a4'))) {
+            this.state.hasResume = true;
+            response.triggered_agents = ['content_agent', 'render_agent'];
+            response.resume_content_json = this.profilePayload();
+            response.resume_html = { html: this.mockResumeHtmlForLanguage(lang), version: 2 };
+            response.reply_message = apiT('mock.optimizedA4Demo', 'Resume optimized for one A4 page (demo mode).');
             return response;
         }
 
         if (msg.includes('translate') || msg.includes('convert to chinese') || msg.includes('convert to english') || msg.includes('中文') || msg.includes('英文')) {
             this.state.hasResume = true;
-            const isEn = /english|英文|en/i.test(message);
-            const html = isEn ? mockResumeEnHtml() : mockResumeZhHtml();
+            const targetLang = /english|英文|en/i.test(message) ? 'en'
+                : (/portugu|葡/i.test(message) ? 'pt' : (/traditional|繁體|zh-tw/i.test(message) ? 'zh-TW' : 'zh'));
+            const html = this.mockResumeHtmlForLanguage(targetLang);
             response.triggered_agents = ['content_agent', 'render_agent'];
             response.resume_content_json = this.profilePayload();
             response.resume_html = { html, version: 2 };
-            response.language = isEn ? 'en' : 'zh';
-            response.reply_message = `Resume converted to ${isEn ? 'English' : 'Chinese'} (demo mode, A4 single page).`;
+            response.language = targetLang;
+            response.reply_message = apiT('mock.resumeTranslatedDemo', 'Resume converted (demo mode, A4 single page).');
             return response;
         }
 
         if (!this.state.hasJob && message.trim().length > 30) {
             this.state.hasJob = true;
             response.triggered_agents = ['jd_agent', 'gap_agent'];
-            response.job = { id: 'job_mock_1', title: 'Cross-border Customer Service Specialist', company: 'GBA Employer' };
-            response.gaps = this.gapPayload();
-            response.reply_message = 'Job description analyzed and gaps identified (demo mode).';
+            response.job = {
+                id: 'job_mock_1',
+                title: this.mockJobTitleForLanguage(lang),
+                company: 'GBA Employer',
+            };
+            response.gaps = this.buildMockGaps(lang);
+            response.questions_to_ask = this.buildMockGapQuestions(lang);
+            response.reply_message = apiT('mock.jdAnalyzedDemo', 'Job description analyzed and gaps identified (demo mode).');
             return response;
         }
 
@@ -573,9 +794,9 @@ class MockAPIService {
         return response;
     }
 
-    async getResumeHtml(sessionId) {
+    async getResumeHtml(sessionId, language = 'zh') {
         await this.delay(300);
-        return { resume_html: { html: mockResumeEnHtml(), version: 1 } };
+        return { resume_html: { html: this.mockResumeHtmlForLanguage(language), version: 1 } };
     }
 
     _resumeContentToMarkdown(content) {
@@ -656,7 +877,7 @@ class MockAPIService {
             'zh-TW': 'convert to traditional chinese resume',
             zh: 'convert to chinese resume',
         };
-        const response = await this.chat(sessionId, messageMap[lang] || messageMap.zh, []);
+        const response = await this.chat(sessionId, messageMap[lang] || messageMap.zh, [], { language: lang });
         response.language = lang;
         response.language_checklist = this.buildMockChecklist(lang);
         return response;
@@ -664,52 +885,112 @@ class MockAPIService {
 
     async getLanguageChecklist(sessionId, language) {
         await this.delay(400);
-        const checklist = this.buildMockChecklist(language);
-        return { language: checklist.language, language_checklist: checklist };
+        return this.buildMockChecklist(language);
     }
 
-    buildMockJd(industry, experienceLevel, employerType = 'private', jdDraft = '') {
+    buildMockJd(industry, experienceLevel, employerType = 'private', jdDraft = '', language = 'zh') {
+        const lang = this.normalizeResumeLanguage(language);
         const industryLabels = {
-            tech: 'Technology',
-            finance: 'Finance',
-            ecommerce: 'E-commerce',
-            healthcare: 'Healthcare',
-            education: 'Education',
-            other: 'General',
+            zh: { tech: '科技', finance: '金融', ecommerce: '电商', healthcare: '医疗', education: '教育', other: '综合' },
+            'zh-TW': { tech: '科技', finance: '金融', ecommerce: '電商', healthcare: '醫療', education: '教育', other: '綜合' },
+            en: { tech: 'Technology', finance: 'Finance', ecommerce: 'E-commerce', healthcare: 'Healthcare', education: 'Education', other: 'General' },
+            pt: { tech: 'Tecnologia', finance: 'Finanças', ecommerce: 'Comércio eletrónico', healthcare: 'Saúde', education: 'Educação', other: 'Geral' },
         };
         const employerLabels = {
-            soe: 'State-owned Enterprise (国央企)',
-            public: 'Public Sector (体制内)',
-            foreign: 'Foreign Enterprise (外企)',
-            private: 'Private Enterprise (民企)',
-            npo: 'Non-profit Organization (NPO/NGO 非营利社会组织)',
-            hmt: 'HK/Macau/TW-funded Enterprise (港澳台资企业)',
-            other: 'Other (其他)',
+            zh: { soe: '国央企', public: '体制内', foreign: '外企', private: '民企', npo: '非营利组织', hmt: '港澳台资企业', other: '其他' },
+            'zh-TW': { soe: '國央企', public: '體制內', foreign: '外企', private: '民企', npo: '非營利組織', hmt: '港澳台資企業', other: '其他' },
+            en: { soe: 'State-owned Enterprise', public: 'Public Sector', foreign: 'Foreign Enterprise', private: 'Private Enterprise', npo: 'Non-profit Organization', hmt: 'HK/Macau/TW-funded Enterprise', other: 'Other' },
+            pt: { soe: 'Empresa estatal', public: 'Setor público', foreign: 'Empresa estrangeira', private: 'Empresa privada', npo: 'Organização sem fins lucrativos', hmt: 'Empresa HK/Macau/TW', other: 'Outro' },
         };
         const levelLabels = {
-            entry: 'Entry Level (0-2 years)',
-            mid: 'Mid Level (3-5 years)',
-            senior: 'Senior Level (5+ years)',
-            executive: 'Executive / Leadership',
+            zh: { entry: '初级（0-2年）', mid: '中级（3-5年）', senior: '高级（5年以上）', executive: '管理层' },
+            'zh-TW': { entry: '初級（0-2年）', mid: '中級（3-5年）', senior: '高級（5年以上）', executive: '管理層' },
+            en: { entry: 'Entry Level (0-2 years)', mid: 'Mid Level (3-5 years)', senior: 'Senior Level (5+ years)', executive: 'Executive / Leadership' },
+            pt: { entry: 'Júnior (0-2 anos)', mid: 'Intermédio (3-5 anos)', senior: 'Sénior (5+ anos)', executive: 'Executivo / Liderança' },
         };
-        const industryLabel = industryLabels[industry] || industry || 'General';
-        const employerLabel = employerLabels[employerType] || employerType || 'Private Enterprise';
-        const levelLabel = levelLabels[experienceLevel] || experienceLevel || 'Mid Level';
+
+        const labels = industryLabels[lang] || industryLabels.en;
+        const employerMap = employerLabels[lang] || employerLabels.en;
+        const levelMap = levelLabels[lang] || levelLabels.en;
+        const industryLabel = labels[industry] || industry || labels.other;
+        const employerLabel = employerMap[employerType] || employerType || employerMap.private;
+        const levelLabel = levelMap[experienceLevel] || experienceLevel || levelMap.mid;
 
         const draftTitle = (jdDraft || '').split('\n')[0].trim();
-        const jobTitle = draftTitle || `${industryLabel} Professional`;
+        const defaultTitles = {
+            zh: `${industryLabel}相关岗位`,
+            'zh-TW': `${industryLabel}相關崗位`,
+            en: `${industryLabel} Professional`,
+            pt: `Profissional de ${industryLabel}`,
+        };
+        const jobTitle = draftTitle || defaultTitles[lang] || defaultTitles.en;
 
-        return {
-            title: jobTitle,
-            jd_text: [
+        let jd_text;
+        if (lang === 'zh') {
+            jd_text = [
+                `岗位名称：${jobTitle}`,
+                '',
+                '岗位职责：',
+                `- 承担${industryLabel}领域${levelLabel}岗位的核心工作`,
+                '- 与跨部门、跨境团队协作，推进项目落地',
+                '- 持续学习行业知识，优化工作流程与成果交付',
+                '',
+                '任职要求：',
+                `- ${levelLabel}相关经验，熟悉${industryLabel}行业常见业务场景`,
+                `- 符合${employerLabel}用人特点，具备良好沟通与执行力`,
+                '- 适应粤港澳大湾区跨境就业与多语言协作环境',
+                '',
+                '加分项：',
+                '- 双语或多语种沟通能力',
+                '- 数字化工具与远程协作经验',
+            ].join('\n');
+        } else if (lang === 'zh-TW') {
+            jd_text = [
+                `崗位名稱：${jobTitle}`,
+                '',
+                '崗位職責：',
+                `- 承擔${industryLabel}領域${levelLabel}崗位的核心工作`,
+                '- 與跨部門、跨境團隊協作，推進項目落地',
+                '- 持續學習行業知識，優化工作流程與成果交付',
+                '',
+                '任職要求：',
+                `- ${levelLabel}相關經驗，熟悉${industryLabel}行業常見業務場景`,
+                `- 符合${employerLabel}用人特點，具備良好溝通與執行力`,
+                '- 適應粵港澳大灣區跨境就業與多語言協作環境',
+                '',
+                '加分項：',
+                '- 雙語或多語種溝通能力',
+                '- 數位化工具與遠程協作經驗',
+            ].join('\n');
+        } else if (lang === 'pt') {
+            jd_text = [
+                `Cargo: ${jobTitle}`,
+                '',
+                'Responsabilidades:',
+                `- Executar funções centrais de nível ${levelLabel.toLowerCase()} no setor ${industryLabel.toLowerCase()}`,
+                '- Colaborar com equipas transfronteiriças e interdepartamentais',
+                '- Comunicar claramente com stakeholders',
+                '- Melhorar processos e entregas continuamente',
+                '',
+                'Requisitos:',
+                `- Experiência ${levelLabel.toLowerCase()} em ${industryLabel.toLowerCase()} ou áreas relacionadas`,
+                `- Perfil alinhado com ${employerLabel}`,
+                '- Forte comunicação, trabalho em equipa e capacidade de aprendizagem',
+                '- Adaptação ao emprego transfronteiriço na GBA',
+                '',
+                'Preferencial:',
+                '- Competências bilingues ou multilingues',
+                '- Experiência com ferramentas digitais e trabalho remoto',
+            ].join('\n');
+        } else {
+            jd_text = [
                 `Job Title: ${jobTitle}`,
                 '',
                 'Key Responsibilities:',
                 `- Perform core duties for ${levelLabel.toLowerCase()} roles in the ${industryLabel.toLowerCase()} sector`,
                 '- Collaborate with cross-functional and cross-border teams',
-                '- Communicate clearly with stakeholders in English and Chinese contexts',
+                '- Communicate clearly with stakeholders',
                 '- Solve problems independently and improve processes continuously',
-                '- Document work and share knowledge with teammates',
                 '',
                 'Requirements:',
                 `- ${levelLabel} experience in ${industryLabel.toLowerCase()} or related fields`,
@@ -720,14 +1001,55 @@ class MockAPIService {
                 'Preferred Qualifications:',
                 '- Bilingual or multilingual communication skills',
                 '- Experience with digital tools and remote collaboration',
-                '- Industry certifications or project portfolio (if applicable)',
-            ].join('\n'),
+            ].join('\n');
+        }
+
+        const meta = this.buildMockJdMeta(lang, jobTitle, industryLabel);
+        return {
+            title: jobTitle,
+            jd_text,
+            primary_tech_stack: meta.primary_tech_stack,
+            alignment_note: meta.alignment_note,
+            needs_clarification: meta.needs_clarification,
+            clarification_hint: meta.clarification_hint,
+            requires_user_confirmation: true,
         };
     }
 
-    async generateJobDescription(sessionId, industry, experienceLevel, employerType = 'private', jdDraft = '') {
+    buildMockJdMeta(language, jobTitle, industryLabel = '') {
+        const lang = this.normalizeResumeLanguage(language);
+        const tables = {
+            zh: {
+                primary_tech_stack: ['客户服务', 'CRM', '跨境电商'],
+                alignment_note: `已根据 Alex Chen 的${industryLabel || '目标行业'}客服与跨境协作经历生成定向岗位描述「${jobTitle}」，职责与技能要求与其简历背景对齐。`,
+                needs_clarification: false,
+                clarification_hint: '',
+            },
+            'zh-TW': {
+                primary_tech_stack: ['客戶服務', 'CRM', '跨境電商'],
+                alignment_note: `已根據 Alex Chen 的${industryLabel || '目標行業'}客服與跨境協作經歷生成定向崗位描述「${jobTitle}」，職責與技能要求與其履歷背景對齊。`,
+                needs_clarification: false,
+                clarification_hint: '',
+            },
+            en: {
+                primary_tech_stack: ['Customer Service', 'CRM', 'Cross-border E-commerce'],
+                alignment_note: `Generated a targeted JD for "${jobTitle}" from Alex Chen's cross-border customer service background in ${industryLabel || 'the target industry'}. Responsibilities and requirements align with the uploaded profile.`,
+                needs_clarification: false,
+                clarification_hint: '',
+            },
+            pt: {
+                primary_tech_stack: ['Apoio ao cliente', 'CRM', 'Comércio eletrónico transfronteiriço'],
+                alignment_note: `JD orientada para «${jobTitle}» com base na experiência de Alex Chen em apoio ao cliente transfronteiriço (${industryLabel || 'setor alvo'}). Responsabilidades alinhadas com o perfil carregado.`,
+                needs_clarification: false,
+                clarification_hint: '',
+            },
+        };
+        return tables[lang] || tables.en;
+    }
+
+    async generateJobDescription(sessionId, industry, experienceLevel, employerType = 'private', jdDraft = '', language = 'zh') {
         await this.delay(1200);
-        return this.buildMockJd(industry, experienceLevel, employerType, jdDraft);
+        return this.buildMockJd(industry, experienceLevel, employerType, jdDraft, language);
     }
 }
 
@@ -755,6 +1077,24 @@ class APIClient {
         });
     }
 
+    _mockModeBannerHtml() {
+        const title = apiT('mock.demoModeTitle', 'Demo mode');
+        const body = apiT(
+            'mock.demoModeBody',
+            'Backend not connected. Resume parsing uses sample data (Alex Chen), unrelated to your upload.'
+        );
+        const action = apiT(
+            'mock.demoModeAction',
+            'Start the backend and refresh, or run in the console:'
+        );
+        const code = "localStorage.removeItem('gba_api_mock_mode'); location.reload()";
+        return (
+            '<strong>' + title + '</strong> '
+            + body + ' '
+            + action + ' <code class="bg-amber-600/40 px-1 rounded">' + code + '</code>'
+        );
+    }
+
     _syncMockModeIndicator() {
         if (typeof document === 'undefined') return;
         let banner = document.getElementById('gba-mock-mode-banner');
@@ -766,12 +1106,9 @@ class APIClient {
             banner = document.createElement('div');
             banner.id = 'gba-mock-mode-banner';
             banner.className = 'fixed top-0 inset-x-0 z-[9998] bg-amber-500 text-white text-center text-sm py-2 px-4 shadow-md';
-            banner.innerHTML = (
-                '<strong>演示模式</strong>：后端未连接，简历解析会使用示例数据（Alex Chen），与上传文件无关。'
-                + ' 请启动 backend 后刷新页面，或在控制台执行 <code class="bg-amber-600/40 px-1 rounded">localStorage.removeItem(\'gba_api_mock_mode\'); location.reload()</code>'
-            );
             document.body.prepend(banner);
         }
+        banner.innerHTML = this._mockModeBannerHtml();
     }
 
     _healthUrl() {
@@ -858,6 +1195,42 @@ class APIClient {
     }
 
     /**
+     * Language for optimization Q&A (gap analysis, JD confirmation hints): follow page UI locale.
+     */
+    getPageLanguage() {
+        return this.getApiLanguage();
+    }
+
+    /**
+     * Sync session render language to current page UI language (gap / optimization prompts).
+     */
+    async syncPageLanguageToSession() {
+        if (!this.sessionId || this.useMockMode) {
+            return null;
+        }
+        try {
+            await this.ensureBackendAvailable();
+            return await this.setResumeLanguage(this.getPageLanguage());
+        } catch (error) {
+            console.warn('Page language sync skipped:', error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Language for resume/chat agents: prefer selected resume language over UI language.
+     */
+    getChatLanguage() {
+        if (typeof window !== 'undefined' && typeof currentResumeLanguage !== 'undefined' && currentResumeLanguage) {
+            if (typeof normalizeResumeLang === 'function') {
+                return normalizeResumeLang(currentResumeLanguage);
+            }
+            return String(currentResumeLanguage);
+        }
+        return this.getApiLanguage();
+    }
+
+    /**
      * Load JWT from localStorage (Node auth service)
      */
     getAuthToken() {
@@ -937,13 +1310,14 @@ class APIClient {
     async chat(message, attachments = [], options = {}) {
         const retryOnAccessDenied = options.retryOnAccessDenied !== false;
         const allowMockFallback = options.allowMockFallback !== false;
+        const chatLanguage = options.language || this.getChatLanguage();
         try {
             this.ensureSessionStarted();
 
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
                 return this._applyChatResponseSession(
-                    await this.mockService.chat(this.sessionId, message, attachments)
+                    await this.mockService.chat(this.sessionId, message, attachments, { language: chatLanguage })
                 );
             }
 
@@ -951,7 +1325,7 @@ class APIClient {
                 session_id: this.sessionId,
                 message: message,
                 attachments: attachments,
-                language: this.getApiLanguage(),
+                language: chatLanguage,
             });
 
             return this._applyChatResponseSession(response.data);
@@ -960,13 +1334,13 @@ class APIClient {
             if (this._isSessionAccessError(error) && retryOnAccessDenied) {
                 this.clearSession();
                 this.generateSessionId();
-                return this.chat(message, attachments, { retryOnAccessDenied: false, allowMockFallback });
+                return this.chat(message, attachments, { retryOnAccessDenied: false, allowMockFallback, language: chatLanguage });
             }
             if (allowMockFallback && this._shouldUseMockFallback(error)) {
                 const switched = await this._enableMockModeIfBackendDown();
                 if (switched) {
                     return this._applyChatResponseSession(
-                        await this.mockService.chat(this.sessionId, message, attachments)
+                        await this.mockService.chat(this.sessionId, message, attachments, { language: chatLanguage })
                     );
                 }
             }
@@ -1048,12 +1422,14 @@ class APIClient {
      */
     async submitJobDescription(jdText, targetContext = null) {
         try {
+            const pageLang = this.getPageLanguage();
+            await this.syncPageLanguageToSession();
             const ctx = this._resolveTargetJobContext(targetContext, jdText);
             await this.syncTargetJobContext(ctx, jdText);
             const message = typeof buildJdSubmissionText === 'function'
                 ? buildJdSubmissionText(jdText, ctx)
                 : jdText;
-            const response = await this.chat(message, []);
+            const response = await this.chat(message, [], { language: pageLang });
             return response;
         } catch (error) {
             console.error('JD submission error:', error);
@@ -1064,7 +1440,7 @@ class APIClient {
     /**
      * Generate a suggested target JD from JD draft text, industry, employer type, and experience level
      */
-    async generateJobDescription(industry, experienceLevel, employerType = '', jdDraft = '') {
+    async generateJobDescription(industry, experienceLevel, employerType = '', jdDraft = '', language = '') {
         try {
             if (!this.sessionId) {
                 throw new Error(apiT('errors.noActiveSession', 'No active session'));
@@ -1073,9 +1449,11 @@ class APIClient {
                 throw new Error(apiT('errors.selectIndustryLevel', 'Please select industry and experience level'));
             }
 
+            const outputLanguage = language || this.getChatLanguage();
+
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
-                return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private', jdDraft);
+                return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private', jdDraft, outputLanguage);
             }
 
             const response = await this.client.post('/resume/generate-jd', {
@@ -1084,13 +1462,15 @@ class APIClient {
                 experience_level: experienceLevel,
                 employer_type: employerType,
                 jd_draft: jdDraft || '',
+                language: outputLanguage,
             });
 
             return response.data;
         } catch (error) {
             console.error('JD generation error:', error);
             if (!error.response && !this.useMockMode && await this._enableMockModeIfBackendDown()) {
-                return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private', jdDraft);
+                const outputLanguage = language || this.getChatLanguage();
+                return this.mockService.generateJobDescription(this.sessionId, industry, experienceLevel, employerType || 'private', jdDraft, outputLanguage);
             }
             throw this.handleError(error);
         }
@@ -1235,8 +1615,16 @@ class APIClient {
             }
             const ctx = this._resolveTargetJobContext(targetContext, jobTitle);
             await this.ensureBackendAvailable();
+            const outputLanguage = this.getPageLanguage();
+            await this.syncPageLanguageToSession();
             if (this.useMockMode) {
-                return this.mockService.buildMockJd(ctx.industry || 'tech', ctx.experience_level || 'mid', ctx.employer_type || 'private');
+                return this.mockService.buildMockJd(
+                    ctx.industry || 'tech',
+                    ctx.experience_level || 'mid',
+                    ctx.employer_type || 'private',
+                    jobTitle,
+                    outputLanguage
+                );
             }
             const response = await this.client.post('/resume/generate-jd-from-title', {
                 session_id: this.sessionId,
@@ -1244,6 +1632,7 @@ class APIClient {
                 industry: ctx.industryLabel || ctx.industry || '',
                 employer_type: ctx.employer_type || '',
                 experience_level: ctx.experienceLevelLabel || ctx.experience_level || '',
+                language: outputLanguage,
             });
             return response.data;
         } catch (error) {
@@ -1285,9 +1674,12 @@ class APIClient {
      */
     async runGapAnalysis() {
         try {
+            const pageLang = this.getPageLanguage();
+            await this.syncPageLanguageToSession();
             const response = await this.chat(
                 'Please analyze skill gaps and missing competencies between my profile and the target job.',
-                []
+                [],
+                { language: pageLang }
             );
             return response;
         } catch (error) {
@@ -1305,7 +1697,7 @@ class APIClient {
         }
         try {
             await this.ensureBackendAvailable();
-            return await this.setResumeLanguage(this.getApiLanguage());
+            return await this.setResumeLanguage(this.getChatLanguage());
         } catch (error) {
             console.warn('Session language sync skipped:', error.message);
             return null;
@@ -1339,7 +1731,7 @@ class APIClient {
 
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
-                return this.mockService.getResumeHtml(this.sessionId);
+                return this.mockService.getResumeHtml(this.sessionId, this.getChatLanguage());
             }
 
             const response = await this.client.get('/resume/html', {
@@ -1351,7 +1743,7 @@ class APIClient {
             console.error('Get resume HTML error:', error);
             if (!error.response && !this.useMockMode) {
                 console.warn('[API] Resume HTML fetch failed, using local fallback:', error.message);
-                return this.mockService.getResumeHtml(this.sessionId);
+                return this.mockService.getResumeHtml(this.sessionId, this.getChatLanguage());
             }
             throw error;
         }
@@ -2118,6 +2510,9 @@ if (typeof window !== 'undefined') {
     window.addEventListener('gba:language-changed', () => {
         if (typeof Utils !== 'undefined') {
             Utils.updateSessionDisplay(apiClient.sessionId);
+        }
+        if (apiClient.useMockMode) {
+            apiClient._syncMockModeIndicator();
         }
     });
 }

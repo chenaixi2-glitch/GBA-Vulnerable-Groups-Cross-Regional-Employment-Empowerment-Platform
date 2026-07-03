@@ -21,14 +21,97 @@ const ProfileEditor = {
 
     SECTION_ORDER: ['education', 'skill', 'internship', 'project', 'award', 'paper', 'custom'],
 
-    SECTION_CONFIG: {
-        education: { label: 'Education', icon: 'fa-graduation-cap', addLabel: 'Add education' },
-        skill: { label: 'Skills', icon: 'fa-tools', addLabel: 'Add skill' },
-        internship: { label: 'Work / Internship', icon: 'fa-briefcase', addLabel: 'Add experience' },
-        project: { label: 'Projects', icon: 'fa-project-diagram', addLabel: 'Add project' },
-        award: { label: 'Awards', icon: 'fa-trophy', addLabel: 'Add award' },
-        paper: { label: 'Publications', icon: 'fa-book', addLabel: 'Add publication' },
-        custom: { label: 'Other', icon: 'fa-folder', addLabel: 'Add section' },
+    getSectionConfig() {
+        return {
+            education: {
+                label: profileUiText('resume.profileEditor.sectionEducation', 'Education'),
+                icon: 'fa-graduation-cap',
+                addLabel: profileUiText('resume.profileEditor.addEducation', 'Add education'),
+            },
+            skill: {
+                label: profileUiText('resume.profileEditor.sectionSkills', 'Skills'),
+                icon: 'fa-tools',
+                addLabel: profileUiText('resume.profileEditor.addSkill', 'Add skill'),
+            },
+            internship: {
+                label: profileUiText('resume.profileEditor.sectionWork', 'Work / Internship'),
+                icon: 'fa-briefcase',
+                addLabel: profileUiText('resume.profileEditor.addExperience', 'Add experience'),
+            },
+            project: {
+                label: profileUiText('resume.profileEditor.sectionProjects', 'Projects'),
+                icon: 'fa-project-diagram',
+                addLabel: profileUiText('resume.profileEditor.addProject', 'Add project'),
+            },
+            award: {
+                label: profileUiText('resume.profileEditor.sectionAwards', 'Awards'),
+                icon: 'fa-trophy',
+                addLabel: profileUiText('resume.profileEditor.addAward', 'Add award'),
+            },
+            paper: {
+                label: profileUiText('resume.profileEditor.sectionPublications', 'Publications'),
+                icon: 'fa-book',
+                addLabel: profileUiText('resume.profileEditor.addPublication', 'Add publication'),
+            },
+            custom: {
+                label: profileUiText('resume.profileEditor.sectionOther', 'Other'),
+                icon: 'fa-folder',
+                addLabel: profileUiText('resume.profileEditor.addSection', 'Add section'),
+            },
+        };
+    },
+
+    getResumeLang() {
+        if (typeof currentResumeLanguage !== 'undefined') return currentResumeLanguage;
+        if (typeof defaultResumeLanguageFromUi === 'function') return defaultResumeLanguageFromUi();
+        return 'zh';
+    },
+
+    _missingSlotsKey: '',
+
+    hasModuleType(type) {
+        return (this.draft?.modules || []).some((m) => m.type === type);
+    },
+
+    ensureMissingSlotsFromChecklist(checklist) {
+        if (!checklist?.items || !this.draft) return false;
+        const key = checklist.items.map((i) => `${i.id}:${i.missing ? 1 : 0}`).join('|');
+        if (this._missingSlotsKey === key) return false;
+        this._missingSlotsKey = key;
+
+        const missingFields = new Set(
+            checklist.items
+                .filter((item) => item.missing && item.severity !== 'ok')
+                .map((item) => item.field || item.category)
+        );
+        let changed = false;
+
+        const ensureSection = (field, fn) => {
+            if (!missingFields.has(field)) return;
+            fn();
+            changed = true;
+        };
+
+        ensureSection('education', () => {
+            if (!(this.draft.education || []).length) this.addEducation(true);
+        });
+        ensureSection('internships', () => {
+            if (!this.hasModuleType('internship')) this.addModule('internship', true);
+        });
+        ensureSection('projects', () => {
+            if (!this.hasModuleType('project')) this.addModule('project', true);
+        });
+        ensureSection('skills', () => {
+            if (!this.hasModuleType('skill')) this.addModule('skill', true);
+        });
+        ensureSection('awards', () => {
+            if (!this.hasModuleType('award')) this.addModule('award', true);
+        });
+        ensureSection('volunteer', () => {
+            if (!this.hasModuleType('custom')) this.addModule('custom', true);
+        });
+
+        return changed;
     },
 
     init() {
@@ -67,6 +150,12 @@ const ProfileEditor = {
         ['profile-name', 'profile-email', 'profile-phone', 'profile-city'].forEach((id) => {
             document.getElementById(id)?.addEventListener('input', () => this.scheduleSave());
         });
+
+        const supplementSection = document.getElementById('profile-supplement-section');
+        if (supplementSection) {
+            supplementSection.addEventListener('input', () => this.scheduleSave());
+            supplementSection.addEventListener('change', () => this.scheduleSave());
+        }
 
         document.getElementById('profile-photo-upload-btn')?.addEventListener('click', () => {
             document.getElementById('profile-photo-input')?.click();
@@ -175,8 +264,8 @@ const ProfileEditor = {
             extras.has_photo = 'true';
             this.renderPhotoPreview();
             await this.persistDraft();
-            if (typeof refreshLanguageChecklist === 'function' && (typeof currentResumeLanguage === 'undefined' || currentResumeLanguage === 'zh')) {
-                await refreshLanguageChecklist('zh');
+            if (typeof refreshLanguageChecklist === 'function') {
+                await refreshLanguageChecklist(this.getResumeLang());
             }
             Utils.showToast(profileUiText('resume.photo.uploaded', 'ID photo uploaded'));
         } catch (error) {
@@ -190,8 +279,8 @@ const ProfileEditor = {
         extras.has_photo = 'false';
         this.renderPhotoPreview();
         await this.persistDraft();
-        if (typeof refreshLanguageChecklist === 'function' && (typeof currentResumeLanguage === 'undefined' || currentResumeLanguage === 'zh')) {
-            await refreshLanguageChecklist('zh');
+        if (typeof refreshLanguageChecklist === 'function') {
+            await refreshLanguageChecklist(this.getResumeLang());
         }
         Utils.showToast(profileUiText('resume.photo.removed', 'ID photo removed'));
     },
@@ -248,7 +337,7 @@ const ProfileEditor = {
             } else {
                 modules.push({
                     id: fact.id || this.newId('mod'),
-                    type: type in this.SECTION_CONFIG ? type : 'custom',
+                    type: type in this.getSectionConfig() ? type : 'custom',
                     title: this.inferTitle(fact.content, type),
                     content: fact.content || '',
                     is_custom: false,
@@ -304,7 +393,7 @@ const ProfileEditor = {
         return text.split('\n')[0].slice(0, 80);
     },
 
-    addEducation() {
+    addEducation(silent = false) {
         if (!this.draft) this.draft = { profile_basic: {}, education: [], modules: [] };
         if (!this.draft.education) this.draft.education = [];
         this.draft.education.push({
@@ -327,13 +416,18 @@ const ProfileEditor = {
         this.scheduleSave(true);
     },
 
-    addModule(type = 'custom') {
+    addModule(type = 'custom', silent = false) {
         if (!this.draft) this.draft = { profile_basic: {}, education: [], modules: [] };
-        const cfg = this.SECTION_CONFIG[type] || this.SECTION_CONFIG.custom;
+        const cfg = this.getSectionConfig()[type] || this.getSectionConfig().custom;
+        const newTitle = type === 'skill'
+            ? ''
+            : profileUiText('resume.profileEditor.newEntryTitle', 'New {section}', {
+                section: cfg.label.replace(/s$/, ''),
+            });
         this.draft.modules.push({
             id: this.newId('mod'),
-            type: type in this.SECTION_CONFIG ? type : 'custom',
-            title: type === 'skill' ? '' : `New ${cfg.label.replace(/s$/, '')}`,
+            type: type in this.getSectionConfig() ? type : 'custom',
+            title: newTitle,
             content: '',
             is_custom: true,
         });
@@ -350,6 +444,23 @@ const ProfileEditor = {
 
     collectDraftFromForm() {
         const extras = { ...(this.draft?.profile_basic?.extras || {}) };
+        const supplementFieldMap = {
+            'profile-address': 'address',
+            'profile-age': 'age',
+            'profile-gender': 'gender',
+            'profile-native-place': 'native_place',
+            'profile-political-status': 'political_status',
+            'profile-linkedin': 'linkedin',
+            'profile-summary': 'summary',
+        };
+        Object.entries(supplementFieldMap).forEach(([id, extraKey]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const val = el.value.trim();
+            if (val) extras[extraKey] = val;
+            else delete extras[extraKey];
+        });
+
         const basic = {
             name: document.getElementById('profile-name')?.value.trim() || '',
             email: document.getElementById('profile-email')?.value.trim() || '',
@@ -419,73 +530,127 @@ const ProfileEditor = {
             .replace(/"/g, '&quot;');
     },
 
+    renderSupplementSection() {
+        const container = document.getElementById('profile-supplement-section');
+        if (!container) return;
+
+        const extras = this.draft?.profile_basic?.extras || {};
+        const lang = this.getResumeLang();
+        const isCjk = typeof isCjkResumeLang === 'function'
+            ? isCjkResumeLang(lang)
+            : (lang === 'zh' || lang === 'zh-TW');
+
+        const field = (id, labelKey, labelFallback, placeholderKey, placeholderFallback, value, fullWidth) => `
+            <div class="${fullWidth ? 'sm:col-span-2' : ''}">
+                <label class="block text-xs font-medium text-gray-500 mb-1" for="${id}">${profileUiText(labelKey, labelFallback)}</label>
+                <input id="${id}" type="text" value="${this.escapeHtml(value)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText(placeholderKey, placeholderFallback))}">
+            </div>`;
+
+        const summaryField = `
+            <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-500 mb-1" for="profile-summary">${profileUiText('resume.profileEditor.summary', 'Self introduction')}</label>
+                <textarea id="profile-summary" rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.summaryPlaceholder', '2–4 sentences highlighting strengths and role fit'))}">${this.escapeHtml(extras.summary || '')}</textarea>
+            </div>`;
+
+        let fieldsHtml = '';
+        if (isCjk) {
+            fieldsHtml = [
+                field('profile-address', 'resume.profileEditor.address', 'Full address', 'resume.profileEditor.addressPlaceholder', 'Province, city, district', extras.address || '', true),
+                field('profile-age', 'resume.profileEditor.age', 'Age', 'resume.profileEditor.agePlaceholder', 'e.g. 24', extras.age || '', false),
+                field('profile-gender', 'resume.profileEditor.gender', 'Gender', 'resume.profileEditor.genderPlaceholder', 'Male / Female', extras.gender || '', false),
+                field('profile-native-place', 'resume.profileEditor.nativePlace', 'Native place', 'resume.profileEditor.nativePlacePlaceholder', 'e.g. Guangzhou, Guangdong', extras.native_place || '', false),
+                field('profile-political-status', 'resume.profileEditor.politicalStatus', 'Political status', 'resume.profileEditor.politicalStatusPlaceholder', 'Party member / League member / Non-party', extras.political_status || '', false),
+                summaryField,
+            ].join('');
+        } else {
+            fieldsHtml = [
+                field('profile-linkedin', 'resume.profileEditor.linkedin', 'LinkedIn', 'resume.profileEditor.linkedinPlaceholder', 'https://linkedin.com/in/yourname', extras.linkedin || '', true),
+                summaryField,
+            ].join('');
+        }
+
+        container.innerHTML = `
+            <div class="p-4 border border-amber-100 bg-amber-50/40 rounded-lg">
+                <h4 class="font-semibold text-gray-800 text-sm mb-1">${profileUiText('resume.profileEditor.supplementTitle', 'Additional profile fields')}</h4>
+                <p class="text-xs text-gray-500 mb-3">${profileUiText('resume.profileEditor.supplementHint', 'See inline reminders next to each field that needs attention.')}</p>
+                <div class="grid sm:grid-cols-2 gap-3">${fieldsHtml}</div>
+            </div>`;
+    },
+
     renderEducationCard(entry) {
         return `
         <div class="border border-gray-200 rounded-lg p-4 mb-2 bg-white" data-education-id="${entry.id}" data-is-custom="${entry.is_custom ? 'true' : 'false'}">
             <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-xs font-medium text-indigo-600 uppercase tracking-wide">Education entry</span>
-                <button type="button" data-remove-education="${entry.id}" class="text-red-500 hover:text-red-700 p-1" title="Remove">
+                <span class="text-xs font-medium text-indigo-600 uppercase tracking-wide">${profileUiText('resume.profileEditor.educationEntry', 'Education entry')}</span>
+                <button type="button" data-remove-education="${entry.id}" class="text-red-500 hover:text-red-700 p-1" title="${this.escapeHtml(profileUiText('resume.profileEditor.remove', 'Remove'))}">
                     <i class="fas fa-trash-alt text-sm"></i>
                 </button>
             </div>
             <div class="grid sm:grid-cols-2 gap-2">
                 <div class="sm:col-span-2">
-                    <label class="block text-xs text-gray-500 mb-1">School</label>
-                    <input data-edu-school type="text" value="${this.escapeHtml(entry.school)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="University / School name">
+                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.school', 'School')}</label>
+                    <input data-edu-school type="text" value="${this.escapeHtml(entry.school)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.schoolPlaceholder', 'University / School name'))}">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Major</label>
-                    <input data-edu-major type="text" value="${this.escapeHtml(entry.major)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Major / Field">
+                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.major', 'Major')}</label>
+                    <input data-edu-major type="text" value="${this.escapeHtml(entry.major)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.majorPlaceholder', 'Major / Field'))}">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Degree</label>
-                    <input data-edu-degree type="text" value="${this.escapeHtml(entry.degree)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Bachelor / Master…">
+                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.degree', 'Degree')}</label>
+                    <input data-edu-degree type="text" value="${this.escapeHtml(entry.degree)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.degreePlaceholder', 'Bachelor / Master…'))}">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Start</label>
-                    <input data-edu-start type="text" value="${this.escapeHtml(entry.start_date)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="2019-09">
+                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.startDate', 'Start')}</label>
+                    <input data-edu-start type="text" value="${this.escapeHtml(entry.start_date)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.datePlaceholder', '2019-09'))}">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">End</label>
-                    <input data-edu-end type="text" value="${this.escapeHtml(entry.end_date)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="2023-06">
+                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.endDate', 'End')}</label>
+                    <input data-edu-end type="text" value="${this.escapeHtml(entry.end_date)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.endDatePlaceholder', '2023-06'))}">
                 </div>
             </div>
         </div>`;
     },
 
     renderModuleCard(module) {
-        const typeOptions = Object.entries(this.SECTION_CONFIG)
+        const sectionConfig = this.getSectionConfig();
+        const typeOptions = Object.entries(sectionConfig)
             .filter(([k]) => k !== 'education')
             .map(([value, cfg]) => `<option value="${value}" ${module.type === value ? 'selected' : ''}>${cfg.label}</option>`)
             .join('');
 
         const showTitle = module.type !== 'skill';
+        const detailsLabel = module.type === 'skill'
+            ? profileUiText('resume.profileEditor.skillLabel', 'Skill')
+            : profileUiText('resume.profileEditor.details', 'Details');
+        const detailsPlaceholder = module.type === 'skill'
+            ? profileUiText('resume.profileEditor.skillPlaceholder', 'e.g. Python, Advanced')
+            : profileUiText('resume.profileEditor.detailsPlaceholder', 'Role, achievements, technologies…');
 
         return `
         <div class="border border-gray-200 rounded-lg p-4 mb-2 bg-white" data-module-id="${module.id}" data-is-custom="${module.is_custom ? 'true' : 'false'}">
             <div class="flex items-start justify-between gap-2 mb-2">
                 <select data-module-type class="border border-gray-300 rounded-lg p-1.5 text-xs bg-gray-50">${typeOptions}</select>
-                <button type="button" data-remove-module="${module.id}" class="text-red-500 hover:text-red-700 p-1" title="Remove">
+                <button type="button" data-remove-module="${module.id}" class="text-red-500 hover:text-red-700 p-1" title="${this.escapeHtml(profileUiText('resume.profileEditor.remove', 'Remove'))}">
                     <i class="fas fa-trash-alt text-sm"></i>
                 </button>
             </div>
             ${showTitle ? `
             <div class="mb-2">
-                <label class="block text-xs text-gray-500 mb-1">Title</label>
-                <input data-module-title type="text" value="${this.escapeHtml(module.title)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Company / Project name">
+                <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.entryTitle', 'Title')}</label>
+                <input data-module-title type="text" value="${this.escapeHtml(module.title)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.entryTitlePlaceholder', 'Company / Project name'))}">
             </div>` : `<input data-module-title type="hidden" value="${this.escapeHtml(module.title)}">`}
             <div>
-                <label class="block text-xs text-gray-500 mb-1">${module.type === 'skill' ? 'Skill' : 'Details'}</label>
-                <textarea data-module-content rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${module.type === 'skill' ? 'e.g. Python, Advanced' : 'Role, achievements, technologies…'}">${this.escapeHtml(module.content)}</textarea>
+                <label class="block text-xs text-gray-500 mb-1">${detailsLabel}</label>
+                <textarea data-module-content rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(detailsPlaceholder)}">${this.escapeHtml(module.content)}</textarea>
             </div>
         </div>`;
     },
 
     renderSection(type, items, renderFn) {
-        const cfg = this.SECTION_CONFIG[type];
+        const cfg = this.getSectionConfig()[type];
         const cards = items.length
             ? items.map((item) => renderFn.call(this, item)).join('')
-            : '<p class="text-xs text-gray-400 italic mb-2">No entries yet.</p>';
+            : `<p class="text-xs text-gray-400 italic mb-2">${profileUiText('resume.profileEditor.noEntries', 'No entries yet — add one below or fill the empty slot.')}</p>`;
 
         return `
         <div class="mb-5" data-section-type="${type}">
@@ -515,7 +680,9 @@ const ProfileEditor = {
         if (emailEl) emailEl.value = basic.email || '';
         if (phoneEl) phoneEl.value = basic.phone || '';
         if (cityEl) cityEl.value = basic.city || '';
+        this.renderSupplementSection();
         this.renderPhotoPreview();
+        this.updatePhotoVisibility(this.getResumeLang());
 
         const body = document.getElementById('profile-editor-body');
         if (!body) return;
@@ -523,7 +690,7 @@ const ProfileEditor = {
         const education = draft.education || [];
         const modulesByType = {};
         (draft.modules || []).forEach((m) => {
-            const t = m.type in this.SECTION_CONFIG ? m.type : 'custom';
+            const t = m.type in this.getSectionConfig() ? m.type : 'custom';
             if (!modulesByType[t]) modulesByType[t] = [];
             modulesByType[t].push(m);
         });
@@ -607,17 +774,17 @@ const ProfileEditor = {
         this.render();
         this.show(false);
 
+        document.getElementById('jd-section')?.classList.remove('hidden');
+        if (typeof updateStepIndicator === 'function') {
+            updateStepIndicator(1, 'completed');
+            updateStepIndicator(2, 'active');
+        }
+
         try {
             await this.persistDraft();
         } catch (error) {
             console.warn('Draft save after upload failed:', error.message);
             this.setSaveStatus(profileUiText('resume.draftSaveFailed', 'Save failed — edits kept locally'));
-        }
-
-        document.getElementById('jd-section')?.classList.remove('hidden');
-        if (typeof updateStepIndicator === 'function') {
-            updateStepIndicator(1, 'completed');
-            updateStepIndicator(2, 'active');
         }
     },
 };
@@ -628,4 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('gba:language-changed', () => {
     ProfileEditor.renderPhotoPreview();
+    if (ProfileEditor.draft) {
+        ProfileEditor.render();
+    }
 });
