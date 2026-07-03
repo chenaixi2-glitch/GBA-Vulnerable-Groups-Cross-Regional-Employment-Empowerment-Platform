@@ -1,6 +1,13 @@
 (function () {
     'use strict';
 
+    function seT(key, fallback, vars) {
+        if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+        var s = fallback;
+        if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+        return s;
+    }
+
     function initDemoActions() {
         document.querySelectorAll('a[href="#"]').forEach(function (link) {
             var label = (link.textContent || '').trim().toLowerCase();
@@ -173,9 +180,9 @@
                             .join('') +
                         '</div></div><div class="text-left sm:text-right shrink-0"><div class="text-green-600 font-semibold mb-2">' +
                         job[3] +
-                        '% Match</div><a href="apply.html?role=' +
+                        '% ' + seT('site.matchLabel', 'Match') + '</div><a href="apply.html?role=' +
                         job[4] +
-                        '" class="btn-primary justify-center">Apply Now</a></div></div></div>'
+                        '" class="btn-primary justify-center">' + seT('site.applyNow', 'Apply Now') + '</a></div></div></div>'
                     );
                 })
                 .join('');
@@ -216,10 +223,17 @@
                     ? '#' + document.querySelector('main, section, div[id]').id
                     : '#';
             skip.className = 'skip-link';
-            skip.textContent = 'Skip to content';
+            skip.textContent = seT('site.skipToContent', 'Skip to content');
+            skip.dataset.i18nDynamic = '1';
             document.body.insertBefore(skip, document.body.firstChild);
         }
     }
+
+    window.addEventListener('gba:language-changed', function () {
+        var skip = document.querySelector('.skip-link');
+        if (skip) skip.textContent = seT('site.skipToContent', 'Skip to content');
+        initRecommendedJobs();
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
         initPolish();

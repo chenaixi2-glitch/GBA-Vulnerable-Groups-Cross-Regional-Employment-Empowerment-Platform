@@ -2,6 +2,13 @@
  * 企业端 Dashboard 实时统计 + HR 团队绩效
  */
 (function () {
+  function dT(key, fallback, vars) {
+    if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
+    var s = fallback;
+    if (vars && s) Object.keys(vars).forEach(function (k) { s = String(s).replace('{' + k + '}', vars[k]); });
+    return s;
+  }
+
   function setSubtext(el, text) {
     if (!el) return;
     el.textContent = text;
@@ -32,9 +39,9 @@
     if (tbody) {
       tbody.innerHTML =
         '<tr><td colspan="8" class="py-8 text-center">' +
-        '<p class="text-amber-800 font-medium mb-2"><i class="fas fa-lock mr-1"></i> HR 团队绩效统计需捐款解锁</p>' +
-        '<p class="text-sm text-gray-500 mb-3">招聘发布、岗位匹配与法律帮助可免费使用</p>' +
-        '<a href="donation-legal.html" class="inline-flex px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">前往捐款箱</a>' +
+        '<p class="text-amber-800 font-medium mb-2"><i class="fas fa-lock mr-1"></i> ' + escapeHtml(dT('corporate.hrPremiumLocked', 'HR team analytics require a donation to unlock')) + '</p>' +
+        '<p class="text-sm text-gray-500 mb-3">' + escapeHtml(dT('corporate.hrPremiumFreeHint', 'Job posting, matching and legal aid are free')) + '</p>' +
+        '<a href="donation-legal.html" class="inline-flex px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">' + escapeHtml(dT('corporate.goDonation', 'Go to donation box')) + '</a>' +
         '</td></tr>';
     }
     const canvas = document.getElementById('hrTeamChart');
@@ -53,19 +60,19 @@
       const cards = document.querySelectorAll('#dashboard .stat-card');
       if (cards[0]) {
         animateCounter(cards[0].querySelector('.counter'), s.active_jobs || 0);
-        setSubtext(cards[0].querySelector('.text-xs'), `↑ ${s.jobs_this_week || 0} this week`);
+        setSubtext(cards[0].querySelector('.text-xs'), dT('corporate.thisWeek', '↑ {count} this week', { count: s.jobs_this_week || 0 }));
       }
       if (cards[1]) {
         animateCounter(cards[1].querySelector('.counter'), s.total_applications || 0);
-        setSubtext(cards[1].querySelector('.text-xs'), `↑ ${s.applications_today || 0} today`);
+        setSubtext(cards[1].querySelector('.text-xs'), dT('corporate.today', '↑ {count} today', { count: s.applications_today || 0 }));
       }
       if (cards[2]) {
         animateCounter(cards[2].querySelector('.counter'), s.interviews || 0);
-        setSubtext(cards[2].querySelector('.text-xs'), `${s.applications_by_status?.reviewing || 0} reviewing`);
+        setSubtext(cards[2].querySelector('.text-xs'), dT('corporate.reviewingCount', '{count} reviewing', { count: s.applications_by_status?.reviewing || 0 }));
       }
       if (cards[3]) {
         animateCounter(cards[3].querySelector('.counter'), s.hires_this_month || 0);
-        setSubtext(cards[3].querySelector('.text-xs'), `${s.applications_by_status?.accepted || 0} accepted total`);
+        setSubtext(cards[3].querySelector('.text-xs'), dT('corporate.acceptedTotal', '{count} accepted total', { count: s.applications_by_status?.accepted || 0 }));
       }
       if (cards[4]) {
         const rateEl = cards[4].querySelector('.text-3xl');
@@ -79,9 +86,9 @@
         if (daysEl) {
           daysEl.textContent = s.avg_match_score != null ? String(s.avg_match_score) : '-';
         }
-        setSubtext(cards[5].querySelector('.text-xs'), 'Avg match score');
+        setSubtext(cards[5].querySelector('.text-xs'), dT('corporate.avgMatchScore', 'Avg match score'));
         const label = cards[5].querySelector('.text-gray-500');
-        if (label) label.textContent = 'Match Score';
+        if (label) label.textContent = dT('corporate.matchScore', 'Match Score');
       }
 
       if (window.recruitmentChart && s.application_trend) {
@@ -128,7 +135,7 @@
 
     const rows = data.hr_performance || [];
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-gray-400">暂无 HR 绩效数据。可邀请更多 HR 加入组织后查看对比。</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-gray-400">' + escapeHtml(dT('corporate.hrNoData', 'No HR performance data yet. Invite more HR members to compare.')) + '</td></tr>';
       return;
     }
 
@@ -136,10 +143,10 @@
       const isMe = hr.user_id === data.current_user_id;
       return '<tr class="border-b border-gray-50' + (isMe ? ' bg-green-50/50' : '') + '">' +
         '<td class="py-3 pr-4 font-medium text-gray-900">' + escapeHtml(hr.hr_name) +
-        (isMe ? ' <span class="text-xs text-green-700">(我)</span>' : '') +
+        (isMe ? ' <span class="text-xs text-green-700">' + escapeHtml(dT('corporate.hrMe', '(me)')) + '</span>' : '') +
         '<div class="text-xs text-gray-400">' + escapeHtml(hr.hr_title || '') + '</div></td>' +
         '<td class="py-3 pr-4 text-gray-600">' + escapeHtml(hr.member_role) + '</td>' +
-        '<td class="py-3 pr-4">' + hr.jobs_posted + ' <span class="text-xs text-gray-400">(' + hr.active_jobs + ' active)</span></td>' +
+        '<td class="py-3 pr-4">' + hr.jobs_posted + ' <span class="text-xs text-gray-400">' + escapeHtml(dT('corporate.activeJobsSuffix', '({count} active)', { count: hr.active_jobs })) + '</span></td>' +
         '<td class="py-3 pr-4">' + hr.applications_received + '</td>' +
         '<td class="py-3 pr-4">' + hr.reviews_handled + '</td>' +
         '<td class="py-3 pr-4 font-semibold text-green-700">' + hr.hires + '</td>' +
@@ -168,13 +175,13 @@
         labels: labels,
         datasets: [
           {
-            label: '投递数',
+            label: dT('corporate.chartApplications', 'Applications'),
             data: apps,
             backgroundColor: 'rgba(37, 99, 235, 0.7)',
             borderRadius: 6,
           },
           {
-            label: '录用数',
+            label: dT('corporate.chartHires', 'Hires'),
             data: hires,
             backgroundColor: 'rgba(16, 185, 129, 0.85)',
             borderRadius: 6,
@@ -212,7 +219,7 @@
       if (meta) {
         meta.classList.remove('hidden');
         const orgName = document.getElementById('hr-org-name');
-        if (orgName) orgName.textContent = data.org_name || '企业组织';
+        if (orgName) orgName.textContent = data.org_name || dT('corpPortal.companyProfile', 'Company');
         const inviteWrap = document.getElementById('hr-invite-wrap');
         const inviteCode = document.getElementById('hr-invite-code');
         if (data.invite_code && inviteWrap && inviteCode) {
@@ -230,7 +237,7 @@
       }
       const tbody = document.getElementById('hr-team-table-body');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-gray-400">HR 绩效暂不可用（请执行 migrate_v8 迁移）</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-gray-400">' + escapeHtml(dT('corporate.hrUnavailable', 'HR performance unavailable (run migrate_v8)')) + '</td></tr>';
       }
     }
   }
@@ -249,4 +256,8 @@
   }
 
   window.loadCorporateStats = loadAll;
+
+  window.addEventListener('gba:language-changed', function () {
+    loadAll();
+  });
 })();

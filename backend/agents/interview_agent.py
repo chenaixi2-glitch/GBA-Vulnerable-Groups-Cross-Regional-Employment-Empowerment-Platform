@@ -19,7 +19,7 @@ from tools.interview_program import (
     build_interview_program,
     format_stages_generation_spec,
 )
-from tools.output_language import prompt_language_kwargs
+from tools.output_language import interview_question_prompt_language_kwargs
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import CopilotState, InterviewQA
 from workflow.trace import append_trace
@@ -267,7 +267,7 @@ async def custom_interview_answers_async(
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
         resume_json=state.resume_content_json.model_dump_json(indent=2),
-        **prompt_language_kwargs(state),
+        **interview_question_prompt_language_kwargs(state),
     )
 
     try:
@@ -343,7 +343,7 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
             job_json=build_enriched_job_json(state),
             profile_json=state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}",
             resume_json=state.resume_content_json.model_dump_json(indent=2) if state.resume_content_json else "{}",
-            **prompt_language_kwargs(state),
+            **interview_question_prompt_language_kwargs(state),
         )
         input_summary = "基于用户消息与已有部分上下文分阶段生成面试题（独立模式）。"
         program = None
@@ -363,7 +363,7 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
             job_json=build_enriched_job_json(state),
             profile_json=state.candidate_profile.model_dump_json(indent=2),
             resume_json=state.resume_content_json.model_dump_json(indent=2),
-            **prompt_language_kwargs(state),
+            **interview_question_prompt_language_kwargs(state),
         )
         input_summary = (
             f"按{program.version}程序分{program.stage_count}阶段生成面试问答"

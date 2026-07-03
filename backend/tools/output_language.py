@@ -43,8 +43,26 @@ def resolve_gap_prompt_language(state: CopilotState) -> str:
     return resolve_page_ui_language(state)
 
 
+def resolve_interview_question_language(state: CopilotState) -> str:
+    """Language for interview questions, reference answers, and interviewer messages."""
+    if state.chat_question_output_language:
+        return normalize_language(state.chat_question_output_language)
+    if state.meta and (state.meta.interview_question_language or "").strip():
+        return normalize_language(state.meta.interview_question_language)
+    return "zh"
+
+
+def resolve_interview_feedback_language(state: CopilotState) -> str:
+    """Language for answer evaluation, brief feedback, and debrief reports."""
+    if state.chat_feedback_output_language:
+        return normalize_language(state.chat_feedback_output_language)
+    if state.meta and (state.meta.interview_feedback_language or "").strip():
+        return normalize_language(state.meta.interview_feedback_language)
+    return "zh"
+
+
 def resolve_output_language(state: CopilotState) -> str:
-    """Language for JD/interview agent prompts — prefers per-request locale."""
+    """Language for JD agent prompts — prefers page locale, not interview."""
     if state.chat_output_language:
         return normalize_language(state.chat_output_language)
     if state.meta and (state.meta.ui_output_language or "").strip():
@@ -113,16 +131,44 @@ def apply_chat_output_language(state: CopilotState, language: str | None) -> Cop
     return state
 
 
-def apply_interview_output_language(state: CopilotState, language: str | None) -> CopilotState:
-    """Set interview output language for this request only; does not change page UI locale."""
+def apply_interview_question_language(state: CopilotState, language: str | None) -> CopilotState:
+    """Persist interview question output language; does not change page or feedback locale."""
     if not language or not str(language).strip():
-        state.chat_output_language = ""
+        state.chat_question_output_language = ""
         return state
     lang = normalize_language(language)
     if lang not in VALID_RESUME_LANGUAGES:
-        state.chat_output_language = ""
+        state.chat_question_output_language = ""
         return state
-    state.chat_output_language = lang
+    state.chat_question_output_language = lang
+    state.meta = state.meta.model_copy(update={"interview_question_language": lang})
+    return state
+
+
+def apply_interview_feedback_language(state: CopilotState, language: str | None) -> CopilotState:
+    """Persist interview feedback output language; does not change page or question locale."""
+    if not language or not str(language).strip():
+        state.chat_feedback_output_language = ""
+        return state
+    lang = normalize_language(language)
+    if lang not in VALID_RESUME_LANGUAGES:
+        state.chat_feedback_output_language = ""
+        return state
+    state.chat_feedback_output_language = lang
+    state.meta = state.meta.model_copy(update={"interview_feedback_language": lang})
+    return state
+
+
+def apply_interview_languages(
+    state: CopilotState,
+    question_language: str | None = None,
+    feedback_language: str | None = None,
+) -> CopilotState:
+    """Apply question and/or feedback language for a single request."""
+    if question_language:
+        apply_interview_question_language(state, question_language)
+    if feedback_language:
+        apply_interview_feedback_language(state, feedback_language)
     return state
 
 
@@ -145,31 +191,53 @@ def apply_session_language(state: CopilotState, language: str | None) -> Copilot
     return apply_resume_target_language(state, language)
 
 
-def prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
-    lang = resolve_output_language(state)
+def _language_kwargs(lang: str) -> dict[str, str]:
     return {
         "output_language": lang,
         "output_language_label": language_label(lang),
         "output_language_instruction": output_language_instruction(lang),
     }
+
+
+def interview_question_prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
+    """Prompt kwargs for interview question / reference answer generation."""
+    return _language_kwargs(resolve_interview_question_language(state))
+
+
+def interview_feedback_prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
+    """Prompt kwargs for interview feedback / debrief generation."""
+    return _language_kwargs(resolve_interview_feedback_language(state))
+
+
+def interview_turn_prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
+    """Prompt kwargs when one turn produces both feedback and follow-up questions."""
+    q_lang = resolve_interview_question_language(state)
+    f_lang = resolve_interview_feedback_language(state)
+    return {
+        **_language_kwargs(q_lang),
+        "question_output_language": q_lang,
+        "question_output_language_label": language_label(q_lang),
+        "question_output_language_instruction": output_language_instruction(q_lang),
+        "feedback_output_language": f_lang,
+        "feedback_output_language_label": language_label(f_lang),
+        "feedback_output_language_instruction": output_language_instruction(f_lang),
+    }
+
+
+def prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
+    lang = resolve_output_language(state)
+    return _language_kwargs(lang)
 
 
 def gap_prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
     """Prompt kwargs for gap analysis — includes a stronger top-of-prompt language block."""
     lang = resolve_gap_prompt_language(state)
     return {
-        "output_language": lang,
-        "output_language_label": language_label(lang),
-        "output_language_instruction": output_language_instruction(lang),
+        **_language_kwargs(lang),
         "gap_output_language_instruction": gap_output_language_instruction(lang),
     }
 
 
 def page_prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
     """Prompt kwargs for page-scoped agents (learning path) — follows UI locale only."""
-    lang = resolve_page_ui_language(state)
-    return {
-        "output_language": lang,
-        "output_language_label": language_label(lang),
-        "output_language_instruction": output_language_instruction(lang),
-    }
+    return _language_kwargs(resolve_page_ui_language(state))

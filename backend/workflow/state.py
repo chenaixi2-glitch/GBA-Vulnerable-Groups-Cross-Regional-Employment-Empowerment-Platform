@@ -304,7 +304,9 @@ class Meta(BaseModel):
     target_jd_text: str = ""  # 用户填写的目标 JD 原文
     target_industry: str = ""  # 目标行业（下拉框）
     target_experience_level: str = ""  # 目标经验等级（下拉框）
-    ui_output_language: str = ""  # 页面 UI 语言（zh | zh-TW | en | pt），用于缺口追问等交互文案
+    ui_output_language: str = ""  # 页面 UI 语言（zh | zh-TW | en | pt），用于缺口追问、学习路线等
+    interview_question_language: str = ""  # 用户选择的面试题/追问输出语言
+    interview_feedback_language: str = ""  # 用户选择的面试反馈/复盘输出语言
     dirty_flags: DirtyFlags = Field(default_factory=DirtyFlags)
 
 
@@ -368,4 +370,6 @@ class CopilotState(BaseModel):
     triggered_agents: list[str] = Field(default_factory=list)
     workflow_trace: list[WorkflowTraceItem] = Field(default_factory=list)
     resume_language_target: str = ""  # runtime: zh | zh-TW | en | pt for language_convert intent
-    chat_output_language: str = ""  # runtime: per-request UI locale for gap/JD/interview prompts
+    chat_output_language: str = ""  # runtime: per-request page UI locale
+    chat_question_output_language: str = ""  # runtime: per-request interview question locale
+    chat_feedback_output_language: str = ""  # runtime: per-request interview feedback locale

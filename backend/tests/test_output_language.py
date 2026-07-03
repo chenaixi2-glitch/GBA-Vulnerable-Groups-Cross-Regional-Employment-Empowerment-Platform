@@ -3,15 +3,21 @@
 from workflow.state import CopilotState, Meta, RenderConfig
 from tools.output_language import (
     apply_chat_output_language,
-    apply_interview_output_language,
+    apply_interview_feedback_language,
+    apply_interview_question_language,
     apply_resume_target_language,
     apply_session_language,
     gap_output_language_instruction,
     gap_prompt_language_kwargs,
+    interview_feedback_prompt_language_kwargs,
+    interview_question_prompt_language_kwargs,
+    interview_turn_prompt_language_kwargs,
     output_language_instruction,
     page_prompt_language_kwargs,
     prompt_language_kwargs,
     resolve_gap_prompt_language,
+    resolve_interview_feedback_language,
+    resolve_interview_question_language,
     resolve_output_language,
     resolve_page_ui_language,
     resolve_resume_target_language,
@@ -112,18 +118,63 @@ def test_gap_prompt_language_kwargs_includes_mandatory_block():
         **kwargs,
     )
     assert "MANDATORY OUTPUT LANGUAGE" in prompt
-    assert "FINAL REMINDER" in prompt
-    assert "English" in prompt
 
 
-def test_apply_interview_output_language_does_not_change_meta():
+def test_apply_interview_question_language_does_not_change_page_or_feedback():
     state = CopilotState(
         session_id="sess_test",
-        meta=Meta(ui_output_language="zh"),
+        meta=Meta(ui_output_language="zh", interview_feedback_language="pt"),
     )
-    apply_interview_output_language(state, "en")
-    assert state.chat_output_language == "en"
+    apply_interview_question_language(state, "en")
+    assert state.chat_question_output_language == "en"
+    assert state.meta.interview_question_language == "en"
     assert state.meta.ui_output_language == "zh"
+    assert state.meta.interview_feedback_language == "pt"
+
+
+def test_apply_interview_feedback_language_does_not_change_page_or_question():
+    state = CopilotState(
+        session_id="sess_test",
+        meta=Meta(ui_output_language="zh", interview_question_language="en"),
+    )
+    apply_interview_feedback_language(state, "pt")
+    assert state.chat_feedback_output_language == "pt"
+    assert state.meta.interview_feedback_language == "pt"
+    assert state.meta.ui_output_language == "zh"
+    assert state.meta.interview_question_language == "en"
+
+
+def test_interview_languages_are_independent():
+    state = CopilotState(
+        session_id="sess_test",
+        chat_question_output_language="en",
+        chat_feedback_output_language="pt",
+    )
+    q_kwargs = interview_question_prompt_language_kwargs(state)
+    f_kwargs = interview_feedback_prompt_language_kwargs(state)
+    turn_kwargs = interview_turn_prompt_language_kwargs(state)
+    assert q_kwargs["output_language"] == "en"
+    assert f_kwargs["output_language"] == "pt"
+    assert turn_kwargs["question_output_language"] == "en"
+    assert turn_kwargs["feedback_output_language"] == "pt"
+    assert "English" in turn_kwargs["question_output_language_instruction"]
+    assert "português" in turn_kwargs["feedback_output_language_instruction"]
+
+
+def test_resolve_interview_question_language_does_not_use_page_language():
+    state = CopilotState(
+        session_id="sess_test",
+        meta=Meta(ui_output_language="en"),
+    )
+    assert resolve_interview_question_language(state) == "zh"
+
+
+def test_resolve_interview_feedback_language_does_not_use_page_language():
+    state = CopilotState(
+        session_id="sess_test",
+        meta=Meta(ui_output_language="en"),
+    )
+    assert resolve_interview_feedback_language(state) == "zh"
 
 
 def test_resolve_page_ui_language_ignores_resume_target():

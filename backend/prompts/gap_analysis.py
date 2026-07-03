@@ -47,6 +47,16 @@ GAP_ANALYSIS_PROMPT = """=== MANDATORY OUTPUT LANGUAGE (HIGHEST PRIORITY) ===
             "status": "pending",
             "answer_ref": ""
         }}
+    ],
+    "experiences_to_remove": [
+        {{
+            "id": "rem_1",
+            "fact_id": "fact_internship_2",
+            "section_type": "internship | project | award | paper | skill | education",
+            "title": "<experience title in the required output language>",
+            "reason": "<clear explanation why this entry should be omitted for the target role or A4 one-page layout, in the required output language>",
+            "priority": "recommended | optional"
+        }}
     ]
 }}
 
@@ -57,9 +67,12 @@ GAP_ANALYSIS_PROMPT = """=== MANDATORY OUTPUT LANGUAGE (HIGHEST PRIORITY) ===
 4. 当经历描述缺少量化数据（人数、规模、时长、性能、营收等）时，必须生成追问，主动询问用户是否有相关可验证数据；问题应明确举例（如用户数、提升比例、团队规模），并说明「若无相关数据可留空」；不得建议用户编造数据
 5. 对每段与目标岗位相关的核心实习/项目经历，若缺量化描述，questions_to_ask 中至少包含 1 条 medium 优先级追问（非必填，用户可留空）
 6. 当无法从简历判断与岗位的匹配方向时，questions_to_ask 至少包含 1 条 high 优先级问题
-7. 即使没有 gaps，若存在技术方向不确定性或关键经历缺量化信息，也应输出 questions_to_ask
-8. 即使没有结果，也必须返回合法 JSON 对象
+7. 当 type 为 missing_experience 的 gap 存在时，questions_to_ask 中必须包含对应追问，并在 question 中明确请用户用文字描述可补充的经历（公司/项目、职责、成果等）
+8. 当某段经历与目标岗位相关度低、内容重复、或为实现 A4 单页需精简时，须在 experiences_to_remove 中列出，并写清 title 与 reason；仅建议移除，最终由用户确认
+9. experiences_to_remove 须引用候选人画像 facts 中的 fact_id（如有）；若无 id 则 fact_id 留空但 title 须可识别
+10. 即使没有 gaps，若存在技术方向不确定性或关键经历缺量化信息，也应输出 questions_to_ask
+11. 即使没有结果，也必须返回合法 JSON 对象
 
 === FINAL REMINDER ===
-All gaps[].description, questions_to_ask[].question, and questions_to_ask[].reason MUST be in {output_language_label} ({output_language}) only. No other language.
+Re-read the MANDATORY OUTPUT LANGUAGE block at the top. Every gaps[].description, questions_to_ask[].question, questions_to_ask[].reason, and experiences_to_remove[].title/reason MUST use that language only.
 """

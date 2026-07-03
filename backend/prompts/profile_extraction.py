@@ -48,4 +48,5 @@ PROFILE_EXTRACTION_PROMPT = """你是一个候选人画像构建专家。请从�
 6. award / paper 同理，每项一条
 7. 即使信息不足，也必须返回合法 JSON 对象
 8. 保留已有画像中的信息，只添加或更新
+9. 若用户明确列出 CONFIRMED_REMOVALS 要求删除的经历（按 fact_id 或 title），不得再输出或保留对应 fact
 """

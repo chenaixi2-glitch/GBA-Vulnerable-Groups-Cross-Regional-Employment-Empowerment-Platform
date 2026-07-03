@@ -147,7 +147,8 @@ INTERACTIVE_INTERVIEW_TURN_PROMPT = """你是资深企业面试官，正在与�
 8. category 必须使用当前阶段可用分类标签
 
 ## 输出语言
-{output_language_instruction}
+- brief_feedback（对候选人回答的点评）：{feedback_output_language_instruction}
+- interviewer_message（追问/新问题/结束语）：{question_output_language_instruction}
 
 ## 机器协议
 - 返回且仅返回一个合法 JSON 对象
@@ -192,7 +193,7 @@ INTERACTIVE_INTERVIEW_DEBRIEF_PROMPT = """你是面试辅导专家。结构化�
 6. category_scores：各维度得分（使用标准分类名）
 7. 若初筛阶段有明显淘汰信号（表达混乱、动机模糊、不了解岗位等），须在 weaknesses 中明确指出
 
-## 输出语言
+## 输出语言（反馈与复盘）
 {output_language_instruction}
 
 ## 机器协议

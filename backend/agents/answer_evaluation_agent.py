@@ -9,7 +9,7 @@ from typing import Any
 from agents.json_contracts import AnswerEvaluationOutput, LLMJudgeRubricOutput
 from models.llm import get_llm, get_judge_llm, ainvoke_json_with_schema
 from prompts.answer_evaluation import ANSWER_EVALUATION_PROMPT, LLM_JUDGE_RUBRIC_PROMPT
-from tools.output_language import output_language_instruction, resolve_output_language
+from tools.output_language import output_language_instruction, resolve_interview_feedback_language
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import AnswerEvaluation, CopilotState, InterviewQA
 from workflow.trace import append_trace, summarize_user_message
@@ -116,7 +116,7 @@ async def answer_evaluation_node_async(state: CopilotState) -> dict[str, Any]:
         reference_answer=qa.answer or "（无参考答案）",
         user_answer=user_answer,
         job_context=_job_context(state),
-        output_language_instruction=output_language_instruction(resolve_output_language(state)),
+        output_language_instruction=output_language_instruction(resolve_interview_feedback_language(state)),
     )
     llm = get_llm()
     try:

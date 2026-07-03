@@ -706,10 +706,12 @@ async function generateResume() {
         // 单独以页面 UI 语言跑缺口分析，避免 JD 提交链路返回旧语言/缓存的 questions
         let gapGaps = [];
         let gapQuestions = [];
+        let gapRemovals = [];
         try {
             const gapResponse = await apiClient.runGapAnalysis();
             gapGaps = gapResponse.gaps || [];
             gapQuestions = gapResponse.questions_to_ask || [];
+            gapRemovals = gapResponse.experiences_to_remove || [];
             if (gapGaps.length) displayGapAnalysis(gapGaps);
         } catch (_) {
             /* gap analysis optional */
@@ -718,10 +720,11 @@ async function generateResume() {
         updateAgentStatus('agent-gap', 'completed');
         Utils.hideLoading();
 
-        // 交互式追问：技术栈/经历不明确时向用户提问
+        // 交互式追问：技术栈/经历不明确时向用户提问；删除经历须说明原因
         const optimizationResult = await showOptimizationDialog({
             gaps: gapGaps,
             questions: gapQuestions,
+            removals: gapRemovals,
             alignmentHint: jdAlignmentHint,
         });
         if (!optimizationResult?.proceed) {
@@ -730,9 +733,13 @@ async function generateResume() {
         }
 
         const answered = (optimizationResult.answers || []).filter((a) => a.answer);
-        if (answered.length) {
+        const agreedRemovals = (optimizationResult.removals || []).filter((r) => r.agreed);
+        if (answered.length || agreedRemovals.length) {
             Utils.showLoading(uiT('resume.toast.updatingProfile', 'Updating profile with your answers...'));
-            await apiClient.submitOptimizationClarifications(answered);
+            await apiClient.submitOptimizationFeedback({
+                answers: answered,
+                removals: agreedRemovals,
+            });
             Utils.hideLoading();
         }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post New Job — GBA Platform</title>
+    <title data-i18n="postJob.pageTitle">Post New Job — GBA Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -210,7 +210,7 @@
         body.high-contrast .form-input { background: #111; border-color: #555; color: #fff; }
     </style>
 </head>
-<body>
+<body data-page="corporate">
 
     <!-- Top navigation bar -->
     <nav class="bg-white shadow-sm fixed w-full z-50 border-b border-gray-100">
@@ -218,7 +218,7 @@
             <div class="flex items-center gap-4">
                 <a href="portal.html" class="flex items-center gap-2 text-gray-500 hover:text-green-600 transition-colors text-sm font-medium">
                     <i class="fas fa-arrow-left"></i>
-                    <span>Back to Portal</span>
+                    <span data-i18n="postJob.backPortal">Back to Portal</span>
                 </a>
                 <span class="text-gray-200">|</span>
                 <a href="../index.html" class="flex items-center gap-1.5">
@@ -227,7 +227,8 @@
                 </a>
             </div>
             <div class="flex items-center gap-3">
-                <span class="preview-badge"><i class="fas fa-eye mr-1"></i>Preview</span>
+                <div id="header-lang-slot"></div>
+                <span class="preview-badge"><i class="fas fa-eye mr-1"></i><span data-i18n="postJob.preview">Preview</span></span>
                 <img src="https://ui-avatars.com/api/?name=Company&background=10b981&color=fff" alt="Company" class="w-8 h-8 rounded-full">
             </div>
         </div>
@@ -239,27 +240,27 @@
 
             <!-- Page header -->
             <div class="mb-8 pt-4">
-                <h1 class="text-2xl font-bold text-gray-900">Post a New Job</h1>
-                <p class="text-gray-500 text-sm mt-1">Fill in the details below to publish your job opening to GBA talent pool</p>
+                <h1 class="text-2xl font-bold text-gray-900" data-i18n="postJob.pageHeading">Post a New Job</h1>
+                <p class="text-gray-500 text-sm mt-1" data-i18n="postJob.pageSubtitle">Fill in the details below to publish your job opening to GBA talent pool</p>
             </div>
 
             <!-- Step indicator -->
             <div class="step-indicator mb-8">
                 <div class="step active" id="step-1-indicator">
                     <div class="step-dot">1</div>
-                    <span class="step-label">Basic Info</span>
+                    <span class="step-label" data-i18n="postJob.stepBasic">Basic Info</span>
                 </div>
                 <div class="step" id="step-2-indicator">
                     <div class="step-dot">2</div>
-                    <span class="step-label">Requirements</span>
+                    <span class="step-label" data-i18n="postJob.stepRequirements">Requirements</span>
                 </div>
                 <div class="step" id="step-3-indicator">
                     <div class="step-dot">3</div>
-                    <span class="step-label">Benefits</span>
+                    <span class="step-label" data-i18n="postJob.stepBenefits">Benefits</span>
                 </div>
                 <div class="step" id="step-4-indicator">
                     <div class="step-dot">4</div>
-                    <span class="step-label">Settings</span>
+                    <span class="step-label" data-i18n="postJob.stepSettings">Settings</span>
                 </div>
             </div>
 
@@ -272,15 +273,15 @@
                     <div class="form-card">
                         <div class="section-title">
                             <span class="icon"><i class="fas fa-briefcase"></i></span>
-                            Basic Information
+                            <span data-i18n="postJob.basicInfo">Basic Information</span>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
-                                <label class="form-label">Job Title <span class="required">*</span></label>
-                                <input type="text" id="job-title" class="form-input" placeholder="e.g. Senior Software Engineer" required>
+                                <label class="form-label"><span data-i18n="postJob.jobTitle">Job Title</span> <span class="required">*</span></label>
+                                <input type="text" id="job-title" class="form-input" data-i18n-placeholder="postJob.placeholderTitle" placeholder="e.g. Senior Software Engineer" required>
                             </div>
                             <div>
-                                <label class="form-label">Department <span class="required">*</span></label>
+                                <label class="form-label"><span data-i18n="postJob.department">Department</span> <span class="required">*</span></label>
                                 <select id="department" class="form-input" required>
                                     <option value="">Select department</option>
                                     <option>Technology & Engineering</option>
@@ -631,14 +632,14 @@
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between items-center mt-6">
                     <button type="button" id="btn-prev" class="btn-secondary hidden">
-                        <i class="fas fa-arrow-left"></i> Previous
+                        <i class="fas fa-arrow-left"></i> <span data-i18n="postJob.previous">Previous</span>
                     </button>
                     <div class="flex-1"></div>
                     <button type="button" id="btn-next" class="btn-submit">
-                        Next Step <i class="fas fa-arrow-right"></i>
+                        <span data-i18n="postJob.nextStep">Next Step</span> <i class="fas fa-arrow-right"></i>
                     </button>
                     <button type="submit" id="btn-submit" class="btn-submit hidden">
-                        <i class="fas fa-paper-plane"></i> Publish Job
+                        <i class="fas fa-paper-plane"></i> <span data-i18n="postJob.publishJob">Publish Job</span>
                     </button>
                 </div>
 
@@ -652,24 +653,24 @@
             <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
                 <i class="fas fa-check text-4xl text-green-600"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Job Posted!</h2>
-            <p class="text-gray-500 mb-6">Your job posting is now live and visible to GBA talent. Our AI matching engine is already finding the best candidates for you.</p>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2" data-i18n="postJob.jobPosted">Job Posted!</h2>
+            <p class="text-gray-500 mb-6" data-i18n="postJob.jobPostedDesc">Your job posting is now live and visible to GBA talent. Our AI matching engine is already finding the best candidates for you.</p>
             <div class="bg-gray-50 rounded-xl p-4 text-left mb-6">
                 <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-500">Job ID</span>
+                    <span class="text-gray-500" data-i18n="postJob.jobId">Job ID</span>
                     <span class="font-mono font-semibold text-gray-800" id="success-job-id">GBA-2026-0001</span>
                 </div>
                 <div class="flex items-center justify-between text-sm mt-2">
-                    <span class="text-gray-500">Status</span>
-                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">Active</span>
+                    <span class="text-gray-500" data-i18n="corpPortal.colStatus">Status</span>
+                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold" data-i18n="postJob.statusActive">Active</span>
                 </div>
             </div>
             <div class="flex gap-3">
                 <a href="portal.html#jobs" class="flex-1 btn-secondary justify-center text-sm py-2.5">
-                    <i class="fas fa-list mr-1"></i> View My Jobs
+                    <i class="fas fa-list mr-1"></i> <span data-i18n="postJob.viewMyJobs">View My Jobs</span>
                 </a>
                 <button type="button" onclick="resetForm()" class="flex-1 btn-submit justify-center text-sm py-2.5">
-                    <i class="fas fa-plus mr-1"></i> Post Another
+                    <i class="fas fa-plus mr-1"></i> <span data-i18n="postJob.postAnother">Post Another</span>
                 </button>
             </div>
         </div>
@@ -780,18 +781,18 @@
             if (prioritizeWrap) prioritizeWrap.classList.toggle('hidden', !allOpen);
             if (!preview) return;
             if (types.length) {
-                preview.textContent = '弱势群体友好 · Tags: ' + types.join(', ');
+                preview.textContent = corpT('postJob.targetPreviewTags', 'Vulnerable-group friendly · Tags: {tags}', { tags: types.join(', ') });
                 preview.className = 'text-xs text-emerald-700 mt-3 font-medium';
                 return;
             }
             if (allOpen && criteria.prioritize_vulnerable) {
-                preview.textContent = '弱势群体友好 · 全员可见，企业端应聘者列表弱势群体优先排序';
+                preview.textContent = corpT('postJob.targetPreviewPrioritize', 'Vulnerable-group friendly · Visible to all; vulnerable candidates ranked first');
                 preview.className = 'text-xs text-emerald-700 mt-3 font-medium';
                 return;
             }
             preview.textContent = allOpen
-                ? '开放岗位：不勾选优先推荐则不显示弱势群体友好标签'
-                : '当前条件未推导弱势群体类型标签';
+                ? corpT('postJob.targetPreviewOpen', 'Open role: without prioritize checkbox, no vulnerable-group tag is shown')
+                : corpT('postJob.targetPreviewNoTags', 'Current criteria do not derive vulnerable-group type tags');
             preview.className = 'text-xs text-amber-600 mt-3 font-medium';
         }
 
@@ -821,8 +822,8 @@
             const summary = document.getElementById('job-summary').value.trim();
             const resp = document.getElementById('responsibilities').value.trim();
             const additional = document.getElementById('additional-req').value.trim();
-            let description = summary + '\n\nKey Responsibilities:\n' + resp;
-            if (additional) description += '\n\nAdditional Requirements:\n' + additional;
+            let description = summary + '\n\n' + corpT('postJob.keyResponsibilitiesHeader', 'Key Responsibilities:') + '\n' + resp;
+            if (additional) description += '\n\n' + corpT('postJob.additionalReqHeader', 'Additional Requirements:') + '\n' + additional;
 
             return {
                 title: document.getElementById('job-title').value.trim(),
@@ -882,28 +883,29 @@
         // ── Application method toggle ──────────────────────────────────────────
         document.getElementById('apply-method').addEventListener('change', function () {
             const urlWrap = document.getElementById('apply-url-wrap');
-            urlWrap.style.display = this.value === 'External URL' ? 'block' : 'none';
+            urlWrap.style.display = this.value === 'external' ? 'block' : 'none';
         });
         document.getElementById('apply-url-wrap').style.display = 'none';
 
         // ── Review summary ─────────────────────────────────────────────────────
         function buildSummary() {
-            const title   = document.getElementById('job-title').value || '(not set)';
-            const dept    = document.getElementById('department').value || '(not set)';
-            const type    = document.getElementById('employment-type').value || '(not set)';
-            const loc     = document.getElementById('work-location').value || '(not set)';
+            const notSet = corpT('postJob.notSet', '(not set)');
+            const title   = document.getElementById('job-title').value || notSet;
+            const dept    = document.getElementById('department').value || notSet;
+            const type    = document.getElementById('employment-type').value || notSet;
+            const loc     = document.getElementById('work-location').value || notSet;
             const salMin  = document.getElementById('salary-min').value;
             const salMax  = document.getElementById('salary-max').value;
-            const salStr  = salMin && salMax ? '¥' + Number(salMin).toLocaleString() + ' – ¥' + Number(salMax).toLocaleString() : 'Not specified';
-            const deadline = document.getElementById('deadline').value || 'Not specified';
+            const salStr  = salMin && salMax ? '¥' + Number(salMin).toLocaleString() + ' – ¥' + Number(salMax).toLocaleString() : corpT('postJob.notSpecified', 'Not specified');
+            const deadline = document.getElementById('deadline').value || corpT('postJob.notSpecified', 'Not specified');
 
             const rows = [
-                ['Job Title',        title],
-                ['Department',       dept],
-                ['Employment Type',  type],
-                ['Location',         loc],
-                ['Salary Range',     salStr],
-                ['Application Deadline', deadline],
+                [corpT('postJob.summaryJobTitle', 'Job Title'),        title],
+                [corpT('postJob.summaryDepartment', 'Department'),       dept],
+                [corpT('postJob.summaryEmploymentType', 'Employment Type'),  type],
+                [corpT('postJob.summaryLocation', 'Location'),         loc],
+                [corpT('postJob.summarySalary', 'Salary Range'),     salStr],
+                [corpT('postJob.summaryDeadline', 'Application Deadline'), deadline],
             ];
 
             const content = document.getElementById('summary-content');
@@ -952,8 +954,8 @@
                 }
                 updateTargetPreview();
                 const btn = document.getElementById('btn-submit');
-                if (btn) btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-                document.title = 'Edit Job — GBA Platform';
+                if (btn) btn.innerHTML = '<i class="fas fa-save"></i> ' + corpT('postJob.saveChanges', 'Save Changes');
+                document.title = corpT('postJob.editTitle', 'Edit Job — GBA Platform');
             } catch (e) {
                 showToast(mapCorpMsg(e.message) || corpT('corporate.loadJobFailed', 'Failed to load job for editing'), 'error');
             }
@@ -963,7 +965,7 @@
         document.getElementById('post-job-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const btn = document.getElementById('btn-submit');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> ' + (isEditMode ? 'Saving…' : 'Publishing…');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> ' + (isEditMode ? corpT('postJob.saving', 'Saving…') : corpT('postJob.publishing', 'Publishing…'));
             btn.disabled = true;
 
             try {
@@ -986,8 +988,8 @@
                 showToast(mapCorpMsg(err.message) || corpT('corporate.saveJobFailed', 'Failed to save job. Are you logged in as corporate?'), 'error');
             } finally {
                 btn.innerHTML = isEditMode
-                    ? '<i class="fas fa-save"></i> Save Changes'
-                    : '<i class="fas fa-paper-plane"></i> Publish Job';
+                    ? '<i class="fas fa-save"></i> ' + corpT('postJob.saveChanges', 'Save Changes')
+                    : '<i class="fas fa-paper-plane"></i> ' + corpT('postJob.publishJob', 'Publish Job');
                 btn.disabled = false;
             }
         });
@@ -1057,9 +1059,14 @@
     <script src="../assets/site-guide.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            if (window.GBAI18n && GBAI18n.initLanguage) await GBAI18n.initLanguage();
             await PortalAuth.guardPortalAuth({ portal: 'corporate', authPage: 'auth.html' });
             PlatformAccess.guardCurrentPage({ showModal: true, skipOnDonationPage: true });
             if (typeof window.loadJobForEdit === 'function') window.loadJobForEdit();
+        });
+        window.addEventListener('gba:language-changed', function () {
+            updateTargetPreview();
+            if (currentStep === totalSteps) buildSummary();
         });
     </script>
 </body>

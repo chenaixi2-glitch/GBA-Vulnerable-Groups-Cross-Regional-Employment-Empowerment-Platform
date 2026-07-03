@@ -12,7 +12,8 @@ let interviewSession = {
     tone: 'professional',
     programVersion: 'quick',
     programLabel: '',
-    interviewLanguage: '',
+    questionLanguage: '',
+    feedbackLanguage: '',
 };
 
 /** 交互式多轮模拟面试状态 */
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeInterviewPrep();
     setupInteractiveSaveModal();
     selectProgramVersion('quick');
-    initInterviewLanguage();
+    initInterviewLanguages();
 });
 
 function normalizeInterviewLang(code) {
@@ -99,30 +100,43 @@ function resumeLangDisplayLabel(code) {
     return code;
 }
 
-function getDefaultInterviewLanguage() {
+function getDefaultInterviewLang() {
     if (typeof apiClient !== 'undefined' && apiClient.getPageLanguage) {
         return apiClient.getPageLanguage();
     }
     if (typeof window.GBAI18n !== 'undefined' && GBAI18n.uiLangToApiLang) {
         return normalizeInterviewLang(GBAI18n.uiLangToApiLang(GBAI18n.getLang()));
     }
-    return 'en';
+    return 'zh';
 }
 
-function initInterviewLanguage() {
-    interviewSession.interviewLanguage = getDefaultInterviewLanguage();
-    syncInterviewLanguageButtons();
-    window.addEventListener('gba:language-changed', () => syncInterviewLanguageButtons());
+function initInterviewLanguages() {
+    const defaultLang = getDefaultInterviewLang();
+    interviewSession.questionLanguage = defaultLang;
+    interviewSession.feedbackLanguage = defaultLang;
+    syncQuestionLanguageButtons();
+    syncFeedbackLanguageButtons();
+    window.addEventListener('gba:language-changed', () => {
+        syncQuestionLanguageButtons();
+        syncFeedbackLanguageButtons();
+        if (typeof selectInterviewMode === 'function') selectInterviewMode(interviewMode);
+        updateInteractiveSaveButton();
+    });
 }
 
-function selectInterviewLanguage(language) {
-    interviewSession.interviewLanguage = normalizeInterviewLang(language);
-    syncInterviewLanguageButtons();
+function selectQuestionLanguage(language) {
+    interviewSession.questionLanguage = normalizeInterviewLang(language);
+    syncQuestionLanguageButtons();
 }
 
-function syncInterviewLanguageButtons() {
-    const active = normalizeInterviewLang(interviewSession.interviewLanguage || getDefaultInterviewLanguage());
-    document.querySelectorAll('[data-interview-lang]').forEach((btn) => {
+function selectFeedbackLanguage(language) {
+    interviewSession.feedbackLanguage = normalizeInterviewLang(language);
+    syncFeedbackLanguageButtons();
+}
+
+function syncLangButtonGroup(selector, activeLang) {
+    const active = normalizeInterviewLang(activeLang);
+    document.querySelectorAll(selector).forEach((btn) => {
         const code = normalizeInterviewLang(btn.dataset.interviewLang);
         const labelEl = btn.querySelector('.interview-lang-label');
         if (labelEl) labelEl.textContent = resumeLangDisplayLabel(code);
@@ -133,8 +147,20 @@ function syncInterviewLanguageButtons() {
     });
 }
 
-function getSelectedInterviewLanguage() {
-    return normalizeInterviewLang(interviewSession.interviewLanguage || getDefaultInterviewLanguage());
+function syncQuestionLanguageButtons() {
+    syncLangButtonGroup('[data-question-lang]', interviewSession.questionLanguage || getDefaultInterviewLang());
+}
+
+function syncFeedbackLanguageButtons() {
+    syncLangButtonGroup('[data-feedback-lang]', interviewSession.feedbackLanguage || getDefaultInterviewLang());
+}
+
+function getSelectedQuestionLanguage() {
+    return normalizeInterviewLang(interviewSession.questionLanguage || getDefaultInterviewLang());
+}
+
+function getSelectedFeedbackLanguage() {
+    return normalizeInterviewLang(interviewSession.feedbackLanguage || getDefaultInterviewLang());
 }
 
 function initializeInterviewPrep() {
@@ -326,17 +352,17 @@ function selectInterviewMode(mode) {
     document.getElementById('interactive-panel').classList.toggle('hidden', !isInteractive);
     document.getElementById('program-version-section')?.classList.toggle('hidden', isCustom);
     document.getElementById('sidebar-progress-title').textContent = isInteractive
-        ? 'Interview Progress'
-        : (isCustom ? 'Custom Questions Progress' : 'Question Bank Progress');
+        ? uiT('interview.sidebarProgressInteractive', 'Interview Progress')
+        : (isCustom ? uiT('interview.sidebarProgressCustom', 'Custom Questions Progress') : uiT('interview.sidebarProgressQuestionBank', 'Question Bank Progress'));
 
     const startBtn = document.getElementById('btn-load-questions');
     if (startBtn) {
         if (isInteractive) {
-            startBtn.innerHTML = '<i class="fas fa-comments mr-2"></i> Start Mock Interview';
+            startBtn.innerHTML = '<i class="fas fa-comments mr-2"></i> ' + uiT('interview.startSession', 'Start Mock Interview');
         } else if (isCustom) {
-            startBtn.innerHTML = '<i class="fas fa-magic mr-2"></i> Generate Reference Answers';
+            startBtn.innerHTML = '<i class="fas fa-magic mr-2"></i> ' + uiT('interview.generateReferenceAnswers', 'Generate Reference Answers');
         } else {
-            startBtn.innerHTML = '<i class="fas fa-play mr-2"></i> Generate Question Bank';
+            startBtn.innerHTML = '<i class="fas fa-play mr-2"></i> ' + uiT('interview.generateQuestionBank', 'Generate Question Bank');
         }
     }
 
@@ -498,7 +524,7 @@ async function loadInterviewQuestions() {
 
         const response = await apiClient.startInterviewSession(
             jobTitle, industry, interviewSession.tone, targetContext, programVersion, specializedFocus,
-            getSelectedInterviewLanguage()
+            getSelectedQuestionLanguage()
         );
 
         if (response.interview_qa && response.interview_qa.length > 0) {
@@ -605,7 +631,7 @@ async function loadCustomInterviewQuestions() {
         }) : null;
 
         const response = await apiClient.generateCustomInterviewAnswers(
-            questions, targetContext, getSelectedInterviewLanguage()
+            questions, targetContext, getSelectedQuestionLanguage()
         );
 
         if (response.interview_qa && response.interview_qa.length > 0) {
@@ -684,7 +710,7 @@ async function startInteractiveInterview() {
             programVersion,
             specializedFocus,
             targetContext,
-            language: getSelectedInterviewLanguage(),
+            questionLanguage: getSelectedQuestionLanguage(),
         });
 
         const session = response.interactive_interview;
@@ -838,7 +864,11 @@ async function submitInteractiveAnswer() {
         Utils.showLoading('Interviewer is thinking...');
         input.disabled = true;
 
-        const response = await apiClient.submitInteractiveTurn(answer, getSelectedInterviewLanguage());
+        const response = await apiClient.submitInteractiveTurn(
+            answer,
+            getSelectedQuestionLanguage(),
+            getSelectedFeedbackLanguage()
+        );
         const session = response.interactive_interview;
 
         interactiveSession.status = session.status;
@@ -887,7 +917,7 @@ async function endInteractiveInterview() {
         Utils.showLoading('Generating debrief report...');
         document.getElementById('interactive-input-section').classList.add('hidden');
 
-        const response = await apiClient.endInteractiveInterview(true, getSelectedInterviewLanguage());
+        const response = await apiClient.endInteractiveInterview(true, getSelectedFeedbackLanguage());
         const session = response.interactive_interview;
 
         interactiveSession.status = 'completed';
@@ -908,7 +938,7 @@ async function endInteractiveInterview() {
 
 async function loadInteractiveDebrief() {
     try {
-        const response = await apiClient.endInteractiveInterview(true, getSelectedInterviewLanguage());
+        const response = await apiClient.endInteractiveInterview(true, getSelectedFeedbackLanguage());
         const session = response.interactive_interview;
         interactiveSession.debrief = session.debrief;
         renderInteractiveDebrief(session.debrief);
@@ -1072,14 +1102,14 @@ function updateInteractiveSaveControls() {
 
     if (interactiveSession.savedRecordId) {
         saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Saved to Account';
+        saveBtn.innerHTML = '<i class="fas fa-check mr-2"></i> ' + uiT('interview.savedToAccount', 'Saved to Account');
         if (savedBadge) {
             savedBadge.classList.remove('hidden');
-            savedBadge.textContent = `Record ID: ${interactiveSession.savedRecordId}`;
+            savedBadge.textContent = uiT('interview.recordIdLabel', 'Record ID: {id}', { id: interactiveSession.savedRecordId });
         }
     } else {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Save to Account';
+        saveBtn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> ' + uiT('interview.saveToAccount', 'Save to Account');
         if (savedBadge) savedBadge.classList.add('hidden');
     }
 }
@@ -1263,7 +1293,7 @@ async function submitAnswer() {
 
         const currentQuestion = interviewSession.questions[interviewSession.currentQuestionIndex];
         const feedbackResponse = await apiClient.submitAnswer(
-            currentQuestion.id, answer, getSelectedInterviewLanguage()
+            currentQuestion.id, answer, getSelectedFeedbackLanguage()
         );
 
         Utils.hideLoading();
@@ -1494,7 +1524,8 @@ function restartSession() {
             tone: 'professional',
             programVersion: 'quick',
             programLabel: '',
-            interviewLanguage: getDefaultInterviewLanguage(),
+            questionLanguage: getDefaultInterviewLang(),
+            feedbackLanguage: getDefaultInterviewLang(),
         };
 
         interactiveSession = {
@@ -1549,7 +1580,8 @@ function restartSession() {
         updatePrerequisiteStatus();
         updateProgress();
         selectTone('professional');
-        syncInterviewLanguageButtons();
+        syncQuestionLanguageButtons();
+        syncFeedbackLanguageButtons();
 
         document.getElementById('btn-load-questions').disabled = true;
         selectInterviewMode(interviewMode);

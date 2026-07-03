@@ -502,9 +502,9 @@
 
                 <!-- Nav links (desktop) -->
                 <div class="hidden md:flex items-center space-x-6 shrink-0">
-                    <a href="#dashboard" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm">Dashboard</a>
-                    <a href="#ai-features" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm">HR Tools</a>
-                    <a href="#jobs" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm">My Jobs</a>
+                    <a href="#dashboard" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm" data-i18n="corpPortal.navDashboard">Dashboard</a>
+                    <a href="#ai-features" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm" data-i18n="corpPortal.navHrTools">HR Tools</a>
+                    <a href="#jobs" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm" data-i18n="corpPortal.navMyJobs">My Jobs</a>
                 </div>
 
                 <!-- Inline scrolling ticker (fills middle space) -->
@@ -512,21 +512,21 @@
                     <div class="w-1 h-4 bg-gray-200 rounded-full mr-3 shrink-0"></div>
                     <div class="overflow-hidden flex-1" style="mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);">
                         <div id="nav-ticker-track" class="nav-ticker whitespace-nowrap" style="animation:navTicker 38s linear infinite;">
-                            <span class="nav-ticker-item"><i class="fas fa-circle text-green-400" style="font-size:6px;vertical-align:middle;"></i>&nbsp;85% Diversity Rate — exceeding GBA benchmark&ensp;&ensp;</span>
+                            <span class="nav-ticker-item"><i class="fas fa-circle text-green-400" style="font-size:6px;vertical-align:middle;"></i>&nbsp;<span data-i18n="corpPortal.tickerDiversity">85% Diversity Rate — exceeding GBA benchmark</span>&ensp;&ensp;</span>
                             <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-bolt text-yellow-400"></i>&nbsp;AI Matching: 89 new candidate matches today&ensp;&ensp;</span>
+                            <span class="nav-ticker-item">&ensp;<i class="fas fa-bolt text-yellow-400"></i>&nbsp;<span data-i18n="corpPortal.tickerAiMatch">AI Matching: 89 new candidate matches today</span>&ensp;&ensp;</span>
                             <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-map-marker-alt text-blue-400"></i>&nbsp;Covering 11 GBA cities: HK · Macau · Shenzhen · Guangzhou · Foshan · Dongguan&ensp;&ensp;</span>
+                            <span class="nav-ticker-item">&ensp;<i class="fas fa-map-marker-alt text-blue-400"></i>&nbsp;<span data-i18n="corpPortal.tickerCities">Covering 11 GBA cities: HK · Macau · Shenzhen · Guangzhou · Foshan · Dongguan</span>&ensp;&ensp;</span>
                             <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-users text-purple-400"></i>&nbsp;Inclusive hiring: disabilities, elderly 45+, career returners&ensp;&ensp;</span>
+                            <span class="nav-ticker-item">&ensp;<i class="fas fa-users text-purple-400"></i>&nbsp;<span data-i18n="corpPortal.tickerInclusive">Inclusive hiring: disabilities, elderly 45+, career returners</span>&ensp;&ensp;</span>
                             <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-circle text-green-400" style="font-size:6px;vertical-align:middle;"></i>&nbsp;85% Diversity Rate — exceeding GBA benchmark&ensp;&ensp;</span>
+                            <span class="nav-ticker-item">&ensp;<i class="fas fa-circle text-green-400" style="font-size:6px;vertical-align:middle;"></i>&nbsp;<span data-i18n="corpPortal.tickerDiversity">85% Diversity Rate — exceeding GBA benchmark</span>&ensp;&ensp;</span>
                             <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-bolt text-yellow-400"></i>&nbsp;AI Matching: 89 new candidate matches today&ensp;&ensp;</span>
+                            <span class="nav-ticker-item">&ensp;<i class="fas fa-bolt text-yellow-400"></i>&nbsp;<span data-i18n="corpPortal.tickerAiMatch">AI Matching: 89 new candidate matches today</span>&ensp;&ensp;</span>
                             <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-map-marker-alt text-blue-400"></i>&nbsp;Covering 11 GBA cities: HK · Macau · Shenzhen · Guangzhou · Foshan · Dongguan&ensp;&ensp;</span>
+                            <span class="nav-ticker-item">&ensp;<i class="fas fa-map-marker-alt text-blue-400"></i>&nbsp;<span data-i18n="corpPortal.tickerCities">Covering 11 GBA cities: HK · Macau · Shenzhen · Guangzhou · Foshan · Dongguan</span>&ensp;&ensp;</span>
                             <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-users text-purple-400"></i>&nbsp;Inclusive hiring: disabilities, elderly 45+, career returners&ensp;&ensp;</span>
+                            <span class="nav-ticker-item">&ensp;<i class="fas fa-users text-purple-400"></i>&nbsp;<span data-i18n="corpPortal.tickerInclusive">Inclusive hiring: disabilities, elderly 45+, career returners</span>&ensp;&ensp;</span>
                         </div>
                     </div>
                 </div>
@@ -548,15 +548,15 @@
                     </div>
                     <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium text-sm whitespace-nowrap transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
                     <div id="portal-auth-guest" class="flex items-center space-x-2">
-                        <a href="auth.html" class="text-sm text-gray-600 hover:text-green-600 font-medium">登录</a>
-                        <a href="auth.html?tab=register" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium">注册</a>
+                        <a href="auth.html" class="text-sm text-gray-600 hover:text-green-600 font-medium" data-i18n="portal.login">登录</a>
+                        <a href="auth.html?tab=register" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium" data-i18n="portal.signup">注册</a>
                     </div>
                     <div id="portal-auth-user" class="hidden flex items-center space-x-2">
                         <div class="text-right hidden lg:block">
                             <div id="portal-user-name" class="text-sm font-medium text-gray-800"></div>
                             <div id="portal-user-email" class="text-xs text-gray-500"></div>
                         </div>
-                        <a href="company-profile.html" class="text-sm text-green-700 hover:text-green-800 font-medium hidden md:inline">企业信息</a>
+                        <a href="company-profile.html" class="text-sm text-green-700 hover:text-green-800 font-medium hidden md:inline" data-i18n="corpPortal.companyProfile">企业信息</a>
                         <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600">退出</button>
                     </div>
                 </div>
@@ -589,7 +589,7 @@
             <div class="flex flex-col sm:flex-row justify-center gap-4 items-center">
                 <a href="#dashboard" class="btn-primary text-lg">
                     <i class="fas fa-chart-line"></i>
-                    <span>View Recruitment Dashboard</span>
+                    <span data-i18n="corpPortal.viewDashboard">View Recruitment Dashboard</span>
                 </a>
                 <a href="#ai-features" class="inline-flex items-center justify-center gap-2 text-lg font-medium px-8 py-3 rounded-lg border-2 border-white/90 text-white hover:bg-white/10 transition-colors">
                     <i class="fas fa-layer-group"></i>
@@ -640,12 +640,12 @@
             <!-- Section header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-8">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-900">Recruiter Dashboard</h2>
-                    <p class="text-gray-500 mt-1 text-sm">Real-time overview of your hiring pipeline</p>
+                    <h2 class="text-3xl font-bold text-gray-900" data-i18n="corpPortal.recruiterDashboard">Recruiter Dashboard</h2>
+                    <p class="text-gray-500 mt-1 text-sm" data-i18n="corpPortal.dashboardSubtitle">Real-time overview of your hiring pipeline</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="inline-flex items-center gap-1.5 text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-medium">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>Live
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span><span data-i18n="corpPortal.live">Live</span>
                     </span>
                     <span id="dashboard-date" class="text-xs text-gray-400 font-mono"></span>
                 </div>
@@ -658,32 +658,32 @@
             <div class="stats-grid mb-8">
                 <div class="stat-card">
                     <div class="text-3xl font-bold text-green-600 mb-1 counter" data-target="15">0</div>
-                    <div class="text-gray-500 text-sm font-medium">Active Jobs</div>
+                    <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.activeJobs">Active Jobs</div>
                     <div class="text-xs text-green-600 mt-1">↑ 3 this week</div>
                 </div>
                 <div class="stat-card" style="border-left-color:#2563eb">
                     <div class="text-3xl font-bold text-blue-600 mb-1 counter" data-target="254">0</div>
-                    <div class="text-gray-500 text-sm font-medium">Applications</div>
+                    <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.applications">Applications</div>
                     <div class="text-xs text-blue-600 mt-1">↑ 18 today</div>
                 </div>
                 <div class="stat-card" style="border-left-color:#7c3aed">
                     <div class="text-3xl font-bold text-purple-600 mb-1 counter" data-target="45">0</div>
-                    <div class="text-gray-500 text-sm font-medium">Interviews</div>
+                    <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.interviews">Interviews</div>
                     <div class="text-xs text-purple-600 mt-1">12 this week</div>
                 </div>
                 <div class="stat-card" style="border-left-color:#f97316">
                     <div class="text-3xl font-bold text-orange-600 mb-1 counter" data-target="12">0</div>
-                    <div class="text-gray-500 text-sm font-medium">Hires This Month</div>
+                    <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.hiresThisMonth">Hires This Month</div>
                     <div class="text-xs text-orange-600 mt-1">↑ 4 vs last month</div>
                 </div>
                 <div class="stat-card">
                     <div class="text-3xl font-bold text-green-600 mb-1">85%</div>
-                    <div class="text-gray-500 text-sm font-medium">Diversity Rate</div>
+                    <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.diversityRate">Diversity Rate</div>
                     <div class="progress-bar mt-2"><div class="progress-fill" style="width:85%"></div></div>
                 </div>
                 <div class="stat-card" style="border-left-color:#2563eb">
                     <div class="text-3xl font-bold text-blue-600 mb-1 counter" data-target="18">0</div>
-                    <div class="text-gray-500 text-sm font-medium">Days to Hire</div>
+                    <div class="text-gray-500 text-sm font-medium" data-i18n="corpPortal.daysToHire">Days to Hire</div>
                     <div class="text-xs text-blue-600 mt-1">↓ 2 vs last month</div>
                 </div>
             </div>
@@ -692,8 +692,8 @@
             <div class="bg-white rounded-xl shadow-sm p-6 mb-8" id="hr-team-performance">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800">HR Team Performance</h3>
-                        <p class="text-sm text-gray-500 mt-1">各 HR 发布岗位、处理投递与录用绩效对比</p>
+                        <h3 class="text-lg font-semibold text-gray-800" data-i18n="corpPortal.hrTeamPerformance">HR Team Performance</h3>
+                        <p class="text-sm text-gray-500 mt-1" data-i18n="corpPortal.hrTeamSubtitle">各 HR 发布岗位、处理投递与录用绩效对比</p>
                     </div>
                     <div id="hr-team-meta" class="text-xs text-gray-500 text-right hidden">
                         <span id="hr-org-name" class="font-medium text-gray-700"></span>
@@ -729,11 +729,11 @@
                 <!-- Trend chart (2/3) -->
                 <div class="xl:col-span-2 bg-white rounded-xl shadow-sm p-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
-                        <h3 class="text-lg font-semibold text-gray-800">Recruitment Trend</h3>
+                        <h3 class="text-lg font-semibold text-gray-800" data-i18n="corpPortal.recruitmentTrend">Recruitment Trend</h3>
                         <div class="flex gap-2">
-                            <button type="button" data-chart-period="monthly" class="px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-lg font-medium shadow-sm">Monthly</button>
-                            <button type="button" data-chart-period="quarterly" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg">Quarterly</button>
-                            <button type="button" data-chart-period="yearly" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg">Yearly</button>
+                            <button type="button" data-chart-period="monthly" class="px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-lg font-medium shadow-sm" data-i18n="corpPortal.periodMonthly">Monthly</button>
+                            <button type="button" data-chart-period="quarterly" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg" data-i18n="corpPortal.periodQuarterly">Quarterly</button>
+                            <button type="button" data-chart-period="yearly" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg" data-i18n="corpPortal.periodYearly">Yearly</button>
                         </div>
                     </div>
                     <div class="chart-container" style="height:260px;">
@@ -797,8 +797,8 @@
     <!-- HR Tools Section (6 tools) -->
     <section id="ai-features" class="py-20 bg-white scroll-mt-20">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-3">HR &amp; Compliance Tools</h2>
-            <p class="text-gray-500 text-center mb-12 max-w-2xl mx-auto">Six AI-powered tools to streamline inclusive recruitment, policy compliance and employer development across the Greater Bay Area.</p>
+            <h2 class="text-3xl font-bold text-center mb-3" data-i18n="corpPortal.hrToolsTitle">HR &amp; Compliance Tools</h2>
+            <p class="text-gray-500 text-center mb-12 max-w-2xl mx-auto" data-i18n="corpPortal.hrToolsSubtitle">Six AI-powered tools to streamline inclusive recruitment, policy compliance and employer development across the Greater Bay Area.</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
@@ -898,13 +898,13 @@
                 <div class="flex flex-wrap items-center gap-3">
                     <a href="post-job.html" class="btn-primary" id="jobs-post-btn">
                         <i class="fas fa-plus mr-2"></i>
-                        <span>Post New Job</span>
+                        <span data-i18n="corpPortal.postNewJob">Post New Job</span>
                     </a>
                     <a href="company-profile.html" class="px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium">
                         <i class="fas fa-building mr-1"></i>企业信息
                     </a>
                     <div class="relative">
-                        <input id="jobs-search-input" type="text" placeholder="Search jobs..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                        <input id="jobs-search-input" type="text" data-i18n-placeholder="corpPortal.searchJobs" placeholder="Search jobs..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
                     </div>
                     <!-- Location filter -->

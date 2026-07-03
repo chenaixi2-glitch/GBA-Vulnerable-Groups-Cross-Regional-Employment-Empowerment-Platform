@@ -99,7 +99,7 @@ async function generateLearningPathAnalysis() {
         document.getElementById('assessment-section').classList.add('hidden');
         document.getElementById('loading-state').classList.remove('hidden');
         document.getElementById('loading-state').querySelector('p').textContent =
-            'AI is analyzing skill gaps and curating resources...';
+            uiT('learningPath.loadingDesc', 'AI is analyzing skill gaps and curating resources...');
 
         const response = await apiClient.generateLearningPathAnalysis({
             targetJob: inputs.targetJob,
@@ -155,7 +155,7 @@ async function generateLearningPathTimeline() {
         document.getElementById('btn-generate-timeline').disabled = true;
         document.getElementById('loading-state').classList.remove('hidden');
         document.getElementById('loading-state').querySelector('p').textContent =
-            'Building your personalized learning timeline...';
+            uiT('learningPath.loadingTimelineDesc', 'Building your personalized learning timeline...');
 
         const targetContext = typeof collectTargetJobContext === 'function'
             ? collectTargetJobContext({
@@ -226,7 +226,7 @@ function updateProjectedWeeksHint() {
     }
 
     const weeks = computeWeeksFromHours(learningPathData.estimatedHours, dailyHours);
-    hint.textContent = `At ${dailyHours} hour(s) per day, you'll need approximately ${weeks} week(s) to complete the plan.`;
+    hint.textContent = uiT('learningPath.projectedWeeksHint', 'At {hours} hour(s) per day, you\'ll need approximately {weeks} week(s) to complete the plan.', { hours: dailyHours, weeks: weeks });
 
     if (!learningPathData.timeline?.length) {
         document.getElementById('estimated-weeks').textContent = weeks;
@@ -312,6 +312,12 @@ function displayOverview(data) {
     document.getElementById('confidence-score').textContent = `${data.confidenceScore}%`;
 }
 
+function priorityLabel(priority) {
+    const key = priority === 'High' ? 'learningPath.priorityHigh' : priority === 'Low' ? 'learningPath.priorityLow' : 'learningPath.priorityMedium';
+    const fb = priority === 'High' ? 'High' : priority === 'Low' ? 'Low' : 'Medium';
+    return uiT(key, fb);
+}
+
 function displaySkillGaps(skillGaps) {
     const container = document.getElementById('skill-gaps-container');
 
@@ -319,7 +325,7 @@ function displaySkillGaps(skillGaps) {
         container.innerHTML = `
             <div class="text-center py-8 text-gray-600">
                 <i class="fas fa-check-circle text-green-500 text-3xl mb-3"></i>
-                <p>No significant skill gaps detected for your target role.</p>
+                <p>${escapeHtml(uiT('learningPath.noSkillGaps', 'No significant skill gaps detected for your target role.'))}</p>
             </div>
         `;
         return;
@@ -328,24 +334,24 @@ function displaySkillGaps(skillGaps) {
     container.innerHTML = skillGaps.map(gap => `
         <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between mb-3">
-                <h4 class="font-bold text-gray-900">${gap.skill}</h4>
+                <h4 class="font-bold text-gray-900">${escapeHtml(gap.skill)}</h4>
                 <span class="px-3 py-1 rounded-full text-xs font-medium ${getPriorityClass(gap.priority)}">
-                    ${gap.priority} Priority
+                    ${escapeHtml(uiT('learningPath.priorityLabel', '{priority} Priority', { priority: priorityLabel(gap.priority) }))}
                 </span>
             </div>
 
-            <p class="text-sm text-gray-600 mb-3">${gap.description}</p>
+            <p class="text-sm text-gray-600 mb-3">${escapeHtml(gap.description)}</p>
 
             <div class="grid grid-cols-3 gap-4 mb-3">
                 <div>
-                    <div class="text-xs text-gray-500 mb-1">Gap Type</div>
+                    <div class="text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.gapTypeLabel', 'Gap Type'))}</div>
                     <span class="skill-badge skill-current">
                         <i class="fas fa-tag text-xs"></i>
                         ${formatGapType(gap.type)}
                     </span>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-500 mb-1">Severity</div>
+                    <div class="text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.severityLabel', 'Severity'))}</div>
                     <span class="skill-badge skill-target">
                         <i class="fas fa-bullseye text-xs"></i>
                         ${gap.severity}
@@ -353,7 +359,7 @@ function displaySkillGaps(skillGaps) {
                 </div>
                 ${gap.estimatedHours ? `
                 <div>
-                    <div class="text-xs text-gray-500 mb-1">Est. Hours</div>
+                    <div class="text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.estHoursLabel', 'Est. Hours'))}</div>
                     <span class="skill-badge skill-gap">
                         <i class="fas fa-clock text-xs"></i>
                         ${gap.estimatedHours}h
@@ -515,7 +521,7 @@ function displayTimeline(timeline, editing = timelineEditMode) {
     const container = document.getElementById('timeline-container');
 
     if (!timeline.length) {
-        container.innerHTML = '<p class="text-gray-600 text-sm">Timeline will appear after you choose daily study hours.</p>';
+        container.innerHTML = '<p class="text-gray-600 text-sm">' + escapeHtml(uiT('learningPath.timelineEmptyHint', 'Timeline will appear after you choose daily study hours.')) + '</p>';
         return;
     }
 
@@ -525,25 +531,25 @@ function displayTimeline(timeline, editing = timelineEditMode) {
                 <div class="timeline-dot"></div>
                 <div class="bg-gray-50 border border-blue-200 rounded-lg p-4 ml-4 space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-blue-600 uppercase">Phase ${phase.phase || index + 1}</span>
+                        <span class="text-xs font-semibold text-blue-600 uppercase">${escapeHtml(uiT('learningPath.phaseLabel', 'Phase {n}', { n: phase.phase || index + 1 }))}</span>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Title</label>
+                        <label class="block text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.editTitleLabel', 'Title'))}</label>
                         <input data-field="title" type="text" value="${escapeHtml(phase.title)}"
                             class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Weeks (e.g. 1-4)</label>
+                        <label class="block text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.editWeeksLabel', 'Weeks (e.g. 1-4)'))}</label>
                         <input data-field="weeks" type="text" value="${escapeHtml(phase.weeks)}"
                             class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Description</label>
+                        <label class="block text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.editDescLabel', 'Description'))}</label>
                         <textarea data-field="description" rows="2"
                             class="w-full border border-gray-300 rounded-lg p-2 text-sm">${escapeHtml(phase.description)}</textarea>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Skills (comma-separated)</label>
+                        <label class="block text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.editSkillsLabel', 'Skills (comma-separated)'))}</label>
                         <input data-field="skills" type="text" value="${escapeHtml((phase.skills || []).join(', '))}"
                             class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
@@ -559,7 +565,7 @@ function displayTimeline(timeline, editing = timelineEditMode) {
             <div class="bg-white border border-gray-200 rounded-lg p-4 ml-4">
                 <div class="flex items-center justify-between mb-2">
                     <h4 class="font-bold text-gray-900">${escapeHtml(phase.title)}</h4>
-                    <span class="text-sm text-gray-500">Weeks ${escapeHtml(phase.weeks)}</span>
+                    <span class="text-sm text-gray-500">${escapeHtml(uiT('learningPath.weeksLabel', 'Weeks {weeks}', { weeks: phase.weeks }))}</span>
                 </div>
                 <p class="text-sm text-gray-600 mb-3">${escapeHtml(phase.description)}</p>
                 <div class="flex flex-wrap gap-2">
@@ -578,7 +584,7 @@ function displayResources(resources) {
     const container = document.getElementById('resources-container');
 
     if (!resources.length) {
-        container.innerHTML = '<p class="text-gray-600 text-sm">Resources will appear once skill gaps are identified.</p>';
+        container.innerHTML = '<p class="text-gray-600 text-sm">' + escapeHtml(uiT('learningPath.resourcesEmptyHint', 'Resources will appear once skill gaps are identified.')) + '</p>';
         return;
     }
 
@@ -599,7 +605,7 @@ function displayResources(resources) {
                 </div>
             </div>
             <a href="${resource.url}" target="_blank" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 mt-2">
-                View Resource
+                ${escapeHtml(uiT('learningPath.viewResource', 'View Resource'))}
                 <i class="fas fa-external-link-alt ml-1 text-xs"></i>
             </a>
         </div>
@@ -693,3 +699,17 @@ function exportLearningPlanJson() {
     Utils.downloadFile(blob, `learning-plan-${Date.now()}.json`);
     Utils.showToast(uiT('learningPath.toast.exportedJson', 'Learning plan exported as JSON'));
 }
+
+function refreshLearningPathLocalizedUI() {
+    if (!learningPathData) return;
+    displayOverview(learningPathData);
+    displaySkillGaps(learningPathData.skillGaps || []);
+    displayFollowUpQuestions(learningPathData.followUpQuestions || []);
+    displayResources(learningPathData.resources || []);
+    if (learningPathData.timeline && learningPathData.timeline.length) {
+        displayTimeline(learningPathData.timeline);
+    }
+    updateProjectedWeeksHint();
+}
+
+window.addEventListener('gba:language-changed', refreshLearningPathLocalizedUI);

@@ -19,6 +19,43 @@ from log import get_logger
 logger = get_logger("agent")
 
 
+def _parse_confirmed_removals(user_message: str) -> tuple[set[str], set[str]]:
+    """Parse CONFIRMED_REMOVALS block — returns (fact_ids, titles) to drop."""
+    fact_ids: set[str] = set()
+    titles: set[str] = set()
+    if "CONFIRMED_REMOVALS" not in user_message:
+        return fact_ids, titles
+    for line in user_message.splitlines():
+        line = line.strip()
+        if not line.startswith("- id="):
+            continue
+        for part in line.lstrip("- ").split("|"):
+            part = part.strip()
+            if part.startswith("fact_id="):
+                val = part.split("=", 1)[1].strip()
+                if val:
+                    fact_ids.add(val)
+            elif part.startswith("title="):
+                val = part.split("=", 1)[1].strip()
+                if val:
+                    titles.add(val.lower())
+    return fact_ids, titles
+
+
+def _filter_removed_facts(facts: list[Fact], user_message: str) -> list[Fact]:
+    fact_ids, titles = _parse_confirmed_removals(user_message)
+    if not fact_ids and not titles:
+        return facts
+    kept: list[Fact] = []
+    for fact in facts:
+        if fact.id in fact_ids:
+            continue
+        if titles and fact.content and any(t in fact.content.lower() for t in titles):
+            continue
+        kept.append(fact)
+    return kept
+
+
 async def profile_node_async(state: CopilotState) -> dict[str, Any]:
     """Profile Agent 异步节点函数。"""
     logger.info("Profile Agent started for session %s", state.session_id)
@@ -106,6 +143,8 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
                 break
         if not found:
             existing_facts.append(fact)
+
+    existing_facts = _filter_removed_facts(existing_facts, material_text)
 
     profile = CandidateProfile(
         profile_basic=new_basic,

@@ -17,7 +17,11 @@ from workflow.state import CopilotState
 from storage.redis_client import get_redis_client, RedisSessionStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
 from services.llm_queue import SessionBusyError, llm_queue_slot
-from tools.output_language import apply_chat_output_language
+from tools.output_language import (
+    apply_chat_output_language,
+    apply_interview_feedback_language,
+    apply_interview_question_language,
+)
 from log import get_logger
 
 logger = get_logger("api")
@@ -53,6 +57,7 @@ class ChatRequest(BaseModel):
     message: str
     attachments: list[dict[str, Any]] = Field(default_factory=list)
     language: str = ""  # UI locale → API lang: zh | zh-TW | en | pt
+    language_scope: str = "page"  # page | interview_question | interview_feedback
 
 
 class ChatResponse(BaseModel):
@@ -107,7 +112,13 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     else:
         state = CopilotState(session_id=session_id)
 
-    apply_chat_output_language(state, req.language)
+    scope = (req.language_scope or "page").strip().lower()
+    if scope == "interview_question":
+        apply_interview_question_language(state, req.language)
+    elif scope == "interview_feedback":
+        apply_interview_feedback_language(state, req.language)
+    else:
+        apply_chat_output_language(state, req.language)
 
     # 注入用户输入
     prepared_input = prepare_chat_input(req.message, req.attachments)
@@ -134,7 +145,9 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     persist_data = final_state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
                                                      "execution_plan", "reply_message", "triggered_agents",
                                                      "workflow_trace", "resume_language_target",
-                                                     "chat_output_language"})
+                                                     "chat_output_language",
+                                                     "chat_question_output_language",
+                                                     "chat_feedback_output_language"})
     await _asave_state(store, persist_data)
 
     # 草稿暂存 Redis；数据库持久化仅在用户确认保存（POST /api/resume/save）时执行

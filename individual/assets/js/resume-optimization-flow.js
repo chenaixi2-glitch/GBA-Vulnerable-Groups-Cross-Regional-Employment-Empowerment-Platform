@@ -211,6 +211,7 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
                     ${removalItems.map((item, i) => `
                     <div class="optimization-removal mb-3 p-3 border border-orange-200 bg-orange-50 rounded-lg"
                         data-removal-id="${escapeHtml(item.id || `rem_${i}`)}"
+                        data-fact-id="${escapeHtml(item.fact_id || '')}"
                         data-title="${escapeHtml(item.title || '')}"
                         data-reason="${escapeHtml(item.reason || '')}">
                         <div class="flex items-start gap-2">
@@ -286,6 +287,7 @@ function collectRemovalDecisions() {
         const agreed = item.querySelector('.removal-agree')?.checked || false;
         removals.push({
             id: item.dataset.removalId,
+            fact_id: item.dataset.factId || '',
             title: item.dataset.title || '',
             reason: item.dataset.reason || '',
             agreed,

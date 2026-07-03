@@ -78,6 +78,7 @@ class MockAPIService {
             job: null,
             gaps: [],
             questions_to_ask: [],
+            experiences_to_remove: [],
             resume_content_json: null,
             render_config: null,
             resume_html: null,
@@ -411,6 +412,45 @@ class MockAPIService {
         return (tables[lang] || tables.en).map((q) => ({ ...q }));
     }
 
+    buildMockExperienceRemovals(language = 'zh') {
+        const lang = this.normalizeResumeLanguage(language);
+        const tables = {
+            zh: [{
+                id: 'rem_1',
+                fact_id: 'fact_project_1',
+                section_type: 'project',
+                title: 'Knowledge Base Refresh',
+                reason: '与目标岗位关联度较低，且为节省 A4 单页篇幅建议精简',
+                priority: 'recommended',
+            }],
+            'zh-TW': [{
+                id: 'rem_1',
+                fact_id: 'fact_project_1',
+                section_type: 'project',
+                title: 'Knowledge Base Refresh',
+                reason: '與目標崗位關聯度較低，且為節省 A4 單頁篇幅建議精簡',
+                priority: 'recommended',
+            }],
+            en: [{
+                id: 'rem_1',
+                fact_id: 'fact_project_1',
+                section_type: 'project',
+                title: 'Knowledge Base Refresh',
+                reason: 'Low relevance to the target role; suggested to omit for a one-page A4 layout',
+                priority: 'recommended',
+            }],
+            pt: [{
+                id: 'rem_1',
+                fact_id: 'fact_project_1',
+                section_type: 'project',
+                title: 'Knowledge Base Refresh',
+                reason: 'Baixa relevância para a vaga; sugerido omitir para caber numa página A4',
+                priority: 'recommended',
+            }],
+        };
+        return (tables[lang] || tables.en).map((r) => ({ ...r }));
+    }
+
     mockResumeHtmlForLanguage(language = 'zh') {
         const lang = this.normalizeResumeLanguage(language);
         if (lang === 'en' || lang === 'pt') {
@@ -735,6 +775,7 @@ class MockAPIService {
             response.triggered_agents = ['gap_agent'];
             response.gaps = this.buildMockGaps(lang);
             response.questions_to_ask = this.buildMockGapQuestions(lang);
+            response.experiences_to_remove = this.buildMockExperienceRemovals(lang);
             response.reply_message = apiT('mock.gapAnalysisDone', 'Skill gap analysis completed (demo mode).');
             return response;
         }
@@ -1340,6 +1381,9 @@ class APIClient {
                 message: message,
                 attachments: attachments,
                 language: chatLanguage,
+                language_scope: options.languageScope === 'interview_question' ? 'interview_question'
+                    : options.languageScope === 'interview_feedback' ? 'interview_feedback'
+                    : 'page',
             });
 
             return this._applyChatResponseSession(response.data);
@@ -1348,7 +1392,7 @@ class APIClient {
             if (this._isSessionAccessError(error) && retryOnAccessDenied) {
                 this.clearSession();
                 this.generateSessionId();
-                return this.chat(message, attachments, { retryOnAccessDenied: false, allowMockFallback, language: chatLanguage });
+                return this.chat(message, attachments, { retryOnAccessDenied: false, allowMockFallback, language: chatLanguage, languageScope: options.languageScope });
             }
             if (allowMockFallback && this._shouldUseMockFallback(error)) {
                 const switched = await this._enableMockModeIfBackendDown();
@@ -1689,19 +1733,38 @@ class APIClient {
     }
 
     /**
+     * Submit optimization dialog feedback: supplemental answers + user-confirmed removals
+     */
+    async submitOptimizationFeedback({ answers = [], removals = [] } = {}) {
+        const hasAnswers = answers && answers.length;
+        const hasRemovals = removals && removals.length;
+        if (!hasAnswers && !hasRemovals) return null;
+
+        const sections = [
+            'Please update my candidate profile for resume optimization based on the feedback below.',
+            'Use only the facts I provide — do not invent numbers or achievements.',
+        ];
+
+        if (hasRemovals) {
+            sections.push('', 'CONFIRMED_REMOVALS (remove these from profile facts — do not include in resume):');
+            removals.forEach((r) => {
+                sections.push(`- id=${r.id || ''}|fact_id=${r.fact_id || ''}|title=${r.title || ''}|reason=${r.reason || ''}`);
+            });
+        }
+
+        if (hasAnswers) {
+            const lines = answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
+            sections.push('', 'CLARIFICATIONS (add or update profile facts from my answers):', lines);
+        }
+
+        return this.submitProfileText(sections.join('\n'));
+    }
+
+    /**
      * Submit user answers from optimization dialog to enrich candidate profile
      */
     async submitOptimizationClarifications(answers) {
-        if (!answers || !answers.length) return null;
-        const lines = answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
-        const message = [
-            'Please incorporate the following clarifications into my candidate profile for resume optimization.',
-            'These answers clarify my primary tech stack, project details, quantified results, or role fit.',
-            'Use only the facts I provide below — do not invent numbers or achievements.',
-            '',
-            lines,
-        ].join('\n');
-        return this.submitProfileText(message);
+        return this.submitOptimizationFeedback({ answers, removals: [] });
     }
 
     /**
@@ -2128,11 +2191,11 @@ class APIClient {
     /**
      * Start interview session - triggers interview_agent (requires job, profile, resume in session)
      */
-    async startInterviewSession(jobTitle, industry = '', tone = 'professional', targetContext = null, programVersion = 'quick', specializedFocus = '', language = null) {
+    async startInterviewSession(jobTitle, industry = '', tone = 'professional', targetContext = null, programVersion = 'quick', specializedFocus = '', questionLanguage = null) {
         try {
             const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
             await this.syncTargetJobContext(ctx);
-            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
+            const qLang = this.normalizeResumeLanguage(questionLanguage || 'zh');
             const message = [
                 'Please generate interview questions based on my job description, candidate profile, and resume content.',
                 `Target role: ${jobTitle || ctx?.jd_text?.split('\n')[0] || 'target position'}.`,
@@ -2143,7 +2206,7 @@ class APIClient {
                 `Program version: ${programVersion}.`,
                 specializedFocus ? `Specialized focus: ${specializedFocus}.` : '',
             ].filter(Boolean).join(' ');
-            const response = await this.chat(message, [], { language: interviewLang });
+            const response = await this.chat(message, [], { language: qLang, languageScope: 'interview_question' });
             return response;
         } catch (error) {
             console.error('Interview session error:', error);
@@ -2154,7 +2217,7 @@ class APIClient {
     /**
      * Generate reference answers for user-uploaded custom interview questions
      */
-    async generateCustomInterviewAnswers(questions, targetContext = null, language = null) {
+    async generateCustomInterviewAnswers(questions, targetContext = null, questionLanguage = null) {
         try {
             if (!this.sessionId) {
                 this.generateSessionId();
@@ -2162,7 +2225,7 @@ class APIClient {
             const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
             await this.syncTargetJobContext(ctx);
             await this.ensureBackendAvailable();
-            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
+            const qLang = this.normalizeResumeLanguage(questionLanguage || 'zh');
             if (this.useMockMode) {
                 await this.mockService.delay(1200);
                 return {
@@ -2174,7 +2237,7 @@ class APIClient {
             const response = await this.client.post('/interview/custom/generate-answers', {
                 session_id: this.sessionId,
                 questions,
-                language: interviewLang,
+                question_language: qLang,
             });
             if (response.data.session_id) {
                 this.saveSessionId(response.data.session_id);
@@ -2189,11 +2252,11 @@ class APIClient {
     /**
      * Submit answer and get feedback - triggers question_agent
      */
-    async submitAnswer(questionId, answer, language = null) {
+    async submitAnswer(questionId, answer, feedbackLanguage = null) {
         try {
-            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
+            const fLang = this.normalizeResumeLanguage(feedbackLanguage || 'zh');
             const message = `Evaluate my answer to question ${questionId}: ${answer}`;
-            const response = await this.chat(message, [], { language: interviewLang });
+            const response = await this.chat(message, [], { language: fLang, languageScope: 'interview_feedback' });
             return response;
         } catch (error) {
             console.error('Submit answer error:', error);
@@ -2204,7 +2267,7 @@ class APIClient {
     /**
      * Start interactive multi-turn mock interview
      */
-    async startInteractiveInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 0, programVersion = 'quick', specializedFocus = '', targetContext = null, language = null } = {}) {
+    async startInteractiveInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 0, programVersion = 'quick', specializedFocus = '', targetContext = null, questionLanguage = null } = {}) {
         try {
             if (!this.sessionId) {
                 this.generateSessionId();
@@ -2212,7 +2275,7 @@ class APIClient {
             const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
             await this.syncTargetJobContext(ctx);
             await this.ensureBackendAvailable();
-            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
+            const qLang = this.normalizeResumeLanguage(questionLanguage || 'zh');
             if (this.useMockMode) {
                 return await this.mockService.startInteractiveInterview(
                     this.sessionId, tone, jobTitle, industry, maxRounds, programVersion, specializedFocus
@@ -2226,7 +2289,7 @@ class APIClient {
                 max_rounds: maxRounds,
                 program_version: programVersion,
                 specialized_focus: specializedFocus,
-                language: interviewLang,
+                question_language: qLang,
             });
             if (response.data.session_id) {
                 this.saveSessionId(response.data.session_id);
@@ -2241,20 +2304,22 @@ class APIClient {
     /**
      * Submit answer in interactive interview, get follow-up question
      */
-    async submitInteractiveTurn(answer, language = null) {
+    async submitInteractiveTurn(answer, questionLanguage = null, feedbackLanguage = null) {
         try {
             if (!this.sessionId) {
                 throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             await this.ensureBackendAvailable();
-            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
+            const qLang = this.normalizeResumeLanguage(questionLanguage || 'zh');
+            const fLang = this.normalizeResumeLanguage(feedbackLanguage || 'zh');
             if (this.useMockMode) {
                 return await this.mockService.submitInteractiveTurn(this.sessionId, answer);
             }
             const response = await this.client.post('/interview/interactive/turn', {
                 session_id: this.sessionId,
                 answer,
-                language: interviewLang,
+                question_language: qLang,
+                feedback_language: fLang,
             });
             return response.data;
         } catch (error) {
@@ -2266,20 +2331,20 @@ class APIClient {
     /**
      * End interactive interview and generate debrief
      */
-    async endInteractiveInterview(generateDebrief = true, language = null) {
+    async endInteractiveInterview(generateDebrief = true, feedbackLanguage = null) {
         try {
             if (!this.sessionId) {
                 throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
             await this.ensureBackendAvailable();
-            const interviewLang = this.normalizeResumeLanguage(language || this.getPageLanguage());
+            const fLang = this.normalizeResumeLanguage(feedbackLanguage || 'zh');
             if (this.useMockMode) {
                 return await this.mockService.endInteractiveInterview(this.sessionId, generateDebrief);
             }
             const response = await this.client.post('/interview/interactive/end', {
                 session_id: this.sessionId,
                 generate_debrief: generateDebrief,
-                language: interviewLang,
+                feedback_language: fLang,
             });
             return response.data;
         } catch (error) {
