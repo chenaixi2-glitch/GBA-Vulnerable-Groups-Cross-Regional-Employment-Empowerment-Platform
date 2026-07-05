@@ -449,6 +449,12 @@ const API = {
     AUTH_TOKEN_KEY: 'gba_auth_token',
 
     nodeApiBase() {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.apiBase) {
+            return AuthAPI.apiBase();
+        }
+        if (typeof resolveNodeApiBase === 'function') {
+            return resolveNodeApiBase();
+        }
         const host = (typeof location !== 'undefined' && location.hostname) || 'localhost';
         return `http://${host}:3000/api`;
     },

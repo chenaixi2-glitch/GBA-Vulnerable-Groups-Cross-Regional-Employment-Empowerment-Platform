@@ -3,6 +3,9 @@
  */
 (function (global) {
   const API_BASE = (function () {
+    if (typeof global.resolveNodeApiBase === 'function') {
+      return global.resolveNodeApiBase();
+    }
     const host = global.location.hostname || 'localhost';
     return `http://${host}:3000/api`;
   })();

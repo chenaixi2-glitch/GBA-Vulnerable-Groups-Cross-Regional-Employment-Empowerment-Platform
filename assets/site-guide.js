@@ -231,6 +231,12 @@
 
     function injectStyles() {
         if (document.getElementById('gba-site-guide-styles')) return;
+        var isCorporate = page === 'corporate';
+        var accentFrom = isCorporate ? '#10b981' : '#2563eb';
+        var accentTo = isCorporate ? '#059669' : '#1d4ed8';
+        var accentShadow = isCorporate ? 'rgba(16, 185, 129, 0.35)' : 'rgba(37, 99, 235, 0.35)';
+        var accentShadowHover = isCorporate ? 'rgba(16, 185, 129, 0.42)' : 'rgba(37, 99, 235, 0.42)';
+        var nextGradient = isCorporate ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #2563eb, #059669)';
         var style = document.createElement('style');
         style.id = 'gba-site-guide-styles';
         style.textContent = [
@@ -257,7 +263,7 @@
             '  transition: transform .25s ease, opacity .25s ease, top .25s ease, left .25s ease;',
             '}',
             '#gba-guide-card.active { transform: translateY(0); opacity: 1; }',
-            '#gba-guide-card .gga-step { font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #2563eb; margin-bottom: .35rem; }',
+            '#gba-guide-card .gga-step { font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: ' + accentFrom + '; margin-bottom: .35rem; }',
             '#gba-guide-card .gga-title { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: .5rem; line-height: 1.35; }',
             '#gba-guide-card .gga-body { font-size: .9rem; color: #475569; line-height: 1.65; margin-bottom: 1rem; }',
             '#gba-guide-card .gga-actions { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }',
@@ -271,18 +277,18 @@
             '#gba-guide-card .gga-skip:hover { background: #f8fafc; color: #334155; }',
             '#gba-guide-card .gga-back { background: #f1f5f9; color: #334155; }',
             '#gba-guide-card .gga-back:hover { background: #e2e8f0; }',
-            '#gba-guide-card .gga-next { background: linear-gradient(135deg, #2563eb, #059669); color: #fff; }',
+            '#gba-guide-card .gga-next { background: ' + nextGradient + '; color: #fff; }',
             '#gba-guide-card .gga-next:hover { filter: brightness(1.05); }',
             '#gba-guide-fab {',
             '  position: fixed; bottom: 2rem; left: 2rem; z-index: 8900;',
             '  display: inline-flex; align-items: center; gap: .45rem;',
             '  padding: .65rem 1rem; border-radius: 999px; border: none; cursor: pointer;',
-            '  background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;',
+            '  background: linear-gradient(135deg, ' + accentFrom + ', ' + accentTo + '); color: #fff;',
             '  font-size: .82rem; font-weight: 700;',
-            '  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);',
+            '  box-shadow: 0 8px 24px ' + accentShadow + ';',
             '  transition: transform .2s, box-shadow .2s, opacity .2s;',
             '}',
-            '#gba-guide-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(37, 99, 235, 0.42); }',
+            '#gba-guide-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 28px ' + accentShadowHover + '; }',
             '#gba-guide-fab.hidden { opacity: 0; pointer-events: none; }',
             'body.gba-guide-active { overflow: hidden; }',
             '@media (max-width: 480px) {',
@@ -385,6 +391,67 @@
         cardEl.style.width = cardW + 'px';
     }
 
+    // Space reserved at the top of the viewport for the fixed header, so the
+    // spotlight box never gets clipped behind it nor floats mid-page for
+    // targets taller than the viewport (e.g. long FAQ sections).
+    var HEADER_CLEARANCE = 84;
+
+    function placeSpotlightOn(target) {
+        var rect = target.getBoundingClientRect();
+        if (rect.width < 2 && rect.height < 2) {
+            spotlightEl.classList.add('hidden');
+            positionCard(null, true);
+            cardEl.classList.add('active');
+            return;
+        }
+        var pad = 10;
+        // Clamp each edge independently (rather than deriving width/height from
+        // the raw rect) so oversized targets — taller or wider than the viewport —
+        // still produce a box that starts right at the visible edge instead of
+        // floating away from it and leaving part of the target dimmed.
+        var top = Math.max(HEADER_CLEARANCE, rect.top - pad);
+        var left = Math.max(8, rect.left - pad);
+        var right = Math.min(window.innerWidth - 8, rect.right + pad);
+        var bottom = Math.min(window.innerHeight - 8, rect.bottom + pad);
+
+        spotlightEl.classList.remove('hidden');
+        spotlightEl.style.top = top + 'px';
+        spotlightEl.style.left = left + 'px';
+        spotlightEl.style.width = Math.max(0, right - left) + 'px';
+        spotlightEl.style.height = Math.max(0, bottom - top) + 'px';
+        positionCard(rect, false);
+        cardEl.classList.add('active');
+    }
+
+    // A fixed setTimeout can't reliably guess how long a native smooth scroll takes —
+    // it varies a lot with distance, so jumping to a far-down section (e.g. FAQ) can
+    // still be mid-animation when the spotlight position gets measured, leaving the
+    // box stranded away from the actual target. Instead, poll each animation frame
+    // and only place the spotlight once the target's position stops moving.
+    function waitForScrollSettle(target, done) {
+        var lastTop = null;
+        var stableFrames = 0;
+        var attempts = 0;
+        var maxAttempts = 120; // ~2s safety cap at 60fps
+
+        function check() {
+            attempts += 1;
+            var top = target.getBoundingClientRect().top;
+            if (lastTop !== null && Math.abs(top - lastTop) < 0.5) {
+                stableFrames += 1;
+            } else {
+                stableFrames = 0;
+            }
+            lastTop = top;
+            if (stableFrames >= 4 || attempts >= maxAttempts) {
+                done();
+                return;
+            }
+            requestAnimationFrame(check);
+        }
+        requestAnimationFrame(check);
+    }
+
     function renderStep(scrollToTarget) {
         if (!steps.length) return;
         var step = steps[currentStep];
@@ -399,32 +466,22 @@
         backBtn.style.visibility = currentStep === 0 ? 'hidden' : 'visible';
         nextBtn.textContent = currentStep >= steps.length - 1 ? t('finish') : t('next');
 
-        if (target) {
-            if (scrollToTarget !== false) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-            }
-            window.setTimeout(function () {
-                var rect = target.getBoundingClientRect();
-                if (rect.width < 2 && rect.height < 2) {
-                    spotlightEl.classList.add('hidden');
-                    positionCard(null, true);
-                    cardEl.classList.add('active');
-                    return;
-                }
-                var pad = 10;
-                spotlightEl.classList.remove('hidden');
-                spotlightEl.style.top = Math.max(8, rect.top - pad) + 'px';
-                spotlightEl.style.left = Math.max(8, rect.left - pad) + 'px';
-                spotlightEl.style.width = Math.min(window.innerWidth - 16, rect.width + pad * 2) + 'px';
-                spotlightEl.style.height = Math.min(window.innerHeight - 16, rect.height + pad * 2) + 'px';
-                positionCard(rect, false);
-                cardEl.classList.add('active');
-            }, scrollToTarget === false ? 0 : 350);
-        } else {
+        if (!target) {
             spotlightEl.classList.add('hidden');
             positionCard(null, true);
             cardEl.classList.add('active');
+            return;
         }
+
+        if (scrollToTarget === false) {
+            placeSpotlightOn(target);
+            return;
+        }
+
+        var preScrollRect = target.getBoundingClientRect();
+        var fitsViewport = preScrollRect.height <= (window.innerHeight - HEADER_CLEARANCE - 24);
+        target.scrollIntoView({ behavior: 'smooth', block: fitsViewport ? 'center' : 'start', inline: 'nearest' });
+        waitForScrollSettle(target, function () { placeSpotlightOn(target); });
     }
 
     function portalGuideUrl() {

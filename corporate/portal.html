@@ -587,7 +587,7 @@
             <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="corpPortal.heroSubtitle">Connect with diverse talent across the Greater Bay Area through our AI-powered recruitment platform</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4 items-center">
-                <a href="#dashboard" class="btn-primary text-lg">
+                <a href="#dashboard" class="inline-flex items-center justify-center gap-2 text-lg font-medium px-8 py-3 rounded-lg border-2 border-white/90 text-white hover:bg-white/10 transition-colors">
                     <i class="fas fa-chart-line"></i>
                     <span data-i18n="corpPortal.viewDashboard">View Recruitment Dashboard</span>
                 </a>
@@ -774,24 +774,6 @@
         </div>
     </section>
 
-    <!-- 爱心捐款箱 · 弱势群体法律服务 -->
-    <section id="donation-fund" class="py-16 bg-gradient-to-b from-amber-50 to-white scroll-mt-20">
-        <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto text-center mb-10">
-                <h2 class="text-3xl font-bold text-gray-900 mb-3"><i class="fas fa-hand-holding-heart text-amber-500 mr-2"></i><span data-i18n="corpPortal.donationSectionTitle">爱心捐款箱 · 弱势群体法律服务</span></h2>
-                <p class="text-gray-600" data-i18n="corpPortal.donationSectionDesc">招聘发布、岗位匹配与法律帮助免费使用。面试模拟、HR 绩效统计等高级功能需向捐款箱捐款（金额不限）。募集到的资金将全额用于为弱势求职者提供免费法律服务。</p>
-            </div>
-            <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-lg border p-6 md:p-8">
-                <div id="corporate-donation-mini"></div>
-                <div class="mt-6 text-center">
-                    <a href="donation-legal.html" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:opacity-90">
-                        <i class="fas fa-scale-balanced"></i> <span data-i18n="corpPortal.donationLearnMore">查看法律服务详情并捐款</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-    
     <!-- HR Tools Section (6 tools) -->
     <section id="ai-features" class="py-20 bg-white scroll-mt-20">
         <div class="container mx-auto px-4">
@@ -2162,12 +2144,12 @@
 
     <script src="../assets/site-enhancements.js"></script>
     <script src="../assets/site-guide.js"></script>
+    <script src="../assets/js/node-api-base.js"></script>
     <script src="../assets/js/auth-api.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/api-client.js"></script>
     <script src="../assets/js/portal-auth.js"></script>
     <script src="../assets/js/platform-access.js"></script>
-    <script src="../assets/js/donation-box.js"></script>
     <script src="assets/js/my-jobs.js"></script>
     <script src="assets/js/dashboard-stats.js"></script>
     <script>
@@ -2201,10 +2183,6 @@
             PortalAuth.initPortalAuth({ portal: 'corporate', requireAuth: false });
             PlatformAccess.guardFeatureLinks('[data-require-access]');
             PlatformAccess.guardPremiumFeatureLinks('[data-require-premium-access]');
-            const miniRoot = document.getElementById('corporate-donation-mini');
-            if (miniRoot && typeof DonationBox !== 'undefined') {
-                DonationBox.renderDonationBox(miniRoot, { portal: 'corporate' });
-            }
             try {
                 const access = await PlatformAccess.fetchAccess();
                 renderPortalAccessBanner(access);
