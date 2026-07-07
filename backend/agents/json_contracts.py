@@ -131,7 +131,11 @@ class ResumeGenerationOutput(BaseModel):
     projects: list[ResumeSectionItemOutput] = Field(default_factory=list)
     awards: list[ResumeSectionItemOutput] = Field(default_factory=list)
     papers: list[ResumeSectionItemOutput] = Field(default_factory=list)
-    language: str = "zh"
+    language: str = "en"
+    section_order: list[str] = Field(
+        default_factory=list,
+        description="Optimized section display order; omit to infer from content",
+    )
 
 
 class PageMarginOutput(BaseModel):
@@ -144,7 +148,7 @@ class PageMarginOutput(BaseModel):
 class RenderInstructionOutput(BaseModel):
     template_id: str = "default"
     theme: str = "light"
-    language: str = "zh"
+    language: str = "en"
     font_family: str = "Source Han Sans"
     font_size: int = 14
     line_height: float = 1.5

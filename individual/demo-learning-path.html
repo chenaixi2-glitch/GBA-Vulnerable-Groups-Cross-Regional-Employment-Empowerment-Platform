@@ -138,6 +138,18 @@
                     <span class="hidden sm:inline" data-i18n="learningPath.sessionLabel">Session</span><span class="hidden sm:inline">: </span><span id="session-id" class="font-mono">Not started</span>
                 </span>
                 <div id="header-lang-slot"></div>
+                <div id="portal-auth-guest" class="flex items-center gap-2">
+                    <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1" data-i18n="portal.login">Log in</a>
+                    <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg" data-i18n="portal.signup">Sign up</a>
+                </div>
+                <div id="portal-auth-user" class="hidden flex items-center gap-3">
+                    <a href="profile.html" class="text-sm text-blue-700 hover:text-blue-800 font-medium hidden sm:inline" data-i18n="portal.profile">Profile</a>
+                    <div class="text-right hidden sm:block">
+                        <div id="portal-user-name" class="text-sm font-medium text-gray-900"></div>
+                        <div id="portal-user-email" class="text-xs text-gray-500"></div>
+                    </div>
+                    <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600 px-2 py-1" data-i18n="portal.logout">Log out</button>
+                </div>
             </div>
         </div>
     </header>
@@ -578,8 +590,12 @@
     <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
         <span id="toast-message"></span>
     </div>
+    <script src="../assets/js/node-api-base.js"></script>
+    <script src="../assets/js/auth-api.js"></script>
+    <script src="../assets/js/portal-auth.js"></script>
 
     <script src="../assets/i18n/i18n.js"></script>
+    <script src="../assets/js/page-bootstrap.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/target-job-context.js"></script>
     <script src="assets/js/api-client.js"></script>

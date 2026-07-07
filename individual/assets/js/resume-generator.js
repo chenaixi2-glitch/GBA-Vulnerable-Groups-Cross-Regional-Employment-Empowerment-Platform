@@ -56,6 +56,20 @@ function uiT(key, fallback, vars) {
     return s;
 }
 
+function guardAiTaskRetry() {
+    if (typeof Utils !== 'undefined' && Utils.isAiTaskRetryBlocked && Utils.isAiTaskRetryBlocked()) {
+        Utils.showAiTaskRetryBlockedHint();
+        return false;
+    }
+    return true;
+}
+
+function beginAiTaskAttempt() {
+    if (typeof Utils !== 'undefined' && Utils.stopAiTaskRetryWait) {
+        Utils.stopAiTaskRetryWait();
+    }
+}
+
 function parsedFieldLabel(key, fallback) {
     return uiT('resume.' + key, fallback);
 }
@@ -73,33 +87,36 @@ function parsedFactTypeLabel(type) {
     return parsedFieldLabel(entry[0], entry[1]);
 }
 
+function onPageReady(fn) {
+    if (window.GBAPageBootstrap && typeof GBAPageBootstrap.runWhenReady === 'function') {
+        GBAPageBootstrap.runWhenReady(fn);
+    } else if (window.GBAI18n && typeof GBAI18n.initLanguage === 'function') {
+        GBAI18n.initLanguage().then(fn);
+    } else {
+        fn();
+    }
+}
+
+function syncResumeLanguageUi() {
+    if (typeof GBAI18n !== 'undefined' && typeof GBAI18n.applyResumeLangButtonLabels === 'function') {
+        GBAI18n.applyResumeLangButtonLabels();
+    }
+    if (typeof syncResumeLanguageButtons === 'function') {
+        syncResumeLanguageButtons();
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    initializeResumeGenerator();
-    if (window.GBAI18n && typeof GBAI18n.initLanguage === 'function') {
-        GBAI18n.initLanguage().then(() => {
-            if (typeof GBAI18n.applyResumeLangButtonLabels === 'function') {
-                GBAI18n.applyResumeLangButtonLabels();
-            }
-            if (typeof syncResumeLanguageButtons === 'function') {
-                syncResumeLanguageButtons();
-            }
-            if (typeof apiClient !== 'undefined') {
-                apiClient.ensureSessionStarted();
-            }
-        }).catch(() => {
-            if (typeof apiClient !== 'undefined') {
-                apiClient.ensureSessionStarted();
-            }
-        });
-    }
+    onPageReady(() => {
+        initializeResumeGenerator();
+        syncResumeLanguageUi();
+        if (typeof apiClient !== 'undefined') {
+            apiClient.ensureSessionStarted();
+        }
+    });
     window.addEventListener('gba:language-changed', () => {
-        if (typeof GBAI18n !== 'undefined' && typeof GBAI18n.applyResumeLangButtonLabels === 'function') {
-            GBAI18n.applyResumeLangButtonLabels();
-        }
-        if (typeof syncResumeLanguageButtons === 'function') {
-            syncResumeLanguageButtons();
-        }
+        syncResumeLanguageUi();
     });
 });
 
@@ -208,6 +225,26 @@ function revealJdSection() {
     if (typeof updateProfileContinueUi === 'function') {
         updateProfileContinueUi(lastChecklistData);
     }
+    showJdExportShortcutHint();
+}
+
+function showJdExportShortcutHint() {
+    const hint = document.getElementById('jd-export-shortcut-hint');
+    if (!hint) return;
+    hint.classList.remove('hidden');
+    const textEl = document.getElementById('jd-export-shortcut-text');
+    if (!textEl) return;
+    if (resumeGenerated) {
+        textEl.textContent = uiT(
+            'resume.jdExportShortcutReady',
+            'Step 2 is optional. Your resume is already generated — scroll to the right panel to preview, or use the export buttons in «Resume Analysis Results» (PDF, DOCX, HTML).'
+        );
+    } else {
+        textEl.textContent = uiT(
+            'resume.jdExportShortcutProfile',
+            'Step 2 is optional. You can skip JD tailoring: in «Resume Analysis Results» on the right, choose a resume language and click «Generate preview & export» to download directly.'
+        );
+    }
 }
 
 async function proceedToJdStep() {
@@ -232,7 +269,10 @@ async function proceedToJdStep() {
         }
 
         revealJdSection();
-        Utils.showToast(uiT('resume.toast.profileReadyForStep2', 'Profile complete — continue with your target job description'));
+        Utils.showToast(uiT(
+            'resume.toast.profileReadyForStep2',
+            'Profile complete — continue with your target job description, or export directly from Resume Analysis Results on the right'
+        ));
         document.getElementById('jd-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
         Utils.hideLoading();
@@ -533,11 +573,13 @@ function getEmployerTypeLabel(value) {
  */
 async function fillSuggestedJd(industry, experienceLevel, employerType, options = {}) {
     const { silent = false } = options;
+    if (!guardAiTaskRetry()) return;
     const jdTextarea = document.getElementById('jd-text');
     const generateBtn = document.getElementById('btn-generate-jd');
     const jdDraft = jdTextarea?.value.trim() || '';
 
     try {
+        beginAiTaskAttempt();
         if (generateBtn) generateBtn.disabled = true;
         if (!silent) {
             Utils.showLoading(uiT('resume.toast.generatingJd', 'Generating suggested job description...'));
@@ -565,7 +607,7 @@ async function fillSuggestedJd(industry, experienceLevel, employerType, options 
         }
     } catch (error) {
         if (!silent) {
-            Utils.showToast(uiT('resume.toast.jdGenerateFailed', 'Failed to generate job description: {msg}', { msg: error.message }));
+            Utils.showAiTaskErrorToast(error, 'resume.toast.jdGenerateFailed', 'Failed to generate job description: {msg}', { msg: error.message });
         }
         console.error('JD generation error:', error);
     } finally {
@@ -809,6 +851,7 @@ async function executeUploadResume() {
     if (resumeUploadInProgress) {
         return;
     }
+    if (!guardAiTaskRetry()) return;
 
     const uploadBtn = document.getElementById('btn-upload-resume');
     resumeUploadInProgress = true;
@@ -819,6 +862,7 @@ async function executeUploadResume() {
 
     let slowHintTimer = null;
     try {
+        beginAiTaskAttempt();
         Utils.showLoading(uiT('resume.toast.uploadingResume', 'Uploading resume...'));
         slowHintTimer = setTimeout(() => {
             Utils.showLoading(uiT('resume.toast.uploadingSlow', 'AI is parsing your resume — this may take 1–2 minutes, please wait…'));
@@ -906,14 +950,12 @@ async function executeUploadResume() {
         console.log('Profile agent response:', response);
     } catch (error) {
         Utils.hideLoading();
-        const toastMsg = error.code === API_ERROR.SESSION_BUSY
-            ? error.message
-            : uiT('resume.toast.uploadFailed', 'Failed to upload resume: {msg}', { msg: error.message || '' });
-        Utils.showToast(toastMsg);
+        Utils.showAiTaskErrorToast(error, 'resume.toast.uploadFailed', 'Failed to upload resume: {msg}', { msg: error.message || '' });
         console.error('Upload error:', error);
     } finally {
         resumeUploadInProgress = false;
         updateUploadContinueButton();
+        Utils.refreshAiTaskRetryButtonGuards?.();
         if (slowHintTimer) clearTimeout(slowHintTimer);
     }
 }
@@ -925,7 +967,8 @@ function updateProfileExportUi() {
     }
 }
 
-function applyResumeGenerationResult(response, lang) {
+function applyResumeGenerationResult(response, lang, options = {}) {
+    const { beforeDraftSnapshot = null } = options;
     if (response?.resume_html?.html) {
         displayResume(response.resume_html.html);
     }
@@ -940,6 +983,22 @@ function applyResumeGenerationResult(response, lang) {
     updateProfileExportUi();
     document.getElementById('resume-preview-section')?.classList.remove('hidden');
     showResumeChatPanel();
+
+    if (response?.resume_content_json
+        && typeof ProfileEditor !== 'undefined'
+        && ProfileEditor.syncDraftFromResumeContent) {
+        const changed = ProfileEditor.syncDraftFromResumeContent(response.resume_content_json, {
+            beforeSnapshot: beforeDraftSnapshot,
+        });
+        if (changed > 0) {
+            setResumeView('edit', { scroll: false });
+            Utils.showToast(uiT(
+                'resume.toast.translationReviewFields',
+                '{count} title-level field(s) highlighted (name, school, company/project) — please review',
+                { count: changed }
+            ));
+        }
+    }
 }
 
 /**
@@ -968,10 +1027,16 @@ async function generateResumeFromProfile(options = {}) {
         return true;
     }
 
+    if (!guardAiTaskRetry()) return false;
+
     try {
+        beginAiTaskAttempt();
         if (!silent) {
             Utils.showLoading(uiT('resume.toast.generatingProfileResume', 'Generating resume from your profile...'));
         }
+        const beforeDraftSnapshot = (typeof ProfileEditor !== 'undefined' && ProfileEditor.captureDraftSnapshot)
+            ? ProfileEditor.captureDraftSnapshot()
+            : null;
         await syncDraftBeforeGenerate({ required: true, showLoading: false });
         const draft = (typeof ProfileEditor !== 'undefined' && ProfileEditor.collectDraftFromForm)
             ? ProfileEditor.collectDraftFromForm()
@@ -980,7 +1045,7 @@ async function generateResumeFromProfile(options = {}) {
             await applyResumeLanguageSelection(lang);
         }
         const response = await apiClient.generateResumeFromProfile(lang, draft);
-        applyResumeGenerationResult(response, lang);
+        applyResumeGenerationResult(response, lang, { beforeDraftSnapshot });
         resetResumeUndoHistory();
         if (!silent) {
             Utils.hideLoading();
@@ -990,7 +1055,7 @@ async function generateResumeFromProfile(options = {}) {
         return true;
     } catch (error) {
         if (!silent) Utils.hideLoading();
-        Utils.showToast(uiT('resume.toast.profileResumeFailed', 'Could not generate resume: {msg}', { msg: error.message }));
+        Utils.showAiTaskErrorToast(error, 'resume.toast.profileResumeFailed', 'Could not generate resume: {msg}', { msg: error.message });
         console.error('Profile resume generation error:', error);
         return false;
     }
@@ -1004,17 +1069,20 @@ window.generateResumeFromProfile = generateResumeFromProfile;
 async function generateResume() {
     const generateBtn = document.getElementById('btn-generate');
     if (generateBtn?.dataset.busy === '1') return;
+    if (!guardAiTaskRetry()) return;
 
     const setGenerateBusy = (busy) => {
         if (!generateBtn) return;
+        const blocked = typeof Utils !== 'undefined' && Utils.isAiTaskRetryBlocked && Utils.isAiTaskRetryBlocked();
         generateBtn.dataset.busy = busy ? '1' : '0';
-        generateBtn.disabled = busy;
+        generateBtn.disabled = busy || blocked;
         generateBtn.classList.toggle('opacity-50', busy);
         generateBtn.classList.toggle('cursor-not-allowed', busy);
     };
 
     setGenerateBusy(true);
     try {
+        beginAiTaskAttempt();
         apiClient.ensureSessionStarted();
 
         if (!hasParsedProfileOnPage()) {
@@ -1037,6 +1105,10 @@ async function generateResume() {
                 return;
             }
         }
+
+        const beforeDraftSnapshot = (typeof ProfileEditor !== 'undefined' && ProfileEditor.captureDraftSnapshot)
+            ? ProfileEditor.captureDraftSnapshot()
+            : null;
 
         const jdTextarea = document.getElementById('jd-text');
         const industrySelect = document.getElementById('industry-select');
@@ -1148,12 +1220,21 @@ async function generateResume() {
         updateAgentStatus('agent-content', 'completed');
         updateAgentStatus('agent-render', 'running');
 
+        let highlightCount = 0;
         if (resumeResponse.resume_html && resumeResponse.resume_html.html) {
-            applyResumeGenerationResult(resumeResponse, resumeResponse.resume_content_json?.meta?.language || currentResumeLanguage);
+            highlightCount = applyResumeGenerationResult(
+                resumeResponse,
+                resumeResponse.resume_content_json?.meta?.language || currentResumeLanguage,
+                { beforeDraftSnapshot }
+            );
         } else {
             const resumeData = await apiClient.getResumeHtml();
             if (resumeData.resume_html && resumeData.resume_html.html) {
-                applyResumeGenerationResult({ resume_html: resumeData.resume_html }, currentResumeLanguage);
+                highlightCount = applyResumeGenerationResult(
+                    { resume_html: resumeData.resume_html },
+                    currentResumeLanguage,
+                    { beforeDraftSnapshot }
+                );
             } else {
                 throw new Error(uiT('errors.resumeHtmlUnavailable', 'Resume HTML not available'));
             }
@@ -1170,12 +1251,12 @@ async function generateResume() {
 
         Utils.showToast(uiT('resume.toast.generated', 'Resume generated successfully!'));
 
-        setResumeView('preview', { scroll: true });
+        setResumeView(highlightCount > 0 ? 'edit' : 'preview', { scroll: true });
 
         console.log('Resume generation complete:', resumeResponse);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast(uiT('resume.toast.generateFailed', 'Failed to generate resume: {msg}', { msg: error.message }));
+        Utils.showAiTaskErrorToast(error, 'resume.toast.generateFailed', 'Failed to generate resume: {msg}', { msg: error.message });
         console.error('Generation error:', error);
 
         updateAgentStatus('agent-jd', 'failed');
@@ -1184,6 +1265,7 @@ async function generateResume() {
         updateAgentStatus('agent-render', 'failed');
     } finally {
         setGenerateBusy(false);
+        Utils.refreshAiTaskRetryButtonGuards?.();
         if (typeof hideOptimizationDialog === 'function') {
             hideOptimizationDialog();
         }
@@ -1551,6 +1633,7 @@ async function submitResumeChatEdit() {
         return;
     }
     if (resumeChatBusy) return;
+    if (!guardAiTaskRetry()) return;
 
     const input = document.getElementById('resume-chat-input');
     const message = input?.value.trim();
@@ -1565,6 +1648,7 @@ async function submitResumeChatEdit() {
     appendResumeChatMessage('assistant', uiT('resume.chat.thinking', 'Working on your changes…'));
 
     try {
+        beginAiTaskAttempt();
         const beforeSnapshot = await captureCurrentResumeSnapshot();
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null;
         await apiClient.syncTargetJobContext(targetContext);
@@ -1611,11 +1695,9 @@ async function submitResumeChatEdit() {
         if (messages?.lastChild) {
             messages.removeChild(messages.lastChild);
         }
-        appendResumeChatMessage(
-            'assistant',
-            uiT('resume.toast.chatFailed', 'Edit failed: {msg}', { msg: error.message })
-        );
-        Utils.showToast(uiT('resume.toast.chatFailed', 'Edit failed: {msg}', { msg: error.message }));
+        const chatErrMsg = getAiTaskErrorMessage(error, 'resume.toast.chatFailed', 'Edit failed: {msg}', { msg: error.message });
+        appendResumeChatMessage('assistant', chatErrMsg);
+        Utils.showAiTaskErrorToast(error, 'resume.toast.chatFailed', 'Edit failed: {msg}', { msg: error.message });
         console.error('Resume chat edit error:', error);
     } finally {
         setResumeChatBusy(false);
@@ -1682,6 +1764,7 @@ async function translateResumeToPortuguese() {
  * Shared translate handler
  */
 async function translateResume(targetLanguage) {
+    if (!guardAiTaskRetry()) return;
     const lang = typeof normalizeResumeLang === 'function' ? normalizeResumeLang(targetLanguage) : targetLanguage;
     const loadingMsgs = {
         zh: uiT('resume.toast.translatingZh', 'Converting to Simplified Chinese resume...'),
@@ -1690,33 +1773,39 @@ async function translateResume(targetLanguage) {
         pt: uiT('resume.toast.translatingPt', 'Converting to Portuguese resume...'),
     };
     try {
+        beginAiTaskAttempt();
         Utils.showLoading(loadingMsgs[lang] || loadingMsgs.en);
         const beforeSnapshot = await captureCurrentResumeSnapshot();
+        const beforeDraftSnapshot = (typeof ProfileEditor !== 'undefined' && ProfileEditor.captureDraftSnapshot)
+            ? ProfileEditor.captureDraftSnapshot()
+            : null;
         const response = await apiClient.translateResume(lang);
 
         if (response.resume_html && response.resume_html.html) {
             displayResume(response.resume_html.html);
         }
-        applyResumeGenerationResult(response, lang);
+        const highlightCount = applyResumeGenerationResult(response, lang, { beforeDraftSnapshot });
         if (beforeSnapshot.html && response.resume_html?.html) {
             pushResumeUndoSnapshot(beforeSnapshot);
         }
         Utils.hideLoading();
         const missing = response.language_checklist?.missing_count || 0;
-        const baseMsgs = {
-            zh: uiT('resume.toast.convertedZh', 'Resume converted to Simplified Chinese (A4 single page)'),
-            'zh-TW': uiT('resume.toast.convertedZhTw', 'Resume converted to Traditional Chinese (A4 single page)'),
-            en: uiT('resume.toast.convertedEn', 'Resume converted to English (A4 single page)'),
-            pt: uiT('resume.toast.convertedPt', 'Resume converted to Portuguese (A4)'),
-        };
-        const baseMsg = baseMsgs[lang] || baseMsgs.en;
-        Utils.showToast(missing > 0
-            ? baseMsg + uiT('resume.toast.itemsToReview', ' — {count} item(s) to review in profile editor', { count: missing })
-            : baseMsg);
-        setResumeView('preview', { scroll: true });
+        if (highlightCount === 0) {
+            const baseMsgs = {
+                zh: uiT('resume.toast.convertedZh', 'Resume converted to Simplified Chinese (A4 single page)'),
+                'zh-TW': uiT('resume.toast.convertedZhTw', 'Resume converted to Traditional Chinese (A4 single page)'),
+                en: uiT('resume.toast.convertedEn', 'Resume converted to English (A4 single page)'),
+                pt: uiT('resume.toast.convertedPt', 'Resume converted to Portuguese (A4)'),
+            };
+            const baseMsg = baseMsgs[lang] || baseMsgs.en;
+            Utils.showToast(missing > 0
+                ? baseMsg + uiT('resume.toast.itemsToReview', ' — {count} item(s) to review in profile editor', { count: missing })
+                : baseMsg);
+        }
+        setResumeView(highlightCount > 0 ? 'edit' : 'preview', { scroll: true });
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast(uiT('resume.toast.translationFailed', 'Translation failed: {msg}', { msg: error.message }));
+        Utils.showAiTaskErrorToast(error, 'resume.toast.translationFailed', 'Translation failed: {msg}', { msg: error.message });
         console.error('Translation error:', error);
     }
 }
@@ -1744,8 +1833,10 @@ async function optimizeResume() {
         Utils.showToast(uiT('resume.toast.generateFirst', 'Please generate a resume first'));
         return;
     }
+    if (!guardAiTaskRetry()) return;
 
     try {
+        beginAiTaskAttempt();
         Utils.showLoading(uiT('resume.toast.analyzingGaps', 'Analyzing gaps for optimization...'));
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null;
         await apiClient.syncTargetJobContext(targetContext);
@@ -1802,7 +1893,7 @@ async function optimizeResume() {
         Utils.showToast(uiT('resume.toast.optimizedA4', 'Resume optimized for one A4 page'));
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast(uiT('resume.toast.optimizeFailed', 'Optimization failed: {msg}', { msg: error.message }));
+        Utils.showAiTaskErrorToast(error, 'resume.toast.optimizeFailed', 'Optimization failed: {msg}', { msg: error.message });
         console.error('Optimization error:', error);
     } finally {
         if (typeof hideOptimizationDialog === 'function') {

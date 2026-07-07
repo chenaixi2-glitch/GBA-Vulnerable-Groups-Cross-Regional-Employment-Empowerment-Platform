@@ -158,13 +158,25 @@ let interviewPrerequisites = {
 
 let interviewSetup = null;
 
+function onPageReady(fn) {
+    if (window.GBAPageBootstrap && typeof GBAPageBootstrap.runWhenReady === 'function') {
+        GBAPageBootstrap.runWhenReady(fn);
+    } else if (window.GBAI18n && typeof GBAI18n.initLanguage === 'function') {
+        GBAI18n.initLanguage().then(fn);
+    } else {
+        fn();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    initializeInterviewPrep();
-    setupInteractiveSaveModal();
-    setupQuestionBankSaveModal();
-    selectProgramVersion('quick');
-    initInterviewLanguages();
-    loadQuestionBankSavedRecords();
+    onPageReady(() => {
+        initializeInterviewPrep();
+        setupInteractiveSaveModal();
+        setupQuestionBankSaveModal();
+        selectProgramVersion('quick');
+        initInterviewLanguages();
+        loadQuestionBankSavedRecords();
+    });
 });
 
 function normalizeInterviewLang(code) {
@@ -441,7 +453,12 @@ async function submitInterviewJobDescription() {
 
 async function generateInterviewResume() {
     if (!ensureInterviewProfileApplied()) return;
+    if (typeof Utils !== 'undefined' && Utils.isAiTaskRetryBlocked && Utils.isAiTaskRetryBlocked()) {
+        Utils.showAiTaskRetryBlockedHint();
+        return;
+    }
     try {
+        if (typeof Utils !== 'undefined' && Utils.stopAiTaskRetryWait) Utils.stopAiTaskRetryWait();
         Utils.showLoading(uiT('interview.loadingGeneratingResume', 'Generating tailored resume content...'));
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
             fields: {
@@ -469,7 +486,7 @@ async function generateInterviewResume() {
         console.log('Resume generation response:', response);
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast(uiT('interview.toast.resumeFailed', 'Failed to generate resume: {msg}', { msg: error.message }));
+        Utils.showAiTaskErrorToast(error, 'interview.toast.resumeFailed', 'Failed to generate resume: {msg}', { msg: error.message });
         console.error('Resume generation error:', error);
     }
 }

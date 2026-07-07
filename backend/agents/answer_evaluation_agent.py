@@ -7,7 +7,8 @@ import re
 from typing import Any
 
 from agents.json_contracts import AnswerEvaluationOutput, LLMJudgeRubricOutput
-from models.llm import get_llm, get_judge_llm, ainvoke_json_with_schema
+from models.llm import get_llm, get_judge_llm
+from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.answer_evaluation import ANSWER_EVALUATION_PROMPT, LLM_JUDGE_RUBRIC_PROMPT
 from tools.output_language import output_language_instruction, resolve_interview_feedback_language
 from tools.target_job_context import build_enriched_job_json
@@ -119,9 +120,15 @@ async def answer_evaluation_node_async(state: CopilotState) -> dict[str, Any]:
         output_language_instruction=output_language_instruction(resolve_interview_feedback_language(state)),
     )
     llm = get_llm()
+    feedback_lang = resolve_interview_feedback_language(state)
     try:
-        evaluation = await ainvoke_json_with_schema(
-            llm, prompt, AnswerEvaluationOutput, logger, "Answer Evaluation Agent"
+        evaluation = await ainvoke_json_with_language_guard(
+            llm,
+            prompt,
+            AnswerEvaluationOutput,
+            logger,
+            "Answer Evaluation Agent",
+            feedback_lang,
         )
     except RuntimeError as exc:
         logger.error("Answer Evaluation Agent failed: %s", exc)

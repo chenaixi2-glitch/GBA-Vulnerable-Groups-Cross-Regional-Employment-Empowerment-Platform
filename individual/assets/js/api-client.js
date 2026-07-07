@@ -47,7 +47,80 @@ function apiCode(code, i18nKey, fallbackEn) {
 /** Machine-readable API error codes returned in HTTP detail fields */
 const API_ERROR = {
     SESSION_BUSY: 'SESSION_BUSY',
+    REQUEST_TIMEOUT: 'REQUEST_TIMEOUT',
 };
+
+const AI_TASK_PENDING_TOAST_MS = 8000;
+
+function isRequestTimeoutError(error) {
+    if (!error) return false;
+    if (error.code === API_ERROR.REQUEST_TIMEOUT) return true;
+    const code = String(error.code || '').toUpperCase();
+    if (code === 'ECONNABORTED') return true;
+    const msg = String(error.message || '').toLowerCase();
+    return msg.includes('timeout') || msg.includes('timed out');
+}
+
+function isAiTaskPendingError(error) {
+    if (!error) return false;
+    return error.code === API_ERROR.SESSION_BUSY || error.code === API_ERROR.REQUEST_TIMEOUT;
+}
+
+/**
+ * User-facing message for AI task failures (timeout / session busy vs generic).
+ */
+function getAiTaskErrorMessage(error, fallbackKey, fallbackEn, vars) {
+    if (error && error.code === API_ERROR.SESSION_BUSY) {
+        return error.message || apiT(
+            'errors.sessionBusy',
+            'Another AI task is already running for this session. Please wait for it to finish, then try again.'
+        );
+    }
+    if (error && error.code === API_ERROR.REQUEST_TIMEOUT) {
+        return apiT(
+            'errors.aiTaskStillProcessing',
+            'The request timed out, but the server may still be processing your AI task in the background. Please wait before trying again.'
+        );
+    }
+    const msg = (error && error.message) ? error.message : '';
+    return apiT(fallbackKey, fallbackEn, { ...(vars || {}), msg });
+}
+
+function formatRetryDuration(totalSeconds) {
+    const s = Math.max(0, Math.ceil(Number(totalSeconds) || 0));
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    if (mins > 0) {
+        return apiT('errors.retryDurationMinSec', '{minutes} min {seconds} sec', {
+            minutes: mins,
+            seconds: String(secs).padStart(2, '0'),
+        });
+    }
+    return apiT('errors.retryDurationSec', '{seconds} sec', { seconds: s });
+}
+
+function buildAiTaskRetryBannerMessage(state) {
+    const time = formatRetryDuration(state.retryAfter);
+    if (state.queueStatus === 'queued' && state.queuePosition > 0) {
+        return apiT(
+            'errors.aiTaskRetryQueued',
+            'Queued (position {position}). You can retry in about {time}.',
+            { position: state.queuePosition, time }
+        );
+    }
+    if (state.errorKind === API_ERROR.REQUEST_TIMEOUT) {
+        return apiT(
+            'errors.aiTaskRetryCountdownTimeout',
+            'The request timed out, but processing may continue in the background. You can retry in about {time}.',
+            { time }
+        );
+    }
+    return apiT(
+        'errors.aiTaskRetryCountdown',
+        'An AI task is still running. You can retry in about {time}.',
+        { time }
+    );
+}
 
 function apiMsg(message) {
     if (message == null) return '';
@@ -1773,6 +1846,7 @@ class APIClient {
                 industry: ctx.industryLabel || ctx.industry || '',
                 employer_type: ctx.employer_type || '',
                 experience_level: ctx.experienceLevelLabel || ctx.experience_level || '',
+                typography_fit_mode: ctx.typography_fit_mode || 'auto',
             });
             return response.data;
         } catch (error) {
@@ -3166,6 +3240,39 @@ class APIClient {
     }
 
     /**
+     * Poll LLM queue / session lock status for retry countdown UI.
+     */
+    async getQueueStatus() {
+        if (!this.sessionId) {
+            return {
+                enabled: false,
+                status: 'idle',
+                retry_after_seconds: 0,
+                position: 0,
+            };
+        }
+        try {
+            await this.ensureBackendAvailable({ silent: true });
+            if (this.useMockMode) {
+                return {
+                    enabled: false,
+                    status: 'idle',
+                    retry_after_seconds: 0,
+                    position: 0,
+                };
+            }
+            const response = await this.client.get('/queue/status', {
+                params: { session_id: this.sessionId },
+                timeout: API_CONFIG.HEALTH_TIMEOUT,
+            });
+            return response.data;
+        } catch (error) {
+            console.warn('Queue status poll failed:', error);
+            return null;
+        }
+    }
+
+    /**
      * Convert file to base64
      */
     fileToBase64(file) {
@@ -3224,6 +3331,16 @@ class APIClient {
             }
         } else if (error.request) {
             const url = this._formatRequestUrl(error);
+            const timeoutMs = Number(error.config?.timeout) || API_CONFIG.TIMEOUT;
+            const isLongRunningAiRequest = timeoutMs >= API_CONFIG.TIMEOUT;
+            if (isLongRunningAiRequest && isRequestTimeoutError(error)) {
+                const err = new Error(apiT(
+                    'errors.aiTaskStillProcessing',
+                    'The request timed out, but the server may still be processing your AI task in the background. Please wait before trying again.'
+                ));
+                err.code = API_ERROR.REQUEST_TIMEOUT;
+                return err;
+            }
             return new Error(apiT('errors.networkErrorWithUrl', 'Network error — no response from {url}. Ensure the backend is running (cd backend && python main.py).', { url }));
         } else {
             return new Error(apiMsg(error.message) || apiT('errors.unexpected', 'An unexpected error occurred.'));
@@ -3238,6 +3355,9 @@ if (typeof window !== 'undefined') {
     window.addEventListener('gba:language-changed', () => {
         if (typeof Utils !== 'undefined') {
             Utils.updateSessionDisplay(apiClient.sessionId);
+            if (Utils._aiTaskRetryState?.active) {
+                Utils._updateAiTaskRetryBanner();
+            }
         }
         if (apiClient.useMockMode) {
             apiClient._syncMockModeIndicator();
@@ -3258,6 +3378,183 @@ if (typeof window !== 'undefined') {
 const Utils = {
     _loadingProgressTimer: null,
     _loadingProgressState: null,
+    _aiTaskRetryState: {
+        active: false,
+        errorKind: null,
+        retryAfter: 0,
+        queueStatus: 'idle',
+        queuePosition: 0,
+        tickTimer: null,
+        pollTimer: null,
+        guardedElements: [],
+    },
+
+    _aiTaskRetryGuardSelector() {
+        return [
+            '[data-ai-retry-guard]',
+            '#btn-generate',
+            '#btn-generate-jd',
+            '#btn-generate-profile-resume',
+            '#btn-upload-resume',
+            '[data-resume-translate]',
+            'button[onclick*="optimizeResume"]',
+            'button[onclick*="generateInterviewResume"]',
+        ].join(',');
+    },
+
+    isAiTaskRetryBlocked() {
+        const state = this._aiTaskRetryState;
+        return Boolean(state?.active);
+    },
+
+    showAiTaskRetryBlockedHint() {
+        const state = this._aiTaskRetryState;
+        if (!state?.active) return;
+        const msg = state.retryAfter > 0
+            ? buildAiTaskRetryBannerMessage(state)
+            : apiT('errors.aiTaskRetryChecking', 'Checking whether the AI task has finished…');
+        this.showToast(msg, 4000);
+        this._updateAiTaskRetryBanner();
+    },
+
+    stopAiTaskRetryWait() {
+        const state = this._aiTaskRetryState;
+        if (!state) return;
+        if (state.tickTimer) clearInterval(state.tickTimer);
+        if (state.pollTimer) clearInterval(state.pollTimer);
+        state.active = false;
+        state.errorKind = null;
+        state.retryAfter = 0;
+        state.queueStatus = 'idle';
+        state.queuePosition = 0;
+        state.tickTimer = null;
+        state.pollTimer = null;
+        this._restoreAiTaskRetryButtonGuards();
+        document.getElementById('gba-ai-retry-banner')?.remove();
+    },
+
+    startAiTaskRetryWait(error) {
+        if (!isAiTaskPendingError(error)) return;
+        this.stopAiTaskRetryWait();
+        const state = this._aiTaskRetryState;
+        state.active = true;
+        state.errorKind = error.code;
+        state.retryAfter = error.code === API_ERROR.REQUEST_TIMEOUT ? 90 : 30;
+        this._applyAiTaskRetryButtonGuards();
+        this._ensureAiTaskRetryBanner();
+        this._updateAiTaskRetryBanner();
+        this._pollAiTaskRetryStatus();
+        state.pollTimer = setInterval(() => this._pollAiTaskRetryStatus(), 2000);
+        state.tickTimer = setInterval(() => this._tickAiTaskRetryCountdown(), 1000);
+    },
+
+    async _pollAiTaskRetryStatus() {
+        const state = this._aiTaskRetryState;
+        if (!state?.active) return;
+        const status = await apiClient.getQueueStatus();
+        if (!status) {
+            if (state.retryAfter > 0) {
+                state.retryAfter = Math.max(0, state.retryAfter - 1);
+                this._updateAiTaskRetryBanner();
+            }
+            return;
+        }
+
+        state.queueStatus = status.status || 'idle';
+        state.queuePosition = Number(status.position) || 0;
+        const retryAfter = Number(status.retry_after_seconds) || 0;
+
+        if (status.status === 'idle' && retryAfter <= 0) {
+            this._finishAiTaskRetryWait(true);
+            return;
+        }
+
+        if (retryAfter > 0) {
+            state.retryAfter = retryAfter;
+        } else if (status.status === 'running' || status.status === 'queued') {
+            state.retryAfter = Math.max(state.retryAfter, 15);
+        } else {
+            this._finishAiTaskRetryWait(true);
+            return;
+        }
+        this._updateAiTaskRetryBanner();
+    },
+
+    _tickAiTaskRetryCountdown() {
+        const state = this._aiTaskRetryState;
+        if (!state?.active) return;
+        if (state.retryAfter > 0) {
+            state.retryAfter -= 1;
+            this._updateAiTaskRetryBanner();
+        }
+        if (state.retryAfter <= 0) {
+            this._pollAiTaskRetryStatus();
+        }
+    },
+
+    _finishAiTaskRetryWait(ready) {
+        this.stopAiTaskRetryWait();
+        if (ready) {
+            this.showToast(apiT('errors.aiTaskRetryReady', 'You can retry now.'), 4000);
+        }
+    },
+
+    _ensureAiTaskRetryBanner() {
+        if (typeof document === 'undefined') return;
+        let banner = document.getElementById('gba-ai-retry-banner');
+        if (banner) return;
+        banner = document.createElement('div');
+        banner.id = 'gba-ai-retry-banner';
+        banner.className = 'fixed bottom-20 right-4 z-[9997] max-w-md bg-amber-600 text-white text-sm px-4 py-3 rounded-lg shadow-lg border border-amber-500';
+        banner.innerHTML = '<div id="gba-ai-retry-message" class="leading-relaxed"></div>';
+        document.body.appendChild(banner);
+    },
+
+    _updateAiTaskRetryBanner() {
+        const state = this._aiTaskRetryState;
+        if (!state?.active) return;
+        this._ensureAiTaskRetryBanner();
+        const messageEl = document.getElementById('gba-ai-retry-message');
+        if (!messageEl) return;
+        if (state.retryAfter > 0) {
+            messageEl.textContent = buildAiTaskRetryBannerMessage(state);
+            return;
+        }
+        messageEl.textContent = apiT('errors.aiTaskRetryChecking', 'Checking whether the AI task has finished…');
+    },
+
+    _applyAiTaskRetryButtonGuards() {
+        this._restoreAiTaskRetryButtonGuards();
+        const state = this._aiTaskRetryState;
+        state.guardedElements = [];
+        document.querySelectorAll(this._aiTaskRetryGuardSelector()).forEach((el) => {
+            if (!(el instanceof HTMLElement)) return;
+            state.guardedElements.push({ el, wasDisabled: el.disabled });
+            el.disabled = true;
+            el.setAttribute('aria-disabled', 'true');
+            el.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+    },
+
+    _restoreAiTaskRetryButtonGuards() {
+        const state = this._aiTaskRetryState;
+        (state.guardedElements || []).forEach(({ el, wasDisabled }) => {
+            if (!el || !el.isConnected) return;
+            el.disabled = wasDisabled;
+            if (wasDisabled) {
+                el.setAttribute('aria-disabled', 'true');
+            } else {
+                el.removeAttribute('aria-disabled');
+            }
+            el.classList.remove('opacity-50', 'cursor-not-allowed');
+        });
+        state.guardedElements = [];
+    },
+
+    refreshAiTaskRetryButtonGuards() {
+        if (!this.isAiTaskRetryBlocked()) return;
+        this._applyAiTaskRetryButtonGuards();
+    },
 
     /**
      * Show toast notification
@@ -3276,6 +3573,18 @@ const Utils = {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, duration);
+        }
+    },
+
+    /**
+     * Toast for AI task errors — longer duration when backend may still be working.
+     */
+    showAiTaskErrorToast(error, fallbackKey, fallbackEn, vars) {
+        const pending = isAiTaskPendingError(error);
+        const msg = getAiTaskErrorMessage(error, fallbackKey, fallbackEn, vars);
+        this.showToast(msg, pending ? AI_TASK_PENDING_TOAST_MS : 3000);
+        if (pending) {
+            this.startAiTaskRetryWait(error);
         }
     },
 

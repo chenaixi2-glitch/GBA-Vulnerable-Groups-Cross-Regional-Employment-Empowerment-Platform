@@ -5,21 +5,23 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from workflow.state import RenderConfig
+    from workflow.state import RenderConfig, ResumeContent
 
 SECTION_LABELS: dict[str, dict[str, str]] = {
     "zh": {
         "profile": "基本信息",
-        "summary": "个人总结",
-        "skills": "专业技能",
+        "summary": "自我评价",
+        "education": "教育经历",
+        "skills": "相关技能",
         "internships": "实习经历",
-        "projects": "项目经历",
+        "projects": "在校经历",
         "awards": "获奖经历",
         "papers": "论文",
     },
     "zh-TW": {
         "profile": "基本資料",
         "summary": "個人總結",
+        "education": "教育經歷",
         "skills": "專業技能",
         "internships": "實習經歷",
         "projects": "項目經歷",
@@ -47,11 +49,64 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
 }
 
 SECTION_ORDER_BY_LANGUAGE: dict[str, list[str]] = {
-    "zh": ["profile", "summary", "skills", "projects", "internships", "awards"],
-    "zh-TW": ["profile", "summary", "skills", "projects", "internships", "awards"],
+    # 仅作 agent 缺省建议 / 冷启动回退，不由模板强制
+    "zh": ["summary", "education", "internships", "projects", "skills", "awards"],
+    "zh-TW": ["profile", "summary", "internships", "projects", "skills", "awards"],
     "en": ["profile", "summary", "internships", "projects", "skills", "awards"],
     "pt": ["profile", "summary", "internships", "projects", "skills", "awards"],
 }
+
+ALL_RESUME_SECTIONS: tuple[str, ...] = (
+    "profile", "summary", "education", "skills", "internships", "projects", "awards", "papers",
+)
+
+
+def default_section_order_for_language(language: str) -> list[str]:
+    """语言相关的版块顺序建议 — 供 agent 缺省或冷启动使用，非模板硬编码。"""
+    lang = normalize_language(language)
+    return list(SECTION_ORDER_BY_LANGUAGE.get(lang, SECTION_ORDER_BY_LANGUAGE["en"]))
+
+
+def resolve_section_order(
+    resume_content: "ResumeContent",
+    language: str,
+    explicit: list[str] | None = None,
+) -> list[str]:
+    """Agent 显式 section_order 优先；否则按有内容的版块 + 语言缺省建议推断。"""
+    def _has(section: str) -> bool:
+        if section == "profile":
+            p = resume_content.profile
+            return bool(
+                p.name or p.email or p.phone or p.city
+                or p.linkedin or p.github or getattr(p, "address", "")
+            )
+        if section == "summary":
+            return bool((resume_content.summary or "").strip())
+        if section == "education":
+            return bool(resume_content.profile.education)
+        if section == "skills":
+            return bool(resume_content.skills)
+        if section == "internships":
+            return bool(resume_content.internships)
+        if section == "projects":
+            return bool(resume_content.projects)
+        if section == "awards":
+            return bool(resume_content.awards)
+        if section == "papers":
+            return bool(resume_content.papers)
+        return False
+
+    if explicit:
+        cleaned = [s for s in explicit if s in ALL_RESUME_SECTIONS and _has(s)]
+        if cleaned:
+            return cleaned
+
+    preferred = default_section_order_for_language(language)
+    ordered = [s for s in preferred if _has(s)]
+    for section in ALL_RESUME_SECTIONS:
+        if _has(section) and section not in ordered:
+            ordered.append(section)
+    return ordered or list(preferred)
 
 FONT_BY_LANGUAGE: dict[str, str] = {
     "zh": "Source Han Sans",
@@ -105,7 +160,7 @@ def employer_type_label(value: str | None) -> str:
 
 def normalize_language(language: str | None) -> str:
     if not language:
-        return "zh"
+        return "en"
     raw = language.strip()
     lang = raw.lower().replace("_", "-")
     aliases = {
@@ -131,8 +186,8 @@ def normalize_language(language: str | None) -> str:
         "葡语": "pt",
         "葡語": "pt",
     }
-    mapped = aliases.get(lang, raw if raw in VALID_RESUME_LANGUAGES else "zh")
-    return mapped if mapped in VALID_RESUME_LANGUAGES else "zh"
+    mapped = aliases.get(lang, raw if raw in VALID_RESUME_LANGUAGES else "en")
+    return mapped if mapped in VALID_RESUME_LANGUAGES else "en"
 
 
 def is_cjk_resume_language(language: str) -> bool:

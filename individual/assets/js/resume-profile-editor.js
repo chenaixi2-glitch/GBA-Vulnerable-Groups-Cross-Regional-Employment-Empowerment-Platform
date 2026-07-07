@@ -125,7 +125,18 @@ const ProfileEditor = {
     bindEvents() {
         const container = document.getElementById('profile-editor-body');
         if (container) {
-            container.addEventListener('input', () => this.scheduleSave());
+            container.addEventListener('input', (e) => {
+            const translated = e.target.closest('.profile-field-translated');
+            if (translated) {
+                translated.classList.remove('profile-field-translated');
+                translated.removeAttribute('data-translated-from');
+                translated.removeAttribute('title');
+                const label = translated.closest('div')?.querySelector('label')
+                    || translated.parentElement?.querySelector('label');
+                label?.querySelector('.profile-translated-badge')?.remove();
+            }
+        });
+        container.addEventListener('input', () => this.scheduleSave());
             container.addEventListener('change', () => this.scheduleSave());
             container.addEventListener('click', (e) => {
                 const removeModule = e.target.closest('[data-remove-module]');
@@ -545,14 +556,14 @@ const ProfileEditor = {
             end_date: '',
             is_custom: true,
         });
-        this.render();
+        this.render({ preserveDraft: true });
         this.scheduleSave(true);
     },
 
     removeEducation(eduId) {
         if (!this.draft?.education) return;
         this.draft.education = this.draft.education.filter((e) => e.id !== eduId);
-        this.render();
+        this.render({ preserveDraft: true });
         this.scheduleSave(true);
     },
 
@@ -571,14 +582,14 @@ const ProfileEditor = {
             content: '',
             is_custom: true,
         });
-        this.render();
+        this.render({ preserveDraft: true });
         this.scheduleSave(true);
     },
 
     removeModule(moduleId) {
         if (!this.draft) return;
         this.draft.modules = this.draft.modules.filter((m) => m.id !== moduleId);
-        this.render();
+        this.render({ preserveDraft: true });
         this.scheduleSave(true);
     },
 
@@ -741,6 +752,181 @@ const ProfileEditor = {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    },
+
+    normalizeCompareText(value) {
+        return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    },
+
+    captureDraftSnapshot() {
+        const draft = this.collectDraftFromForm();
+        return JSON.parse(JSON.stringify(draft));
+    },
+
+    clearTranslationHighlights() {
+        document.querySelectorAll('.profile-field-translated').forEach((el) => {
+            el.classList.remove('profile-field-translated');
+            el.removeAttribute('data-translated-from');
+            el.removeAttribute('title');
+        });
+        document.querySelectorAll('.profile-translated-badge').forEach((badge) => badge.remove());
+        const banner = document.getElementById('profile-translation-review-banner');
+        if (banner) banner.classList.add('hidden');
+    },
+
+    markTranslatedInput(inputEl, previousValue) {
+        if (!inputEl) return;
+        inputEl.classList.add('profile-field-translated');
+        inputEl.setAttribute('data-translated-from', previousValue || '');
+        inputEl.title = profileUiText(
+            'resume.profileEditor.translatedFieldHint',
+            'Auto-translated — please review: was "{original}"',
+            { original: previousValue || '' }
+        );
+
+        const label = inputEl.closest('div')?.querySelector('label')
+            || inputEl.parentElement?.querySelector('label');
+        if (label && !label.querySelector('.profile-translated-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'profile-translated-badge ml-2 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800';
+            badge.textContent = profileUiText('resume.profileEditor.translatedBadge', 'Translated — review');
+            label.appendChild(badge);
+        }
+    },
+
+    applyTranslationHighlights(beforeSnapshot, afterDraft) {
+        this.clearTranslationHighlights();
+        if (!beforeSnapshot || !afterDraft) return 0;
+
+        const beforeBasic = beforeSnapshot.profile_basic || {};
+        const afterBasic = afterDraft.profile_basic || {};
+        let changedCount = 0;
+
+        const compareScalar = (selector, beforeVal, afterVal) => {
+            const beforeNorm = this.normalizeCompareText(beforeVal);
+            const afterNorm = this.normalizeCompareText(afterVal);
+            if (!afterNorm || beforeNorm === afterNorm) return;
+            const el = document.querySelector(selector);
+            if (!el) return;
+            this.markTranslatedInput(el, beforeVal);
+            changedCount += 1;
+        };
+
+        compareScalar('#profile-name', beforeBasic.name, afterBasic.name);
+
+        const beforeEdu = beforeSnapshot.education || [];
+        const afterEdu = afterDraft.education || [];
+        afterEdu.forEach((entry, index) => {
+            const prev = beforeEdu[index] || beforeEdu.find((e) => e.id === entry.id) || {};
+            const card = document.querySelector(`[data-education-id="${entry.id}"]`)
+                || document.querySelectorAll('[data-education-id]')[index];
+            if (!card) return;
+            const beforeSchool = prev.school || '';
+            const afterSchool = entry.school || '';
+            if (this.normalizeCompareText(afterSchool)
+                && this.normalizeCompareText(beforeSchool) !== this.normalizeCompareText(afterSchool)) {
+                this.markTranslatedInput(card.querySelector('[data-edu-school]'), beforeSchool);
+                changedCount += 1;
+            }
+        });
+
+        const beforeModules = beforeSnapshot.modules || [];
+        const afterModules = afterDraft.modules || [];
+        const titleLevelTypes = new Set(['internship', 'project']);
+        afterModules.forEach((mod, index) => {
+            if (!titleLevelTypes.has(mod.type)) return;
+            const prev = beforeModules[index] || beforeModules.find((m) => m.id === mod.id) || {};
+            const card = document.querySelector(`[data-module-id="${mod.id}"]`)
+                || document.querySelectorAll('[data-module-id]')[index];
+            if (!card) return;
+            const beforeTitle = prev.title || '';
+            const afterTitle = mod.title || '';
+            if (this.normalizeCompareText(afterTitle)
+                && this.normalizeCompareText(beforeTitle) !== this.normalizeCompareText(afterTitle)) {
+                this.markTranslatedInput(card.querySelector('[data-module-title]'), beforeTitle);
+                changedCount += 1;
+            }
+        });
+
+        const banner = document.getElementById('profile-translation-review-banner');
+        if (banner && changedCount > 0) {
+            banner.classList.remove('hidden');
+            const textEl = document.getElementById('profile-translation-review-text');
+            if (textEl) {
+                textEl.textContent = profileUiText(
+                    'resume.profileEditor.translationReviewBanner',
+                    '{count} title-level field(s) were auto-translated (name, school, company/project). Highlighted fields need your review.',
+                    { count: changedCount }
+                );
+            }
+        }
+
+        return changedCount;
+    },
+
+    resumeContentJsonToDraft(resumeContentJson) {
+        if (!resumeContentJson) return null;
+        const profile = resumeContentJson.profile || {};
+        const extras = { ...(profile.extras || {}) };
+        if (resumeContentJson.summary) extras.summary = resumeContentJson.summary;
+        if (profile.linkedin) extras.linkedin = profile.linkedin;
+        if (profile.address) extras.address = profile.address;
+        if (profile.github) extras.github = profile.github;
+
+        const education = (profile.education || []).map((entry) => ({
+            id: entry.id || this.newId('edu'),
+            school: entry.school || '',
+            major: entry.major || '',
+            degree: entry.degree || '',
+            start_date: entry.start_date || '',
+            end_date: entry.end_date || '',
+            is_custom: false,
+        }));
+
+        const modules = [];
+        const pushSection = (items, type) => {
+            (items || []).forEach((item) => {
+                modules.push({
+                    id: item.id || this.newId('mod'),
+                    type,
+                    title: item.title || '',
+                    content: item.content || '',
+                    is_custom: false,
+                });
+            });
+        };
+        pushSection(resumeContentJson.skills, 'skill');
+        pushSection(resumeContentJson.internships, 'internship');
+        pushSection(resumeContentJson.projects, 'project');
+        pushSection(resumeContentJson.awards, 'award');
+        pushSection(resumeContentJson.papers, 'paper');
+
+        return {
+            profile_basic: {
+                name: profile.name || '',
+                email: profile.email || '',
+                phone: profile.phone || '',
+                city: profile.city || '',
+                extras,
+            },
+            education,
+            modules: this.normalizeModules(modules),
+        };
+    },
+
+    syncDraftFromResumeContent(resumeContentJson, options = {}) {
+        const { beforeSnapshot = null } = options;
+        const mapped = this.resumeContentJsonToDraft(resumeContentJson);
+        if (!mapped) return 0;
+
+        this.draft = this.ensureDraftShape(mapped);
+        this.render({ preserveDraft: true });
+        if (typeof refreshLanguageChecklist === 'function') {
+            refreshLanguageChecklist(this.getResumeLang());
+        }
+        const changed = this.applyTranslationHighlights(beforeSnapshot, this.draft);
+        this.scheduleSave(true);
+        return changed;
     },
 
     renderSupplementSection() {
@@ -1000,6 +1186,7 @@ const ProfileEditor = {
 
         this.draft = draft;
         this._missingSlotsKey = '';
+        this.clearTranslationHighlights();
         this.render({ preserveDraft: true });
         this.show(false);
         this.updateSaveUi();
@@ -1018,8 +1205,20 @@ const ProfileEditor = {
     },
 };
 
+function onPageReady(fn) {
+    if (window.GBAPageBootstrap && typeof GBAPageBootstrap.runWhenReady === 'function') {
+        GBAPageBootstrap.runWhenReady(fn);
+    } else if (window.GBAI18n && typeof GBAI18n.initLanguage === 'function') {
+        GBAI18n.initLanguage().then(fn);
+    } else {
+        fn();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    ProfileEditor.init();
+    onPageReady(() => {
+        ProfileEditor.init();
+    });
 });
 
 window.addEventListener('gba:language-changed', () => {

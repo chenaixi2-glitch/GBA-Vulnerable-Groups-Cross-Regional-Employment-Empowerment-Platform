@@ -59,6 +59,14 @@ def template_id_for_tier(tier: str) -> str:
     return _TIER_TEMPLATE_IDS.get(normalize_experience_tier(tier), "default")
 
 
+def template_id_for_language(language: str, tier: str) -> str:
+    """仅简体中文单页简历使用校园版式 default_zh；其余语言用 default。"""
+    lang = normalize_language(language)
+    if lang == "zh" and page_limit_for_tier(tier) <= 1:
+        return "default_zh"
+    return template_id_for_tier(tier)
+
+
 def resume_constraints_for_tier(tier: str) -> str:
     if page_limit_for_tier(tier) <= 1:
         return RESUME_A4_ONE_PAGE_CONSTRAINTS.strip()
@@ -99,7 +107,7 @@ def apply_render_config_for_experience(
     lang = normalize_language(language)
     tier = normalize_experience_tier(experience_level)
     page_limit = page_limit_for_tier(tier)
-    template_id = template_id_for_tier(tier)
+    template_id = template_id_for_language(lang, tier)
 
     if tier == "entry":
         margin = 18 if lang == "en" else 20
@@ -130,7 +138,6 @@ def apply_render_config_for_experience(
         "dense_mode": dense_mode,
         "spacing_scale": spacing_scale,
         "layout_mode": "single-column",
-        "section_order": list(SECTION_ORDER_BY_LANGUAGE.get(lang, config.section_order)),
         "page_margin": config.page_margin.model_copy(update={
             "top": margin,
             "right": margin,

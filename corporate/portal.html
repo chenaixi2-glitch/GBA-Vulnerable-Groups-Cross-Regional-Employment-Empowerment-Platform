@@ -2208,6 +2208,7 @@
         });
 
         window.addEventListener('gba:language-changed', async function () {
+            PortalAuth.refreshPortalAuthNav('corporate');
             applyPortalChartI18n();
             try {
                 const access = await PlatformAccess.fetchAccess();

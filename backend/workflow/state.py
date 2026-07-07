@@ -72,7 +72,7 @@ class SectionItem(BaseModel):
 
 class ResumeContentMeta(BaseModel):
     target_role: str = ""
-    language: str = "zh"  # zh | zh-TW | en | pt
+    language: str = "en"  # zh | zh-TW | en | pt
     version: int = 1
     last_updated_at: str = ""
     content_hash: str = ""
@@ -99,7 +99,7 @@ class PageMargin(BaseModel):
 class RenderConfig(BaseModel):
     template_id: str = "default"
     theme: str = "light"
-    language: str = "zh"  # zh | zh-TW | en | pt — controls section labels and layout defaults
+    language: str = "en"  # zh | zh-TW | en | pt — controls section labels and layout defaults
     font_family: str = "Source Han Sans"
     font_size: int = 13
     line_height: float = 1.35
@@ -113,6 +113,7 @@ class RenderConfig(BaseModel):
     layout_mode: str = "single-column"
     spacing_scale: str = "compact"
     page_limit: int = 1  # max A4 pages allowed for current experience tier
+    typography_fit_mode: str = "auto"  # auto | comfortable | compact
     version: int = 1
     last_render_reason: str = ""
 

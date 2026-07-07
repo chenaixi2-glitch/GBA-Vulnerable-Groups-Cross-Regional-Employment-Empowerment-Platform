@@ -35,7 +35,7 @@ def resolve_page_ui_language(state: CopilotState) -> str:
         return normalize_language(state.chat_output_language)
     if state.meta and (state.meta.ui_output_language or "").strip():
         return normalize_language(state.meta.ui_output_language)
-    return "zh"
+    return "en"
 
 
 def resolve_gap_prompt_language(state: CopilotState) -> str:
@@ -49,7 +49,7 @@ def resolve_interview_question_language(state: CopilotState) -> str:
         return normalize_language(state.chat_question_output_language)
     if state.meta and (state.meta.interview_question_language or "").strip():
         return normalize_language(state.meta.interview_question_language)
-    return "zh"
+    return "en"
 
 
 def resolve_interview_feedback_language(state: CopilotState) -> str:
@@ -58,7 +58,7 @@ def resolve_interview_feedback_language(state: CopilotState) -> str:
         return normalize_language(state.chat_feedback_output_language)
     if state.meta and (state.meta.interview_feedback_language or "").strip():
         return normalize_language(state.meta.interview_feedback_language)
-    return "zh"
+    return "en"
 
 
 def resolve_output_language(state: CopilotState) -> str:
@@ -71,7 +71,7 @@ def resolve_output_language(state: CopilotState) -> str:
         return normalize_language(state.render_config.language)
     if state.resume_content_json and state.resume_content_json.meta.language:
         return normalize_language(state.resume_content_json.meta.language)
-    return "zh"
+    return "en"
 
 
 def resolve_resume_target_language(state: CopilotState) -> str:
@@ -80,12 +80,12 @@ def resolve_resume_target_language(state: CopilotState) -> str:
         return normalize_language(state.render_config.language)
     if state.resume_content_json and state.resume_content_json.meta.language:
         return normalize_language(state.resume_content_json.meta.language)
-    return "zh"
+    return "en"
 
 
 def output_language_instruction(language: str | None) -> str:
     code = normalize_language(language)
-    return OUTPUT_LANGUAGE_INSTRUCTIONS.get(code, OUTPUT_LANGUAGE_INSTRUCTIONS["zh"])
+    return OUTPUT_LANGUAGE_INSTRUCTIONS.get(code, OUTPUT_LANGUAGE_INSTRUCTIONS["en"])
 
 
 def gap_output_language_instruction(language: str | None) -> str:
@@ -345,7 +345,7 @@ _INTERVIEW_END_REASON_DEFAULT: dict[str, str] = {
 
 def _pick_lang_text(table: dict[str, str], language: str | None) -> str:
     code = normalize_language(language)
-    return table.get(code) or table.get("zh", "")
+    return table.get(code) or table.get("en", "")
 
 
 def interview_opening_message(state: CopilotState, question_count: int) -> str:

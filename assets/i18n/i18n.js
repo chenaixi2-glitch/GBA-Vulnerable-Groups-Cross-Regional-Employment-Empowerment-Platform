@@ -45,7 +45,7 @@
     var localeCache = {};
     var currentLang = 'en';
 
-    /** English fallbacks for server-side meta keys (no en.json locale file) */
+    /** English locale file (assets/i18n/locales/en.json) supplements inline fallbacks in JS */
     var META_FB = {
         groupTypes: {
             disability: 'People with disabilities',
@@ -142,7 +142,6 @@
     }
 
     function loadLocale(lang) {
-        if (lang === 'en') return Promise.resolve({});
         if (localeCache[lang]) return Promise.resolve(localeCache[lang]);
         return fetch(localePath(lang))
             .then(function (res) {
@@ -180,9 +179,6 @@
     }
 
     function t(key, fallback, vars) {
-        if (currentLang === 'en') {
-            return applyVars(fallback || key, vars);
-        }
         var val = resolveKey(localeCache[currentLang], key);
         if (val) {
             return applyVars(val, vars);
@@ -371,6 +367,25 @@
         setText('[data-i18n="home.navMyApplications"]', pageText('[data-i18n="home.navMyApplications"]', 'navMyApplications'));
     }
 
+    function isLanguageSwitcherNode(node) {
+        if (!node) return false;
+        if (node.id === 'current-language') return true;
+        if (node.hasAttribute && node.hasAttribute('data-i18n-lang')) return true;
+        return !!(node.closest && node.closest('.language-selector, #gba-lang-switcher, #language-dropdown, #ui-lang'));
+    }
+
+    function currentLanguageLabel(lang) {
+        var fb = LABELS[lang] || lang;
+        return t('lang.' + lang, fb);
+    }
+
+    function applyCurrentLanguageLabel(lang) {
+        document.querySelectorAll('#current-language').forEach(function (node) {
+            node.textContent = currentLanguageLabel(lang);
+            delete node.dataset.l10nOriginal;
+        });
+    }
+
     function applyLangDropdownLabels() {
         document.querySelectorAll('[data-i18n-lang]').forEach(function (node) {
             var code = node.getAttribute('data-i18n-lang');
@@ -378,6 +393,7 @@
             var fb = LANG_NAMES_FB[code] || code;
             var text = t('lang.' + code, fb);
             if (text) node.textContent = text;
+            delete node.dataset.l10nOriginal;
         });
     }
 
@@ -418,6 +434,7 @@
     function applyStaticStrings(lang) {
         if (lang === 'en') {
             document.querySelectorAll('[data-l10n-original]').forEach(function (el) {
+                if (isLanguageSwitcherNode(el)) return;
                 var nodes = [];
                 el.childNodes.forEach(function (n) {
                     if (n.nodeType === 3) nodes.push(n);
@@ -433,6 +450,9 @@
             acceptNode: function (node) {
                 var parent = node.parentElement;
                 if (!parent || parent.closest('script,style,noscript,[data-i18n],option[data-i18n]')) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                if (isLanguageSwitcherNode(parent)) {
                     return NodeFilter.FILTER_REJECT;
                 }
                 if (parent.id === 'session-id' || parent.dataset.i18nDynamic === '1') {
@@ -473,16 +493,13 @@
         lang = LABELS[lang] ? lang : 'en';
         currentLang = lang;
         document.documentElement.lang = lang;
-        var curNodes = document.querySelectorAll('#current-language');
-        for (var ci = 0; ci < curNodes.length; ci += 1) {
-            curNodes[ci].textContent = LABELS[lang];
-        }
         var sel = document.getElementById('ui-lang');
         if (sel) sel.value = lang === 'zh-CN' ? 'zh-CN' : lang;
         applyPageCopy(lang);
         applyDataI18n(lang);
         applyLangDropdownLabels();
         applyStaticStrings(lang);
+        applyCurrentLanguageLabel(lang);
         applyResumeLangButtonLabels();
     }
 

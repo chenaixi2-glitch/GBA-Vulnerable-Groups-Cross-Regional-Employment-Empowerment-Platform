@@ -8,6 +8,7 @@ from tools.resume_page_policy import (
     page_limit_for_tier,
     page_limit_label,
     resume_constraints_for_tier,
+    template_id_for_language,
     template_id_for_tier,
 )
 from workflow.state import RenderConfig
@@ -48,10 +49,17 @@ class TestPageLimits:
 class TestRenderConfigPolicy:
     def test_entry_uses_single_page_template(self):
         config = apply_render_config_for_experience(RenderConfig(), "zh", "Entry Level (0-2 years)")
-        assert config.template_id == "default"
+        assert config.template_id == "default_zh"
         assert config.page_limit == 1
         assert config.spacing_scale == "compact"
         assert config.dense_mode is True
+
+    def test_zh_tw_uses_western_default_template(self):
+        config = apply_render_config_for_experience(RenderConfig(), "zh-TW", "Entry Level (0-2 years)")
+        assert config.template_id == "default"
+        assert template_id_for_language("zh-TW", "entry") == "default"
+        assert template_id_for_language("en", "entry") == "default"
+        assert template_id_for_language("zh", "entry") == "default_zh"
 
     def test_senior_uses_multipage_template(self):
         config = apply_render_config_for_experience(RenderConfig(), "en", "Senior Level (5+ years)")

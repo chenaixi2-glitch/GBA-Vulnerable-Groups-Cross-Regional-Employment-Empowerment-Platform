@@ -347,6 +347,7 @@
         });
 
         window.addEventListener('gba:language-changed', function () {
+            PortalAuth.refreshPortalAuthNav('individual');
             refreshPortalDynamicContent();
         });
     </script>

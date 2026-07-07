@@ -10,7 +10,8 @@ from typing import Any
 
 from agents.gap_analysis_core import has_gap_analysis_context, run_gap_analysis
 from agents.json_contracts import LearningPathResourcesOutput, LearningPathTimelineOutput
-from models.llm import get_llm, ainvoke_json_with_schema
+from models.llm import get_llm
+from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.learning_path import LEARNING_PATH_TIMELINE_PROMPT
 from prompts.learning_path_resources import LEARNING_PATH_RESOURCES_PROMPT
 from tools.output_language import page_prompt_language_kwargs
@@ -116,15 +117,21 @@ def _infer_total_hours(gaps: list[Gap], parsed: LearningPathResourcesOutput) -> 
 
 async def _run_resources_phase(state: CopilotState, gaps: list[Gap]) -> tuple[list[Gap], list[LearningPathResource], int]:
     gaps_payload = [g.model_dump() for g in gaps]
+    lang_kwargs = page_prompt_language_kwargs(state)
     prompt = LEARNING_PATH_RESOURCES_PROMPT.format(
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
         gaps_json=json.dumps(gaps_payload, ensure_ascii=False, indent=2),
-        **page_prompt_language_kwargs(state),
+        **lang_kwargs,
     )
     llm = get_llm()
-    parsed = await ainvoke_json_with_schema(
-        llm, prompt, LearningPathResourcesOutput, logger, "Learning Path Agent (resources)"
+    parsed = await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        LearningPathResourcesOutput,
+        logger,
+        "Learning Path Agent (resources)",
+        lang_kwargs["output_language"],
     )
     gaps = _apply_gap_hour_estimates(gaps, parsed)
     resources = _build_resources(parsed)
@@ -180,6 +187,7 @@ async def _run_timeline_phase(state: CopilotState, daily_hours: float) -> dict[s
     gaps_payload = [g.model_dump() for g in state.gaps]
     resources_payload = [r.model_dump() for r in state.learning_path_resources]
 
+    lang_kwargs = page_prompt_language_kwargs(state)
     prompt = LEARNING_PATH_TIMELINE_PROMPT.format(
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
@@ -188,11 +196,16 @@ async def _run_timeline_phase(state: CopilotState, daily_hours: float) -> dict[s
         estimated_total_hours=estimated_hours,
         daily_hours=daily_hours,
         total_weeks=total_weeks,
-        **page_prompt_language_kwargs(state),
+        **lang_kwargs,
     )
     llm = get_llm()
-    parsed = await ainvoke_json_with_schema(
-        llm, prompt, LearningPathTimelineOutput, logger, "Learning Path Agent (timeline)"
+    parsed = await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        LearningPathTimelineOutput,
+        logger,
+        "Learning Path Agent (timeline)",
+        lang_kwargs["output_language"],
     )
 
     timeline = _build_timeline(parsed)

@@ -45,8 +45,10 @@ RESUME_LANGUAGE_CONVERT_PROMPT = """你是跨境就业简历本地化专家。�
 - 面向澳门及大湾区葡语雇主场景
 
 ## 三、内容模块顺序
-- zh / zh-TW：个人信息 → 教育 → 实习/工作 → 项目 → 技能 → 荣誉 → 自我评价
-- en / pt：Contact → Summary → Work Experience → Education → Skills → Projects/Awards
+- 由你在 JSON 的 section_order 字段中根据目标岗位与候选人背景决定先后（模板只负责排版）
+- zh 常见参考：自我评价 → 教育 → 实习/工作 → 项目 → 技能 → 荣誉
+- en / pt 常见参考：Contact(profile) → Summary → Work → Education → Skills → Projects/Awards
+- 仅列出实际有内容的版块 id
 
 ## 四、经历描述写法
 - zh / zh-TW：陈述句，动宾短句，可适度量化

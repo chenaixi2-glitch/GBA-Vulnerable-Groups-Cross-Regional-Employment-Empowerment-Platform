@@ -104,6 +104,7 @@ class TargetJobContextRequest(BaseModel):
     industry: str = ""
     employer_type: str = ""
     experience_level: str = ""
+    typography_fit_mode: str = ""
 
 
 class ResumeDraftPayload(BaseModel):
@@ -509,7 +510,8 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     """根据 JD 文本框草稿、行业、单位性质、经验等级生成岗位描述（不结合简历）。"""
     from api.chat import _aload_state, _asave_state
     from agents.json_contracts import JDGenerationOutput
-    from models.llm import get_llm, ainvoke_json_with_schema
+    from models.llm import get_llm
+    from tools.output_language_guard import ainvoke_json_with_language_guard
     from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
     from prompts.jd_generation import JD_GENERATION_PROMPT
     from services.jd_cache_service import lookup_jd_cache_by_params, save_jd_cache
@@ -534,7 +536,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     employer_type = normalize_employer_type(req.employer_type)
     employer_type_text = employer_type_label(employer_type) or "未指定"
     jd_draft = req.jd_draft.strip()
-    output_lang = normalize_language(req.language or "zh")
+    output_lang = normalize_language(req.language)
     p_key = params_cache_key(req.industry.strip(), employer_type, req.experience_level.strip())
     use_cache = not jd_draft
 
@@ -580,7 +582,14 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     llm = get_llm()
     try:
         async with llm_queue_slot(req.session_id):
-            parsed = await ainvoke_json_with_schema(llm, prompt, JDGenerationOutput, logger, "JD Generation")
+            parsed = await ainvoke_json_with_language_guard(
+                llm,
+                prompt,
+                JDGenerationOutput,
+                logger,
+                "JD Generation",
+                output_lang,
+            )
     except SessionBusyError:
         raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as e:
@@ -652,7 +661,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
         raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
 
     employer_type = normalize_employer_type(req.employer_type or state.meta.employer_type)
-    output_lang = normalize_language(req.language or "zh")
+    output_lang = normalize_language(req.language)
     try:
         async with llm_queue_slot(req.session_id):
             parsed = await generate_jd_from_title_for_profile(
@@ -715,11 +724,22 @@ async def set_target_job_context(req: TargetJobContextRequest, request: Request)
     state = CopilotState.model_validate(saved)
     employer_type = normalize_employer_type(req.employer_type) if req.employer_type.strip() else state.meta.employer_type
 
+    from tools.typography_ladder import normalize_typography_fit_mode
+
+    typography_fit_mode = (
+        normalize_typography_fit_mode(req.typography_fit_mode)
+        if req.typography_fit_mode.strip()
+        else state.render_config.typography_fit_mode
+    )
+
     state.meta = state.meta.model_copy(update={
         "target_jd_text": req.jd_text.strip(),
         "target_industry": req.industry.strip(),
         "target_experience_level": req.experience_level.strip(),
         "employer_type": employer_type or state.meta.employer_type,
+    })
+    state.render_config = state.render_config.model_copy(update={
+        "typography_fit_mode": typography_fit_mode,
     })
 
     persist_data = state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
@@ -734,6 +754,7 @@ async def set_target_job_context(req: TargetJobContextRequest, request: Request)
             "industry": state.meta.target_industry,
             "employer_type": state.meta.employer_type,
             "experience_level": state.meta.target_experience_level,
+            "typography_fit_mode": state.render_config.typography_fit_mode,
         },
     }
 
@@ -770,7 +791,7 @@ async def set_employer_type(req: SetEmployerTypeRequest, request: Request):
                                               "workflow_trace", "resume_language_target"})
     await _asave_state(store, persist_data)
 
-    lang = state.render_config.language or (state.resume_content_json.meta.language if state.resume_content_json else "zh")
+    lang = state.render_config.language or (state.resume_content_json.meta.language if state.resume_content_json else "en")
     draft_store = RedisDraftStore(client, req.session_id, user.get("sub") if user else None)
     draft = await draft_store.load_draft()
     state = state_with_draft(state, draft)
@@ -779,7 +800,7 @@ async def set_employer_type(req: SetEmployerTypeRequest, request: Request):
 
 
 @router.get("/language-checklist")
-async def get_language_checklist(session_id: str, language: str = "zh", employer_type: str = "", request: Request = None):
+async def get_language_checklist(session_id: str, language: str = "en", employer_type: str = "", request: Request = None):
     """根据目标语言检查简历缺失项与格式提醒。"""
     from api.chat import _aload_state
     from api.draft_utils import state_with_draft
@@ -974,7 +995,7 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
     if user:
         await bind_session_owner(req.session_id, user)
 
-    target = normalize_language(req.language or "zh")
+    target = normalize_language(req.language)
     if target not in VALID_RESUME_LANGUAGES:
         raise HTTPException(status_code=422, detail="language 必须为 zh、zh-TW、en 或 pt")
 

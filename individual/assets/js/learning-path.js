@@ -16,9 +16,21 @@ function uiT(key, fallback, vars) {
     return out;
 }
 
+function onPageReady(fn) {
+    if (window.GBAPageBootstrap && typeof GBAPageBootstrap.runWhenReady === 'function') {
+        GBAPageBootstrap.runWhenReady(fn);
+    } else if (window.GBAI18n && typeof GBAI18n.initLanguage === 'function') {
+        GBAI18n.initLanguage().then(fn);
+    } else {
+        fn();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    initializeLearningPath();
-    initLearningPathLanguages();
+    onPageReady(() => {
+        initializeLearningPath();
+        initLearningPathLanguages();
+    });
 });
 
 function normalizeLearningPathLang(code) {

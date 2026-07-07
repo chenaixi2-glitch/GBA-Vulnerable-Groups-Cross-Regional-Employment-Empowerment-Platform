@@ -7,11 +7,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen" data-page="individual">
     <header class="bg-white border-b px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-sm">
         <a href="../index.html" class="text-blue-700 font-semibold"><i class="fas fa-arrow-left mr-1"></i><span data-i18n="friendlyEmployers.home">Home</span></a>
         <div class="flex items-center gap-3">
             <div id="header-lang-slot"></div>
+                <div id="portal-auth-guest" class="flex items-center gap-2">
+                    <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1" data-i18n="portal.login">Log in</a>
+                    <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg" data-i18n="portal.signup">Sign up</a>
+                </div>
+                <div id="portal-auth-user" class="hidden flex items-center gap-3">
+                    <a href="profile.html" class="text-sm text-blue-700 hover:text-blue-800 font-medium hidden sm:inline" data-i18n="portal.profile">Profile</a>
+                    <div class="text-right hidden sm:block">
+                        <div id="portal-user-name" class="text-sm font-medium text-gray-900"></div>
+                        <div id="portal-user-email" class="text-xs text-gray-500"></div>
+                    </div>
+                    <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600 px-2 py-1" data-i18n="portal.logout">Log out</button>
+                </div>
             <a href="portal.html" class="text-slate-600 hover:underline" data-i18n="home.footerIndividualPortal">Individual Portal</a>
             <a href="my-applications.html" class="text-slate-600 hover:underline" data-i18n="home.navMyApplications">My applications</a>
             <a href="demo-jobs-database.html?friendly=1" class="text-emerald-700 font-medium" data-i18n="friendlyEmployers.viewJobs">View friendly jobs</a>
@@ -82,7 +94,10 @@
     </footer>
     <script src="../assets/js/node-api-base.js"></script>
     <script src="assets/js/platform-api.js"></script>
+    <script src="../assets/js/auth-api.js"></script>
+    <script src="../assets/js/portal-auth.js"></script>
     <script src="../assets/i18n/i18n.js"></script>
+    <script src="../assets/js/page-bootstrap.js"></script>
     <script>
         function feT(key, fallback, vars) {
             if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);

@@ -8,7 +8,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from agents.json_contracts import JDAnalysisOutput, JDTitleGenerationOutput
-from models.llm import get_llm, ainvoke_json_with_schema
+from models.llm import get_llm
+from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.jd_analysis import JD_ANALYSIS_PROMPT
 from tools.output_language import prompt_language_kwargs
 from services.jd_title_service import generate_jd_from_title_for_profile
@@ -104,12 +105,20 @@ def _job_result(
 
 
 async def _parse_jd_with_llm(jd_text: str, state: CopilotState) -> JDAnalysisOutput:
+    lang_kwargs = prompt_language_kwargs(state)
     prompt = JD_ANALYSIS_PROMPT.format(
         jd_text=jd_text,
-        **prompt_language_kwargs(state),
+        **lang_kwargs,
     )
     llm = get_llm()
-    return await ainvoke_json_with_schema(llm, prompt, JDAnalysisOutput, logger, "JD Agent")
+    return await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        JDAnalysisOutput,
+        logger,
+        "JD Agent",
+        lang_kwargs["output_language"],
+    )
 
 
 async def _generate_jd_from_title(state: CopilotState, job_title: str) -> tuple[str, str]:

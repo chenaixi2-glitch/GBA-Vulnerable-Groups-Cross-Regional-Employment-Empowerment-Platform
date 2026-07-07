@@ -20,6 +20,7 @@ from tools.resume_page_policy import (
     resolve_page_limit,
 )
 from tools.resume_layout import normalize_language
+from tools.typography_ladder import fit_typography_to_page_limit
 from workflow.state import CopilotState, RenderConfig, ResumeHtml, PageMargin
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
@@ -70,21 +71,29 @@ async def _fit_resume_to_page_limit_async(
     state: CopilotState,
     resume_content,
     render_config: RenderConfig,
-) -> tuple[Any, str, int | None, int]:
-    """Render HTML and compress content if PDF exceeds page_limit."""
+) -> tuple[Any, str, RenderConfig, int | None, int, int]:
+    """Render HTML; adjust typography ladder, then compress content if still over limit."""
     page_limit = render_config.page_limit or resolve_page_limit(state)
-    html_str = render_resume_html(resume_content, render_config)
-    page_count = count_pdf_pages_from_html(html_str)
     compress_attempts = 0
+    typography_steps = 0
 
-    while (
-        page_count is not None
-        and page_count > page_limit
-        and compress_attempts < _MAX_PAGE_FIT_ATTEMPTS
-    ):
+    while True:
+        render_config, html_str, page_count, steps_used = fit_typography_to_page_limit(
+            render_config=render_config,
+            page_limit=page_limit,
+            count_pages=count_pdf_pages_from_html,
+            render_html=lambda cfg: render_resume_html(resume_content, cfg),
+        )
+        typography_steps += steps_used
+
+        if page_count is None or page_count <= page_limit:
+            break
+        if compress_attempts >= _MAX_PAGE_FIT_ATTEMPTS:
+            break
+
         compress_attempts += 1
         logger.info(
-            "Resume PDF is %d pages (limit %d), compress attempt %d",
+            "Resume PDF is %d pages (limit %d), typography exhausted — compress attempt %d",
             page_count,
             page_limit,
             compress_attempts,
@@ -99,10 +108,17 @@ async def _fit_resume_to_page_limit_async(
         except RuntimeError as exc:
             logger.warning("Page-limit compression failed: %s", exc)
             break
-        html_str = render_resume_html(resume_content, render_config)
-        page_count = count_pdf_pages_from_html(html_str)
 
-    return resume_content, html_str, page_count, compress_attempts
+    if typography_steps > 0:
+        logger.info(
+            "Typography ladder applied (%d evaluations, mode=%s, font=%d, margin=%d)",
+            typography_steps,
+            render_config.typography_fit_mode,
+            render_config.font_size,
+            render_config.page_margin.top,
+        )
+
+    return resume_content, html_str, render_config, page_count, compress_attempts, typography_steps
 
 
 async def render_node_async(state: CopilotState) -> dict[str, Any]:
@@ -158,7 +174,7 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    resume_content, html_str, page_count, compress_attempts = await _fit_resume_to_page_limit_async(
+    resume_content, html_str, render_config, page_count, compress_attempts, typography_steps = await _fit_resume_to_page_limit_async(
         state,
         resume_content,
         render_config,
@@ -175,11 +191,12 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
     )
 
     logger.info(
-        "HTML rendered v%d (checksum=%s, pdf_pages=%s, compress_attempts=%d)",
+        "HTML rendered v%d (checksum=%s, pdf_pages=%s, compress_attempts=%d, typography_steps=%d)",
         resume_html.version,
         checksum,
         page_count,
         compress_attempts,
+        typography_steps,
     )
 
     meta = state.meta.model_copy(update={
@@ -200,6 +217,8 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
             msg = f"简历已渲染并自动压缩至 {page_count} 页（上限 {page_limit} 页，{layout_label}）。"
         else:
             msg = f"简历已渲染；PDF 仍为 {page_count or '?'} 页，超出 {page_limit} 页上限，建议手动优化。"
+    elif typography_steps > 0 and page_count is not None:
+        msg = f"简历已渲染（PDF {page_count} 页，{layout_label}，已自动调整字号与边距）。"
     elif page_count is not None:
         msg = f"简历已渲染（PDF {page_count} 页，{layout_label}）。"
     if intent == "render_edit":
@@ -223,6 +242,8 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
                 "page_limit": page_limit,
                 "pdf_page_count": page_count,
                 "page_compress_attempts": compress_attempts,
+                "typography_fit_steps": typography_steps,
+                "typography_fit_mode": render_config.typography_fit_mode,
                 "checksum": resume_html.checksum,
             },
         ),

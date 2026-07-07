@@ -11,7 +11,8 @@ from agents.json_contracts import (
     InteractiveBankFeedbackOutput,
     InteractiveInterviewDebriefOutput,
 )
-from models.llm import get_llm, ainvoke_json_with_schema
+from models.llm import get_llm
+from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.interactive_interview import (
     INTERACTIVE_BANK_FEEDBACK_PROMPT,
     INTERACTIVE_INTERVIEW_DEBRIEF_PROMPT,
@@ -511,8 +512,19 @@ async def process_next_pending_feedback(state: CopilotState) -> bool:
     try:
         async with llm_queue_slot(slot_key):
             llm = get_llm()
-            parsed = await ainvoke_json_with_schema(
-                llm, prompt, InteractiveBankFeedbackOutput, logger, "Interactive Bank Feedback",
+            parsed = await ainvoke_json_with_language_guard(
+                llm,
+                prompt,
+                InteractiveBankFeedbackOutput,
+                logger,
+                "Interactive Bank Feedback",
+                q_lang_kwargs["feedback_output_language"],
+                field_languages={
+                    "follow_up_questions": q_lang_kwargs["question_output_language"],
+                    "brief_feedback": q_lang_kwargs["feedback_output_language"],
+                    "closing_message": q_lang_kwargs["feedback_output_language"],
+                    "end_reason": q_lang_kwargs["feedback_output_language"],
+                },
             )
     except Exception as exc:
         logger.error("Pending feedback failed: %s", exc, exc_info=True)
@@ -658,6 +670,7 @@ async def generate_interactive_debrief(state: CopilotState) -> InteractiveInterv
     job_json, resume_json, _ = _context_json(state)
     history = _format_qa_history(session)
 
+    feedback_lang_kwargs = interview_feedback_prompt_language_kwargs(state)
     prompt = INTERACTIVE_INTERVIEW_DEBRIEF_PROMPT.format(
         job_title=session.job_title,
         tone=session.tone,
@@ -667,12 +680,17 @@ async def generate_interactive_debrief(state: CopilotState) -> InteractiveInterv
         job_json=job_json,
         resume_json=resume_json,
         conversation_history=history,
-        **interview_feedback_prompt_language_kwargs(state),
+        **feedback_lang_kwargs,
     )
 
     llm = get_llm()
-    parsed = await ainvoke_json_with_schema(
-        llm, prompt, InteractiveInterviewDebriefOutput, logger, "Interactive Interview Debrief"
+    parsed = await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        InteractiveInterviewDebriefOutput,
+        logger,
+        "Interactive Interview Debrief",
+        feedback_lang_kwargs["output_language"],
     )
 
     key_moments = [

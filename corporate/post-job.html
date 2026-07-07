@@ -228,6 +228,18 @@
             </div>
             <div class="flex items-center gap-3">
                 <div id="header-lang-slot"></div>
+                <div id="portal-auth-guest" class="flex items-center gap-2">
+                    <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1" data-i18n="portal.login">Log in</a>
+                    <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-lg" data-i18n="portal.signup">Sign up</a>
+                </div>
+                <div id="portal-auth-user" class="hidden flex items-center gap-3">
+                    <a href="company-profile.html" class="text-sm text-blue-700 hover:text-blue-800 font-medium hidden sm:inline" data-i18n="portal.profile">Profile</a>
+                    <div class="text-right hidden sm:block">
+                        <div id="portal-user-name" class="text-sm font-medium text-gray-900"></div>
+                        <div id="portal-user-email" class="text-xs text-gray-500"></div>
+                    </div>
+                    <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600 px-2 py-1" data-i18n="portal.logout">Log out</button>
+                </div>
                 <span class="preview-badge"><i class="fas fa-eye mr-1"></i><span data-i18n="postJob.preview">Preview</span></span>
                 <img src="https://ui-avatars.com/api/?name=Company&background=10b981&color=fff" alt="Company" class="w-8 h-8 rounded-full">
             </div>
@@ -1073,6 +1085,7 @@
     <script src="assets/js/api-client.js"></script>
     <script src="../assets/js/platform-access.js"></script>
     <script src="../assets/i18n/i18n.js"></script>
+    <script src="../assets/js/page-bootstrap.js"></script>
 
     <script src="../assets/site-guide.js"></script>
     <script>

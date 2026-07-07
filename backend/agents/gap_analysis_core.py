@@ -6,7 +6,8 @@ import uuid
 from typing import Any
 
 from agents.json_contracts import GapAnalysisOutput, GapOutput, QuestionOutput, ExperienceRemovalOutput
-from models.llm import get_llm, ainvoke_json_with_schema
+from models.llm import get_llm
+from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.gap_analysis import GAP_ANALYSIS_PROMPT
 from tools.output_language import gap_prompt_language_kwargs
 from tools.quantification_questions import supplement_quantification_gaps_and_questions
@@ -97,8 +98,13 @@ async def run_gap_analysis(
         **lang_kwargs,
     )
     llm = get_llm()
-    parsed = await ainvoke_json_with_schema(
-        llm, prompt, GapAnalysisOutput, logger, "Gap Analysis (shared core)"
+    parsed = await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        GapAnalysisOutput,
+        logger,
+        "Gap Analysis (shared core)",
+        lang_kwargs["output_language"],
     )
     gaps = build_gaps(parsed.gaps, resolution_source=resolution_source)
     questions = build_questions(parsed.questions_to_ask)

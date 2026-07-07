@@ -22,7 +22,13 @@ from tools.output_language import (
     resolve_page_ui_language,
     resolve_resume_target_language,
 )
+from tools.resume_layout import normalize_language
 from prompts.gap_analysis import GAP_ANALYSIS_PROMPT
+
+
+def test_copilot_state_defaults_resume_language_to_english():
+    state = CopilotState(session_id="sess_test")
+    assert state.render_config.language == "en"
 
 
 def test_apply_resume_target_language_updates_render_config():
@@ -166,7 +172,7 @@ def test_resolve_interview_question_language_does_not_use_page_language():
         session_id="sess_test",
         meta=Meta(ui_output_language="en"),
     )
-    assert resolve_interview_question_language(state) == "zh"
+    assert resolve_interview_question_language(state) == "en"
 
 
 def test_resolve_interview_feedback_language_does_not_use_page_language():
@@ -174,7 +180,7 @@ def test_resolve_interview_feedback_language_does_not_use_page_language():
         session_id="sess_test",
         meta=Meta(ui_output_language="en"),
     )
-    assert resolve_interview_feedback_language(state) == "zh"
+    assert resolve_interview_feedback_language(state) == "en"
 
 
 def test_resolve_page_ui_language_ignores_resume_target():
@@ -182,7 +188,7 @@ def test_resolve_page_ui_language_ignores_resume_target():
         session_id="sess_test",
         render_config=RenderConfig(language="en"),
     )
-    assert resolve_page_ui_language(state) == "zh"
+    assert resolve_page_ui_language(state) == "en"
 
 
 def test_page_prompt_language_kwargs_follows_page_locale():
@@ -205,3 +211,20 @@ def test_prompt_language_kwargs_prefers_chat_locale():
     kwargs = prompt_language_kwargs(state)
     assert kwargs["output_language"] == "en"
     assert "English" in kwargs["output_language_instruction"]
+
+
+def test_normalize_language_defaults_to_english():
+    assert normalize_language(None) == "en"
+    assert normalize_language("") == "en"
+    assert normalize_language("   ") == "en"
+    assert normalize_language("unknown-lang") == "en"
+
+
+def test_resolve_output_language_defaults_to_english_without_state_locale():
+    state = CopilotState(session_id="sess_test")
+    assert resolve_output_language(state) == "en"
+
+
+def test_resolve_resume_target_language_defaults_to_english_without_content():
+    state = CopilotState(session_id="sess_test")
+    assert resolve_resume_target_language(state) == "en"

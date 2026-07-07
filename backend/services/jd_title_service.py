@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from agents.json_contracts import JDTitleGenerationOutput
-from models.llm import get_llm, ainvoke_json_with_schema
+from models.llm import get_llm
+from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.jd_title_generation import JD_TITLE_GENERATION_PROMPT
 from tools.jd_cache import ensure_title_in_jd_text, extract_title_from_jd
 from tools.resume_layout import employer_type_label, normalize_employer_type, normalize_language, jd_output_language_instruction
@@ -30,7 +31,7 @@ async def generate_jd_from_title_for_profile(
     employer_text = employer_type_label(employer_key) or "未指定"
     profile_json = state.candidate_profile.model_dump_json(indent=2)
 
-    output_lang = normalize_language(language or "zh")
+    output_lang = normalize_language(language)
 
     prompt = JD_TITLE_GENERATION_PROMPT.format(
         job_title=job_title.strip(),
@@ -42,7 +43,14 @@ async def generate_jd_from_title_for_profile(
     )
 
     llm = get_llm()
-    parsed = await ainvoke_json_with_schema(llm, prompt, JDTitleGenerationOutput, logger, "JD Title Generation")
+    parsed = await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        JDTitleGenerationOutput,
+        logger,
+        "JD Title Generation",
+        output_lang,
+    )
     if not (parsed.jd_text or "").strip():
         raise RuntimeError("岗位描述生成结果为空")
 

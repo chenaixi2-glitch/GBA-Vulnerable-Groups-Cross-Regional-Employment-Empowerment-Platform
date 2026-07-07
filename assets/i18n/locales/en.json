@@ -1,0 +1,24 @@
+{
+  "errors": {
+    "sessionBusy": "Another AI task is already running for this session. Please wait for it to finish, then try again.",
+    "aiTaskStillProcessing": "The request timed out, but the server may still be processing your AI task in the background. Please wait before trying again.",
+    "aiTaskRetryCountdown": "An AI task is still running. You can retry in about {time}.",
+    "aiTaskRetryCountdownTimeout": "The request timed out, but processing may continue in the background. You can retry in about {time}.",
+    "aiTaskRetryQueued": "Queued (position {position}). You can retry in about {time}.",
+    "aiTaskRetryChecking": "Checking whether the AI task has finished…",
+    "aiTaskRetryReady": "You can retry now — click generate again.",
+    "retryDurationMinSec": "{minutes} min {seconds} sec",
+    "retryDurationSec": "{seconds} sec",
+    "networkError": "Network error. Check your connection and ensure the backend is running.",
+    "networkErrorWithUrl": "Network error — no response from {url}. Ensure the backend is running (cd backend && python main.py).",
+    "unexpected": "An unexpected error occurred.",
+    "notFound": "Resource not found. Please check your session ID.",
+    "backendUnavailable": "Backend is unavailable. Please ensure the API server is running.",
+    "backendUnavailableTitle": "Backend unavailable",
+    "backendRetry": "Retry connection",
+    "backendRestored": "Backend connected — you can retry your request"
+  },
+  "apiMessages": {
+    "SESSION_BUSY": "Another AI task is already running for this session. Please wait for it to finish, then try again."
+  }
+}

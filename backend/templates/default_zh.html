@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="{{HTML_LANG}}" class="{{THEME_CLASS}} zh-campus-resume">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{NAME}}</title>
+    <style>
+        :root {
+            {{CSS_VARIABLES}}
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        body {
+            font-family: var(--font-family), "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            color: #222;
+            background: #fff;
+        }
+
+        .resume-container {
+            width: 210mm;
+            min-height: 297mm;
+            max-height: 297mm;
+            margin: 0 auto;
+            padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .resume-container.dense .section {
+            margin-bottom: calc(8px * var(--spacing-scale));
+        }
+
+        .resume-container.dense .zh-entry {
+            margin-bottom: calc(6px * var(--spacing-scale));
+        }
+
+        .resume-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: calc(12px * var(--spacing-scale));
+        }
+
+        .resume-header .name {
+            font-size: calc(var(--font-size) * 1.75);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            line-height: 1.2;
+        }
+
+        .profile-photo {
+            width: 88px;
+            height: 118px;
+            object-fit: cover;
+            border: 1px solid #bbb;
+            flex-shrink: 0;
+        }
+
+        .section {
+            margin-bottom: calc(12px * var(--spacing-scale));
+            page-break-inside: avoid;
+        }
+
+        .section h2 {
+            font-size: calc(var(--font-size) * 1.08);
+            font-weight: 700;
+            color: #111;
+            border-bottom: 1.5px solid #222;
+            padding-bottom: 2px;
+            margin-bottom: calc(6px * var(--spacing-scale));
+        }
+
+        .section-summary p,
+        .zh-entry-body {
+            color: #333;
+            text-align: justify;
+        }
+
+        .zh-edu-head,
+        .zh-entry-head {
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #111;
+        }
+
+        .zh-edu-entry,
+        .zh-entry {
+            margin-bottom: calc(8px * var(--spacing-scale));
+        }
+
+        .zh-bullets {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 2px;
+        }
+
+        .zh-bullets li {
+            position: relative;
+            padding-left: 1.1em;
+            margin-bottom: 2px;
+        }
+
+        .zh-bullets li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #333;
+        }
+
+        .contact-footer {
+            margin-top: auto;
+            padding-top: calc(10px * var(--spacing-scale));
+            border-top: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+            font-size: calc(var(--font-size) * 0.92);
+            color: #444;
+        }
+
+        .contact-footer span {
+            white-space: nowrap;
+        }
+
+        @media print {
+            body { background: #fff; color: #000; }
+            .resume-container {
+                width: 210mm;
+                max-height: 297mm;
+                overflow: hidden;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-container {{DENSE_CLASS}}">
+        <header class="resume-header">
+            <h1 class="name">{{NAME}}</h1>
+            {{PHOTO_HTML}}
+        </header>
+        {{SECTIONS_HTML}}
+        <footer class="contact-footer">{{CONTACT_FOOTER}}</footer>
+    </div>
+</body>
+</html>

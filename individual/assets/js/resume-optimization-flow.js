@@ -127,7 +127,7 @@ async function regenerateJdInModal() {
         }
     } catch (error) {
         Utils.hideLoading();
-        Utils.showToast(uiT('resume.opt.regenerateFailed', 'Regeneration failed: {msg}', { msg: error.message }));
+        Utils.showAiTaskErrorToast(error, 'resume.opt.regenerateFailed', 'Regeneration failed: {msg}', { msg: error.message });
     }
 }
 
@@ -180,6 +180,8 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
             resolve({ proceed: true, answers: [], removals: [] });
             return;
         }
+
+        clearOptimizationValidationUi();
 
         const highGaps = (gaps || []).filter((g) => (g.severity || '').toLowerCase() === 'high');
         const mediumQuantGaps = quantGaps.filter((g) => (g.severity || '').toLowerCase() !== 'high');
@@ -271,6 +273,15 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
                         placeholder="${escapeHtml(placeholder)}"></textarea>
                 </div>`;
             }).join('')}`;
+            questionsEl.querySelectorAll('.optimization-answer').forEach((textarea) => {
+                textarea.addEventListener('input', () => {
+                    textarea.classList.remove('optimization-answer-missing', 'border-red-400', 'ring-2', 'ring-red-200');
+                    const errorEl = document.getElementById('optimization-validation-error');
+                    if (errorEl && !document.querySelector('.optimization-answer.optimization-answer-missing')) {
+                        errorEl.classList.add('hidden');
+                    }
+                });
+            });
         }
 
         modal.classList.remove('hidden');
@@ -280,6 +291,29 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
 
 function hideOptimizationDialog() {
     document.getElementById('resume-optimization-dialog')?.classList.add('hidden');
+    clearOptimizationValidationUi();
+}
+
+function clearOptimizationValidationUi() {
+    const errorEl = document.getElementById('optimization-validation-error');
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.classList.add('hidden');
+    }
+    document.querySelectorAll('.optimization-answer.optimization-answer-missing').forEach((el) => {
+        el.classList.remove('optimization-answer-missing', 'border-red-400', 'ring-2', 'ring-red-200');
+    });
+}
+
+function showOptimizationValidationError(message) {
+    const errorEl = document.getElementById('optimization-validation-error');
+    if (!errorEl) {
+        Utils.showToast(message);
+        return;
+    }
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+    errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function collectRemovalDecisions() {
@@ -302,24 +336,37 @@ function collectOptimizationAnswers() {
     const items = document.querySelectorAll('.optimization-question');
     const answers = [];
     let missingRequired = false;
+    let firstMissingTextarea = null;
 
     items.forEach((item) => {
         const textarea = item.querySelector('.optimization-answer');
         const question = item.querySelector('label')?.textContent?.replace(/\*/g, '').trim() || '';
         const answer = textarea?.value.trim() || '';
         const required = textarea?.dataset.required === '1';
-        if (required && !answer) missingRequired = true;
+        textarea?.classList.remove('optimization-answer-missing', 'border-red-400', 'ring-2', 'ring-red-200');
+        if (required && !answer) {
+            missingRequired = true;
+            textarea?.classList.add('optimization-answer-missing', 'border-red-400', 'ring-2', 'ring-red-200');
+            if (!firstMissingTextarea) firstMissingTextarea = textarea;
+        }
         answers.push({ id: item.dataset.qid, question, answer, required });
     });
 
-    return { answers, missingRequired };
+    return { answers, missingRequired, firstMissingTextarea };
 }
 
 function submitOptimizationDialog() {
-    const { answers, missingRequired } = collectOptimizationAnswers();
+    const { answers, missingRequired, firstMissingTextarea } = collectOptimizationAnswers();
     const removals = collectRemovalDecisions();
     if (missingRequired) {
-        Utils.showToast(uiT('resume.opt.requiredQuestions', 'Please answer all required questions marked with *'));
+        showOptimizationValidationError(uiT(
+            'resume.opt.requiredQuestions',
+            'Please answer all required questions marked with *'
+        ));
+        if (firstMissingTextarea) {
+            firstMissingTextarea.focus({ preventScroll: true });
+            firstMissingTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         return;
     }
     hideOptimizationDialog();

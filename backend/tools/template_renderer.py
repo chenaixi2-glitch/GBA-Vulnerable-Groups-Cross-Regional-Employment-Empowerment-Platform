@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import html
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,6 +19,36 @@ logger = get_logger("app")
 _TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
 
 
+def _esc(text: str) -> str:
+    return html.escape(str(text or ""), quote=True)
+
+
+def _format_zh_date(value: str) -> str:
+    text = (value or "").strip()
+    if not text:
+        return ""
+    return text.replace("-", ".")
+
+
+def _content_to_bullets_html(content: str) -> str:
+    text = (content or "").strip()
+    if not text:
+        return ""
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    bullet_lines = []
+    plain_lines = []
+    for line in lines:
+        cleaned = re.sub(r"^[\-•●▪]\s*", "", line).strip()
+        if re.match(r"^[\-•●▪]", line) or len(lines) > 1:
+            bullet_lines.append(cleaned)
+        else:
+            plain_lines.append(cleaned)
+    if bullet_lines:
+        items = "".join(f"<li>{_esc(item)}</li>" for item in bullet_lines if item)
+        return f'<ul class="zh-bullets">{items}</ul>'
+    return f"<p>{_esc(text)}</p>"
+
+
 def render_resume_html(content: "ResumeContent", config: "RenderConfig") -> str:
     """根据简历内容和渲染配置生成 HTML 字符串。"""
     template_path = _TEMPLATE_DIR / f"{config.template_id}.html"
@@ -24,17 +56,19 @@ def render_resume_html(content: "ResumeContent", config: "RenderConfig") -> str:
         template_path = _TEMPLATE_DIR / "default.html"
 
     template = template_path.read_text(encoding="utf-8")
+    lang = normalize_language(config.language or content.meta.language)
+    variables = (
+        _build_zh_template_variables(content, config, lang)
+        if config.template_id == "default_zh"
+        else _build_template_variables(content, config)
+    )
 
-    # 构建模板变量
-    variables = _build_template_variables(content, config)
-
-    # 简单变量替换
-    html = template
+    html_out = template
     for key, value in variables.items():
-        html = html.replace(f"{{{{{key}}}}}", str(value))
+        html_out = html_out.replace(f"{{{{{key}}}}}", str(value))
 
-    logger.info("Resume HTML rendered with template=%s", config.template_id)
-    return html
+    logger.info("Resume HTML rendered with template=%s lang=%s", config.template_id, lang)
+    return html_out
 
 
 def _build_template_variables(content: "ResumeContent", config: "RenderConfig") -> dict:
@@ -168,5 +202,159 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
         "HTML_LANG": lang,
         "SECTIONS_HTML": "\n".join(ordered_sections),
         "NAME": profile.name,
+        "TARGET_ROLE": content.meta.target_role,
+    }
+
+
+def _build_zh_template_variables(content: "ResumeContent", config: "RenderConfig", lang: str) -> dict:
+    """简体中文/繁体中文校园简历版式 — 参考陈艾希中山大学经济学简历。"""
+    labels = SECTION_LABELS.get(lang, SECTION_LABELS["zh"])
+    profile = content.profile
+    extras = getattr(profile, "extras", None) or {}
+
+    margin = config.page_margin
+    spacing = {"compact": 0.75, "standard": 1.0, "relaxed": 1.2}.get(config.spacing_scale, 1.0)
+    css_vars = f"""
+        --font-family: '{config.font_family}', sans-serif;
+        --font-size: {config.font_size}px;
+        --line-height: {config.line_height};
+        --margin-top: {margin.top}px;
+        --margin-right: {margin.right}px;
+        --margin-bottom: {margin.bottom}px;
+        --margin-left: {margin.left}px;
+        --spacing-scale: {spacing};
+    """
+
+    photo_url = (extras.get("photo_url") or extras.get("photo_data") or "").strip()
+    photo_html = f'<img class="profile-photo" src="{_esc(photo_url)}" alt="证件照" />' if photo_url else ""
+
+    edu_parts = []
+    for edu in profile.education:
+        start = _format_zh_date(edu.start_date)
+        end = _format_zh_date(edu.end_date)
+        date_range = f"{start}-{end}" if start and end else (start or end)
+        head = "  ".join(part for part in [
+            date_range,
+            edu.major,
+            f"| {edu.degree}" if edu.degree else "",
+            edu.school,
+        ] if part)
+        edu_parts.append(
+            f'<div class="zh-edu-entry"><div class="zh-edu-head">{_esc(head)}</div></div>'
+        )
+    education_html = "\n".join(edu_parts)
+
+    def _render_zh_items(items) -> str:
+        parts = []
+        for item in items:
+            body = _content_to_bullets_html(item.content)
+            parts.append(
+                f'<div class="zh-entry">'
+                f'<div class="zh-entry-head">{_esc(item.title)}</div>'
+                f'<div class="zh-entry-body">{body}</div>'
+                f'</div>'
+            )
+        return "\n".join(parts)
+
+    def _render_zh_skills(items) -> str:
+        if not items:
+            return ""
+        if len(items) == 1 and "\n" not in (items[0].content or "") and "•" not in (items[0].content or ""):
+            return _content_to_bullets_html(items[0].content)
+        parts = []
+        for item in items:
+            label = (item.title or "").strip()
+            body = (item.content or "").strip()
+            line = f"{label}：{body}" if label and body and label.lower() not in ("skills", "技能", "相关技能") else (body or label)
+            if line:
+                parts.append(f"<li>{_esc(line)}</li>")
+        return f'<ul class="zh-bullets">{"".join(parts)}</ul>' if parts else ""
+
+    footer_parts = []
+    if extras.get("age"):
+        footer_parts.append(f"<span>年龄：{_esc(extras['age'])}</span>")
+    if profile.phone:
+        footer_parts.append(f"<span>电话：{_esc(profile.phone)}</span>")
+    if profile.city:
+        footer_parts.append(f"<span>现居：{_esc(profile.city)}</span>")
+    if profile.email:
+        footer_parts.append(f"<span>邮箱：{_esc(profile.email)}</span>")
+    if extras.get("gender") and not footer_parts:
+        footer_parts.append(f"<span>性别：{_esc(extras['gender'])}</span>")
+
+    sections_html_map = {
+        "summary": f"""
+            <section class="section section-summary">
+                <h2>{labels["summary"]}</h2>
+                {_content_to_bullets_html(content.summary)}
+            </section>
+        """ if content.summary else "",
+        "education": f"""
+            <section class="section section-education">
+                <h2>{labels["education"]}</h2>
+                {education_html}
+            </section>
+        """ if education_html else "",
+        "internships": f"""
+            <section class="section section-internships">
+                <h2>{labels["internships"]}</h2>
+                {_render_zh_items(content.internships)}
+            </section>
+        """ if content.internships else "",
+        "projects": f"""
+            <section class="section section-projects">
+                <h2>{labels["projects"]}</h2>
+                {_render_zh_items(content.projects)}
+            </section>
+        """ if content.projects else "",
+        "skills": f"""
+            <section class="section section-skills">
+                <h2>{labels["skills"]}</h2>
+                {_render_zh_skills(content.skills)}
+            </section>
+        """ if content.skills else "",
+        "awards": f"""
+            <section class="section section-awards">
+                <h2>{labels["awards"]}</h2>
+                {_render_zh_items(content.awards)}
+            </section>
+        """ if content.awards else "",
+        "papers": f"""
+            <section class="section section-papers">
+                <h2>{labels["papers"]}</h2>
+                {_render_zh_items(content.papers)}
+            </section>
+        """ if content.papers else "",
+    }
+
+    ordered_sections = []
+    for section_name in config.section_order:
+        if section_name == "profile":
+            continue
+        if config.visibility_map.get(section_name, True) is False:
+            continue
+        block = sections_html_map.get(section_name, "")
+        if block:
+            ordered_sections.append(block)
+
+    for section_name, block in sections_html_map.items():
+        if section_name in ("profile", *config.section_order):
+            continue
+        if config.visibility_map.get(section_name, True) is False:
+            continue
+        if block:
+            ordered_sections.append(block)
+
+    dense_class = "dense" if config.dense_mode else ""
+
+    return {
+        "CSS_VARIABLES": css_vars,
+        "DENSE_CLASS": dense_class,
+        "THEME_CLASS": config.theme,
+        "HTML_LANG": lang,
+        "SECTIONS_HTML": "\n".join(ordered_sections),
+        "NAME": _esc(profile.name),
+        "PHOTO_HTML": photo_html,
+        "CONTACT_FOOTER": "\n".join(footer_parts),
         "TARGET_ROLE": content.meta.target_role,
     }

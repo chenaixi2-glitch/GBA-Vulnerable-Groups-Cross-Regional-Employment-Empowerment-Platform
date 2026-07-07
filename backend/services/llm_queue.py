@@ -43,6 +43,51 @@ def _session_lock_key(session_id: str) -> str:
     return f"{_SESSION_LOCK_PREFIX}{session_id}"
 
 
+async def _session_lock_retry_seconds(client: aioredis.Redis, session_id: str) -> int:
+    if not session_id:
+        return 0
+    ttl = int(await client.ttl(_session_lock_key(session_id)))
+    return max(ttl, 0)
+
+
+async def _running_job_retry_seconds(
+    client: aioredis.Redis, job_id: str, cfg: dict[str, Any]
+) -> int:
+    enqueued = await client.hget(_job_key(job_id), "enqueued_at")
+    if not enqueued:
+        return int(cfg["avg_job_seconds"])
+    elapsed = time.time() - float(enqueued)
+    return max(0, int(cfg["avg_job_seconds"] - elapsed))
+
+
+def _queue_status_payload(
+    *,
+    cfg: dict[str, Any],
+    status: str,
+    running_count: int,
+    waiting_count: int,
+    position: int = 0,
+    ahead: int = 0,
+    estimated_wait_seconds: int = 0,
+    retry_after_seconds: int = 0,
+    job_id: str | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "enabled": True,
+        "status": status,
+        "position": position,
+        "ahead": ahead,
+        "running_count": running_count,
+        "waiting_count": waiting_count,
+        "max_concurrent": cfg["max_concurrent"],
+        "estimated_wait_seconds": estimated_wait_seconds,
+        "retry_after_seconds": max(int(retry_after_seconds), 0),
+    }
+    if job_id:
+        payload["job_id"] = job_id
+    return payload
+
+
 async def get_queue_status(session_id: str) -> dict[str, Any]:
     """Return queue position / running state for a session (for frontend polling)."""
     cfg = get_llm_queue_config()
@@ -50,75 +95,85 @@ async def get_queue_status(session_id: str) -> dict[str, Any]:
 
     running_count = int(await client.get(_RUNNING_KEY) or 0)
     waiting_count = int(await client.zcard(_WAITING_KEY) or 0)
+    lock_retry = await _session_lock_retry_seconds(client, session_id)
 
     if not cfg["enabled"]:
         return {
             "enabled": False,
-            "status": "idle",
+            "status": "idle" if lock_retry <= 0 else "running",
             "position": 0,
             "ahead": 0,
             "running_count": running_count,
             "waiting_count": waiting_count,
             "max_concurrent": cfg["max_concurrent"],
             "estimated_wait_seconds": 0,
+            "retry_after_seconds": lock_retry,
         }
 
     job_id = await client.get(_session_job_key(session_id))
     if not job_id:
-        return {
-            "enabled": True,
-            "status": "idle",
-            "position": 0,
-            "ahead": 0,
-            "running_count": running_count,
-            "waiting_count": waiting_count,
-            "max_concurrent": cfg["max_concurrent"],
-            "estimated_wait_seconds": 0,
-        }
+        if lock_retry > 0:
+            return _queue_status_payload(
+                cfg=cfg,
+                status="running",
+                running_count=running_count,
+                waiting_count=waiting_count,
+                retry_after_seconds=lock_retry,
+            )
+        return _queue_status_payload(
+            cfg=cfg,
+            status="idle",
+            running_count=running_count,
+            waiting_count=waiting_count,
+        )
 
     job_status = await client.hget(_job_key(job_id), "status")
     if job_status == "running":
-        return {
-            "enabled": True,
-            "status": "running",
-            "position": 0,
-            "ahead": 0,
-            "running_count": running_count,
-            "waiting_count": waiting_count,
-            "max_concurrent": cfg["max_concurrent"],
-            "estimated_wait_seconds": 0,
-            "job_id": job_id,
-        }
+        run_retry = await _running_job_retry_seconds(client, job_id, cfg)
+        return _queue_status_payload(
+            cfg=cfg,
+            status="running",
+            running_count=running_count,
+            waiting_count=waiting_count,
+            retry_after_seconds=max(lock_retry, run_retry),
+            job_id=job_id,
+        )
 
     rank = await client.zrank(_WAITING_KEY, job_id)
     if rank is None:
-        return {
-            "enabled": True,
-            "status": "idle",
-            "position": 0,
-            "ahead": 0,
-            "running_count": running_count,
-            "waiting_count": waiting_count,
-            "max_concurrent": cfg["max_concurrent"],
-            "estimated_wait_seconds": 0,
-        }
+        if lock_retry > 0:
+            return _queue_status_payload(
+                cfg=cfg,
+                status="running",
+                running_count=running_count,
+                waiting_count=waiting_count,
+                retry_after_seconds=lock_retry,
+                job_id=job_id,
+            )
+        return _queue_status_payload(
+            cfg=cfg,
+            status="idle",
+            running_count=running_count,
+            waiting_count=waiting_count,
+            job_id=job_id,
+        )
 
     ahead = int(rank)
     position = ahead + 1
     slots = max(cfg["max_concurrent"], 1)
     estimated_wait = int((ahead / slots) * cfg["avg_job_seconds"])
 
-    return {
-        "enabled": True,
-        "status": "queued",
-        "position": position,
-        "ahead": ahead,
-        "running_count": running_count,
-        "waiting_count": waiting_count,
-        "max_concurrent": cfg["max_concurrent"],
-        "estimated_wait_seconds": estimated_wait,
-        "job_id": job_id,
-    }
+    return _queue_status_payload(
+        cfg=cfg,
+        status="queued",
+        position=position,
+        ahead=ahead,
+        running_count=running_count,
+        waiting_count=waiting_count,
+        estimated_wait_seconds=estimated_wait,
+        retry_after_seconds=max(lock_retry, estimated_wait),
+        job_id=job_id,
+    )
 
 
 _GATE_KEY = "llm:queue:gate"

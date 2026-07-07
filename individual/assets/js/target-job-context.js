@@ -39,7 +39,50 @@ const TARGET_JOB_FIELD_MAP = {
     industry: ['industry-select', 'job-industry', 'industry-focus'],
     employerType: ['employer-type-select', 'interview-employer-type', 'learning-employer-type'],
     experienceLevel: ['experience-level', 'interview-experience-level', 'learning-experience-level'],
+    typographyFitMode: ['typography-fit-mode'],
 };
+
+const TYPOGRAPHY_FIT_STORAGE_KEY = 'gba-typography-fit-mode';
+const TYPOGRAPHY_FIT_MODES = ['auto', 'comfortable', 'compact'];
+
+function readTypographyFitMode() {
+    const el = document.querySelector('.typography-fit-mode-select, #typography-fit-mode');
+    const fromDom = (el && el.value) ? el.value.trim() : '';
+    if (fromDom && TYPOGRAPHY_FIT_MODES.includes(fromDom)) return fromDom;
+    try {
+        const stored = localStorage.getItem(TYPOGRAPHY_FIT_STORAGE_KEY);
+        if (stored && TYPOGRAPHY_FIT_MODES.includes(stored)) return stored;
+    } catch (_) { /* ignore */ }
+    return 'auto';
+}
+
+function syncTypographyFitModeSelects(value) {
+    const mode = TYPOGRAPHY_FIT_MODES.includes(value) ? value : 'auto';
+    document.querySelectorAll('.typography-fit-mode-select, #typography-fit-mode').forEach((el) => {
+        if (el && el.value !== mode) el.value = mode;
+    });
+    try {
+        localStorage.setItem(TYPOGRAPHY_FIT_STORAGE_KEY, mode);
+    } catch (_) { /* ignore */ }
+}
+
+function initTypographyFitModeSelects() {
+    const saved = readTypographyFitMode();
+    syncTypographyFitModeSelects(saved);
+    document.querySelectorAll('.typography-fit-mode-select, #typography-fit-mode').forEach((el) => {
+        if (!el || el.dataset.typographyBound) return;
+        el.dataset.typographyBound = '1';
+        el.addEventListener('change', () => syncTypographyFitModeSelects(el.value));
+    });
+}
+
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTypographyFitModeSelects);
+    } else {
+        initTypographyFitModeSelects();
+    }
+}
 
 function readFirstFieldValue(ids) {
     for (const id of ids) {
@@ -77,6 +120,7 @@ function collectTargetJobContext(options = {}) {
     const industry = readFirstFieldValue(fields.industry);
     const employerType = readFirstFieldValue(fields.employerType);
     const experienceLevel = readFirstFieldValue(fields.experienceLevel);
+    const typography_fit_mode = readTypographyFitMode();
 
     return {
         jd_text: jdText,
@@ -86,6 +130,7 @@ function collectTargetJobContext(options = {}) {
         employerTypeLabel: getTargetEmployerLabel(employerType),
         experience_level: experienceLevel,
         experienceLevelLabel: getTargetExperienceLabel(experienceLevel),
+        typography_fit_mode,
     };
 }
 

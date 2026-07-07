@@ -9,7 +9,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from agents.json_contracts import ResumeGenerationOutput
-from models.llm import get_llm, ainvoke_json_with_schema
+from models.llm import get_llm
+from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.resume_generation import RESUME_GENERATION_PROMPT, RESUME_SECTION_UPDATE_PROMPT
 from prompts.resume_language_convert import RESUME_LANGUAGE_CONVERT_PROMPT
 from prompts.resume_constraints import RESUME_PAGE_COMPRESS_PROMPT, RESUME_EXPERIENCE_POLISH_GUIDELINES
@@ -25,6 +26,7 @@ from tools.resume_layout import (
     opposite_language,
     is_cjk_resume_language,
     resume_output_language_instruction,
+    resolve_section_order,
 )
 from tools.output_language import resolve_resume_target_language
 from tools.target_job_context import build_enriched_job_json
@@ -156,6 +158,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
 
     intent = state.current_intent
     llm = get_llm()
+    guard_lang = _resolve_target_language(state)
 
     if intent == "language_convert":
         if state.resume_content_json is None:
@@ -171,6 +174,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
 
         source_lang = normalize_language(state.resume_content_json.meta.language)
         target_lang = normalize_language(state.resume_language_target) if state.resume_language_target else opposite_language(source_lang)
+        guard_lang = target_lang
 
         prompt = RESUME_LANGUAGE_CONVERT_PROMPT.format(
             source_language_label=language_label(source_lang),
@@ -182,7 +186,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             RESUME_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
         )
     elif intent == "content_edit" and state.resume_content_json:
-        lang = _resolve_target_language(state)
+        lang = guard_lang
         prompt = RESUME_SECTION_UPDATE_PROMPT.format(
             RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
             RESUME_EXPERIENCE_POLISH_GUIDELINES=RESUME_EXPERIENCE_POLISH_GUIDELINES,
@@ -193,7 +197,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             edit_instruction=state.user_message,
         )
     else:
-        lang = _resolve_target_language(state)
+        lang = guard_lang
         job_json = build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}"
         profile_json = state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}"
 
@@ -213,7 +217,14 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
         )
 
     try:
-        parsed = await ainvoke_json_with_schema(llm, prompt, ResumeGenerationOutput, logger, "Resume Content Agent")
+        parsed = await ainvoke_json_with_language_guard(
+            llm,
+            prompt,
+            ResumeGenerationOutput,
+            logger,
+            "Resume Content Agent",
+            guard_lang,
+        )
     except RuntimeError as exc:
         logger.error("Resume Content Agent failed: %s", exc)
         return {
@@ -227,11 +238,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    target_lang = normalize_language(
-        state.resume_language_target
-        if state.current_intent == "language_convert" and state.resume_language_target
-        else _resolve_target_language(state)
-    )
+    target_lang = normalize_language(guard_lang)
     logger.info(
         "Resume target language: %s (render_config=%s, chat_output=%s)",
         target_lang,
@@ -249,6 +256,12 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
         resume_content.meta.language,
         resolve_experience_level(state),
     )
+    section_order = resolve_section_order(
+        resume_content,
+        resume_content.meta.language,
+        explicit=parsed.section_order or None,
+    )
+    render_config = render_config.model_copy(update={"section_order": section_order})
 
     layout_label = page_limit_label(render_config.page_limit, resume_content.meta.language)
     meta = state.meta.model_copy(update={
@@ -316,6 +329,13 @@ async def compress_resume_for_page_limit_async(
         current_resume_json=resume_content.model_dump_json(indent=2),
         job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
     )
-    parsed = await ainvoke_json_with_schema(llm, prompt, ResumeGenerationOutput, logger, "Resume Page Compress")
+    parsed = await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        ResumeGenerationOutput,
+        logger,
+        "Resume Page Compress",
+        lang,
+    )
     compressed = _build_resume_from_parsed(parsed, state, language=resume_content.meta.language)
     return _merge_profile_extras_from_candidate(compressed, state)

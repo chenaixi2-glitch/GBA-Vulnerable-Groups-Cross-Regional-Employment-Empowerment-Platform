@@ -8,7 +8,8 @@ import uuid
 from typing import Any
 
 from agents.json_contracts import InterviewGenerationOutput
-from models.llm import get_llm, ainvoke_json_with_schema
+from models.llm import get_llm
+from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.interview_custom_answer import CUSTOM_INTERVIEW_ANSWER_PROMPT
 from prompts.interview_generation import (
     INTERVIEW_GENERATION_PROMPT,
@@ -261,19 +262,25 @@ async def custom_interview_answers_async(
         }
 
     questions_list = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(questions))
+    lang_kwargs = interview_question_prompt_language_kwargs(state)
     prompt = CUSTOM_INTERVIEW_ANSWER_PROMPT.format(
         question_count=len(questions),
         questions_list=questions_list,
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
         resume_json=state.resume_content_json.model_dump_json(indent=2),
-        **interview_question_prompt_language_kwargs(state),
+        **lang_kwargs,
     )
 
     try:
         llm = get_llm()
-        parsed = await ainvoke_json_with_schema(
-            llm, prompt, InterviewGenerationOutput, logger, "Custom Interview Agent",
+        parsed = await ainvoke_json_with_language_guard(
+            llm,
+            prompt,
+            InterviewGenerationOutput,
+            logger,
+            "Custom Interview Agent",
+            lang_kwargs["output_language"],
         )
     except RuntimeError as exc:
         logger.error("Custom Interview Agent failed: %s", exc)
@@ -338,12 +345,13 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
 
     if standalone:
         logger.info("Interview Agent using standalone mode (partial session context)")
+        lang_kwargs = interview_question_prompt_language_kwargs(state)
         prompt = STANDALONE_INTERVIEW_GENERATION_PROMPT.format(
             user_message=user_message,
             job_json=build_enriched_job_json(state),
             profile_json=state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}",
             resume_json=state.resume_content_json.model_dump_json(indent=2) if state.resume_content_json else "{}",
-            **interview_question_prompt_language_kwargs(state),
+            **lang_kwargs,
         )
         input_summary = "基于用户消息与已有部分上下文分阶段生成面试题（独立模式）。"
         program = None
@@ -357,13 +365,14 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
             job_title=job_title,
             jd_text=jd_text,
         )
+        lang_kwargs = interview_question_prompt_language_kwargs(state)
         prompt = INTERVIEW_GENERATION_PROMPT.format(
             stages_generation_spec=format_stages_generation_spec(program),
             total_questions=program.max_rounds,
             job_json=build_enriched_job_json(state),
             profile_json=state.candidate_profile.model_dump_json(indent=2),
             resume_json=state.resume_content_json.model_dump_json(indent=2),
-            **interview_question_prompt_language_kwargs(state),
+            **lang_kwargs,
         )
         input_summary = (
             f"按{program.version}程序分{program.stage_count}阶段生成面试问答"
@@ -371,7 +380,14 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
         )
 
     try:
-        parsed = await ainvoke_json_with_schema(llm, prompt, InterviewGenerationOutput, logger, "Interview Agent")
+        parsed = await ainvoke_json_with_language_guard(
+            llm,
+            prompt,
+            InterviewGenerationOutput,
+            logger,
+            "Interview Agent",
+            lang_kwargs["output_language"],
+        )
     except RuntimeError as exc:
         logger.error("Interview Agent failed: %s", exc)
         return {

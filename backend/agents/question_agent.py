@@ -7,6 +7,7 @@ import json
 from typing import Any
 
 from models.llm import get_llm, _ainvoke_model, _extract_text_content
+from tools.output_language_guard import ainvoke_json_with_language_guard, guard_text_output
 from tools.output_language import output_language_instruction, resolve_output_language
 from workflow.state import CopilotState
 from workflow.trace import append_trace, summarize_user_message
@@ -69,6 +70,9 @@ async def question_node_async(state: CopilotState) -> dict[str, Any]:
 
     if not answer:
         answer = "我暂时没有从当前状态中找到可回答的信息。可以补充岗位、个人材料或先生成简历后再问我。"
+    else:
+        output_lang = resolve_output_language(state)
+        answer = await guard_text_output(llm, answer, output_lang, logger, "Question Agent")
 
     return {
         "workflow_trace": append_trace(
