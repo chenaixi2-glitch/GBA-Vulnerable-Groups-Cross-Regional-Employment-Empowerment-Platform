@@ -1,0 +1,2 @@
+# Selenium E2E (optional — install when running browser tests)
+selenium>=4.27.0

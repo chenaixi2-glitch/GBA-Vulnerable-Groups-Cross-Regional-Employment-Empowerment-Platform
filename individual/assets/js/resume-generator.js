@@ -56,11 +56,34 @@ function uiT(key, fallback, vars) {
     return s;
 }
 
+function parsedFieldLabel(key, fallback) {
+    return uiT('resume.' + key, fallback);
+}
+
+function parsedFactTypeLabel(type) {
+    const map = {
+        education: ['factTypeEducation', 'Education'],
+        skill: ['factTypeSkill', 'Skills'],
+        internship: ['factTypeInternship', 'Internship / Work'],
+        project: ['factTypeProject', 'Project'],
+        award: ['factTypeAward', 'Award'],
+        paper: ['factTypePaper', 'Publication'],
+    };
+    const entry = map[type] || ['factTypeOther', 'Other'];
+    return parsedFieldLabel(entry[0], entry[1]);
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializeResumeGenerator();
     if (window.GBAI18n && typeof GBAI18n.initLanguage === 'function') {
         GBAI18n.initLanguage().then(() => {
+            if (typeof GBAI18n.applyResumeLangButtonLabels === 'function') {
+                GBAI18n.applyResumeLangButtonLabels();
+            }
+            if (typeof syncResumeLanguageButtons === 'function') {
+                syncResumeLanguageButtons();
+            }
             if (typeof apiClient !== 'undefined') {
                 apiClient.ensureSessionStarted();
             }
@@ -70,6 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    window.addEventListener('gba:language-changed', () => {
+        if (typeof GBAI18n !== 'undefined' && typeof GBAI18n.applyResumeLangButtonLabels === 'function') {
+            GBAI18n.applyResumeLangButtonLabels();
+        }
+        if (typeof syncResumeLanguageButtons === 'function') {
+            syncResumeLanguageButtons();
+        }
+    });
 });
 
 function initializeResumeGenerator() {
@@ -79,7 +110,7 @@ function initializeResumeGenerator() {
         console.warn('Session init failed:', error);
     }
 
-    apiClient.ensureBackendAvailable().catch((error) => {
+    apiClient.ensureBackendAvailable({ silent: true }).catch((error) => {
         console.warn('Backend probe failed:', error.message);
     });
 
@@ -87,6 +118,7 @@ function initializeResumeGenerator() {
     setupDragAndDrop();
     setupJdSectionListeners();
     setupExportModal();
+    setupUploadOverwriteModal();
     setupResumeChat();
     updateUploadContinueButton();
     restoreDraftOnLoad();
@@ -141,6 +173,13 @@ function setupUploadInputListeners() {
 
 async function restoreDraftOnLoad() {
     try {
+        const recordId = typeof SavedProfileBootstrap !== 'undefined'
+            ? SavedProfileBootstrap.getRecordIdFromUrl()
+            : '';
+        if (recordId && typeof apiClient !== 'undefined' && apiClient.isLoggedIn()) {
+            await ProfileEditor.restoreSavedRecord(recordId);
+            return;
+        }
         const restored = await ProfileEditor.loadFromServer();
         if (restored) {
             showUploadResultsPanel();
@@ -232,6 +271,13 @@ function setupExportModal() {
         await runPendingExport();
     });
 
+    document.getElementById('btn-save-as-new-and-export')?.addEventListener('click', async () => {
+        hideSaveModal();
+        const saved = await saveCurrentProfileAsNewRecord();
+        if (!saved) return;
+        await runPendingExport();
+    });
+
     document.getElementById('btn-export-only')?.addEventListener('click', async () => {
         hideSaveModal();
         await runPendingExport();
@@ -243,12 +289,107 @@ function setupExportModal() {
     });
 }
 
+function setupUploadOverwriteModal() {
+    document.getElementById('btn-upload-confirm-overwrite')?.addEventListener('click', async () => {
+        hideUploadOverwriteModal();
+        await executeUploadResume();
+    });
+
+    document.getElementById('btn-upload-save-as-new')?.addEventListener('click', async () => {
+        if (!apiClient.isLoggedIn()) {
+            Utils.showToast(uiT('errors.loginToSaveProfile', 'Please log in to save your profile to the website'));
+            return;
+        }
+        hideUploadOverwriteModal();
+        const saved = await saveCurrentProfileAsNewRecord();
+        if (!saved) return;
+        await executeUploadResume();
+    });
+
+    document.getElementById('btn-upload-cancel-overwrite')?.addEventListener('click', () => {
+        hideUploadOverwriteModal();
+    });
+}
+
+function sessionHasReplaceableContent() {
+    return hasParsedProfileOnPage() || resumeGenerated;
+}
+
+async function saveCurrentProfileAsNewRecord() {
+    if (!apiClient.isLoggedIn()) {
+        Utils.showToast(uiT('errors.loginToSaveProfile', 'Please log in to save your profile to the website'));
+        return false;
+    }
+    if (typeof ProfileEditor === 'undefined' || !ProfileEditor.collectDraftFromForm) {
+        Utils.showToast(uiT('resume.toast.noProfileToSave', 'No profile data to save yet'));
+        return false;
+    }
+
+    const recordName = ProfileEditor.promptRecordName();
+    if (recordName === null) return false;
+
+    try {
+        Utils.showLoading(uiT('resume.toast.savingProfile', 'Saving profile to your account...'));
+        const draft = ProfileEditor.collectDraftFromForm();
+        ProfileEditor.draft = draft;
+        const result = await apiClient.saveProfileToAccount(draft, recordName);
+        Utils.hideLoading();
+        Utils.showToast(uiT('resume.toast.savedAsNewRecord', 'Saved as a new record: {name}', {
+            name: result.record_name || recordName,
+        }));
+        if (typeof ProfileEditor.loadSavedRecords === 'function') {
+            await ProfileEditor.loadSavedRecords();
+        }
+        return true;
+    } catch (error) {
+        Utils.hideLoading();
+        Utils.showToast(uiT('resume.toast.profileSaveFailed', 'Save failed: {msg}', { msg: error.message }));
+        return false;
+    }
+}
+
+function updateSaveModalOverwriteUi(hasSessionPersisted) {
+    const overwriteBody = document.getElementById('save-modal-body-overwrite');
+    const saveAsNewBtn = document.getElementById('btn-save-as-new-and-export');
+    const saveAndExportBtn = document.getElementById('btn-save-and-export');
+    if (overwriteBody) {
+        overwriteBody.classList.toggle('hidden', !hasSessionPersisted);
+    }
+    if (saveAsNewBtn) {
+        saveAsNewBtn.classList.toggle('hidden', !hasSessionPersisted);
+    }
+    if (saveAndExportBtn && hasSessionPersisted) {
+        saveAndExportBtn.textContent = uiT('resume.saveOverwriteAndExport', 'Overwrite session record & export');
+    } else if (saveAndExportBtn) {
+        saveAndExportBtn.textContent = uiT('resume.saveAndExport', 'Save to account & export');
+    }
+}
+
 function showSaveModal() {
     document.getElementById('save-resume-modal')?.classList.remove('hidden');
+    updateSaveModalOverwriteUi(false);
+    if (!apiClient.sessionId) return;
+    apiClient.getSessionResumeStatus()
+        .then((status) => updateSaveModalOverwriteUi(Boolean(status?.has_session_persisted)))
+        .catch(() => updateSaveModalOverwriteUi(false));
 }
 
 function hideSaveModal() {
     document.getElementById('save-resume-modal')?.classList.add('hidden');
+}
+
+function showUploadOverwriteModal() {
+    const saveAsNewBtn = document.getElementById('btn-upload-save-as-new');
+    if (saveAsNewBtn) {
+        saveAsNewBtn.disabled = !apiClient.isLoggedIn();
+        saveAsNewBtn.classList.toggle('opacity-50', !apiClient.isLoggedIn());
+        saveAsNewBtn.classList.toggle('cursor-not-allowed', !apiClient.isLoggedIn());
+    }
+    document.getElementById('upload-overwrite-modal')?.classList.remove('hidden');
+}
+
+function hideUploadOverwriteModal() {
+    document.getElementById('upload-overwrite-modal')?.classList.add('hidden');
 }
 
 async function promptExportResume(format) {
@@ -646,6 +787,29 @@ async function uploadResume() {
         return;
     }
 
+    if (sessionHasReplaceableContent()) {
+        showUploadOverwriteModal();
+        return;
+    }
+
+    await executeUploadResume();
+}
+
+/**
+ * Perform resume upload after user confirms overwrite (or when session is empty).
+ */
+async function executeUploadResume() {
+    const resumeText = document.getElementById('resume-text').value.trim();
+
+    if (!currentFile && !resumeText) {
+        Utils.showToast(uiT('resume.toast.uploadOrPaste', 'Please upload a file or paste resume text'));
+        return;
+    }
+
+    if (resumeUploadInProgress) {
+        return;
+    }
+
     const uploadBtn = document.getElementById('btn-upload-resume');
     resumeUploadInProgress = true;
     if (uploadBtn) {
@@ -665,7 +829,7 @@ async function uploadResume() {
         if (currentFile) {
             response = await apiClient.uploadResume(currentFile);
         } else {
-            response = await apiClient.chat(resumeText, [], { allowMockFallback: true, replaceProfile: true });
+            response = await apiClient.chat(resumeText, [], { replaceProfile: true, usePageLanguage: true });
         }
 
         if (!response?.candidate_profile) {
@@ -682,10 +846,10 @@ async function uploadResume() {
             const profile = response.candidate_profile;
             const lines = [];
             const basic = profile.profile_basic || {};
-            if (basic.name) lines.push('姓名: ' + basic.name);
-            if (basic.email) lines.push('邮箱: ' + basic.email);
-            if (basic.phone) lines.push('电话: ' + basic.phone);
-            if (basic.city) lines.push('城市: ' + basic.city);
+            if (basic.name) lines.push(parsedFieldLabel('parsedName', 'Name') + ': ' + basic.name);
+            if (basic.email) lines.push(parsedFieldLabel('parsedEmail', 'Email') + ': ' + basic.email);
+            if (basic.phone) lines.push(parsedFieldLabel('parsedPhone', 'Phone') + ': ' + basic.phone);
+            if (basic.city) lines.push(parsedFieldLabel('parsedCity', 'City') + ': ' + basic.city);
             if (profile.facts && profile.facts.length) {
                 lines.push('');
                 profile.facts.forEach(function(fact) {
@@ -696,12 +860,7 @@ async function uploadResume() {
                     } catch (_) {
                         title = fact.content ? fact.content.split('\n')[0].slice(0, 80) : '';
                     }
-                    var prefix = fact.type === 'education' ? '教育' :
-                        fact.type === 'skill' ? '技能' :
-                        fact.type === 'internship' ? '实习/工作' :
-                        fact.type === 'project' ? '项目' :
-                        fact.type === 'award' ? '奖项' :
-                        fact.type === 'paper' ? '论文' : '其他';
+                    var prefix = parsedFactTypeLabel(fact.type);
                     lines.push('[' + prefix + '] ' + (title || fact.content || ''));
                 });
             }
@@ -1414,7 +1573,6 @@ async function submitResumeChatEdit() {
         const response = await apiClient.chat(message, [], {
             language: currentResumeLanguage,
             usePageLanguage: false,
-            allowMockFallback: true,
         });
 
         const messages = document.getElementById('resume-chat-messages');
@@ -1495,9 +1653,6 @@ function updateResumeLanguageBadge(language) {
     }
 
     if (lastGapAnalysisData && lastGapAnalysisData.length) {
-        if (typeof apiClient !== 'undefined' && apiClient.useMockMode && apiClient.mockService) {
-            lastGapAnalysisData = apiClient.mockService.buildMockGaps(currentResumeLanguage);
-        }
         displayGapAnalysis(lastGapAnalysisData);
     }
 }

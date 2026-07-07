@@ -7,7 +7,8 @@
     "notStarted": "Não iniciado",
     "retry": "Tente novamente",
     "openSourceSite": "Abrir site de origem",
-    "platformBrand": "Plataforma GBA"
+    "platformBrand": "Plataforma GBA",
+    "contentLanguageRegenHint": "Para mudar o idioma após a geração, regenere o conteúdo."
   },
   "home": {
     "title": "Empoderamento Laboral Transregional da GBA",
@@ -29,6 +30,7 @@
     "howItWorks": "Como funciona",
     "login": "Iniciar sessão",
     "signup": "Registar",
+    "selectLanguage": "Idioma",
     "featureResumeTitle": "Gerador inteligente de CV",
     "featureLearningTitle": "Percurso de aprendizagem personalizado",
     "featureInterviewTitle": "Preparação para entrevista",
@@ -134,7 +136,6 @@
     "footerPhone": "+86 400-123-4567",
     "footerEmail": "info@gba-platform.com",
     "storiesLead": "Cenários ilustrativos que mostram como matching, candidaturas, fluxos empresariais e ferramentas AI de carreira funcionam em conjunto — não são testemunhos reais.",
-    "brandName": "Plataforma GBA",
     "brandShort": "GBA",
     "story1": {
       "role": "Desenvolvedor de software",
@@ -1041,10 +1042,18 @@
     "saveConfirmedNote": "Guardados na conta até eliminar",
     "exportWithoutSaveNote": "Pode exportar sem guardar a qualquer momento",
     "saveAndExport": "Guardar na conta e exportar",
+    "saveOverwriteAndExport": "Substituir registo da sessão e exportar",
+    "saveAsNewAndExport": "Guardar como novo registo e exportar",
     "exportOnly": "Só exportar (não guardar)",
     "cancelExport": "Cancelar",
+    "uploadOverwriteTitle": "Substituir o CV atual?",
+    "uploadOverwriteBody": "Carregar um novo CV substitui o perfil analisado e o CV gerado nesta sessão. Outros registos guardados na conta não são afetados, exceto se escolher substituir ao guardar.",
+    "uploadConfirmOverwrite": "Substituir e analisar novo CV",
+    "uploadSaveAsNew": "Guardar o atual como novo registo e depois carregar",
+    "saveModalOverwriteBody": "Esta sessão já tem um CV guardado na sua conta. Guardar novamente substitui esse registo da sessão; pode guardar como um novo registo com nome.",
     "toast": {
       "savedToAccount": "CV guardado na sua conta",
+      "savedAsNewRecord": "Guardado como novo registo: {name}",
       "saveFailed": "Falha ao guardar: {msg}",
       "jdFromCache": "JD sugerida carregada da cache — pode editar antes de continuar",
       "jdGenerated": "JD sugerida gerada — pode editar antes de continuar",
@@ -1102,6 +1111,7 @@
       "printFailed": "Falha na impressão do browser: {msg}",
       "exportFailed": "Falha na exportação: {msg}",
       "pdfFallbackConfirm": "Exportação PDF no servidor indisponível.\n\nUsar impressão do browser?\nEscolha «Guardar como PDF» ou «Microsoft Print to PDF».",
+      "demoExportUnavailable": "O modo demo não suporta PDF/DOCX no servidor. Ligue o backend ou use impressão do browser.",
       "savingToAccount": "A guardar na sua conta…",
       "savingProfile": "A guardar perfil na sua conta…",
       "profileSaved": "Perfil guardado na sua conta",
@@ -1166,7 +1176,35 @@
     "metaEmployer": "Tipo de empregador: {label}",
     "metaExperience": "Nível de experiência: {label}",
     "metaSection": "Detalhes da vaga-alvo",
-    "manufacturing": "Indústria manufacturera"
+    "manufacturing": "Indústria manufacturera",
+    "savedRecordsTitle": "Perfis guardados",
+    "savedRecordsRefresh": "Atualizar",
+    "savedRecordsHint": "Cada gravação é um registo separado. Carregar um novo CV substitui apenas a cópia de trabalho atual.",
+    "savedRecordsEmpty": "Ainda não há perfis guardados. Clique em «Guardar na conta» para criar um.",
+    "exportPdf": "PDF",
+    "exportDocx": "DOCX",
+    "exportHtml": "HTML",
+    "exportMarkdown": "Markdown",
+    "exportJson": "JSON",
+    "exportPlainText": "Texto simples",
+    "exportWord": "Word",
+    "chineseResumes": "CV em chinês",
+    "englishResumes": "CV em inglês",
+    "parsedName": "Nome",
+    "parsedEmail": "Email",
+    "parsedPhone": "Telefone",
+    "parsedCity": "Cidade",
+    "parsedGithub": "GitHub",
+    "parsedSummary": "Resumo",
+    "parsedResumeTitle": "Conteúdo do CV",
+    "parsedBasicInfo": "Informação básica",
+    "factTypeEducation": "Educação",
+    "factTypeSkill": "Competências",
+    "factTypeInternship": "Estágio/trabalho",
+    "factTypeProject": "Projeto",
+    "factTypeAward": "Prémio",
+    "factTypePaper": "Publicação",
+    "factTypeOther": "Outro"
   },
   "strings": {
     "GBA Platform": "Plataforma GBA",
@@ -1244,7 +1282,45 @@
     "What statistics are shown on the home page?": "Que estatísticas são mostradas na página inicial?",
     "The hero and signup sections display live platform statistics — registered job seekers, partner companies, active job openings, and strong match rates — updated regularly from our database. If data is temporarily unavailable, placeholders are shown.": "As secções principal e de registo mostram estatísticas em tempo real — candidatos registados, empresas parceiras, vagas ativas e taxa de matching elevado — atualizadas regularmente. Se indisponíveis, são mostrados placeholders.",
     "What languages does the platform support?": "Que idiomas a plataforma suporta?",
-    "The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.": "A plataforma suporta chinês simplificado, chinês tradicional, inglês e português — refletindo a diversidade linguística da GBA. Mude de idioma a qualquer momento no seletor do topo."
+    "The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.": "A plataforma suporta chinês simplificado, chinês tradicional, inglês e português — refletindo a diversidade linguística da GBA. Mude de idioma a qualquer momento no seletor do topo.",
+    "PDF": "PDF",
+    "Word": "Word",
+    "DOCX": "DOCX",
+    "Plain text": "Texto simples",
+    "Markdown": "Markdown",
+    "extracts text only": "extrai apenas texto",
+    "Chinese resumes": "CV em chinês",
+    "English resumes": "CV em inglês",
+    "Simplified Chinese": "Chinês simplificado",
+    "Traditional Chinese": "Chinês tradicional",
+    "English": "Inglês",
+    "Portuguese": "Português",
+    "Português": "Português",
+    "Technology & Software": "Tecnologia e software",
+    "Finance & Banking": "Finanças e banca",
+    "E-commerce & Retail": "Comércio eletrónico e retalho",
+    "Healthcare & Medical": "Saúde e medicina",
+    "Education & Training": "Educação e formação",
+    "Manufacturing": "Indústria",
+    "State-owned (国央企)": "Empresa estatal",
+    "Public Sector (体制内)": "Setor público",
+    "Foreign Enterprise (外企)": "Empresa estrangeira",
+    "Private Enterprise (民企)": "Empresa privada",
+    "Non-profit (NPO/NGO)": "Sem fins lucrativos (NPO/NGO)",
+    "HK/Macau/TW-funded (港澳台资)": "Financiamento HK/Macau/TW",
+    "Other (其他)": "Outro",
+    "Employer type / 单位性质": "Tipo de empregador",
+    "Experience level / 经验等级": "Nível de experiência",
+    "Entry Level": "Nível inicial",
+    "Mid Level": "Nível intermédio",
+    "Senior Level": "Nível sénior",
+    "Executive": "Executivo",
+    "Technology": "Tecnologia",
+    "Finance": "Finanças",
+    "E-commerce": "Comércio eletrónico",
+    "Healthcare": "Saúde",
+    "Education": "Educação",
+    "Note": "Nota"
   },
   "portal": {
     "documentTitle": "Plataforma GBA de emprego transfronteiriço — Portal individual",
@@ -1328,6 +1404,11 @@
     "interviewStyle": "Estilo de entrevista",
     "questionLanguageLabel": "Idioma das perguntas",
     "questionLanguageHint": "Perguntas e respostas de referência usarão este idioma, independente da página e do feedback.",
+    "questionLanguageEarlyTitle": "Idioma das perguntas (escolha primeiro)",
+    "questionLanguageEarlyHint": "Antes de gerar o banco ou iniciar a simulação, escolha o idioma das perguntas; será mantido após a geração.",
+    "questionLanguageRegenHint": "Para mudar o idioma após a geração, regenere o banco ou reinicie a simulação.",
+    "questionLanguageSelected": "Selecionado: {lang}",
+    "questionLanguageDefault": "Padrão atual (idioma da página): {lang} — clique acima para confirmar",
     "feedbackLanguageLabel": "Idioma do feedback",
     "feedbackLanguageHint": "Feedback da IA e debrief usarão este idioma, independente da página e das perguntas.",
     "toneProfessional": "Profissional",
@@ -1361,11 +1442,22 @@
     "customUploadTitle": "Carregar perguntas",
     "customUploadDesc": "Cole ou carregue perguntas; a IA gera respostas de referência personalizadas.",
     "uploadTxt": "Carregar .txt",
+    "customQuestionsPlaceholder": "Uma pergunta por linha, por exemplo:\nDescreva o seu projeto de maior impacto\nComo lida com conflitos entre equipas?\nPorque escolheu esta função?",
     "removeFile": "Remover ficheiro",
     "yourAnswer": "A sua resposta",
     "answerPlaceholder": "Escreva aqui. Use STAR para perguntas comportamentais...",
     "answerTip": "Dica: seja específico com exemplos concretos",
     "submitAnswer": "Submeter resposta",
+    "questionNumberLabel": "Pergunta {n}",
+    "questionNumberPrefix": "Pergunta",
+    "questionPlaceholder": "A pergunta da entrevista aparecerá aqui…",
+    "btnPrevious": "Anterior",
+    "btnNext": "Seguinte",
+    "sendAnswer": "Enviar resposta",
+    "interactiveAnswersHint": "As respostas geram perguntas de seguimento em tempo real",
+    "debriefTitle": "Relatório da entrevista",
+    "interactiveSaveLoginSuffix": "para guardar esta simulação na sua conta.",
+    "downloadDebrief": "Transferir relatório",
     "referenceAnswer": "Resposta de referência",
     "show": "Mostrar",
     "hide": "Ocultar",
@@ -1439,15 +1531,63 @@
       "sessionReset": "Sessão reposta",
       "noQuestionsGenerated": "Sem perguntas geradas. Confirme perfil, JD e CV.",
       "noReferenceAnswers": "Sem respostas de referência. Confirme perfil, JD e CV.",
-      "savedToAccount": "Simulação guardada na sua conta"
+      "selectQuestionLanguageFirst": "Selecione primeiro o idioma das perguntas",
+      "savedToAccount": "Simulação guardada na sua conta",
+      "waitingFollowUps": "Aguarde a geração das perguntas de seguimento"
+    },
+    "selectEmployerType": "Tipo de empregador",
+    "selectExperienceLevel": "Nível de experiência",
+    "specialTechnical": "Só questões técnicas/profissionais",
+    "specialNegotiation": "Só negociação de entrevista final",
+    "specialDeepDive": "Só aprofundamento de CV",
+    "confirmEndInterview": "Terminar a entrevista simulada e gerar relatório de debrief?",
+    "confirmSaveInterview": "Guardar esta entrevista simulada e debrief na sua conta?",
+    "confirmNewSession": "Iniciar nova sessão de entrevista? O progresso atual será perdido.",
+    "phasePrimary": "Responda a cada pergunta por ordem; o feedback aparece de forma assíncrona.",
+    "phaseWaitingFollowUps": "Perguntas principais concluídas — a gerar seguimentos e feedback…",
+    "phaseFollowUp": "Fase de seguimento — responda por ordem.",
+    "phaseCompleted": "Entrevista concluída.",
+    "loadingGeneratingResume": "A gerar conteúdo de CV personalizado…",
+    "loadingGeneratingDebrief": "A gerar relatório de debrief…",
+    "loadingSavingInterview": "A guardar na sua conta…",
+    "chat": {
+      "briefFeedback": "Feedback breve",
+      "stageTransition": "Transição de fase",
+      "interviewer": "Entrevistador",
+      "you": "Você"
     }
+  },
+  "savedProfile": {
+    "useSavedTitle": "Usar perfil guardado",
+    "useSavedHint": "Escolha um CV guardado para evitar novo carregamento. Ainda precisa de submeter a descrição da vaga."
+  },
+  "profileReview": {
+    "parsedTitle": "CV analisado (editável)",
+    "parsedHint": "Revise e edite o conteúdo extraído. Clique em Aplicar alterações antes de continuar.",
+    "applyEdits": "Aplicar alterações",
+    "saveNew": "Guardar na conta",
+    "overwrite": "Substituir registo guardado"
   },
   "learningPath": {
     "title": "Percurso de aprendizagem personalizado",
     "pageTitle": "Percurso de aprendizagem personalizado — GBA Platform",
     "sessionLabel": "Sessão",
     "notStarted": "Não iniciada",
+    "contentLanguageEarlyTitle": "Idioma do conteúdo (escolha primeiro)",
+    "contentLanguageEarlyHint": "Antes de analisar lacunas e gerar o percurso, escolha o idioma do conteúdo; será mantido após a geração.",
+    "contentLanguageRegenHint": "Para mudar o idioma após a geração, execute novamente a análise e gere o percurso.",
+    "contentLanguageSelected": "Selecionado: {lang}",
+    "contentLanguageDefault": "Padrão atual (idioma da página): {lang} — clique acima para confirmar",
     "goalsTitle": "Defina os seus objetivos de carreira",
+    "prerequisitesTitle": "Antes da análise",
+    "prereqProfile": "CV / perfil submetido",
+    "prereqJob": "Descrição da vaga submetida",
+    "step1Profile": "Passo 1: O seu CV / perfil",
+    "uploadResume": "Carregar ficheiro de CV (PDF, DOCX, TXT, MD)",
+    "removeFile": "Remover",
+    "submitProfile": "Analisar e submeter perfil",
+    "step2Jd": "Passo 2: Descrição da vaga",
+    "submitJd": "Submeter descrição da vaga",
     "targetJob": "Cargo alvo",
     "targetJobPlaceholder": "ex.: Engenheiro de software sénior",
     "currentRole": "Função atual (opcional)",
@@ -1509,6 +1649,7 @@
     "selectType": "Selecionar tipo",
     "selectLevel": "Selecionar nível",
     "toast": {
+      "selectContentLanguageFirst": "Selecione primeiro o idioma do conteúdo",
       "targetJobRequired": "Introduza o cargo-alvo",
       "skillsRequired": "Indique competências, função ou detalhes do perfil",
       "gapCompleted": "Análise de lacunas concluída! Escolha as horas diárias de estudo.",
@@ -1631,7 +1772,7 @@
     "stepConfig": "Configuração",
     "stepPreview": "Pré-visualizar e exportar",
     "step1Title": "Passo 1 — Perfil para triagem cega",
-    "step1Note": "Nota: ingestão real PDF/DOC no backend (OCR, remoção PII). Use amostra ou texto para este fluxo.",
+    "step1Note": "Nota: a ingestão real de PDF/DOC corre no backend (OCR, remoção de PII). Arraste uma amostra ou cole texto simples neste fluxo.",
     "uploadTap": "Toque para escolher .txt / .pdf / .doc",
     "pastePlaceholder": "Ou cole headline, competências, último cargo…",
     "continue": "Continuar",
@@ -1688,7 +1829,20 @@
     "loadTestDataFirst": "Carregue test-data/browser-bundle.js primeiro.",
     "apiNotLoaded": "Cliente API não carregado. Inicie sessão como empresa.",
     "individualOnlyProfile": "Apenas contas individuais podem editar esta página.",
-    "invalidHealthCheck": "Resposta de health check inválida."
+    "invalidHealthCheck": "Resposta de health check inválida.",
+    "backendUnavailable": "Backend indisponível. Confirme que o serviço API está em execução.",
+    "backendUnavailableTitle": "Backend indisponível",
+    "backendHealthCheckFailed": "Não foi possível contactar o backend (health check falhou). URL: {url}. Inicie: cd backend && python main.py",
+    "backendRetry": "Tentar novamente",
+    "backendRestored": "Backend ligado — pode repetir a operação",
+    "networkErrorWithUrl": "Erro de rede — sem resposta de {url}. Confirme que o backend está ativo (cd backend && python main.py).",
+    "apiErrorWithStatus": "HTTP {status} — {detail} [{url}]",
+    "http401": "HTTP 401 Não autorizado — {detail} [{url}]",
+    "http403": "HTTP 403 Proibido — {detail} [{url}]",
+    "http404": "HTTP 404 Não encontrado — {detail} [{url}]",
+    "http422": "HTTP 422 Pedido inválido — {detail} [{url}]",
+    "http500": "HTTP 500 Erro interno do servidor — {detail} [{url}]",
+    "http503": "HTTP 503 Serviço indisponível — {detail} [{url}]"
   },
   "apiMessages": {
     "SESSION_BUSY": "Já existe uma tarefa de IA em curso nesta sessão. Aguarde a conclusão e tente novamente.",
@@ -1748,7 +1902,25 @@
     "面试已结束": "Entrevista terminada",
     "请继续回答": "Continue a sua resposta",
     "复盘报告已生成（demo mode）": "Relatório de debrief gerado (modo demonstração)",
-    "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印": "Modo demo: PDF/DOCX no servidor indisponível. Ligue o backend ou use impressão do browser."
+    "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印": "Modo demo: PDF/DOCX no servidor indisponível. Ligue o backend ou use impressão do browser.",
+    "INTERVIEW_STARTED": "Simulação iniciada. Responda às perguntas do entrevistador.",
+    "INTERVIEW_TURN_ENDED": "Entrevista concluída. Pode ver o relatório de debrief.",
+    "INTERVIEW_TURN_WAITING": "Perguntas principais concluídas — a gerar seguimentos e feedback…",
+    "INTERVIEW_TURN_NEXT": "Continue com a próxima pergunta; o feedback aparecerá de forma assíncrona.",
+    "INTERVIEW_TURN_RECORDED": "Resposta registada. Aguarde a próxima pergunta ou feedback.",
+    "INTERVIEW_POLL_ENDED": "Entrevista concluída.",
+    "INTERVIEW_POLL_WAITING_FU": "A gerar perguntas de seguimento…",
+    "INTERVIEW_POLL_FEEDBACK": "A gerar feedback…",
+    "INTERVIEW_POLL_SYNCED": "Estado sincronizado.",
+    "INTERVIEW_DEBRIEF_READY": "Relatório de debrief gerado.",
+    "INTERVIEW_ERR_NO_PREREQUISITES": "Faltam cargo, perfil ou CV para iniciar a simulação",
+    "INTERVIEW_ERR_NO_BANK": "Não foi possível gerar o banco de perguntas. Complete cargo e CV.",
+    "INTERVIEW_ERR_ALREADY_ACTIVE": "Já existe uma simulação em curso",
+    "INTERVIEW_ERR_NOT_ACTIVE": "Não há simulação em curso",
+    "INTERVIEW_ERR_EMPTY_ANSWER": "Indique a sua resposta",
+    "INTERVIEW_ERR_NO_CURRENT_QUESTION": "Não há pergunta pendente",
+    "INTERVIEW_ERR_NO_POLL_SESSION": "Não há sessão de simulação para sincronizar",
+    "INTERVIEW_ERR_NO_TURNS": "Sem registo de diálogo da entrevista"
   },
   "app": {
     "connected": "Ligado ao servidor backend",
@@ -2450,5 +2622,97 @@
     "test3bPass": "✓ Resposta avaliada | Agentes: {agents}",
     "test3Done": "✓ Fluxo de entrevista concluído com sucesso",
     "test3Fail": "✗ Fluxo de entrevista falhou: {msg}"
+  },
+  "siteGuide": {
+    "fabLabel": "Guia do site",
+    "welcomeTitle": "Bem-vindo à Plataforma GBA",
+    "welcomeBody": "Este tour rápido mostra como navegar no site. Pode saltar a qualquer momento e rever depois no botão de guia.",
+    "stepOf": "Passo {current} de {total}",
+    "skip": "Saltar tour",
+    "back": "Anterior",
+    "next": "Seguinte",
+    "finish": "Concluir",
+    "replay": "Rever guia",
+    "close": "Fechar",
+    "steps": {
+      "home": [
+        {
+          "title": "Bem-vindo à Plataforma GBA",
+          "body": "A plataforma liga candidatos e empregadores inclusivos na GBA com ferramentas de IA, matching e apoio jurídico."
+        },
+        {
+          "title": "Escolha o portal",
+          "body": "Entre como candidato individual ou recrutador empresarial. Ambos partilham a mesma infraestrutura."
+        },
+        {
+          "title": "Capacidades",
+          "body": "Explore CV com IA, preparação para entrevistas, percursos de aprendizagem e recrutamento inclusivo."
+        },
+        {
+          "title": "Como funciona",
+          "body": "Siga o ciclo completo: perfil, matching, candidaturas, entrevistas e acompanhamento pós-contratação."
+        },
+        {
+          "title": "FAQ",
+          "body": "Respostas sobre acesso, doações, segurança de dados e acessibilidade."
+        },
+        {
+          "title": "Idioma e acessibilidade",
+          "body": "Mude entre inglês, chinês e português."
+        }
+      ],
+      "individual": [
+        {
+          "title": "Guia do portal individual",
+          "body": "O painel reúne ferramentas de IA, matching, candidaturas e acesso jurídico/doações."
+        },
+        {
+          "title": "Painel pessoal",
+          "body": "Visão geral das ferramentas e banners de acesso. Complete o perfil antes de começar."
+        },
+        {
+          "title": "CV inteligente",
+          "body": "Carregue CV e descrição da vaga. A IA analisa lacunas e gera uma versão personalizada."
+        },
+        {
+          "title": "Preparação para entrevista",
+          "body": "Pratique perguntas específicas do cargo com feedback da IA."
+        },
+        {
+          "title": "Matching de vagas",
+          "body": "Navegue vagas recomendadas por perfil e pontuação do CV."
+        },
+        {
+          "title": "Doação e apoio jurídico",
+          "body": "Grupos vulneráveis usam gratuitamente. Outros podem doar para desbloquear funcionalidades."
+        }
+      ],
+      "corporate": [
+        {
+          "title": "Guia do portal empresarial",
+          "body": "Gerencie recrutamento inclusivo, publique vagas com critérios-alvo e analise candidatos pontuados."
+        },
+        {
+          "title": "Painel de recrutamento",
+          "body": "Acompanhe métricas de diversidade e estatísticas do pipeline."
+        },
+        {
+          "title": "Ferramentas de RH",
+          "body": "Triagem cega, calculadoras de conformidade, análise DEI e verificação de trabalho remoto."
+        },
+        {
+          "title": "Minhas vagas",
+          "body": "Veja e gira vagas publicadas e monitorize candidaturas."
+        },
+        {
+          "title": "Publicar vaga",
+          "body": "Crie vagas inclusivas com critérios de grupo-alvo para matching preciso."
+        },
+        {
+          "title": "Idioma",
+          "body": "Mude o idioma aqui."
+        }
+      ]
+    }
   }
 }

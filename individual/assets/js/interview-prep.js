@@ -17,6 +17,12 @@ let interviewSession = {
     savedRecordId: null,
 };
 
+/** 用户是否已手动选择面试题语言（避免页面语言切换时覆盖） */
+let interviewLanguageUserSelected = {
+    question: false,
+    feedback: false,
+};
+
 /** 已保存题库记录列表（登录用户） */
 let questionBankSavedRecords = [];
 
@@ -36,6 +42,11 @@ let interactiveSession = {
     debrief: null,
     savedRecordId: null,
     savePromptDismissed: false,
+    phase: 'primary',
+    pollSequence: 0,
+    pollTimerId: null,
+    currentQuestionId: '',
+    waitingForFollowUps: false,
 };
 
 function uiT(key, fallback, vars) {
@@ -145,7 +156,7 @@ let interviewPrerequisites = {
     resumeReady: false,
 };
 
-let interviewResumeFile = null;
+let interviewSetup = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeInterviewPrep();
@@ -184,22 +195,62 @@ function initInterviewLanguages() {
     interviewSession.feedbackLanguage = defaultLang;
     syncQuestionLanguageButtons();
     syncFeedbackLanguageButtons();
+    updateQuestionLanguageStatus();
     window.addEventListener('gba:language-changed', () => {
-        syncQuestionLanguageButtons();
-        syncFeedbackLanguageButtons();
+        const pageLang = getDefaultInterviewLang();
+        if (!interviewLanguageUserSelected.question) {
+            interviewSession.questionLanguage = pageLang;
+            syncQuestionLanguageButtons();
+        }
+        if (!interviewLanguageUserSelected.feedback) {
+            interviewSession.feedbackLanguage = pageLang;
+            syncFeedbackLanguageButtons();
+        }
+        updateQuestionLanguageStatus();
         if (typeof selectInterviewMode === 'function') selectInterviewMode(interviewMode);
         updateInteractiveSaveButton();
     });
 }
 
-function selectQuestionLanguage(language) {
+function updateQuestionLanguageStatus() {
+    const el = document.getElementById('interview-question-language-status');
+    if (!el) return;
+    const lang = getSelectedQuestionLanguage();
+    const label = resumeLangDisplayLabel(lang);
+    if (interviewLanguageUserSelected.question) {
+        el.textContent = uiT('interview.questionLanguageSelected', 'Selected: {lang}', { lang: label });
+        el.className = 'text-xs text-purple-700 mt-2 font-medium';
+    } else {
+        el.textContent = uiT('interview.questionLanguageDefault', 'Default from page language: {lang} — tap to confirm', { lang: label });
+        el.className = 'text-xs text-gray-500 mt-2';
+    }
+}
+
+async function ensureInterviewLanguagesSynced() {
+    if (typeof apiClient === 'undefined') return;
+    try {
+        await apiClient.syncInterviewLanguagesToSession(
+            getSelectedQuestionLanguage(),
+            getSelectedFeedbackLanguage()
+        );
+    } catch (error) {
+        console.warn('Interview language sync skipped:', error.message);
+    }
+}
+
+async function selectQuestionLanguage(language) {
     interviewSession.questionLanguage = normalizeInterviewLang(language);
+    interviewLanguageUserSelected.question = true;
     syncQuestionLanguageButtons();
+    updateQuestionLanguageStatus();
+    await ensureInterviewLanguagesSynced();
 }
 
 function selectFeedbackLanguage(language) {
     interviewSession.feedbackLanguage = normalizeInterviewLang(language);
+    interviewLanguageUserSelected.feedback = true;
     syncFeedbackLanguageButtons();
+    ensureInterviewLanguagesSynced().catch(() => {});
 }
 
 function syncLangButtonGroup(selector, activeLang) {
@@ -233,6 +284,47 @@ function getSelectedFeedbackLanguage() {
 
 function initializeInterviewPrep() {
     apiClient.ensureSessionStarted();
+
+    interviewSetup = new CandidateJdSetup({
+        parsedTextRows: 14,
+        ids: {
+            fileInput: 'interview-resume-file',
+            profileText: 'interview-profile-text',
+            fileName: 'interview-file-name',
+            fileInfo: 'interview-file-info',
+            jdText: 'interview-jd-text',
+            jdSection: 'interview-jd-section',
+            profileReviewSection: 'interview-profile-review',
+            profileSaveStatus: 'interview-profile-save-status',
+            profileApplyBtn: 'btn-interview-apply-profile',
+            profileSaveBtn: 'btn-interview-save-profile',
+            profileOverwriteBtn: 'btn-interview-overwrite-profile',
+        },
+        targetJobFields: {
+            jdText: ['interview-jd-text'],
+            industry: ['job-industry'],
+            employerType: ['interview-employer-type'],
+            experienceLevel: ['interview-experience-level'],
+        },
+        onProfileReady: () => {
+            interviewPrerequisites.profileReady = true;
+            updatePrerequisiteStatus();
+        },
+        onJobReady: () => {
+            interviewPrerequisites.jobReady = true;
+            updatePrerequisiteStatus();
+            document.getElementById('interview-resume-section')?.classList.remove('hidden');
+        },
+        onPrerequisitesChange: () => {
+            if (interviewSetup?.profileReady) interviewPrerequisites.profileReady = true;
+            if (interviewSetup?.jobReady) interviewPrerequisites.jobReady = true;
+            updatePrerequisiteStatus();
+        },
+        onProfileSaved: () => bootstrapSavedProfileForInterview(),
+    });
+    interviewSetup.init();
+
+    bootstrapSavedProfileForInterview();
 
     setupInputValidation();
     updatePrerequisiteStatus();
@@ -276,90 +368,81 @@ function setPrerequisiteItem(elementId, ready) {
 }
 
 function handleInterviewFileSelect(event) {
-    const file = event.target.files[0];
-    if (file) {
-        interviewResumeFile = file;
-        document.getElementById('interview-file-name').textContent = file.name;
-        document.getElementById('interview-file-info').classList.remove('hidden');
+    interviewSetup?.handleFileSelect(event);
+}
+
+async function bootstrapSavedProfileForInterview() {
+    if (typeof SavedProfileBootstrap === 'undefined') return;
+
+    await SavedProfileBootstrap.renderSavedRecordsPanel({
+        sectionId: 'interview-saved-profiles-section',
+        listId: 'interview-saved-profiles-list',
+        emptyId: 'interview-saved-profiles-empty',
+        currentPage: 'interview',
+        onLoadInPlace: loadSavedProfileForInterview,
+    });
+
+    await SavedProfileBootstrap.restoreFromUrl({
+        setup: interviewSetup,
+        bannerId: 'interview-saved-profile-banner',
+        onRestored: () => {
+            interviewPrerequisites.profileReady = true;
+            updatePrerequisiteStatus();
+        },
+    });
+}
+
+async function loadSavedProfileForInterview(recordId) {
+    if (!recordId || typeof SavedProfileBootstrap === 'undefined') return;
+    const url = SavedProfileBootstrap.buildPageUrl('demo-interview.html', recordId);
+    if (SavedProfileBootstrap.getRecordIdFromUrl() === recordId) {
+        await SavedProfileBootstrap.restoreFromUrl({
+            recordId,
+            setup: interviewSetup,
+            bannerId: 'interview-saved-profile-banner',
+            onRestored: () => {
+                interviewPrerequisites.profileReady = true;
+                updatePrerequisiteStatus();
+            },
+        });
+        return;
     }
+    window.location.href = url;
 }
 
 function clearInterviewFile() {
-    interviewResumeFile = null;
-    document.getElementById('interview-resume-file').value = '';
-    document.getElementById('interview-file-info').classList.add('hidden');
+    interviewSetup?.clearFile();
+}
+
+function ensureInterviewProfileApplied() {
+    if (interviewSetup?.profileDirty) {
+        Utils.showToast(uiT('profileReview.applyBeforeContinue', 'Apply profile edits before continuing'));
+        document.getElementById('interview-profile-review')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+    return true;
 }
 
 async function uploadInterviewProfile() {
-    const profileText = document.getElementById('interview-profile-text').value.trim();
-
-    if (!interviewResumeFile && !profileText) {
-        Utils.showToast(uiT('interview.toast.uploadOrPaste', 'Please upload a resume or paste profile text'));
-        return;
-    }
-
     try {
-        Utils.showLoading('Analyzing your profile...');
-
-        let response;
-        if (interviewResumeFile) {
-            response = await apiClient.uploadResume(interviewResumeFile);
-        } else {
-            response = await apiClient.submitProfileText(profileText);
-        }
-
-        interviewPrerequisites.profileReady = true;
-        updatePrerequisiteStatus();
-
-        document.getElementById('interview-jd-section').classList.remove('hidden');
-        Utils.hideLoading();
-        Utils.showToast(uiT('interview.toast.profileUploaded', 'Profile uploaded successfully'));
-        console.log('Profile agent response:', response);
+        await interviewSetup?.submitProfile();
     } catch (error) {
-        Utils.hideLoading();
-        Utils.showToast(uiT('interview.toast.profileFailed', 'Failed to upload profile: {msg}', { msg: error.message }));
         console.error('Profile upload error:', error);
     }
 }
 
 async function submitInterviewJobDescription() {
-    const jdText = document.getElementById('interview-jd-text').value.trim();
-    const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
-        fields: {
-            jdText: ['interview-jd-text'],
-            industry: ['job-industry'],
-            employerType: ['interview-employer-type'],
-            experienceLevel: ['interview-experience-level'],
-        },
-        jdTextOverride: jdText,
-    }) : null;
-
-    if (!jdText && !targetContext?.industry && !targetContext?.employer_type && !targetContext?.experience_level) {
-        Utils.showToast(uiT('interview.toast.pasteJd', 'Please paste the target job description or fill in target job fields'));
-        return;
-    }
-
     try {
-        Utils.showLoading('Analyzing job description...');
-
-        const response = await apiClient.submitJobDescription(jdText || targetContext?.jd_text || document.getElementById('job-title').value.trim(), targetContext);
-        interviewPrerequisites.jobReady = true;
-        updatePrerequisiteStatus();
-
-        document.getElementById('interview-resume-section').classList.remove('hidden');
-        Utils.hideLoading();
-        Utils.showToast(uiT('interview.toast.jdSubmitted', 'Job description submitted successfully'));
-        console.log('JD agent response:', response);
+        await interviewSetup?.submitJd();
     } catch (error) {
-        Utils.hideLoading();
-        Utils.showToast(uiT('interview.toast.jdFailed', 'Failed to submit job description: {msg}', { msg: error.message }));
         console.error('JD submission error:', error);
     }
 }
 
 async function generateInterviewResume() {
+    if (!ensureInterviewProfileApplied()) return;
     try {
-        Utils.showLoading('Generating tailored resume content...');
+        Utils.showLoading(uiT('interview.loadingGeneratingResume', 'Generating tailored resume content...'));
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
             fields: {
                 jdText: ['interview-jd-text'],
@@ -548,7 +631,7 @@ function updateProgramPreview() {
     if (version === 'specialized') {
         const focus = document.getElementById('specialized-focus')?.value || 'technical';
         const cfg = getInterviewProgramPreviews().specialized[focus];
-        html = `<div class="font-medium text-gray-800">${cfg?.label || '专项版'}</div>`;
+        html = `<div class="font-medium text-gray-800">${cfg?.label || uiT('interview.programSpecialTitle', 'Specialized')}</div>`;
     } else {
         const cfg = getInterviewProgramPreviews()[version];
         html = `<div class="font-medium text-gray-800 mb-1">${cfg.label}</div>`;
@@ -565,6 +648,15 @@ async function loadInterviewQuestions() {
     if (interviewMode === 'custom') {
         return loadCustomInterviewQuestions();
     }
+
+    if (!interviewLanguageUserSelected.question) {
+        Utils.showToast(uiT('interview.toast.selectQuestionLanguageFirst', 'Please select interview question language first'));
+        document.getElementById('interview-question-language-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    await ensureInterviewLanguagesSynced();
+
     const jobTitle = document.getElementById('job-title').value.trim();
     const industry = document.getElementById('job-industry').value;
 
@@ -577,6 +669,8 @@ async function loadInterviewQuestions() {
         Utils.showToast(uiT('interview.toast.completePrereq', 'Please complete all prerequisite steps first'));
         return;
     }
+
+    if (!ensureInterviewProfileApplied()) return;
 
     let progress = null;
     try {
@@ -673,6 +767,13 @@ function clearCustomQuestionsFile() {
 }
 
 async function loadCustomInterviewQuestions() {
+    if (!interviewLanguageUserSelected.question) {
+        Utils.showToast(uiT('interview.toast.selectQuestionLanguageFirst', 'Please select interview question language first'));
+        document.getElementById('interview-question-language-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+    await ensureInterviewLanguagesSynced();
+
     const jobTitle = document.getElementById('job-title').value.trim();
     const questionsText = document.getElementById('custom-questions-text')?.value.trim() || '';
     const questions = parseCustomQuestionsText(questionsText);
@@ -691,6 +792,8 @@ async function loadCustomInterviewQuestions() {
         Utils.showToast(uiT('interview.toast.completePrereq', 'Please complete all prerequisite steps first'));
         return;
     }
+
+    if (!ensureInterviewProfileApplied()) return;
 
     let progress = null;
     try {
@@ -754,6 +857,12 @@ async function startInteractiveInterview() {
     const jobTitle = document.getElementById('job-title').value.trim();
     const industry = document.getElementById('job-industry').value;
 
+    if (!interviewLanguageUserSelected.question) {
+        Utils.showToast(uiT('interview.toast.selectQuestionLanguageFirst', 'Please select interview question language first'));
+        document.getElementById('interview-question-language-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
     if (!jobTitle) {
         Utils.showToast(uiT('interview.toast.jobTitleRequired', 'Please enter a job title'));
         return;
@@ -764,8 +873,11 @@ async function startInteractiveInterview() {
         return;
     }
 
+    if (!ensureInterviewProfileApplied()) return;
+
     try {
-        Utils.showLoading('Starting interactive mock interview...');
+        await ensureInterviewLanguagesSynced();
+        Utils.showLoading(uiT('interview.loadingTitle', 'Generating Questions'));
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
             fields: {
                 jdText: ['interview-jd-text'],
@@ -791,23 +903,7 @@ async function startInteractiveInterview() {
         });
 
         const session = response.interactive_interview;
-        interactiveSession = {
-            active: true,
-            status: session.status,
-            roundCount: session.round_count,
-            maxRounds: session.max_rounds,
-            programVersion: session.program_version || programVersion,
-            specializedFocus: session.specialized_focus || specializedFocus,
-            programLabel: session.program_label || '',
-            jobTrack: session.job_track || '',
-            currentStageIndex: session.current_stage_index || 0,
-            stages: session.stages || [],
-            turns: session.turns || [],
-            debrief: null,
-            savedRecordId: null,
-            savePromptDismissed: false,
-        };
-
+        syncInteractiveSessionFromResponse(session);
         interviewSession.jobTitle = jobTitle;
 
         Utils.hideLoading();
@@ -817,12 +913,122 @@ async function startInteractiveInterview() {
         renderInteractiveChat();
         renderStageBanner();
         updateInteractiveProgress();
+        updateInteractiveInputState();
+        startInteractivePolling();
 
         console.log('Interactive interview started:', session);
     } catch (error) {
         Utils.hideLoading();
         Utils.showToast(uiT('interview.toast.startFailed', 'Failed to start interactive interview: {msg}', { msg: error.message }));
         console.error('Interactive interview error:', error);
+    }
+}
+
+function syncInteractiveSessionFromResponse(session, preserveMeta = {}) {
+    const pollUpdates = session.poll_updates || {};
+    interactiveSession = {
+        active: session.status === 'active',
+        status: session.status,
+        roundCount: session.round_count,
+        maxRounds: session.max_rounds,
+        programVersion: session.program_version || interactiveSession.programVersion || 'quick',
+        specializedFocus: session.specialized_focus || interactiveSession.specializedFocus || '',
+        programLabel: (() => {
+            const version = session.program_version || interactiveSession.programVersion || 'quick';
+            const focus = session.specialized_focus || interactiveSession.specializedFocus || '';
+            const previews = getInterviewProgramPreviews();
+            if (version === 'specialized' && focus) {
+                return previews.specialized[focus]?.label || session.program_label || '';
+            }
+            return previews[version]?.label || session.program_label || interactiveSession.programLabel || '';
+        })(),
+        jobTrack: session.job_track || '',
+        currentStageIndex: session.current_stage_index || 0,
+        stages: session.stages || [],
+        turns: session.turns || [],
+        debrief: session.debrief || interactiveSession.debrief || null,
+        savedRecordId: preserveMeta.savedRecordId ?? interactiveSession.savedRecordId ?? null,
+        savePromptDismissed: preserveMeta.savePromptDismissed ?? interactiveSession.savePromptDismissed ?? false,
+        phase: session.phase || pollUpdates.phase || 'primary',
+        pollSequence: pollUpdates.poll_sequence ?? session.poll_sequence ?? interactiveSession.pollSequence ?? 0,
+        pollTimerId: interactiveSession.pollTimerId || null,
+        currentQuestionId: session.current_question_id || (session.current_question && session.current_question.id) || '',
+        waitingForFollowUps: Boolean(pollUpdates.waiting_for_follow_ups || session.phase === 'follow_up_wait'),
+    };
+}
+
+function stopInteractivePolling() {
+    if (interactiveSession.pollTimerId) {
+        clearInterval(interactiveSession.pollTimerId);
+        interactiveSession.pollTimerId = null;
+    }
+}
+
+function startInteractivePolling() {
+    stopInteractivePolling();
+    interactiveSession.pollTimerId = setInterval(() => {
+        pollInteractiveUpdates().catch((err) => console.warn('Interactive poll:', err.message));
+    }, 2500);
+}
+
+async function pollInteractiveUpdates() {
+    if (!interactiveSession.active && interactiveSession.status !== 'active') {
+        stopInteractivePolling();
+        return;
+    }
+    const prevTurnCount = interactiveSession.turns.length;
+    const response = await apiClient.pollInteractiveSession(
+        interactiveSession.pollSequence || 0,
+        getSelectedQuestionLanguage(),
+        getSelectedFeedbackLanguage()
+    );
+    const session = response.interactive_interview;
+    if (!session) return;
+
+    syncInteractiveSessionFromResponse(session);
+    renderInteractiveChat();
+    renderStageBanner();
+    updateInteractiveProgress();
+    updateInteractiveInputState();
+
+    if (session.turns && session.turns.length > prevTurnCount) {
+        renderInteractiveChat();
+    }
+
+    if (session.status === 'completed') {
+        stopInteractivePolling();
+        interactiveSession.active = false;
+        document.getElementById('interactive-input-section')?.classList.add('hidden');
+        if (!interactiveSession.debrief) {
+            Utils.showToast(uiT('interview.toast.endedDebrief', 'Interview ended. Generating debrief...'));
+            await loadInteractiveDebrief();
+        }
+    }
+}
+
+function updateInteractiveInputState() {
+    const input = document.getElementById('interactive-answer-input');
+    const submitBtn = document.getElementById('btn-submit-interactive');
+    const hint = document.getElementById('interactive-phase-hint');
+    if (!input) return;
+
+    const waiting = interactiveSession.waitingForFollowUps && !interactiveSession.currentQuestionId;
+    const completed = interactiveSession.status === 'completed';
+    const disabled = waiting || completed || interactiveSession.status !== 'active';
+
+    input.disabled = disabled;
+    if (submitBtn) submitBtn.disabled = disabled;
+
+    if (hint) {
+        if (completed) {
+            hint.textContent = uiT('interview.phaseCompleted', 'Interview completed.');
+        } else if (waiting) {
+            hint.textContent = uiT('interview.phaseWaitingFollowUps', 'Core questions done — generating follow-ups and feedback, please wait…');
+        } else if (interactiveSession.phase === 'follow_up') {
+            hint.textContent = uiT('interview.phaseFollowUp', 'Follow-up questions — answer in order.');
+        } else {
+            hint.textContent = uiT('interview.phasePrimary', 'Answer each question in order; feedback appears asynchronously.');
+        }
     }
 }
 
@@ -881,7 +1087,7 @@ function renderInteractiveChat() {
                         <i class="fas fa-lightbulb text-amber-600 text-sm"></i>
                     </div>
                     <div class="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-gray-700">
-                        <div class="text-xs text-amber-700 font-medium mb-1">Brief Feedback</div>
+                        <div class="text-xs text-amber-700 font-medium mb-1">${uiT('interview.chat.briefFeedback', 'Brief Feedback')}</div>
                         ${turn.content}
                     </div>
                 </div>
@@ -893,7 +1099,7 @@ function renderInteractiveChat() {
         if (isStageTransition) {
             html += `
                 <div class="my-4 py-3 px-4 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
-                    <div class="text-xs text-indigo-600 font-medium mb-1"><i class="fas fa-arrow-right mr-1"></i>Stage Transition · ${turn.stage_name || ''}</div>
+                    <div class="text-xs text-indigo-600 font-medium mb-1"><i class="fas fa-arrow-right mr-1"></i>${uiT('interview.chat.stageTransition', 'Stage Transition')} · ${turn.stage_name || ''}</div>
                     ${turn.content}
                 </div>
             `;
@@ -907,7 +1113,7 @@ function renderInteractiveChat() {
                 </div>
                 <div class="flex-1 max-w-[85%] ${isInterviewer ? '' : 'text-right'}">
                     <div class="text-xs text-gray-500 mb-1">
-                        ${isInterviewer ? 'Interviewer' : 'You'}
+                        ${isInterviewer ? uiT('interview.chat.interviewer', 'Interviewer') : uiT('interview.chat.you', 'You')}
                         ${turn.stage_name ? ` · ${turn.stage_name}` : ''}
                         ${turn.category ? ` · ${turn.category}` : ''}
                     </div>
@@ -937,9 +1143,15 @@ async function submitInteractiveAnswer() {
         return;
     }
 
+    if (interactiveSession.waitingForFollowUps && !interactiveSession.currentQuestionId) {
+        Utils.showToast(uiT('interview.toast.waitingFollowUps', 'Please wait for follow-up questions to be generated'));
+        return;
+    }
+
+    const submitBtn = document.getElementById('btn-submit-interactive');
     try {
-        Utils.showLoading('Interviewer is thinking...');
         input.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
 
         const response = await apiClient.submitInteractiveTurn(
             answer,
@@ -947,32 +1159,31 @@ async function submitInteractiveAnswer() {
             getSelectedFeedbackLanguage()
         );
         const session = response.interactive_interview;
-
-        interactiveSession.status = session.status;
-        interactiveSession.roundCount = session.round_count;
-        interactiveSession.currentStageIndex = session.current_stage_index ?? interactiveSession.currentStageIndex;
-        interactiveSession.stages = session.stages || interactiveSession.stages;
-        interactiveSession.turns = session.turns || [];
-        interactiveSession.active = session.status === 'active';
+        syncInteractiveSessionFromResponse(session);
 
         input.value = '';
-        input.disabled = false;
-
-        Utils.hideLoading();
         renderInteractiveChat();
         renderStageBanner();
         updateInteractiveProgress();
+        updateInteractiveInputState();
+
+        if (response.message) {
+            const msg = typeof apiMsg === 'function' ? apiMsg(response.message) : response.message;
+            if (msg) Utils.showToast(msg);
+        }
+
+        pollInteractiveUpdates().catch(() => {});
 
         if (session.status === 'completed') {
+            stopInteractivePolling();
             document.getElementById('interactive-input-section').classList.add('hidden');
-            Utils.showToast(uiT('interview.toast.endedDebrief', 'Interview ended. Generating debrief...'));
             await loadInteractiveDebrief();
         }
     } catch (error) {
-        input.disabled = false;
-        Utils.hideLoading();
         Utils.showToast(uiT('interview.toast.submitFailed', 'Failed to submit answer: {msg}', { msg: error.message }));
         console.error('Interactive turn error:', error);
+    } finally {
+        updateInteractiveInputState();
     }
 }
 
@@ -986,12 +1197,12 @@ async function endInteractiveInterview() {
         return;
     }
 
-    if (!confirm('End the mock interview and generate debrief report?')) {
+    if (!confirm(uiT('interview.confirmEndInterview', 'End the mock interview and generate debrief report?'))) {
         return;
     }
 
     try {
-        Utils.showLoading('Generating debrief report...');
+        Utils.showLoading(uiT('interview.loadingGeneratingDebrief', 'Generating debrief report...'));
         document.getElementById('interactive-input-section').classList.add('hidden');
 
         const response = await apiClient.endInteractiveInterview(true, getSelectedFeedbackLanguage());
@@ -1207,12 +1418,12 @@ async function saveInteractiveInterviewToAccount(skipConfirm = false) {
         return;
     }
 
-    if (!skipConfirm && !confirm('Save this mock interview and debrief to your account?')) {
+    if (!skipConfirm && !confirm(uiT('interview.confirmSaveInterview', 'Save this mock interview and debrief to your account?'))) {
         return;
     }
 
     try {
-        Utils.showLoading('Saving to your account...');
+        Utils.showLoading(uiT('interview.loadingSavingInterview', 'Saving to your account...'));
         const response = await apiClient.saveInteractiveInterview('');
         interactiveSession.savedRecordId = response.record_id || interactiveSession.savedRecordId;
         Utils.hideLoading();
@@ -1867,7 +2078,7 @@ function downloadReport() {
 }
 
 function restartSession() {
-    if (confirm('Start a new interview session? Current progress will be lost.')) {
+    if (confirm(uiT('interview.confirmNewSession', 'Start a new interview session? Current progress will be lost.'))) {
         interviewSession = {
             questions: [],
             stages: [],
@@ -1897,16 +2108,29 @@ function restartSession() {
             debrief: null,
             savedRecordId: null,
             savePromptDismissed: false,
+            phase: 'primary',
+            pollSequence: 0,
+            pollTimerId: null,
+            currentQuestionId: '',
+            waitingForFollowUps: false,
         };
+
+        stopInteractivePolling();
 
         hideInteractiveSaveModal();
         hideQuestionBankSaveModal();
+        interviewLanguageUserSelected = { question: false, feedback: false };
         interviewPrerequisites = {
             profileReady: false,
             jobReady: false,
             resumeReady: false,
         };
-        interviewResumeFile = null;
+        interviewSetup?.clearFile();
+        if (interviewSetup) {
+            interviewSetup.profileReady = false;
+            interviewSetup.jobReady = false;
+        }
+        updateQuestionLanguageStatus();
 
         document.getElementById('question-section').classList.add('hidden');
         document.getElementById('answer-section').classList.add('hidden');

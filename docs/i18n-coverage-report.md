@@ -1,6 +1,6 @@
 # GBA Platform — i18n Coverage Report
 
-Generated: 2026-07-03 12:20:27
+Generated: 2026-07-06 13:45:33
 
 Run again: `node backend/scripts/scan_i18n_coverage.js --out docs/i18n-coverage-report.md`
 
@@ -8,8 +8,8 @@ Run again: `node backend/scripts/scan_i18n_coverage.js --out docs/i18n-coverage-
 
 | Grade | Pages | Meaning |
 |-------|------:|---------|
-| good | 7 | ≥40 `data-i18n` tags |
-| partial | 19 | 10–39 tags and/or JS `t()` helpers |
+| good | 26 | ≥40 `data-i18n` tags |
+| partial | 0 | 10–39 tags and/or JS `t()` helpers |
 | low | 0 | <10 static tags — prioritize |
 | redirect | 2 | Jump pages (minimal copy) |
 | dev | 1 | Dev/test pages |
@@ -20,43 +20,35 @@ Locales checked: zh-CN, zh-TW, pt
 
 | Page | Grade | data-i18n | placeholder | JS t() | Hardcoded JS | i18n.js | lang slot | Missing keys (zh-CN) |
 |------|-------|----------:|------------:|-------:|-------------:|:-------:|:---------:|---------------------:|
-| `individual/my-applications.html` | partial | 6 | 0 | 19 | 0 | ✓ | ✓ | 0 |
-| `individual/friendly-employers.html` | partial | 13 | 0 | 7 | 0 | ✓ | ✓ | 0 |
-| `individual/demo-jobs-database.html` | partial | 14 | 0 | 45 | 0 | ✓ | ✓ | 0 |
-| `individual/demo-olivia.html` | partial | 14 | 1 | 1 | 0 | ✓ | ✓ | 0 |
-| `individual/community.html` | partial | 18 | 0 | 0 | 0 | ✓ | ✓ | 0 |
-| `corporate/donation-legal.html` | partial | 19 | 0 | 4 | 1 | ✓ | ✓ | 0 |
-| `individual/donation-legal.html` | partial | 19 | 0 | 4 | 1 | ✓ | ✓ | 0 |
-| `corporate/audit.html` | partial | 20 | 0 | 0 | 0 | ✓ | ✓ | 0 |
-| `corporate/certification.html` | partial | 22 | 0 | 0 | 0 | ✓ | ✓ | 0 |
-| `individual/credentials.html` | partial | 22 | 0 | 0 | 0 | ✓ | ✓ | 0 |
-| `individual/profile.html` | partial | 23 | 2 | 0 | 0 | ✓ | ✓ | 0 |
-| `corporate/auth.html` | partial | 24 | 1 | 0 | 0 | ✓ | ✓ | 0 |
-| `individual/demo-resume-matching.html` | partial | 24 | 2 | 1 | 0 | ✓ | ✓ | 0 |
-| `individual/my-resume.html` | partial | 24 | 0 | 0 | 0 | ✓ | ✓ | 0 |
-| `corporate/company-profile.html` | partial | 25 | 7 | 7 | 0 | ✓ | ✓ | 0 |
-| `individual/apply.html` | partial | 25 | 4 | 17 | 0 | ✓ | ✓ | 0 |
-| `individual/course-learning.html` | partial | 26 | 0 | 0 | 0 | ✓ | ✓ | 0 |
-| `individual/demo-policy-navigator.html` | partial | 27 | 0 | 1 | 0 | ✓ | ✓ | 0 |
-| `individual/auth.html` | partial | 36 | 0 | 0 | 0 | ✓ | ✓ | 0 |
 | `corporate/index.html` | redirect | 2 | 0 | 0 | 0 | ✓ | · | 0 |
 | `individual/index.html` | redirect | 2 | 0 | 0 | 0 | ✓ | · | 0 |
 | `individual/test-api.html` | dev | 17 | 0 | 31 | 0 | ✓ | ✓ | 0 |
+| `corporate/donation-legal.html` | good | 40 | 0 | 4 | 1 | ✓ | ✓ | 0 |
+| `individual/community.html` | good | 40 | 0 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/friendly-employers.html` | good | 40 | 0 | 7 | 0 | ✓ | ✓ | 0 |
+| `corporate/audit.html` | good | 41 | 0 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/donation-legal.html` | good | 41 | 0 | 4 | 1 | ✓ | ✓ | 0 |
+| `individual/my-applications.html` | good | 41 | 0 | 19 | 0 | ✓ | ✓ | 0 |
+| `corporate/certification.html` | good | 43 | 0 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/demo-jobs-database.html` | good | 43 | 0 | 45 | 0 | ✓ | ✓ | 0 |
+| `individual/demo-olivia.html` | good | 43 | 1 | 1 | 0 | ✓ | ✓ | 0 |
+| `individual/credentials.html` | good | 44 | 0 | 0 | 0 | ✓ | ✓ | 0 |
+| `corporate/auth.html` | good | 45 | 1 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/profile.html` | good | 45 | 2 | 0 | 0 | ✓ | ✓ | 0 |
+| `corporate/company-profile.html` | good | 46 | 7 | 7 | 0 | ✓ | ✓ | 0 |
+| `individual/demo-resume-matching.html` | good | 46 | 2 | 1 | 0 | ✓ | ✓ | 0 |
+| `individual/my-resume.html` | good | 46 | 0 | 0 | 0 | ✓ | ✓ | 0 |
 | `individual/portal.html` | good | 46 | 0 | 13 | 0 | ✓ | ✓ | 0 |
-| `individual/demo-learning-path.html` | good | 60 | 5 | 0 | 0 | ✓ | ✓ | 0 |
-| `individual/demo-interview.html` | good | 68 | 5 | 0 | 0 | ✓ | ✓ | 0 |
-| `individual/demo-resume-generator.html` | good | 122 | 3 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/apply.html` | good | 47 | 4 | 17 | 0 | ✓ | ✓ | 0 |
+| `individual/demo-policy-navigator.html` | good | 47 | 0 | 1 | 0 | ✓ | ✓ | 0 |
+| `individual/course-learning.html` | good | 48 | 0 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/auth.html` | good | 58 | 0 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/demo-learning-path.html` | good | 77 | 5 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/demo-interview.html` | good | 103 | 6 | 0 | 0 | ✓ | ✓ | 0 |
+| `individual/demo-resume-generator.html` | good | 142 | 3 | 0 | 0 | ✓ | ✓ | 0 |
 | `corporate/post-job.html` | good | 148 | 12 | 32 | 1 | ✓ | ✓ | 0 |
-| `index.html` | good | 225 | 5 | 20 | 0 | ✓ | · | 0 |
+| `index.html` | good | 226 | 5 | 20 | 0 | ✓ | · | 0 |
 | `corporate/portal.html` | good | 282 | 5 | 47 | 0 | ✓ | · | 0 |
-
-## Partial coverage
-
-### `individual/demo-resume-matching.html`
-
-- **Grade:** partial · **data-i18n:** 24 · **JS i18n calls:** 1 · **Hardcoded JS hints:** 0
-- **Sample untagged static text:**
-  - “Note:”
 
 ## Good coverage (reference)
 
@@ -73,7 +65,7 @@ Locales checked: zh-CN, zh-TW, pt
 
 ### `index.html`
 
-- **Grade:** good · **data-i18n:** 225 · **JS i18n calls:** 20 · **Hardcoded JS hints:** 0
+- **Grade:** good · **data-i18n:** 226 · **JS i18n calls:** 20 · **Hardcoded JS hints:** 0
 - **Sample untagged static text:**
   - “GBA Cross-Border Employment Empowerment Platform”
   - “English”
@@ -90,7 +82,7 @@ Locales checked: zh-CN, zh-TW, pt
 
 ### `individual/demo-resume-generator.html`
 
-- **Grade:** good · **data-i18n:** 122 · **JS i18n calls:** 0 · **Hardcoded JS hints:** 0
+- **Grade:** good · **data-i18n:** 142 · **JS i18n calls:** 0 · **Hardcoded JS hints:** 0
 - **Sample untagged static text:**
   - “PDF”
   - “Word”
@@ -101,29 +93,28 @@ Locales checked: zh-CN, zh-TW, pt
 
 ### `individual/demo-interview.html`
 
-- **Grade:** good · **data-i18n:** 68 · **JS i18n calls:** 0 · **Hardcoded JS hints:** 0
+- **Grade:** good · **data-i18n:** 103 · **JS i18n calls:** 0 · **Hardcoded JS hints:** 0
 - **Sample untagged static text:**
-  - “Employer type / 单位性质”
-  - “State-owned (国央企)”
-  - “Public Sector (体制内)”
-  - “Foreign Enterprise (外企)”
-  - “Private Enterprise (民企)”
-  - “Non-profit (NPO/NGO)”
+  - “Simplified Chinese”
+  - “Traditional Chinese”
+  - “English”
+  - “Portuguese”
+  - “Your interview question will appear here...”
+  - “Log in”
 
 ### `individual/demo-learning-path.html`
 
-- **Grade:** good · **data-i18n:** 60 · **JS i18n calls:** 0 · **Hardcoded JS hints:** 0
+- **Grade:** good · **data-i18n:** 77 · **JS i18n calls:** 0 · **Hardcoded JS hints:** 0
 - **Sample untagged static text:**
-  - “Technology & Software”
-  - “Finance & Banking”
-  - “E-commerce & Retail”
-  - “Healthcare & Medical”
-  - “Education & Training”
-  - “Manufacturing”
+  - “gap_agent”
 
-### `individual/portal.html`
+### `individual/auth.html`
 
-- **Grade:** good · **data-i18n:** 46 · **JS i18n calls:** 13 · **Hardcoded JS hints:** 0
+- **Grade:** good · **data-i18n:** 58 · **JS i18n calls:** 0 · **Hardcoded JS hints:** 0
+
+### `individual/course-learning.html`
+
+- **Grade:** good · **data-i18n:** 48 · **JS i18n calls:** 0 · **Hardcoded JS hints:** 0
 
 ## Notes
 

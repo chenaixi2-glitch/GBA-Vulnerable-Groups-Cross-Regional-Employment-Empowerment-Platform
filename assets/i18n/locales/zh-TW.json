@@ -7,7 +7,8 @@
     "notStarted": "未开始",
     "retry": "請重试",
     "openSourceSite": "打开源站",
-    "platformBrand": "GBA 就業平台"
+    "platformBrand": "GBA 就業平台",
+    "contentLanguageRegenHint": "生成後如需更換語言，請重新生成。"
   },
   "meta": {
     "listSeparator": "、",
@@ -75,10 +76,11 @@
     "navFriendlyEmployers": "友好企業",
     "heroFriendlyJobs": "弱勢群體友好崗位",
     "navMyApplications": "我的投遞",
-    "brandName": "GBA 平台",
+    "brandName": "GBA 就業賦能平台",
     "howItWorks": "運作方式",
     "login": "登入",
     "signup": "註冊",
+    "selectLanguage": "語言",
     "featureResumeTitle": "智能履歷生成",
     "featureLearningTitle": "個性化學習路徑",
     "featureInterviewTitle": "面試準備",
@@ -184,7 +186,6 @@
     "footerPhone": "+86 400-123-4567",
     "footerEmail": "info@gba-platform.com",
     "storiesLead": "以下為說明性場景，展示匹配、投遞、企業流程與 AI 職業工具如何協同——非真實用戶評價。",
-    "brandName": "GBA 就業賦能平台",
     "brandShort": "GBA",
     "story1": {
       "role": "軟件開發工程師",
@@ -1027,51 +1028,231 @@
       "summaryPlaceholder": "2–4 句話概括優勢與崗位匹配度"
     },
     "checklistItems": {
-      "zh_photo": { "label": "證件照", "message": "中文履歷（國企/事業單位/銀行/教師/傳統行業）建議附正裝證件照", "suggestion": "請上傳白底/淺藍底一寸證件照，置於履歷右上角；互聯網技術崗可選" },
-      "zh_photo_strict": { "label": "證件照", "message": "國央企/體制內崗位必須附正裝證件照", "suggestion": "請上傳白底/淺藍底一寸證件照，置於履歷右上角" },
-      "zh_name": { "label": "姓名", "message": "姓名是中文履歷頂部必填項", "suggestion": "請在基本資訊中填寫姓名" },
-      "zh_phone": { "label": "電話", "message": "國內履歷需留手機號碼", "suggestion": "格式：138 XXXX XXXX" },
-      "zh_email": { "label": "郵箱", "message": "郵箱是國內履歷常規聯繫方式", "suggestion": "如 xxx@163.com" },
-      "zh_address": { "label": "住址", "message": "中文履歷通常寫詳細住址（省市區）", "suggestion": "例：廣東省廣州市 XX 區" },
-      "zh_age": { "label": "年齡", "message": "國內常規履歷建議註明年齡", "suggestion": "可在個人資訊中補充年齡" },
-      "zh_gender": { "label": "性別", "message": "國內常規履歷建議註明性別", "suggestion": "男 / 女" },
-      "zh_native": { "label": "籍貫", "message": "中文履歷常見籍貫資訊", "suggestion": "如：廣東廣州" },
-      "zh_political": { "label": "政治面貌", "message": "國內部分崗位會關注政治面貌", "suggestion": "黨員 / 團員 / 群眾" },
-      "zh_political_strict": { "label": "政治面貌", "message": "國企/事業單位/考公類崗位常需政治面貌", "suggestion": "黨員 / 團員 / 群眾" },
-      "zh_education": { "label": "教育經歷", "message": "中文履歷教育經歷通常緊跟個人資訊", "suggestion": "學校、專業、學位、起止時間" },
-      "zh_experience": { "label": "實習/工作經歷", "message": "中文履歷需有實習或工作經歷模塊", "suggestion": "按時間倒序，描述職責與成果" },
-      "zh_projects": { "label": "項目經歷", "message": "技術/互聯網崗位中文履歷強烈建議有項目經歷", "suggestion": "突出技術棧與個人貢獻" },
-      "zh_skills": { "label": "技能/證書", "message": "中文履歷需列技能與證書（四六級、計算機、資格證等）", "suggestion": "如：CET-6、計算機二級、Python" },
-      "zh_awards": { "label": "榮譽獎項", "message": "中文履歷可含獎學金、競賽、榮譽稱號", "suggestion": "按重要性列出 2-4 項" },
-      "zh_summary": { "label": "自我評價", "message": "中文履歷通常有自我評價段落", "suggestion": "2-4 句，突出優勢與崗位匹配，避免空泛形容詞堆砌" },
-      "zh_foreign_employer": { "label": "外企中文履歷", "message": "目標單位為外企時，中文履歷也應更結果導向、減少空泛自我評價", "suggestion": "突出量化成果、跨文化/跨境協作與語言能力（粵語/英語/普通話）" },
-      "zh_hmt_employer": { "label": "港澳台資中文履歷", "message": "目標單位為港澳台資時，中文履歷也應更結果導向、減少空泛自我評價", "suggestion": "突出量化成果、跨文化/跨境協作與語言能力（粵語/英語/普通話）" },
-      "zh_npo_mission": { "label": "公益/志願經歷", "message": "非營利組織崗位重視社會使命與項目/志願服務經歷", "suggestion": "補充 NGO 項目、志願服務、社會影響力相關描述" },
-      "zh_soe_photo": { "label": "國央企/體制內證件照", "message": "您選擇了國央企/體制內方向，證件照幾乎是硬性要求", "suggestion": "請補充白底/淺藍底正裝一寸照" },
-      "en_no_photo_warn": { "label": "個人照片", "message": "歐美英文履歷嚴禁放照片（涉嫌歧視，會直接淘汰）", "suggestion": "請移除照片；港澳台/新加坡金融前台類可酌情保留專業證件照" },
-      "en_no_photo_ok": { "label": "無個人照片", "message": "符合歐美英文履歷規範（不放照片）", "suggestion": "" },
-      "en_name": { "label": "姓名（頁眉）", "message": "英文履歷以姓名為頁面最大標題，不寫 Resume/CV 大字", "suggestion": "僅寫 FirstName LastName" },
-      "en_phone": { "label": "電話", "message": "需填寫手機號碼", "suggestion": "如有需要可註明國家區號" },
-      "en_email": { "label": "郵箱", "message": "需使用專業郵箱地址", "suggestion": "使用正式郵箱，避免暱稱郵箱" },
-      "en_city": { "label": "城市", "message": "英文履歷只寫城市，不寫詳細住址", "suggestion": "如：Guangzhou, China" },
-      "en_linkedin": { "label": "LinkedIn", "message": "英文履歷強烈建議附 LinkedIn 鏈接", "suggestion": "https://linkedin.com/in/yourname" },
-      "en_forbid_age": { "label": "年齡", "message": "英文履歷不應出現年齡（歐美職場反歧視規範）", "suggestion": "請從履歷中刪除該資訊" },
-      "en_forbid_gender": { "label": "性別", "message": "英文履歷不應出現性別（歐美職場反歧視規範）", "suggestion": "請從履歷中刪除該資訊" },
-      "en_forbid_marital": { "label": "婚姻狀況", "message": "英文履歷不應出現婚姻狀況（歐美職場反歧視規範）", "suggestion": "請從履歷中刪除該資訊" },
-      "en_forbid_ethnicity": { "label": "籍貫/民族/身高", "message": "英文履歷不應出現籍貫、民族或身高（歐美職場反歧視規範）", "suggestion": "請從履歷中刪除該資訊" },
-      "en_forbid_political": { "label": "政治面貌/身份證號", "message": "英文履歷不應出現政治面貌或身份證號（歐美職場反歧視規範）", "suggestion": "請從履歷中刪除該資訊" },
-      "en_forbid_dob": { "label": "出生日期", "message": "英文履歷不應出現出生日期（歐美職場反歧視規範）", "suggestion": "請從履歷中刪除該資訊" },
-      "en_summary": { "label": "Professional Summary", "message": "英文履歷用 3-4 行 Professional Summary 替代中文大段自我評價", "suggestion": "精簡概括核心技能與成果，避免空泛形容詞" },
-      "en_summary_long": { "label": "Summary 過長", "message": "英文履歷的 Summary 建議控制在 3-4 行", "suggestion": "刪減至核心賣點，控制整份履歷頁數" },
-      "en_experience": { "label": "Work Experience", "message": "英文履歷工作經歷優先於教育背景", "suggestion": "動詞開頭 + 量化結果，如：Led X, improved Y by 20%" },
-      "en_quantified": { "label": "量化成果", "message": "英文經歷描述需動詞開頭並含量化數據", "suggestion": "行動動詞 + 任務 + 可衡量結果" },
-      "en_education": { "label": "Education", "message": "教育背景放在 Work Experience 之後", "suggestion": "用英文寫學位，如 B.S. in Computer Science" },
-      "en_skills": { "label": "Skills", "message": "Skills 放在經歷之後，緊湊列表", "suggestion": "按類別分組，逗號分隔" },
-      "en_lang_cert_cet": { "label": "語言證書", "message": "海外/歐美英文履歷中 CET-4/6 認可度低", "suggestion": "如有雅思/托福成績請補充；否則寫 Fluent English" },
-      "en_lang_cert": { "label": "英語能力", "message": "英文履歷建議註明英語能力", "suggestion": "IELTS 7.0 / TOEFL 100 / Fluent English" },
-      "en_lang_cert_ok": { "label": "英語能力", "message": "已標註國際認可的語言能力", "suggestion": "" },
-      "en_one_page": { "label": "頁數限制", "message": "英文履歷建議控制在推薦頁數以內", "suggestion": "刪減次要內容，保持簡潔" },
-      "en_no_subjective": { "label": "主觀形容詞", "message": "英文履歷避免堆砌主觀形容詞", "suggestion": "改用量化成果和行為動詞描述" }
+      "zh_photo": {
+        "label": "證件照",
+        "message": "中文履歷（國企/事業單位/銀行/教師/傳統行業）建議附正裝證件照",
+        "suggestion": "請上傳白底/淺藍底一寸證件照，置於履歷右上角；互聯網技術崗可選"
+      },
+      "zh_photo_strict": {
+        "label": "證件照",
+        "message": "國央企/體制內崗位必須附正裝證件照",
+        "suggestion": "請上傳白底/淺藍底一寸證件照，置於履歷右上角"
+      },
+      "zh_name": {
+        "label": "姓名",
+        "message": "姓名是中文履歷頂部必填項",
+        "suggestion": "請在基本資訊中填寫姓名"
+      },
+      "zh_phone": {
+        "label": "電話",
+        "message": "國內履歷需留手機號碼",
+        "suggestion": "格式：138 XXXX XXXX"
+      },
+      "zh_email": {
+        "label": "郵箱",
+        "message": "郵箱是國內履歷常規聯繫方式",
+        "suggestion": "如 xxx@163.com"
+      },
+      "zh_address": {
+        "label": "住址",
+        "message": "中文履歷通常寫詳細住址（省市區）",
+        "suggestion": "例：廣東省廣州市 XX 區"
+      },
+      "zh_age": {
+        "label": "年齡",
+        "message": "國內常規履歷建議註明年齡",
+        "suggestion": "可在個人資訊中補充年齡"
+      },
+      "zh_gender": {
+        "label": "性別",
+        "message": "國內常規履歷建議註明性別",
+        "suggestion": "男 / 女"
+      },
+      "zh_native": {
+        "label": "籍貫",
+        "message": "中文履歷常見籍貫資訊",
+        "suggestion": "如：廣東廣州"
+      },
+      "zh_political": {
+        "label": "政治面貌",
+        "message": "國內部分崗位會關注政治面貌",
+        "suggestion": "黨員 / 團員 / 群眾"
+      },
+      "zh_political_strict": {
+        "label": "政治面貌",
+        "message": "國企/事業單位/考公類崗位常需政治面貌",
+        "suggestion": "黨員 / 團員 / 群眾"
+      },
+      "zh_education": {
+        "label": "教育經歷",
+        "message": "中文履歷教育經歷通常緊跟個人資訊",
+        "suggestion": "學校、專業、學位、起止時間"
+      },
+      "zh_experience": {
+        "label": "實習/工作經歷",
+        "message": "中文履歷需有實習或工作經歷模塊",
+        "suggestion": "按時間倒序，描述職責與成果"
+      },
+      "zh_projects": {
+        "label": "項目經歷",
+        "message": "技術/互聯網崗位中文履歷強烈建議有項目經歷",
+        "suggestion": "突出技術棧與個人貢獻"
+      },
+      "zh_skills": {
+        "label": "技能/證書",
+        "message": "中文履歷需列技能與證書（四六級、計算機、資格證等）",
+        "suggestion": "如：CET-6、計算機二級、Python"
+      },
+      "zh_awards": {
+        "label": "榮譽獎項",
+        "message": "中文履歷可含獎學金、競賽、榮譽稱號",
+        "suggestion": "按重要性列出 2-4 項"
+      },
+      "zh_summary": {
+        "label": "自我評價",
+        "message": "中文履歷通常有自我評價段落",
+        "suggestion": "2-4 句，突出優勢與崗位匹配，避免空泛形容詞堆砌"
+      },
+      "zh_foreign_employer": {
+        "label": "外企中文履歷",
+        "message": "目標單位為外企時，中文履歷也應更結果導向、減少空泛自我評價",
+        "suggestion": "突出量化成果、跨文化/跨境協作與語言能力（粵語/英語/普通話）"
+      },
+      "zh_hmt_employer": {
+        "label": "港澳台資中文履歷",
+        "message": "目標單位為港澳台資時，中文履歷也應更結果導向、減少空泛自我評價",
+        "suggestion": "突出量化成果、跨文化/跨境協作與語言能力（粵語/英語/普通話）"
+      },
+      "zh_npo_mission": {
+        "label": "公益/志願經歷",
+        "message": "非營利組織崗位重視社會使命與項目/志願服務經歷",
+        "suggestion": "補充 NGO 項目、志願服務、社會影響力相關描述"
+      },
+      "zh_soe_photo": {
+        "label": "國央企/體制內證件照",
+        "message": "您選擇了國央企/體制內方向，證件照幾乎是硬性要求",
+        "suggestion": "請補充白底/淺藍底正裝一寸照"
+      },
+      "en_no_photo_warn": {
+        "label": "個人照片",
+        "message": "歐美英文履歷嚴禁放照片（涉嫌歧視，會直接淘汰）",
+        "suggestion": "請移除照片；港澳台/新加坡金融前台類可酌情保留專業證件照"
+      },
+      "en_no_photo_ok": {
+        "label": "無個人照片",
+        "message": "符合歐美英文履歷規範（不放照片）",
+        "suggestion": ""
+      },
+      "en_name": {
+        "label": "姓名（頁眉）",
+        "message": "英文履歷以姓名為頁面最大標題，不寫 Resume/CV 大字",
+        "suggestion": "僅寫 FirstName LastName"
+      },
+      "en_phone": {
+        "label": "電話",
+        "message": "需填寫手機號碼",
+        "suggestion": "如有需要可註明國家區號"
+      },
+      "en_email": {
+        "label": "郵箱",
+        "message": "需使用專業郵箱地址",
+        "suggestion": "使用正式郵箱，避免暱稱郵箱"
+      },
+      "en_city": {
+        "label": "城市",
+        "message": "英文履歷只寫城市，不寫詳細住址",
+        "suggestion": "如：Guangzhou, China"
+      },
+      "en_linkedin": {
+        "label": "LinkedIn",
+        "message": "英文履歷強烈建議附 LinkedIn 鏈接",
+        "suggestion": "https://linkedin.com/in/yourname"
+      },
+      "en_forbid_age": {
+        "label": "年齡",
+        "message": "英文履歷不應出現年齡（歐美職場反歧視規範）",
+        "suggestion": "請從履歷中刪除該資訊"
+      },
+      "en_forbid_gender": {
+        "label": "性別",
+        "message": "英文履歷不應出現性別（歐美職場反歧視規範）",
+        "suggestion": "請從履歷中刪除該資訊"
+      },
+      "en_forbid_marital": {
+        "label": "婚姻狀況",
+        "message": "英文履歷不應出現婚姻狀況（歐美職場反歧視規範）",
+        "suggestion": "請從履歷中刪除該資訊"
+      },
+      "en_forbid_ethnicity": {
+        "label": "籍貫/民族/身高",
+        "message": "英文履歷不應出現籍貫、民族或身高（歐美職場反歧視規範）",
+        "suggestion": "請從履歷中刪除該資訊"
+      },
+      "en_forbid_political": {
+        "label": "政治面貌/身份證號",
+        "message": "英文履歷不應出現政治面貌或身份證號（歐美職場反歧視規範）",
+        "suggestion": "請從履歷中刪除該資訊"
+      },
+      "en_forbid_dob": {
+        "label": "出生日期",
+        "message": "英文履歷不應出現出生日期（歐美職場反歧視規範）",
+        "suggestion": "請從履歷中刪除該資訊"
+      },
+      "en_summary": {
+        "label": "Professional Summary",
+        "message": "英文履歷用 3-4 行 Professional Summary 替代中文大段自我評價",
+        "suggestion": "精簡概括核心技能與成果，避免空泛形容詞"
+      },
+      "en_summary_long": {
+        "label": "Summary 過長",
+        "message": "英文履歷的 Summary 建議控制在 3-4 行",
+        "suggestion": "刪減至核心賣點，控制整份履歷頁數"
+      },
+      "en_experience": {
+        "label": "Work Experience",
+        "message": "英文履歷工作經歷優先於教育背景",
+        "suggestion": "動詞開頭 + 量化結果，如：Led X, improved Y by 20%"
+      },
+      "en_quantified": {
+        "label": "量化成果",
+        "message": "英文經歷描述需動詞開頭並含量化數據",
+        "suggestion": "行動動詞 + 任務 + 可衡量結果"
+      },
+      "en_education": {
+        "label": "Education",
+        "message": "教育背景放在 Work Experience 之後",
+        "suggestion": "用英文寫學位，如 B.S. in Computer Science"
+      },
+      "en_skills": {
+        "label": "Skills",
+        "message": "Skills 放在經歷之後，緊湊列表",
+        "suggestion": "按類別分組，逗號分隔"
+      },
+      "en_lang_cert_cet": {
+        "label": "語言證書",
+        "message": "海外/歐美英文履歷中 CET-4/6 認可度低",
+        "suggestion": "如有雅思/托福成績請補充；否則寫 Fluent English"
+      },
+      "en_lang_cert": {
+        "label": "英語能力",
+        "message": "英文履歷建議註明英語能力",
+        "suggestion": "IELTS 7.0 / TOEFL 100 / Fluent English"
+      },
+      "en_lang_cert_ok": {
+        "label": "英語能力",
+        "message": "已標註國際認可的語言能力",
+        "suggestion": ""
+      },
+      "en_one_page": {
+        "label": "頁數限制",
+        "message": "英文履歷建議控制在推薦頁數以內",
+        "suggestion": "刪減次要內容，保持簡潔"
+      },
+      "en_no_subjective": {
+        "label": "主觀形容詞",
+        "message": "英文履歷避免堆砌主觀形容詞",
+        "suggestion": "改用量化成果和行為動詞描述"
+      }
     },
     "checklist": {
       "photo": "證件照",
@@ -1138,10 +1319,18 @@
     "saveConfirmedNote": "確認保存後存儲在賬戶中，直至您刪除",
     "exportWithoutSaveNote": "您可隨時選擇僅導出而不保存",
     "saveAndExport": "保存到賬戶並導出",
+    "saveOverwriteAndExport": "覆蓋會話記錄並導出",
+    "saveAsNewAndExport": "另存為新記錄並導出",
     "exportOnly": "僅導出（不保存）",
     "cancelExport": "取消",
+    "uploadOverwriteTitle": "是否覆蓋當前履歷？",
+    "uploadOverwriteBody": "上傳新履歷將替換本會話中已解析的資料與已生成的履歷內容；賬戶中其他已保存記錄不受影響，除非您在保存時選擇覆蓋會話記錄。",
+    "uploadConfirmOverwrite": "確認覆蓋並解析新履歷",
+    "uploadSaveAsNew": "另存當前履歷後再上傳",
+    "saveModalOverwriteBody": "本會話在您的賬戶中已有保存記錄。再次「保存到賬戶」將覆蓋該會話記錄；您也可以選擇另存為新的命名記錄。",
     "toast": {
       "savedToAccount": "履歷已保存到您的帳戶",
+      "savedAsNewRecord": "已另存為新記錄：{name}",
       "saveFailed": "保存失敗：{msg}",
       "jdFromCache": "已从缓存載入建议崗位描述 — 您可编辑后再继续",
       "jdGenerated": "已生成建议崗位描述 — 您可编辑后再继续",
@@ -1202,6 +1391,7 @@
       "printFailed": "浏览器打印失敗：{msg}",
       "exportFailed": "匯出失敗：{msg}",
       "pdfFallbackConfirm": "服务端 PDF 匯出暂不可用。\n\n是否改用浏览器打印？\n請在打印对话框中选择「另存为 PDF」或「Microsoft Print to PDF」。",
+      "demoExportUnavailable": "演示模式不支援服務端 PDF/DOCX，請連接後端或使用瀏覽器列印。",
       "savingToAccount": "正在保存到您的帳戶…",
       "savingProfile": "正在保存資料到您的帳戶…",
       "profileSaved": "履歷資料已保存到您的帳戶",
@@ -1266,7 +1456,35 @@
     "metaEmployer": "单位性质: {label}",
     "metaExperience": "经验等级: {label}",
     "metaSection": "目标岗位补充信息",
-    "manufacturing": "制造业"
+    "manufacturing": "制造业",
+    "savedRecordsTitle": "已保存的資料",
+    "savedRecordsRefresh": "重新整理",
+    "savedRecordsHint": "每次保存為獨立記錄。上傳新履歷僅替換目前工作副本。",
+    "savedRecordsEmpty": "暫無已保存資料。點擊「保存到帳戶」建立一筆記錄。",
+    "exportPdf": "PDF",
+    "exportDocx": "DOCX",
+    "exportHtml": "HTML",
+    "exportMarkdown": "Markdown",
+    "exportJson": "JSON",
+    "exportPlainText": "純文字",
+    "exportWord": "Word",
+    "chineseResumes": "中文履歷",
+    "englishResumes": "英文履歷",
+    "parsedName": "姓名",
+    "parsedEmail": "郵箱",
+    "parsedPhone": "電話",
+    "parsedCity": "城市",
+    "parsedGithub": "GitHub",
+    "parsedSummary": "個人總結",
+    "parsedResumeTitle": "履歷內容",
+    "parsedBasicInfo": "基本資料",
+    "factTypeEducation": "教育",
+    "factTypeSkill": "技能",
+    "factTypeInternship": "實習/工作",
+    "factTypeProject": "專案",
+    "factTypeAward": "獎項",
+    "factTypePaper": "論文",
+    "factTypeOther": "其他"
   },
   "strings": {
     "GBA Platform": "大灣區平台",
@@ -1344,7 +1562,45 @@
     "What statistics are shown on the home page?": "首頁展示哪些統計數據？",
     "The hero and signup sections display live platform statistics — registered job seekers, partner companies, active job openings, and strong match rates — updated regularly from our database. If data is temporarily unavailable, placeholders are shown.": "首頁英雄區與註冊區展示平台即時統計：註冊求職者、合作企業、在招崗位與高匹配率，數據定期更新。若暫時無法載入，將顯示占位符。",
     "What languages does the platform support?": "平台支援哪些語言？",
-    "The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.": "平台支援簡體中文、繁體中文、英文和葡語，覆蓋大灣區多元語言環境。可隨時透過頂部導航的語言選擇器切換。"
+    "The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.": "平台支援簡體中文、繁體中文、英文和葡語，覆蓋大灣區多元語言環境。可隨時透過頂部導航的語言選擇器切換。",
+    "PDF": "PDF",
+    "Word": "Word",
+    "DOCX": "DOCX",
+    "Plain text": "純文字",
+    "Markdown": "Markdown",
+    "extracts text only": "仅提取文字",
+    "Chinese resumes": "中文履歷",
+    "English resumes": "英文履歷",
+    "Simplified Chinese": "簡體中文",
+    "Traditional Chinese": "繁體中文",
+    "English": "English",
+    "Portuguese": "Portuguese",
+    "Português": "Português",
+    "Technology & Software": "科技與軟體",
+    "Finance & Banking": "金融與銀行",
+    "E-commerce & Retail": "電商與零售",
+    "Healthcare & Medical": "醫療與健康",
+    "Education & Training": "教育與培訓",
+    "Manufacturing": "製造業",
+    "State-owned (国央企)": "國央企",
+    "Public Sector (体制内)": "體制內",
+    "Foreign Enterprise (外企)": "外企",
+    "Private Enterprise (民企)": "民企",
+    "Non-profit (NPO/NGO)": "非營利組織（NPO/NGO）",
+    "HK/Macau/TW-funded (港澳台资)": "港澳台資企業",
+    "Other (其他)": "其他",
+    "Employer type / 单位性质": "單位性質",
+    "Experience level / 经验等级": "經驗等級",
+    "Entry Level": "初級",
+    "Mid Level": "中級",
+    "Senior Level": "高級",
+    "Executive": "管理層",
+    "Technology": "科技",
+    "Finance": "金融",
+    "E-commerce": "電商",
+    "Healthcare": "醫療",
+    "Education": "教育",
+    "Note": "說明"
   },
   "portal": {
     "documentTitle": "GBA 跨區域就業賦能平台 — 個人端門戶",
@@ -1428,6 +1684,11 @@
     "interviewStyle": "面試風格",
     "questionLanguageLabel": "面試題語言",
     "questionLanguageHint": "面試題與參考答案將使用此語言，可與頁面語言、回饋語言分別設定。",
+    "questionLanguageEarlyTitle": "面試題語言（請先選擇）",
+    "questionLanguageEarlyHint": "在生成題庫或開始模擬面試之前，請先選擇面試題語言；生成後將沿用此語言。",
+    "questionLanguageRegenHint": "生成後如需更換語言，請重新生成題庫或重新開始模擬面試。",
+    "questionLanguageSelected": "已選擇：{lang}",
+    "questionLanguageDefault": "目前預設（頁面語言）：{lang} — 請點擊上方按鈕確認",
     "feedbackLanguageLabel": "回饋語言",
     "feedbackLanguageHint": "AI 回饋與複盤將使用此語言，可與頁面語言、面試題語言分別設定。",
     "toneProfessional": "專業",
@@ -1479,11 +1740,22 @@
     "customUploadTitle": "上傳你的面試題",
     "customUploadDesc": "貼上或上傳題目，AI 將根據你的資料與職位生成個性化參考答案。",
     "uploadTxt": "上傳 .txt 文件",
+    "customQuestionsPlaceholder": "每行一題，例如：\n請介紹一下你最有成就感的專案\n你如何處理跨部門協作中的衝突？\n為什麼選擇這個崗位？",
     "removeFile": "移除文件",
     "yourAnswer": "你的回答",
     "answerPlaceholder": "在此輸入回答。行為題建議使用 STAR 法則（情境、任務、行動、結果）...",
     "answerTip": "提示：請具體說明並給出實例",
     "submitAnswer": "提交回答",
+    "questionNumberLabel": "第 {n} 題",
+    "questionNumberPrefix": "題目",
+    "questionPlaceholder": "面試題目將顯示在這裡…",
+    "btnPrevious": "上一題",
+    "btnNext": "下一題",
+    "sendAnswer": "傳送回答",
+    "interactiveAnswersHint": "回答將即時驅動追問生成",
+    "debriefTitle": "面試復盤",
+    "interactiveSaveLoginSuffix": "以將此次模擬面試保存到您的帳戶。",
+    "downloadDebrief": "下載復盤",
     "referenceAnswer": "參考答案",
     "show": "顯示",
     "hide": "隱藏",
@@ -1557,15 +1829,64 @@
       "sessionReset": "工作階段已重置",
       "noQuestionsGenerated": "未生成面試题。請确保資料、崗位描述与履歷已完整。",
       "noReferenceAnswers": "未生成参考答案。請确保資料、崗位描述与履歷已完整。",
-      "savedToAccount": "模擬面試已保存到您的帳戶"
+      "selectQuestionLanguageFirst": "請先選擇面試題語言",
+      "savedToAccount": "模擬面試已保存到您的帳戶",
+      "waitingFollowUps": "請等待追問生成完成"
+    },
+    "selectEmployerType": "單位性質",
+    "selectExperienceLevel": "經驗等級",
+    "specialTechnical": "只練技術/專業題",
+    "specialNegotiation": "只練終面談判",
+    "specialDeepDive": "只練履歷深挖",
+    "confirmEndInterview": "結束模擬面試並生成復盤報告？",
+    "confirmSaveInterview": "將此模擬面試與復盤保存到您的帳戶？",
+    "confirmNewSession": "開始新的面試會話？目前進度將遺失。",
+    "phasePrimary": "請按順序回答每道題；點評將異步顯示。",
+    "phaseWaitingFollowUps": "預設題已答完，正在生成追問與點評，請稍候…",
+    "phaseFollowUp": "追問階段 — 請按順序回答。",
+    "phaseCompleted": "面試已結束。",
+    "loadingGeneratingResume": "正在生成定制履歷內容…",
+    "loadingGeneratingDebrief": "正在生成覆盤報告…",
+    "loadingSavingInterview": "正在保存到您的帳戶…",
+    "chat": {
+      "briefFeedback": "簡要點評",
+      "stageTransition": "階段過渡",
+      "interviewer": "面試官",
+      "you": "你"
     }
+  },
+  "savedProfile": {
+    "useSavedTitle": "使用已保存的資料",
+    "useSavedHint": "選擇已保存的履歷可跳過重新上傳，但仍需提交目標崗位描述。"
+  },
+  "profileReview": {
+    "parsedTitle": "解析後的履歷（可編輯）",
+    "parsedHint": "請檢查並編輯提取的內容。繼續前請點擊「套用修改」同步變更。",
+    "applyEdits": "套用修改",
+    "saveNew": "保存到帳戶",
+    "overwrite": "覆蓋已保存記錄"
   },
   "learningPath": {
     "title": "個性化學習路徑",
     "pageTitle": "個性化學習路徑 — GBA Platform",
     "sessionLabel": "會話",
     "notStarted": "未開始",
+    "contentLanguageEarlyTitle": "內容語言（請先選擇）",
+    "contentLanguageEarlyHint": "在分析技能差距與生成學習路徑之前，請先選擇內容語言；生成後將沿用此語言。",
+    "contentLanguageRegenHint": "生成後如需更換語言，請重新分析並生成學習路徑。",
+    "contentLanguageSelected": "已選擇：{lang}",
+    "contentLanguageDefault": "目前預設（頁面語言）：{lang} — 請點擊上方按鈕確認",
     "goalsTitle": "設定職業目標",
+    "prerequisitesTitle": "分析前準備",
+    "prereqProfile": "已提交履歷/資料",
+    "prereqJob": "已提交目標崗位描述",
+    "step1Profile": "步驟 1：你的履歷 / 資料",
+    "uploadResume": "上傳履歷檔案（PDF、DOCX、TXT、MD）",
+    "removeFile": "移除",
+    "submitProfile": "解析並提交資料",
+    "step2Jd": "步驟 2：目標崗位描述",
+    "submitJd": "提交職位描述",
+    "submitJd": "提交職位描述",
     "targetJob": "目標職位",
     "targetJobPlaceholder": "例如：高級軟件工程師",
     "currentRole": "當前職位（可選）",
@@ -1627,6 +1948,7 @@
     "selectType": "選擇類型",
     "selectLevel": "選擇等級",
     "toast": {
+      "selectContentLanguageFirst": "請先選擇內容語言",
       "targetJobRequired": "請输入目标崗位名称",
       "skillsRequired": "請填写现有技能、职位或資料详情",
       "gapCompleted": "技能差距分析完成！請选择每日學習时长。",
@@ -1749,7 +2071,7 @@
     "stepConfig": "優化設置",
     "stepPreview": "預覽與導出",
     "step1Title": "步驟 1 — 上傳盲篩資料",
-    "step1Note": "說明：真實 PDF/DOC 解析在後端（OCR、脫敏）。此流程可拖入樣本或貼上純文本。",
+    "step1Note": "說明：真實 PDF/DOC 解析在後端（OCR、脫敏）。此流程可拖入樣本或貼上純文字。",
     "uploadTap": "點擊選擇 .txt / .pdf / .doc",
     "pastePlaceholder": "或貼上標題、技能要點、最近職位描述…",
     "continue": "繼續",
@@ -1806,7 +2128,20 @@
     "loadTestDataFirst": "請先載入 test-data/browser-bundle.js。",
     "apiNotLoaded": "API 客户端未載入，請以企業账号登入。",
     "individualOnlyProfile": "仅個人账号可编辑此页面。",
-    "invalidHealthCheck": "健康检查响应无效。"
+    "invalidHealthCheck": "健康檢查回應無效。",
+    "backendUnavailable": "後端不可用，請確認 API 服務已啟動。",
+    "backendUnavailableTitle": "後端不可用",
+    "backendHealthCheckFailed": "無法連接後端（健康檢查失敗）。地址：{url}。請啟動：cd backend && python main.py",
+    "backendRetry": "重試連線",
+    "backendRestored": "已連接後端 — 可以重試您的操作",
+    "networkErrorWithUrl": "網路錯誤 — 無法從 {url} 獲得回應。請確認後端已啟動（cd backend && python main.py）。",
+    "apiErrorWithStatus": "HTTP {status} — {detail} [{url}]",
+    "http401": "HTTP 401 未授權 — {detail} [{url}]",
+    "http403": "HTTP 403 禁止存取 — {detail} [{url}]",
+    "http404": "HTTP 404 未找到 — {detail} [{url}]",
+    "http422": "HTTP 422 請求無效 — {detail} [{url}]",
+    "http500": "HTTP 500 伺服器內部錯誤 — {detail} [{url}]",
+    "http503": "HTTP 503 服務不可用 — {detail} [{url}]"
   },
   "apiMessages": {
     "SESSION_BUSY": "該工作階段已有 AI 任務正在處理，請稍候完成後再試",
@@ -1866,7 +2201,25 @@
     "面试已结束": "面試已结束",
     "请继续回答": "請继续回答",
     "复盘报告已生成（demo mode）": "复盘报告已生成（演示模式）",
-    "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印": "演示模式不支持服务端 PDF/DOCX，請连接後端或使用浏览器打印"
+    "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印": "演示模式不支持服务端 PDF/DOCX，請连接後端或使用浏览器打印",
+    "INTERVIEW_STARTED": "模擬面試已開始，請回答面試官的問題。",
+    "INTERVIEW_TURN_ENDED": "面試已結束，可查看覆盤報告。",
+    "INTERVIEW_TURN_WAITING": "預設題已答完，正在生成追問與點評，請稍候…",
+    "INTERVIEW_TURN_NEXT": "請繼續回答下一題；點評將異步顯示。",
+    "INTERVIEW_TURN_RECORDED": "回答已記錄，請稍候下一題或點評。",
+    "INTERVIEW_POLL_ENDED": "面試已結束。",
+    "INTERVIEW_POLL_WAITING_FU": "追問生成中，請稍候…",
+    "INTERVIEW_POLL_FEEDBACK": "點評生成中…",
+    "INTERVIEW_POLL_SYNCED": "已同步最新狀態。",
+    "INTERVIEW_DEBRIEF_READY": "覆盤報告已生成。",
+    "INTERVIEW_ERR_NO_PREREQUISITES": "缺少崗位、候選人畫像或履歷內容，無法開始模擬面試",
+    "INTERVIEW_ERR_NO_BANK": "未能生成面試題庫，請補充崗位或履歷資訊後重試",
+    "INTERVIEW_ERR_ALREADY_ACTIVE": "已有進行中的模擬面試，請先結束或完成當前會話",
+    "INTERVIEW_ERR_NOT_ACTIVE": "沒有進行中的模擬面試",
+    "INTERVIEW_ERR_EMPTY_ANSWER": "請提供回答內容",
+    "INTERVIEW_ERR_NO_CURRENT_QUESTION": "當前沒有待回答的面試題",
+    "INTERVIEW_ERR_NO_POLL_SESSION": "沒有可輪詢的模擬面試會話",
+    "INTERVIEW_ERR_NO_TURNS": "沒有面試對話記錄"
   },
   "app": {
     "connected": "已连接後端伺服器",

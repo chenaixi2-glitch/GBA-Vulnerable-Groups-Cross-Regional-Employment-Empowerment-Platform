@@ -3,6 +3,9 @@
  */
 (function (global) {
   const API_BASE = (function () {
+    if (typeof global.resolveNodeApiBase === 'function') {
+      return global.resolveNodeApiBase();
+    }
     const host = global.location.hostname || 'localhost';
     return `http://${host}:3000/api`;
   })();
@@ -159,17 +162,27 @@
 
   async function guardFeatureLinks(selector) {
     const links = document.querySelectorAll(selector || '[data-require-access]');
-    bindGuard(links, (access) => access.has_access);
+    bindGuard(links, (access) => {
+      if (!getToken()) return true;
+      return access.has_access;
+    });
   }
 
   async function guardPremiumFeatureLinks(selector) {
     const links = document.querySelectorAll(selector || '[data-require-premium-access]');
-    bindGuard(links, (access) => access.has_premium_access, { premium: true });
+    bindGuard(links, (access) => {
+      if (!getToken()) return true;
+      return access.has_premium_access;
+    }, { premium: true });
   }
 
   async function guardCurrentPage(options) {
     const opts = options || {};
     if (opts.skipOnDonationPage && /donation-legal\.html/.test(global.location.pathname)) return;
+
+    if (!getToken() && opts.requireLogin !== true) {
+      return fetchAccess();
+    }
 
     const access = await fetchAccess();
     const needsAccess = opts.premium ? !access.has_premium_access : !access.has_access;

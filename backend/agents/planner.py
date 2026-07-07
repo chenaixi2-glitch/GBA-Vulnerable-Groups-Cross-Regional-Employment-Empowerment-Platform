@@ -53,9 +53,10 @@ _DAILY_HOURS_PATTERN = re.compile(
     r"每日\s*\d+(?:\.\d+)?\s*小时",
     re.IGNORECASE,
 )
+_VALID_FORCED_INTENTS = frozenset(_INTENT_PLAN.keys())
 
 
-def resolve_intent(raw_intent: str, user_message: str) -> str:
+def resolve_intent(raw_intent: str, user_message: str, state: CopilotState | None = None) -> str:
     """Apply deterministic routing rules after LLM intent classification."""
     intent = (raw_intent or "ask_question").strip()
     message = (user_message or "").strip()
@@ -74,6 +75,19 @@ def resolve_intent(raw_intent: str, user_message: str) -> str:
             intent,
         )
         return "learning_path"
+
+    if state and intent == "gap_analysis" and state.candidate_profile is None:
+        if state.profile_replace_mode or state.user_attachments:
+            logger.info(
+                "Intent override: gap_analysis -> upload_profile (profile upload in progress)",
+            )
+            return "upload_profile"
+        # Long pasted resume/profile text may mention "gap analysis" in passing — treat as material.
+        if len(message) >= 80:
+            logger.info(
+                "Intent override: gap_analysis -> upload_profile (long material, no profile yet)",
+            )
+            return "upload_profile"
 
     return intent
 
@@ -108,27 +122,34 @@ async def planner_node_async(state: CopilotState) -> dict[str, Any]:
     """Planner Agent 异步节点函数。"""
     logger.info("Planner Agent started for session %s", state.session_id)
 
-    # 1. 意图分类
-    try:
-        intent_result = await _classify_intent_async(state)
-    except RuntimeError as exc:
-        logger.error("Planner Agent failed: %s", exc)
-        return {
-            "current_intent": "ask_question",
-            "execution_plan": [],
-            "triggered_agents": [],
-            "workflow_trace": append_trace(
-                state,
-                node="planner",
-                status="failed",
-                input_summary=f"用户输入：{summarize_user_message(state.user_message)}",
-                output_summary="意图识别失败：模型输出格式异常，请稍后重试。",
-                error=str(exc),
-            ),
-        }
+    forced = (state.forced_intent or "").strip()
+    if forced in _VALID_FORCED_INTENTS:
+        intent = forced
+        reason = f"client forced intent: {forced}"
+        logger.info("Using forced intent: %s", intent)
+    else:
+        # 1. 意图分类
+        try:
+            intent_result = await _classify_intent_async(state)
+        except RuntimeError as exc:
+            logger.error("Planner Agent failed: %s", exc)
+            return {
+                "current_intent": "ask_question",
+                "execution_plan": [],
+                "triggered_agents": [],
+                "workflow_trace": append_trace(
+                    state,
+                    node="planner",
+                    status="failed",
+                    input_summary=f"用户输入：{summarize_user_message(state.user_message)}",
+                    output_summary="意图识别失败：模型输出格式异常，请稍后重试。",
+                    error=str(exc),
+                ),
+            }
 
-    intent = intent_result.intent or "ask_question"
-    intent = resolve_intent(intent, state.user_message)
+        intent = intent_result.intent or "ask_question"
+        reason = intent_result.reason or ""
+        intent = resolve_intent(intent, state.user_message, state)
 
     # 2. 构建执行计划
     plan = _build_execution_plan(intent, state)
@@ -148,8 +169,9 @@ async def planner_node_async(state: CopilotState) -> dict[str, Any]:
             output_summary=f"识别意图为 {intent}，执行计划为 {' -> '.join(plan) if plan else '无后续 Agent'}。",
             artifacts={
                 "intent": intent,
-                "reason": intent_result.reason,
+                "reason": reason,
                 "execution_plan": plan,
+                "forced_intent": bool(forced),
             },
         ),
     }

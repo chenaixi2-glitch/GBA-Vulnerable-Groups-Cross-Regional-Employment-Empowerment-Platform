@@ -182,6 +182,22 @@ class InteractiveInterviewTurnOutput(BaseModel):
     should_end: bool = False
 
 
+class InteractiveBankFeedbackOutput(BaseModel):
+    """异步点评：对单题回答生成点评与追问，不影响下一题展示。"""
+    brief_feedback: str = ""
+    follow_up_questions: list[str] = Field(default_factory=list)
+    follow_up_categories: list[str] = Field(default_factory=list)
+    should_end: bool = False
+    end_reason: str = ""
+    closing_message: str = ""
+    dimensions_covered: bool = False
+    resume_cleared: bool = False
+    can_decide: bool = False
+    no_more_value: bool = False
+    hard_mismatch: bool = False
+    high_match: bool = False
+
+
 class InteractiveInterviewKeyMomentOutput(BaseModel):
     question: str = ""
     your_answer_summary: str = ""

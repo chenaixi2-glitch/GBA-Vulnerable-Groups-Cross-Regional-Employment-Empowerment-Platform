@@ -131,7 +131,7 @@ def check_frontend_assets() -> None:
     js = (root / "individual" / "assets" / "js" / "learning-path.js").read_text(encoding="utf-8")
     api = (root / "individual" / "assets" / "js" / "api-client.js").read_text(encoding="utf-8")
 
-    for needle in ("btn-edit-timeline", "btn-save-plan", "exportLearningPlanJson", "daily-hours-section"):
+    for needle in ("btn-edit-timeline", "btn-save-plan", "exportLearningPlanJson", "daily-hours-section", "btn-learning-submit-profile"):
         assert needle in html or needle in js, f"Frontend missing: {needle}"
 
     for needle in (

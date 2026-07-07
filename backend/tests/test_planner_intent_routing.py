@@ -46,3 +46,21 @@ def test_gap_analysis_plan_triggers_gap_agent():
     state = CopilotState(session_id="s1")
     plan = _build_execution_plan("gap_analysis", state)
     assert plan == ["gap_agent"]
+
+
+def test_gap_analysis_overrides_to_upload_profile_when_no_profile_and_long_material():
+    state = CopilotState(session_id="s1")
+    message = (
+        "Here is my candidate profile for gap analysis. "
+        "Current role: Customer Service Specialist. "
+        "Current skills: Customer Service, English, Cantonese, CRM. "
+        "Career goal: Customer Service Manager."
+    )
+    intent = resolve_intent("gap_analysis", message, state)
+    assert intent == "upload_profile"
+
+
+def test_short_gap_analysis_command_unchanged_without_profile():
+    state = CopilotState(session_id="s1")
+    intent = resolve_intent("gap_analysis", "Analyze my skill gaps for resume optimization.", state)
+    assert intent == "gap_analysis"

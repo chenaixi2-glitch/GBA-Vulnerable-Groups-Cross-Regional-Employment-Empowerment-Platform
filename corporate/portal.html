@@ -534,7 +534,7 @@
                 <!-- Right: Language + Account -->
                 <div class="flex items-center space-x-4 shrink-0 ml-auto md:ml-0">
                     <div class="language-selector">
-                        <button class="flex items-center space-x-1 text-gray-600 hover:text-green-600 transition-colors">
+                        <button type="button" class="flex items-center space-x-1 text-gray-600 hover:text-green-600 transition-colors">
                             <i class="fas fa-globe"></i>
                             <span id="current-language">English</span>
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -546,18 +546,18 @@
                             <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors" data-lang="pt">Português</a>
                         </div>
                     </div>
-                    <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium text-sm whitespace-nowrap transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
+                    <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium text-sm whitespace-nowrap transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
                     <div id="portal-auth-guest" class="flex items-center space-x-2">
-                        <a href="auth.html" class="text-sm text-gray-600 hover:text-green-600 font-medium" data-i18n="portal.login">登录</a>
-                        <a href="auth.html?tab=register" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium" data-i18n="portal.signup">注册</a>
+                        <a href="auth.html" class="text-sm text-gray-600 hover:text-green-600 font-medium" data-i18n="portal.login">Log in</a>
+                        <a href="auth.html?tab=register" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium" data-i18n="portal.signup">Sign up</a>
                     </div>
                     <div id="portal-auth-user" class="hidden flex items-center space-x-2">
                         <div class="text-right hidden lg:block">
                             <div id="portal-user-name" class="text-sm font-medium text-gray-800"></div>
                             <div id="portal-user-email" class="text-xs text-gray-500"></div>
                         </div>
-                        <a href="company-profile.html" class="text-sm text-green-700 hover:text-green-800 font-medium hidden md:inline" data-i18n="corpPortal.companyProfile">企业信息</a>
-                        <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600" data-i18n="corpPortal.logout">退出</button>
+                        <a href="company-profile.html" class="text-sm text-green-700 hover:text-green-800 font-medium hidden md:inline" data-i18n="corpPortal.companyProfile">Company profile</a>
+                        <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600" data-i18n="corpPortal.logout">Log out</button>
                     </div>
                 </div>
 
@@ -574,7 +574,7 @@
                 <a href="#dashboard" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navDashboard">Dashboard</a>
                 <a href="#ai-features" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navHrTools">HR Tools</a>
                 <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navMyJobs">My Jobs</a>
-                <a href="donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
+                <a href="donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
             </div>
         </div>
     </nav>
@@ -691,7 +691,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800" data-i18n="corpPortal.hrTeamPerformance">HR Team Performance</h3>
-                        <p class="text-sm text-gray-500 mt-1" data-i18n="corpPortal.hrTeamSubtitle">各 HR 发布岗位、处理投递与录用绩效对比</p>
+                        <p class="text-sm text-gray-500 mt-1" data-i18n="corpPortal.hrTeamSubtitle">Compare job postings, applications, and hires across HR staff</p>
                     </div>
                     <div id="hr-team-meta" class="text-xs text-gray-500 text-right hidden">
                         <span id="hr-org-name" class="font-medium text-gray-700"></span>
@@ -703,13 +703,13 @@
                         <thead>
                             <tr class="text-left text-gray-500 border-b">
                                 <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColName">HR</th>
-                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColRole">角色</th>
-                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColPosted">发布岗位</th>
-                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColReceived">收到投递</th>
-                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHandled">处理数</th>
-                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHires">录用</th>
-                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHireRate">录用率</th>
-                                <th class="py-2 font-medium" data-i18n="corpPortal.hrColMatchScore">均匹配分</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColRole">Role</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColPosted">Jobs posted</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColReceived">Applications received</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHandled">Handled</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHires">Hires</th>
+                                <th class="py-2 pr-4 font-medium" data-i18n="corpPortal.hrColHireRate">Hire rate</th>
+                                <th class="py-2 font-medium" data-i18n="corpPortal.hrColMatchScore">Avg. match score</th>
                             </tr>
                         </thead>
                         <tbody id="hr-team-table-body">
@@ -778,14 +778,14 @@
     <section id="donation-fund" class="py-16 bg-gradient-to-b from-amber-50 to-white scroll-mt-20">
         <div class="container mx-auto px-4">
             <div class="max-w-4xl mx-auto text-center mb-10">
-                <h2 class="text-3xl font-bold text-gray-900 mb-3"><i class="fas fa-hand-holding-heart text-amber-500 mr-2"></i><span data-i18n="corpPortal.donationSectionTitle">爱心捐款箱 · 弱势群体法律服务</span></h2>
-                <p class="text-gray-600" data-i18n="corpPortal.donationSectionDesc">招聘发布、岗位匹配与法律帮助免费使用。面试模拟、HR 绩效统计等高级功能需向捐款箱捐款（金额不限）。募集到的资金将全额用于为弱势求职者提供免费法律服务。</p>
+                <h2 class="text-3xl font-bold text-gray-900 mb-3"><i class="fas fa-hand-holding-heart text-amber-500 mr-2"></i><span data-i18n="corpPortal.donationSectionTitle">Donation box · Legal aid for vulnerable groups</span></h2>
+                <p class="text-gray-600" data-i18n="corpPortal.donationSectionDesc">Job posting, matching, and legal help are free. Mock interviews and HR performance analytics require a donation (any amount). All funds go to free legal services for vulnerable job seekers.</p>
             </div>
             <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-lg border p-6 md:p-8">
                 <div id="corporate-donation-mini"></div>
                 <div class="mt-6 text-center">
                     <a href="donation-legal.html" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:opacity-90">
-                        <i class="fas fa-scale-balanced"></i> <span data-i18n="corpPortal.donationLearnMore">查看法律服务详情并捐款</span>
+                        <i class="fas fa-scale-balanced"></i> <span data-i18n="corpPortal.donationLearnMore">View legal services and donate</span>
                     </a>
                 </div>
             </div>
@@ -899,7 +899,7 @@
                         <span data-i18n="corpPortal.postNewJob">Post New Job</span>
                     </a>
                     <a href="company-profile.html" class="px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium">
-                        <i class="fas fa-building mr-1"></i><span data-i18n="corpPortal.companyProfile">企业信息</span>
+                        <i class="fas fa-building mr-1"></i><span data-i18n="corpPortal.companyProfile">Company profile</span>
                     </a>
                     <div class="relative">
                         <input id="jobs-search-input" type="text" data-i18n-placeholder="corpPortal.searchJobs" placeholder="Search jobs..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
@@ -2162,6 +2162,7 @@
 
     <script src="../assets/site-enhancements.js"></script>
     <script src="../assets/site-guide.js"></script>
+    <script src="../assets/js/node-api-base.js"></script>
     <script src="../assets/js/auth-api.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/api-client.js"></script>

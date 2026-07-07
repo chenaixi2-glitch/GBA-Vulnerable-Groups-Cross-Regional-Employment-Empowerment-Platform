@@ -241,3 +241,135 @@ def gap_prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
 def page_prompt_language_kwargs(state: CopilotState) -> dict[str, str]:
     """Prompt kwargs for page-scoped agents (learning path) — follows UI locale only."""
     return _language_kwargs(resolve_page_ui_language(state))
+
+
+# ---- Interactive interview UI strings (opening/closing shown to candidate) ----
+
+_INTERVIEW_OPENING: dict[str, str] = {
+    "zh": (
+        "你好，欢迎参加本次结构化模拟面试。我们将按预设题库依次提问，共 {count} 道核心题；"
+        "你作答后我会异步给出点评，必要时追加追问。请放松，我们开始第一题。"
+    ),
+    "zh-TW": (
+        "你好，歡迎參加本次結構化模擬面試。我們將按預設題庫依次提問，共 {count} 道核心題；"
+        "你作答後我會異步給出點評，必要時追加追問。請放鬆，我們開始第一題。"
+    ),
+    "en": (
+        "Hello, welcome to this structured mock interview. We will go through {count} core questions "
+        "from a preset bank. After each answer I will give asynchronous feedback and add follow-ups "
+        "when needed. Let us begin with the first question."
+    ),
+    "pt": (
+        "Olá, bem-vindo(a) a esta simulação estruturada. Vamos percorrer {count} perguntas principais "
+        "do banco pré-definido. Após cada resposta darei feedback de forma assíncrona e, se necessário, "
+        "farei perguntas de seguimento. Vamos começar pela primeira pergunta."
+    ),
+}
+
+_INTERVIEW_CLOSING_NORMAL: dict[str, str] = {
+    "zh": (
+        "今天关于岗位、你的过往经历我们沟通得比较全面，你这边还有什么想了解公司、团队或者岗位的问题吗？"
+        "如果没有，今天的面试就先到这里，后续我们会统一汇总所有面试官意见，1–3 个工作日内给你反馈。"
+    ),
+    "zh-TW": (
+        "今天關於崗位、你的過往經歷我們溝通得比較全面，你這邊還有什麼想了解公司、團隊或者崗位的問題嗎？"
+        "如果沒有，今天的面試就先到此為止，後續我們會統一匯總所有面試官意見，1–3 個工作日內給你反饋。"
+    ),
+    "en": (
+        "We have covered the role and your background in good depth. Do you have any questions about "
+        "the company, team, or role? If not, we will wrap up here; you should hear consolidated "
+        "feedback within 1–3 business days."
+    ),
+    "pt": (
+        "Já abordámos o cargo e a sua experiência com bastante profundidade. Tem alguma pergunta sobre "
+        "a empresa, equipa ou função? Se não, encerramos aqui; receberá feedback consolidado em 1–3 dias úteis."
+    ),
+}
+
+_INTERVIEW_CLOSING_MISMATCH: dict[str, str] = {
+    "zh": (
+        "感谢你今天过来沟通，综合咱们岗位的硬性要求和你的情况，匹配度差距比较大，"
+        "我就不多占用你的时间了，后续就不再推进流程，祝你找到合适的工作。"
+    ),
+    "zh-TW": (
+        "感謝你今天過來溝通，綜合咱們崗位的硬性要求和你的情況，匹配度差距比較大，"
+        "我就不多佔用你的時間了，後續就不再推進流程，祝你找到合適的工作。"
+    ),
+    "en": (
+        "Thank you for your time today. Based on the role requirements and your profile, "
+        "the fit gap is significant, so we will not continue the process. We wish you success "
+        "in finding a suitable role."
+    ),
+    "pt": (
+        "Obrigado pelo seu tempo hoje. Com base nos requisitos do cargo e no seu perfil, "
+        "a adequação é limitada, por isso não avançaremos o processo. Desejamos-lhe sucesso "
+        "na procura de um cargo adequado."
+    ),
+}
+
+_INTERVIEW_CLOSING_THANKS: dict[str, str] = {
+    "zh": "感谢你今天参加模拟面试，今天的沟通到此结束，后续可查看复盘报告改进表现。",
+    "zh-TW": "感謝你今天參加模擬面試，今天的溝通到此結束，後續可查看覆盤報告改進表現。",
+    "en": "Thank you for joining this mock interview. You may review the debrief report to improve next time.",
+    "pt": "Obrigado por participar nesta simulação. Consulte o relatório de debrief para melhorar na próxima vez.",
+}
+
+_INTERVIEW_PHASE_LABEL: dict[str, dict[str, str]] = {
+    "primary": {
+        "zh": "预设题库阶段",
+        "zh-TW": "預設題庫階段",
+        "en": "Preset question bank",
+        "pt": "Banco de perguntas pré-definido",
+    },
+    "follow_up_wait": {
+        "zh": "等待追问生成",
+        "zh-TW": "等待追問生成",
+        "en": "Awaiting follow-up generation",
+        "pt": "A aguardar perguntas de seguimento",
+    },
+    "follow_up": {
+        "zh": "追问阶段",
+        "zh-TW": "追問階段",
+        "en": "Follow-up phase",
+        "pt": "Fase de seguimento",
+    },
+}
+
+_INTERVIEW_END_REASON_DEFAULT: dict[str, str] = {
+    "zh": "核心信息已充分收集或匹配度已明确",
+    "zh-TW": "核心資訊已充分收集或匹配度已明確",
+    "en": "Core information collected or fit decision is clear",
+    "pt": "Informação essencial recolhida ou adequação já definida",
+}
+
+
+def _pick_lang_text(table: dict[str, str], language: str | None) -> str:
+    code = normalize_language(language)
+    return table.get(code) or table.get("zh", "")
+
+
+def interview_opening_message(state: CopilotState, question_count: int) -> str:
+    lang = resolve_interview_question_language(state)
+    template = _pick_lang_text(_INTERVIEW_OPENING, lang)
+    return template.format(count=question_count)
+
+
+def interview_closing_normal(state: CopilotState) -> str:
+    return _pick_lang_text(_INTERVIEW_CLOSING_NORMAL, resolve_interview_question_language(state))
+
+
+def interview_closing_mismatch(state: CopilotState) -> str:
+    return _pick_lang_text(_INTERVIEW_CLOSING_MISMATCH, resolve_interview_question_language(state))
+
+
+def interview_closing_thanks(state: CopilotState) -> str:
+    return _pick_lang_text(_INTERVIEW_CLOSING_THANKS, resolve_interview_question_language(state))
+
+
+def interview_phase_label(state: CopilotState, phase: str) -> str:
+    labels = _INTERVIEW_PHASE_LABEL.get(phase, {})
+    return _pick_lang_text(labels, resolve_interview_question_language(state)) or phase
+
+
+def interview_end_reason_default(state: CopilotState) -> str:
+    return _pick_lang_text(_INTERVIEW_END_REASON_DEFAULT, resolve_interview_feedback_language(state))

@@ -8,9 +8,10 @@
 server/
 ├── package.json            # 依赖与脚本
 ├── ecosystem.config.js     # PM2 部署配置
-├── .env.example            # 环境变量模板
-├── .env.development        # 本地开发（连 XAMPP MariaDB）
-├── .env.production         # 线上生产（连阿里云 RDS）
+├── env.development.example # 本地开发模板（XAMPP MariaDB）→ 复制为 .env.development
+├── env.production.example  # 线上生产模板（阿里云 RDS）→ 复制为 .env.production
+├── .env.development        # 本地开发实际配置（.gitignore，勿提交）
+├── .env.production         # 线上生产实际配置（.gitignore，勿提交）
 ├── sql/
 │   └── init.sql            # 建库建表（幂等）
 └── src/
@@ -50,10 +51,17 @@ server/
 ## 三、本地开发（XAMPP MariaDB）
 
 1. 启动 XAMPP 的 MySQL(MariaDB) 模块。
-2. 安装依赖并初始化数据库：
+2. 复制环境配置：
 
 ```bash
 cd server
+cp env.development.example .env.development
+# 若 XAMPP root 有密码，编辑 .env.development 中的 DB_PASSWORD
+```
+
+3. 安装依赖并初始化数据库：
+
+```bash
 npm install
 npm run db:init      # 默认 development，会在本地建库建表
 npm run dev          # nodemon 热重载启动
@@ -78,11 +86,12 @@ node -v
 
 # 拉取代码后
 cd server
+cp env.production.example .env.production
 npm install --production
 
-# 修改 .env.production：把 JWT_SECRET 换成强随机串
+# 编辑 .env.production：填入 RDS 密码，JWT_SECRET 换成强随机串
 #   openssl rand -hex 32
-# CORS_ORIGIN 改成你的前端域名/IP
+# CORS_ORIGIN 默认为 http://120.77.249.179，有域名时改成域名
 
 # 初始化数据库（在 RDS 上建表）
 npm run db:init -- 

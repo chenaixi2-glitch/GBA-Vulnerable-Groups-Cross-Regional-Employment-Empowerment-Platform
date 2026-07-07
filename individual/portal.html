@@ -97,22 +97,22 @@
                 <a href="demo-resume-generator.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navResume">Resume Generator</a>
                 <a href="demo-interview.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navInterview">Interview Prep</a>
                 <a href="demo-learning-path.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navLearning">Learning Path</a>
-                <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">捐款箱</span></a>
+                <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
             </nav>
             
             <div class="flex items-center gap-3">
                 <div id="header-lang-slot"></div>
                 <div id="portal-auth-guest" class="flex items-center gap-2">
-                    <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5" data-i18n="portal.login">登录</a>
-                    <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg" data-i18n="portal.signup">注册</a>
+                    <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5" data-i18n="portal.login">Log in</a>
+                    <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg" data-i18n="portal.signup">Sign up</a>
                 </div>
                 <div id="portal-auth-user" class="hidden flex items-center gap-3">
-                    <a href="profile.html" class="text-sm text-blue-700 hover:text-blue-800 font-medium hidden sm:inline" data-i18n="portal.profile">个人资料</a>
+                    <a href="profile.html" class="text-sm text-blue-700 hover:text-blue-800 font-medium hidden sm:inline" data-i18n="portal.profile">Profile</a>
                     <div class="text-right hidden sm:block">
                         <div id="portal-user-name" class="text-sm font-medium text-gray-900"></div>
                         <div id="portal-user-email" class="text-xs text-gray-500"></div>
                     </div>
-                    <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600 px-2 py-1" data-i18n="portal.logout">退出</button>
+                    <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600 px-2 py-1" data-i18n="portal.logout">Log out</button>
                 </div>
                 <button id="session-info-btn" class="text-sm text-gray-600 hover:text-blue-600 hidden">
                     <i class="fas fa-user-circle mr-1"></i>
@@ -179,10 +179,10 @@
                     <div class="w-14 h-14 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
                         <i class="fas fa-briefcase text-2xl text-teal-600"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="portal.cardJobsTitle">岗位匹配与投递</h3>
-                    <p class="text-gray-600 text-sm mb-4" data-i18n="portal.cardJobsDesc">按人群类型与简历评分推荐岗位。企业岗位可在平台内直接投递，外部岗位请前往合作招聘网站投递。</p>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="portal.cardJobsTitle">Job matching &amp; applications</h3>
+                    <p class="text-gray-600 text-sm mb-4" data-i18n="portal.cardJobsDesc">Browse recommended roles by group type and resume score. Apply on-platform for employer jobs; use partner sites for external listings.</p>
                     <div class="flex items-center text-teal-600 text-sm font-medium">
-                        <span data-i18n="portal.browseJobs">浏览岗位</span>
+                        <span data-i18n="portal.browseJobs">Browse jobs</span>
                         <i class="fas fa-arrow-right ml-2"></i>
                     </div>
                 </a>
@@ -192,11 +192,11 @@
                     <div class="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                         <i class="fas fa-paper-plane text-2xl text-purple-600"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="portal.cardAppsTitle">我的投递</h3>
-                    <p class="text-gray-600 text-sm mb-4" data-i18n="portal.cardAppsDesc">查看平台内投递记录、匹配分与状态，pending 状态可撤销。</p>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="portal.cardAppsTitle">My applications</h3>
+                    <p class="text-gray-600 text-sm mb-4" data-i18n="portal.cardAppsDesc">View on-platform applications, match scores, and status. Pending applications can be withdrawn.</p>
                     <div id="portal-app-stats" class="text-xs text-purple-700 mb-2 hidden"></div>
                     <div class="flex items-center text-purple-600 text-sm font-medium">
-                        <span data-i18n="portal.viewRecords">查看记录</span>
+                        <span data-i18n="portal.viewRecords">View records</span>
                         <i class="fas fa-arrow-right ml-2"></i>
                     </div>
                 </a>
@@ -206,10 +206,10 @@
                     <div class="w-14 h-14 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
                         <i class="fas fa-hand-holding-heart text-2xl text-amber-600"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="portal.cardDonationTitle">爱心捐款箱 · 法律服务</h3>
-                    <p class="text-gray-600 text-sm mb-4" data-i18n="portal.cardDonationDesc">弱势群体免费使用平台；非弱势群体捐款（不限金额）支持法律服务并解锁功能。资金100%用于弱势群体法律帮扶。</p>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="portal.cardDonationTitle">Donation box · Legal services</h3>
+                    <p class="text-gray-600 text-sm mb-4" data-i18n="portal.cardDonationDesc">Vulnerable groups use the platform free. Others may donate any amount to support legal aid and unlock features. 100% of funds go to legal support for vulnerable groups.</p>
                     <div class="flex items-center text-amber-700 text-sm font-medium">
-                        <span data-i18n="portal.learnDonate">了解并捐款</span>
+                        <span data-i18n="portal.learnDonate">Learn more &amp; donate</span>
                         <i class="fas fa-arrow-right ml-2"></i>
                     </div>
                 </a>
@@ -276,6 +276,7 @@
         <span id="toast-message"></span>
     </div>
 
+    <script src="../assets/js/node-api-base.js"></script>
     <script src="../assets/js/auth-api.js"></script>
     <script src="assets/js/app.js"></script>
     <script src="assets/js/platform-api.js"></script>

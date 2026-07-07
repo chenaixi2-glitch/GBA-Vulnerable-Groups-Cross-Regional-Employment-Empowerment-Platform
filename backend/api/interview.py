@@ -10,13 +10,31 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from agents.interactive_interview_agent import (
+    collect_poll_updates,
     generate_interactive_debrief,
     process_interactive_turn,
+    process_next_pending_feedback,
     session_to_response,
     start_interactive_interview,
 )
 from agents.interview_agent import custom_interview_answers_async, parse_custom_questions
 from api.chat import _aload_state, _asave_state
+from api.interview_messages import (
+    INTERVIEW_DEBRIEF_READY,
+    INTERVIEW_ERR_ALREADY_ACTIVE,
+    INTERVIEW_ERR_NO_POLL_SESSION,
+    INTERVIEW_ERR_NO_TURNS,
+    INTERVIEW_ERR_NOT_ACTIVE,
+    INTERVIEW_POLL_ENDED,
+    INTERVIEW_POLL_FEEDBACK,
+    INTERVIEW_POLL_SYNCED,
+    INTERVIEW_POLL_WAITING_FU,
+    INTERVIEW_STARTED,
+    INTERVIEW_TURN_ENDED,
+    INTERVIEW_TURN_NEXT,
+    INTERVIEW_TURN_RECORDED,
+    INTERVIEW_TURN_WAITING,
+)
 from auth.jwt import get_optional_user
 from auth.session_access import bind_session_owner, ensure_session_access, extract_user_id
 from storage.redis_client import get_redis_client, RedisSessionStore
@@ -121,6 +139,21 @@ class InteractiveEndRequest(BaseModel):
     language: str = ""  # backward-compatible alias for feedback_language
 
 
+class InteractivePollRequest(BaseModel):
+    session_id: str
+    since_sequence: int = 0
+    question_language: str = ""
+    feedback_language: str = ""
+    language: str = ""  # backward-compatible alias for question_language
+
+
+class InterviewLanguageRequest(BaseModel):
+    session_id: str
+    question_language: str = ""
+    feedback_language: str = ""
+    language: str = ""  # backward-compatible alias for question_language
+
+
 class InteractiveResponse(BaseModel):
     session_id: str
     interactive_interview: dict[str, Any] = Field(default_factory=dict)
@@ -190,6 +223,36 @@ async def generate_custom_interview_answers(
     )
 
 
+@router.put("/language")
+async def set_interview_language(req: InterviewLanguageRequest, request: Request) -> dict[str, str]:
+    """在面试题生成前持久化面试题/反馈语言到会话。"""
+    from tools.resume_layout import VALID_RESUME_LANGUAGES, normalize_language
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+
+    state = await _load_state(req.session_id)
+    state.session_id = req.session_id
+
+    q_lang = normalize_language(req.question_language or req.language or "")
+    f_lang = normalize_language(req.feedback_language or "")
+    if q_lang and q_lang not in VALID_RESUME_LANGUAGES:
+        raise HTTPException(status_code=422, detail="question_language 必须为 zh、zh-TW、en 或 pt")
+    if f_lang and f_lang not in VALID_RESUME_LANGUAGES:
+        raise HTTPException(status_code=422, detail="feedback_language 必须为 zh、zh-TW、en 或 pt")
+
+    if q_lang:
+        apply_interview_question_language(state, q_lang)
+    if f_lang:
+        apply_interview_feedback_language(state, f_lang)
+
+    await _save_state(req.session_id, state)
+    return {
+        "question_language": q_lang or (state.meta.interview_question_language if state.meta else ""),
+        "feedback_language": f_lang or (state.meta.interview_feedback_language if state.meta else ""),
+    }
+
+
 @router.post("/interactive/start", response_model=InteractiveResponse)
 async def interactive_start(req: InteractiveStartRequest, request: Request) -> InteractiveResponse:
     """开启多轮对话式模拟面试。"""
@@ -204,7 +267,7 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
     apply_interview_question_language(state, req.question_language or req.language)
 
     if state.interactive_interview.status == "active":
-        raise HTTPException(status_code=400, detail="已有进行中的模拟面试，请先结束或完成当前会话")
+        raise HTTPException(status_code=400, detail=INTERVIEW_ERR_ALREADY_ACTIVE)
 
     try:
         async with llm_queue_slot(session_id):
@@ -232,13 +295,13 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
     return InteractiveResponse(
         session_id=session_id,
         interactive_interview=session_to_response(session),
-        message="模拟面试已开始，请回答面试官的问题。",
+        message=INTERVIEW_STARTED,
     )
 
 
 @router.post("/interactive/turn", response_model=InteractiveResponse)
 async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> InteractiveResponse:
-    """提交回答，获取面试官点评与追问。"""
+    """提交回答：立即返回下一题，点评与追问在后台异步生成（通过 poll 获取）。"""
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
 
@@ -249,13 +312,10 @@ async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> Int
         req.feedback_language,
     )
     if state.interactive_interview.status != "active":
-        raise HTTPException(status_code=400, detail="没有进行中的模拟面试")
+        raise HTTPException(status_code=400, detail=INTERVIEW_ERR_NOT_ACTIVE)
 
     try:
-        async with llm_queue_slot(req.session_id):
-            session = await process_interactive_turn(state, req.answer)
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+        session = await process_interactive_turn(state, req.answer)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -266,11 +326,65 @@ async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> Int
     await _save_state(req.session_id, state)
 
     ended = session.status == "completed"
-    message = "面试已结束，可查看复盘报告。" if ended else "请继续回答面试官的问题。"
+    waiting = session.phase == "follow_up_wait"
+    if ended:
+        message = INTERVIEW_TURN_ENDED
+    elif waiting:
+        message = INTERVIEW_TURN_WAITING
+    elif session.current_question_id:
+        message = INTERVIEW_TURN_NEXT
+    else:
+        message = INTERVIEW_TURN_RECORDED
 
     return InteractiveResponse(
         session_id=req.session_id,
         interactive_interview=session_to_response(session),
+        message=message,
+    )
+
+
+@router.post("/interactive/poll", response_model=InteractiveResponse)
+async def interactive_poll(req: InteractivePollRequest, request: Request) -> InteractiveResponse:
+    """轮询异步点评/追问进度，并尝试处理一条待生成点评。"""
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+
+    state = await _load_state(req.session_id)
+    apply_interview_languages(
+        state,
+        req.question_language or req.language,
+        req.feedback_language,
+    )
+    session = state.interactive_interview
+    if session.status not in ("active", "completed") and not session.pending_feedbacks:
+        raise HTTPException(status_code=400, detail=INTERVIEW_ERR_NO_POLL_SESSION)
+
+    try:
+        await process_next_pending_feedback(state)
+    except SessionBusyError:
+        pass
+    except Exception as exc:
+        logger.error("Interactive poll feedback failed: %s", exc, exc_info=True)
+
+    state.interactive_interview = session
+    await _save_state(req.session_id, state)
+
+    updates = collect_poll_updates(session, req.since_sequence)
+    response_data = session_to_response(session)
+    response_data["poll_updates"] = updates
+
+    if session.status == "completed":
+        message = INTERVIEW_POLL_ENDED
+    elif updates.get("waiting_for_follow_ups"):
+        message = INTERVIEW_POLL_WAITING_FU
+    elif updates.get("pending_feedback_count", 0) > 0:
+        message = INTERVIEW_POLL_FEEDBACK
+    else:
+        message = INTERVIEW_POLL_SYNCED
+
+    return InteractiveResponse(
+        session_id=req.session_id,
+        interactive_interview=response_data,
         message=message,
     )
 
@@ -286,7 +400,7 @@ async def interactive_end(req: InteractiveEndRequest, request: Request) -> Inter
     session = state.interactive_interview
 
     if not session.turns:
-        raise HTTPException(status_code=400, detail="没有面试对话记录")
+        raise HTTPException(status_code=400, detail=INTERVIEW_ERR_NO_TURNS)
 
     try:
         if req.generate_debrief:
@@ -309,7 +423,7 @@ async def interactive_end(req: InteractiveEndRequest, request: Request) -> Inter
     return InteractiveResponse(
         session_id=req.session_id,
         interactive_interview=session_to_response(session),
-        message="复盘报告已生成。",
+        message=INTERVIEW_DEBRIEF_READY,
     )
 
 

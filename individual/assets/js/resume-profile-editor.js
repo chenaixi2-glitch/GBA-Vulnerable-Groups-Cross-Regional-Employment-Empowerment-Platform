@@ -259,11 +259,15 @@ const ProfileEditor = {
             const subtitle = record.candidate_name && record.candidate_name !== name
                 ? `${this.escapeHtml(record.candidate_name)} · ${this.escapeHtml(savedAt)}`
                 : this.escapeHtml(savedAt);
+            const crossLinks = typeof SavedProfileBootstrap !== 'undefined'
+                ? SavedProfileBootstrap.pageLinks(record.id, 'resume')
+                : '';
             return `
                 <div class="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50/80">
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-gray-900 truncate">${this.escapeHtml(name)}</p>
                         <p class="text-xs text-gray-500 mt-0.5">${subtitle}</p>
+                        ${crossLinks ? `<p class="text-xs mt-1">${crossLinks}</p>` : ''}
                     </div>
                     <button type="button" data-restore-profile-record="${this.escapeHtml(record.id)}"
                         class="shrink-0 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100">

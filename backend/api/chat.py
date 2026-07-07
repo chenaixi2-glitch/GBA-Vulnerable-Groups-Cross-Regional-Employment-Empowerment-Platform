@@ -76,6 +76,7 @@ class ChatRequest(BaseModel):
     language: str = ""  # UI locale → API lang: zh | zh-TW | en | pt
     language_scope: str = "page"  # page | interview_question | interview_feedback
     replace_profile: bool = False  # True when uploading a new resume — overwrite Redis working copy
+    forced_intent: str = ""  # Optional: skip LLM intent classification (upload_profile, upload_jd, gap_analysis, …)
 
 
 class ChatResponse(BaseModel):
@@ -150,6 +151,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         draft_store = RedisDraftStore(redis_client, session_id, user.get("sub") if user else None)
         await draft_store.clear_draft()
         logger.info("Profile replace mode: cleared Redis draft for session %s", session_id)
+    state.forced_intent = (req.forced_intent or "").strip()
 
     # 执行 workflow graph，加上config指定langsmith的run_name，方便在LangSmith上查看每次API调用的执行详情
     graph = _get_graph()
@@ -171,7 +173,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     persist_data = final_state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
                                                      "execution_plan", "reply_message", "triggered_agents",
                                                      "workflow_trace", "resume_language_target",
-                                                     "profile_replace_mode",
+                                                     "profile_replace_mode", "forced_intent",
                                                      "chat_output_language",
                                                      "chat_question_output_language",
                                                      "chat_feedback_output_language"})

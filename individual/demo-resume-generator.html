@@ -509,23 +509,23 @@
                             </button>
                             <button onclick="promptExportResume('html')" class="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
                                 <i class="fas fa-file-code mr-1"></i>
-                                HTML
+                                <span data-i18n="resume.exportHtml">HTML</span>
                             </button>
                             <button onclick="promptExportResume('json')" class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
                                 <i class="fas fa-file-alt mr-1"></i>
-                                JSON
+                                <span data-i18n="resume.exportJson">JSON</span>
                             </button>
                             <button onclick="promptExportResume('markdown')" class="px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm">
                                 <i class="fas fa-file-lines mr-1"></i>
-                                Markdown
+                                <span data-i18n="resume.exportMarkdown">Markdown</span>
                             </button>
                             <button onclick="promptExportResume('docx')" class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
                                 <i class="fas fa-file-word mr-1"></i>
-                                DOCX
+                                <span data-i18n="resume.exportDocx">DOCX</span>
                             </button>
                             <button onclick="promptExportResume('pdf')" class="px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm">
                                 <i class="fas fa-file-pdf mr-1"></i>
-                                PDF
+                                <span data-i18n="resume.exportPdf">PDF</span>
                             </button>
                         </div>
                     </div>
@@ -679,10 +679,10 @@
                             <span data-i18n="resume.generateProfilePreview">Generate preview &amp; export</span>
                         </button>
                         <div id="profile-export-actions" class="hidden mt-3 flex flex-wrap gap-2">
-                            <button type="button" onclick="promptExportResume('pdf')" class="px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900">PDF</button>
-                            <button type="button" onclick="promptExportResume('docx')" class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700">DOCX</button>
-                            <button type="button" onclick="promptExportResume('html')" class="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700">HTML</button>
-                            <button type="button" onclick="promptExportResume('markdown')" class="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700">Markdown</button>
+                            <button type="button" onclick="promptExportResume('pdf')" class="px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900" data-i18n="resume.exportPdf">PDF</button>
+                            <button type="button" onclick="promptExportResume('docx')" class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700" data-i18n="resume.exportDocx">DOCX</button>
+                            <button type="button" onclick="promptExportResume('html')" class="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700" data-i18n="resume.exportHtml">HTML</button>
+                            <button type="button" onclick="promptExportResume('markdown')" class="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700" data-i18n="resume.exportMarkdown">Markdown</button>
                             <button type="button" onclick="switchResumeView('preview')" class="px-3 py-1.5 text-xs border border-purple-300 text-purple-800 rounded-lg hover:bg-purple-50">
                                 <span data-i18n="resume.openPreview">Open full preview</span>
                             </button>
@@ -839,13 +839,39 @@
         </div>
     </div>
 
+    <!-- Upload overwrite confirmation -->
+    <div id="upload-overwrite-modal" class="loading-overlay hidden z-[55]">
+        <div class="loading-content max-w-md text-left">
+            <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="resume.uploadOverwriteTitle">Replace current resume?</h3>
+            <p class="text-sm text-gray-600 mb-3" data-i18n="resume.uploadOverwriteBody">
+                Uploading a new resume will replace the current session's parsed profile and any generated resume in this session.
+                Previously saved account records are not affected unless you overwrite them when saving.
+            </p>
+            <div class="flex flex-col gap-2">
+                <button id="btn-upload-confirm-overwrite" type="button" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700" data-i18n="resume.uploadConfirmOverwrite">
+                    Replace and parse new resume
+                </button>
+                <button id="btn-upload-save-as-new" type="button" class="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50" data-i18n="resume.uploadSaveAsNew">
+                    Save current as new record, then upload
+                </button>
+                <button id="btn-upload-cancel-overwrite" type="button" class="w-full text-gray-500 py-2 text-sm hover:text-gray-700" data-i18n="resume.cancel">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Save to Account Modal -->
     <div id="save-resume-modal" class="loading-overlay hidden">
         <div class="loading-content max-w-md text-left">
             <h3 class="text-lg font-bold text-gray-900 mb-2" data-i18n="resume.saveModalTitle">Save resume to your account?</h3>
-            <p class="text-sm text-gray-600 mb-3" data-i18n="resume.saveModalBody">
+            <p id="save-modal-body-default" class="text-sm text-gray-600 mb-3" data-i18n="resume.saveModalBody">
                 Before exporting, you can save this resume to the GBA platform. Your data is encrypted in transit,
                 stored securely, and used only to provide career services. We never sell your personal information.
+            </p>
+            <p id="save-modal-body-overwrite" class="hidden text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3" data-i18n="resume.saveModalOverwriteBody">
+                This session already has a saved resume in your account. Saving again will overwrite that session record.
+                You can save as a new named record instead.
             </p>
             <ul class="text-xs text-gray-500 mb-4 space-y-1 list-disc pl-4">
                 <li data-i18n="resume.saveDraftNote">Draft edits are kept in temporary storage for up to 12 hours while logged in</li>
@@ -855,6 +881,9 @@
             <div class="flex flex-col gap-2">
                 <button id="btn-save-and-export" type="button" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700" data-i18n="resume.saveAndExport">
                     Save to account &amp; export
+                </button>
+                <button id="btn-save-as-new-and-export" type="button" class="hidden w-full border border-blue-600 text-blue-700 py-2.5 rounded-lg font-medium hover:bg-blue-50" data-i18n="resume.saveAsNewAndExport">
+                    Save as new record &amp; export
                 </button>
                 <button id="btn-export-only" type="button" class="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50" data-i18n="resume.exportOnly">
                     Export only (don't save)
@@ -874,17 +903,13 @@
     <script src="../assets/i18n/i18n.js"></script>
     <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/target-job-context.js"></script>
+    <script src="../assets/js/node-api-base.js"></script>
     <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/saved-profile-bootstrap.js"></script>
     <script src="assets/js/platform-api.js"></script>
-    <script src="../assets/js/platform-access.js"></script>
     <script src="assets/js/resume-language-checklist.js"></script>
     <script src="assets/js/resume-profile-editor.js"></script>
     <script src="assets/js/resume-optimization-flow.js"></script>
     <script src="assets/js/resume-generator.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            PlatformAccess.guardCurrentPage({ showModal: true, skipOnDonationPage: true });
-        });
-    </script>
 </body>
 </html>

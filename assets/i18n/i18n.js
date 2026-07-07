@@ -100,6 +100,24 @@
     /** Map API error codes / Chinese API messages → English when UI language is English */
     var EN_API_MESSAGES = {
         'SESSION_BUSY': 'Another AI task is already running for this session. Please wait for it to finish, then try again.',
+        'INTERVIEW_STARTED': 'Mock interview started. Please answer the interviewer\'s questions.',
+        'INTERVIEW_TURN_ENDED': 'Interview ended. You can view the debrief report.',
+        'INTERVIEW_TURN_WAITING': 'Core questions done — generating follow-ups and feedback, please wait…',
+        'INTERVIEW_TURN_NEXT': 'Continue with the next question; feedback will appear asynchronously.',
+        'INTERVIEW_TURN_RECORDED': 'Answer recorded. Please wait for the next question or feedback.',
+        'INTERVIEW_POLL_ENDED': 'Interview ended.',
+        'INTERVIEW_POLL_WAITING_FU': 'Generating follow-up questions…',
+        'INTERVIEW_POLL_FEEDBACK': 'Generating feedback…',
+        'INTERVIEW_POLL_SYNCED': 'Status synced.',
+        'INTERVIEW_DEBRIEF_READY': 'Debrief report generated.',
+        'INTERVIEW_ERR_NO_PREREQUISITES': 'Missing job, profile, or resume content — cannot start mock interview.',
+        'INTERVIEW_ERR_NO_BANK': 'Could not generate question bank. Please complete job and resume steps.',
+        'INTERVIEW_ERR_ALREADY_ACTIVE': 'A mock interview is already in progress.',
+        'INTERVIEW_ERR_NOT_ACTIVE': 'No mock interview in progress.',
+        'INTERVIEW_ERR_EMPTY_ANSWER': 'Please provide an answer.',
+        'INTERVIEW_ERR_NO_CURRENT_QUESTION': 'No pending interview question.',
+        'INTERVIEW_ERR_NO_POLL_SESSION': 'No mock interview session to sync.',
+        'INTERVIEW_ERR_NO_TURNS': 'No interview dialogue recorded.',
         '您属于弱势群体，平台各项功能免费使用，无需捐款': 'You belong to a vulnerable group — platform features are free; no donation required.',
         '感谢您的爱心捐款！资金将全额用于弱势群体法律服务。': 'Thank you for your donation! All funds go to legal aid for vulnerable groups.',
         '请输入有效的捐款金额（大于 0，不限上限）': 'Please enter a valid donation amount (greater than 0).',
@@ -369,13 +387,19 @@
             if (!key || key.indexOf('.') === -1) return;
             if (node.id === 'session-id' || node.dataset.i18nDynamic === '1') return;
             if (!node.dataset.i18nDefault) {
-                var raw = (node.textContent || '').trim();
+                var raw = (node.textContent || node.getAttribute('value') || '').trim();
                 var fbAttr = node.getAttribute('data-i18n-fallback');
                 node.dataset.i18nDefault = fbAttr && !/[\u4e00-\u9fff]/.test(fbAttr) ? fbAttr.trim() : raw;
             }
             var fb = node.dataset.i18nDefault;
             var text = t(key, fb);
-            if (text) node.textContent = text;
+            if (text) {
+                if (node.tagName === 'OPTION') {
+                    node.textContent = text;
+                } else {
+                    node.textContent = text;
+                }
+            }
         });
         document.querySelectorAll('[data-i18n-placeholder]').forEach(function (node) {
             var key = node.getAttribute('data-i18n-placeholder');
@@ -408,7 +432,7 @@
         var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
             acceptNode: function (node) {
                 var parent = node.parentElement;
-                if (!parent || parent.closest('script,style,noscript,[data-i18n]')) {
+                if (!parent || parent.closest('script,style,noscript,[data-i18n],option[data-i18n]')) {
                     return NodeFilter.FILTER_REJECT;
                 }
                 if (parent.id === 'session-id' || parent.dataset.i18nDynamic === '1') {
@@ -488,7 +512,11 @@
             '.gba-lang-floating{position:fixed;bottom:5.5rem;left:1rem;z-index:8000;background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 8px 20px rgba(15,23,42,.12);padding:.35rem .5rem;font-size:.875rem}',
             '.gba-lang-floating .language-dropdown{bottom:100%;top:auto;margin-bottom:.35rem;margin-top:0}',
             '@media (hover:hover){.language-selector:not(.gba-lang-floating):hover .language-dropdown{display:block}}',
-            '@media (hover:none){.language-selector:hover .language-dropdown{display:none}}'
+            '@media (hover:none){.language-selector:hover .language-dropdown{display:none}}',
+            '.gba-lang-on-dark>button{color:#e2e8f0}',
+            '.gba-lang-on-dark .language-dropdown{background:#1e293b;border-color:#475569}',
+            '.gba-lang-on-dark .language-dropdown a{color:#cbd5e1}',
+            '.gba-lang-on-dark .language-dropdown a:hover{background:#334155;color:#fff}'
         ].join('');
         document.head.appendChild(style);
     }
@@ -557,6 +585,9 @@
         var slot = document.getElementById('header-lang-slot');
         if (slot) {
             wrap.className = 'language-selector relative text-sm shrink-0';
+            if (slot.classList.contains('gba-lang-on-dark') || slot.dataset.langTheme === 'dark') {
+                wrap.classList.add('gba-lang-on-dark');
+            }
             wrap.innerHTML = languageSwitcherInnerHtml();
             slot.appendChild(wrap);
             return;

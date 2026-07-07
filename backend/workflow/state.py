@@ -213,6 +213,36 @@ class InterviewStageProgress(BaseModel):
     status: str = "pending"  # pending | active | completed
 
 
+class InteractiveQuestionQueueItem(BaseModel):
+    """交互式模拟面试题库队列项（预设题或异步生成的追问）。"""
+    id: str = ""
+    question: str = ""
+    category: str = ""
+    stage_id: str = ""
+    stage_name: str = ""
+    stage_index: int = 0
+    source: str = "bank"  # bank | follow_up
+    parent_answer_id: str = ""
+    status: str = "pending"  # pending | current | answered
+
+
+class InteractivePendingFeedback(BaseModel):
+    """候选人回答后异步生成的点评与追问任务。"""
+    id: str = ""
+    question_id: str = ""
+    question: str = ""
+    answer: str = ""
+    category: str = ""
+    status: str = "pending"  # pending | processing | completed | failed
+    brief_feedback: str = ""
+    follow_up_questions: list[InteractiveQuestionQueueItem] = Field(default_factory=list)
+    should_end: bool = False
+    end_reason: str = ""
+    closing_message: str = ""
+    created_at: str = ""
+    completed_at: str = ""
+
+
 class InteractiveInterviewTurn(BaseModel):
     """交互式模拟面试单轮对话记录。"""
     id: str = ""
@@ -223,6 +253,7 @@ class InteractiveInterviewTurn(BaseModel):
     round: int = 0
     stage_index: int = 0
     stage_name: str = ""
+    question_id: str = ""
     created_at: str = ""
 
 
@@ -265,6 +296,15 @@ class InteractiveInterviewSession(BaseModel):
     debrief: Optional[InteractiveInterviewDebrief] = None
     started_at: str = ""
     ended_at: str = ""
+    # 题库驱动模式：先预生成题库，异步点评/追问
+    phase: str = "primary"  # primary | follow_up | candidate_qa | closing | completed
+    primary_questions: list[InteractiveQuestionQueueItem] = Field(default_factory=list)
+    follow_up_questions: list[InteractiveQuestionQueueItem] = Field(default_factory=list)
+    current_question_id: str = ""
+    pending_feedbacks: list[InteractivePendingFeedback] = Field(default_factory=list)
+    poll_sequence: int = 0
+    end_reason: str = ""
+    closing_message: str = ""
 
 
 class ConversationEvent(BaseModel):
@@ -370,6 +410,7 @@ class CopilotState(BaseModel):
     triggered_agents: list[str] = Field(default_factory=list)
     workflow_trace: list[WorkflowTraceItem] = Field(default_factory=list)
     profile_replace_mode: bool = False  # runtime: new upload replaces existing profile instead of merging
+    forced_intent: str = ""  # runtime: API/client bypasses LLM intent classification when set
     resume_language_target: str = ""  # runtime: zh | zh-TW | en | pt for language_convert intent
     chat_output_language: str = ""  # runtime: per-request page UI locale
     chat_question_output_language: str = ""  # runtime: per-request interview question locale

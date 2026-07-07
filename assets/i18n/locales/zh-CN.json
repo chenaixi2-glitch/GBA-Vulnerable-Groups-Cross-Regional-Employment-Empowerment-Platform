@@ -7,7 +7,8 @@
     "notStarted": "未开始",
     "retry": "请重试",
     "openSourceSite": "打开源站",
-    "platformBrand": "GBA 就业平台"
+    "platformBrand": "GBA 就业平台",
+    "contentLanguageRegenHint": "生成后如需更换语言，请重新生成。"
   },
   "meta": {
     "listSeparator": "、",
@@ -75,10 +76,11 @@
     "navFriendlyEmployers": "友好企业",
     "heroFriendlyJobs": "弱势群体友好岗位",
     "navMyApplications": "我的投递",
-    "brandName": "GBA 平台",
+    "brandName": "GBA 就业赋能平台",
     "howItWorks": "运作方式",
     "login": "登录",
     "signup": "注册",
+    "selectLanguage": "语言",
     "featureResumeTitle": "智能简历生成",
     "featureLearningTitle": "个性化学习路径",
     "featureInterviewTitle": "面试准备",
@@ -184,7 +186,6 @@
     "footerPhone": "+86 400-123-4567",
     "footerEmail": "info@gba-platform.com",
     "storiesLead": "以下为说明性场景，展示匹配、投递、企业流程与 AI 职业工具如何协同——非真实用户评价。",
-    "brandName": "GBA 就业赋能平台",
     "brandShort": "GBA",
     "story1": {
       "role": "软件开发工程师",
@@ -1032,51 +1033,231 @@
       "summaryPlaceholder": "2–4 句话概括优势与岗位匹配度"
     },
     "checklistItems": {
-      "zh_photo": { "label": "证件照", "message": "中文简历（国企/事业单位/银行/教师/传统行业）建议附正装证件照", "suggestion": "请上传白底/浅蓝底一寸证件照，置于简历右上角；互联网技术岗可选" },
-      "zh_photo_strict": { "label": "证件照", "message": "国央企/体制内岗位必须附正装证件照", "suggestion": "请上传白底/浅蓝底一寸证件照，置于简历右上角" },
-      "zh_name": { "label": "姓名", "message": "姓名是中文简历顶部必填项", "suggestion": "请在基本信息中填写姓名" },
-      "zh_phone": { "label": "电话", "message": "国内简历需留手机号码", "suggestion": "格式：138 XXXX XXXX" },
-      "zh_email": { "label": "邮箱", "message": "邮箱是国内简历常规联系方式", "suggestion": "如 xxx@163.com" },
-      "zh_address": { "label": "住址", "message": "中文简历通常写详细住址（省市区）", "suggestion": "例：广东省广州市 XX 区" },
-      "zh_age": { "label": "年龄", "message": "国内常规简历建议注明年龄", "suggestion": "可在个人信息中补充年龄" },
-      "zh_gender": { "label": "性别", "message": "国内常规简历建议注明性别", "suggestion": "男 / 女" },
-      "zh_native": { "label": "籍贯", "message": "中文简历常见籍贯信息", "suggestion": "如：广东广州" },
-      "zh_political": { "label": "政治面貌", "message": "国内部分岗位会关注政治面貌", "suggestion": "党员 / 团员 / 群众" },
-      "zh_political_strict": { "label": "政治面貌", "message": "国企/事业单位/考公类岗位常需政治面貌", "suggestion": "党员 / 团员 / 群众" },
-      "zh_education": { "label": "教育经历", "message": "中文简历教育经历通常紧跟个人信息", "suggestion": "学校、专业、学位、起止时间" },
-      "zh_experience": { "label": "实习/工作经历", "message": "中文简历需有实习或工作经历模块", "suggestion": "按时间倒序，描述职责与成果" },
-      "zh_projects": { "label": "项目经历", "message": "技术/互联网岗位中文简历强烈建议有项目经历", "suggestion": "突出技术栈与个人贡献" },
-      "zh_skills": { "label": "技能/证书", "message": "中文简历需列技能与证书（四六级、计算机、资格证等）", "suggestion": "如：CET-6、计算机二级、Python" },
-      "zh_awards": { "label": "荣誉奖项", "message": "中文简历可含奖学金、竞赛、荣誉称号", "suggestion": "按重要性列出 2-4 项" },
-      "zh_summary": { "label": "自我评价", "message": "中文简历通常有自我评价段落", "suggestion": "2-4 句，突出优势与岗位匹配，避免空泛形容词堆砌" },
-      "zh_foreign_employer": { "label": "外企中文简历", "message": "目标单位为外企时，中文简历也应更结果导向、减少空泛自我评价", "suggestion": "突出量化成果、跨文化/跨境协作与语言能力（粤语/英语/普通话）" },
-      "zh_hmt_employer": { "label": "港澳台资中文简历", "message": "目标单位为港澳台资时，中文简历也应更结果导向、减少空泛自我评价", "suggestion": "突出量化成果、跨文化/跨境协作与语言能力（粤语/英语/普通话）" },
-      "zh_npo_mission": { "label": "公益/志愿经历", "message": "非营利组织岗位重视社会使命与项目/志愿服务经历", "suggestion": "补充 NGO 项目、志愿服务、社会影响力相关描述" },
-      "zh_soe_photo": { "label": "国央企/体制内证件照", "message": "您选择了国央企/体制内方向，证件照几乎是硬性要求", "suggestion": "请补充白底/浅蓝底正装一寸照" },
-      "en_no_photo_warn": { "label": "个人照片", "message": "欧美英文简历严禁放照片（涉嫌歧视，会直接淘汰）", "suggestion": "请移除照片；港澳台/新加坡金融前台类可酌情保留专业证件照" },
-      "en_no_photo_ok": { "label": "无个人照片", "message": "符合欧美英文简历规范（不放照片）", "suggestion": "" },
-      "en_name": { "label": "姓名（页眉）", "message": "英文简历以姓名为页面最大标题，不写 Resume/CV 大字", "suggestion": "仅写 FirstName LastName" },
-      "en_phone": { "label": "电话", "message": "需填写手机号码", "suggestion": "如有需要可注明国家区号" },
-      "en_email": { "label": "邮箱", "message": "需使用专业邮箱地址", "suggestion": "使用正式邮箱，避免昵称邮箱" },
-      "en_city": { "label": "城市", "message": "英文简历只写城市，不写详细住址", "suggestion": "如：Guangzhou, China" },
-      "en_linkedin": { "label": "LinkedIn", "message": "英文简历强烈建议附 LinkedIn 链接", "suggestion": "https://linkedin.com/in/yourname" },
-      "en_forbid_age": { "label": "年龄", "message": "英文简历不应出现年龄（欧美职场反歧视规范）", "suggestion": "请从简历中删除该信息" },
-      "en_forbid_gender": { "label": "性别", "message": "英文简历不应出现性别（欧美职场反歧视规范）", "suggestion": "请从简历中删除该信息" },
-      "en_forbid_marital": { "label": "婚姻状况", "message": "英文简历不应出现婚姻状况（欧美职场反歧视规范）", "suggestion": "请从简历中删除该信息" },
-      "en_forbid_ethnicity": { "label": "籍贯/民族/身高", "message": "英文简历不应出现籍贯、民族或身高（欧美职场反歧视规范）", "suggestion": "请从简历中删除该信息" },
-      "en_forbid_political": { "label": "政治面貌/身份证号", "message": "英文简历不应出现政治面貌或身份证号（欧美职场反歧视规范）", "suggestion": "请从简历中删除该信息" },
-      "en_forbid_dob": { "label": "出生日期", "message": "英文简历不应出现出生日期（欧美职场反歧视规范）", "suggestion": "请从简历中删除该信息" },
-      "en_summary": { "label": "Professional Summary", "message": "英文简历用 3-4 行 Professional Summary 替代中文大段自我评价", "suggestion": "精简概括核心技能与成果，避免空泛形容词" },
-      "en_summary_long": { "label": "Summary 过长", "message": "英文简历的 Summary 建议控制在 3-4 行", "suggestion": "删减至核心卖点，控制整份简历页数" },
-      "en_experience": { "label": "Work Experience", "message": "英文简历工作经历优先于教育背景", "suggestion": "动词开头 + 量化结果，如：Led X, improved Y by 20%" },
-      "en_quantified": { "label": "量化成果", "message": "英文经历描述需动词开头并含量化数据", "suggestion": "行动动词 + 任务 + 可衡量结果" },
-      "en_education": { "label": "Education", "message": "教育背景放在 Work Experience 之后", "suggestion": "用英文写学位，如 B.S. in Computer Science" },
-      "en_skills": { "label": "Skills", "message": "Skills 放在经历之后，紧凑列表", "suggestion": "按类别分组，逗号分隔" },
-      "en_lang_cert_cet": { "label": "语言证书", "message": "海外/欧美英文简历中 CET-4/6 认可度低", "suggestion": "如有雅思/托福成绩请补充；否则写 Fluent English" },
-      "en_lang_cert": { "label": "英语能力", "message": "英文简历建议注明英语能力", "suggestion": "IELTS 7.0 / TOEFL 100 / Fluent English" },
-      "en_lang_cert_ok": { "label": "英语能力", "message": "已标注国际认可的语言能力", "suggestion": "" },
-      "en_one_page": { "label": "页数限制", "message": "英文简历建议控制在推荐页数以内", "suggestion": "删减次要内容，保持简洁" },
-      "en_no_subjective": { "label": "主观形容词", "message": "英文简历避免堆砌主观形容词", "suggestion": "改用量化成果和行为动词描述" }
+      "zh_photo": {
+        "label": "证件照",
+        "message": "中文简历（国企/事业单位/银行/教师/传统行业）建议附正装证件照",
+        "suggestion": "请上传白底/浅蓝底一寸证件照，置于简历右上角；互联网技术岗可选"
+      },
+      "zh_photo_strict": {
+        "label": "证件照",
+        "message": "国央企/体制内岗位必须附正装证件照",
+        "suggestion": "请上传白底/浅蓝底一寸证件照，置于简历右上角"
+      },
+      "zh_name": {
+        "label": "姓名",
+        "message": "姓名是中文简历顶部必填项",
+        "suggestion": "请在基本信息中填写姓名"
+      },
+      "zh_phone": {
+        "label": "电话",
+        "message": "国内简历需留手机号码",
+        "suggestion": "格式：138 XXXX XXXX"
+      },
+      "zh_email": {
+        "label": "邮箱",
+        "message": "邮箱是国内简历常规联系方式",
+        "suggestion": "如 xxx@163.com"
+      },
+      "zh_address": {
+        "label": "住址",
+        "message": "中文简历通常写详细住址（省市区）",
+        "suggestion": "例：广东省广州市 XX 区"
+      },
+      "zh_age": {
+        "label": "年龄",
+        "message": "国内常规简历建议注明年龄",
+        "suggestion": "可在个人信息中补充年龄"
+      },
+      "zh_gender": {
+        "label": "性别",
+        "message": "国内常规简历建议注明性别",
+        "suggestion": "男 / 女"
+      },
+      "zh_native": {
+        "label": "籍贯",
+        "message": "中文简历常见籍贯信息",
+        "suggestion": "如：广东广州"
+      },
+      "zh_political": {
+        "label": "政治面貌",
+        "message": "国内部分岗位会关注政治面貌",
+        "suggestion": "党员 / 团员 / 群众"
+      },
+      "zh_political_strict": {
+        "label": "政治面貌",
+        "message": "国企/事业单位/考公类岗位常需政治面貌",
+        "suggestion": "党员 / 团员 / 群众"
+      },
+      "zh_education": {
+        "label": "教育经历",
+        "message": "中文简历教育经历通常紧跟个人信息",
+        "suggestion": "学校、专业、学位、起止时间"
+      },
+      "zh_experience": {
+        "label": "实习/工作经历",
+        "message": "中文简历需有实习或工作经历模块",
+        "suggestion": "按时间倒序，描述职责与成果"
+      },
+      "zh_projects": {
+        "label": "项目经历",
+        "message": "技术/互联网岗位中文简历强烈建议有项目经历",
+        "suggestion": "突出技术栈与个人贡献"
+      },
+      "zh_skills": {
+        "label": "技能/证书",
+        "message": "中文简历需列技能与证书（四六级、计算机、资格证等）",
+        "suggestion": "如：CET-6、计算机二级、Python"
+      },
+      "zh_awards": {
+        "label": "荣誉奖项",
+        "message": "中文简历可含奖学金、竞赛、荣誉称号",
+        "suggestion": "按重要性列出 2-4 项"
+      },
+      "zh_summary": {
+        "label": "自我评价",
+        "message": "中文简历通常有自我评价段落",
+        "suggestion": "2-4 句，突出优势与岗位匹配，避免空泛形容词堆砌"
+      },
+      "zh_foreign_employer": {
+        "label": "外企中文简历",
+        "message": "目标单位为外企时，中文简历也应更结果导向、减少空泛自我评价",
+        "suggestion": "突出量化成果、跨文化/跨境协作与语言能力（粤语/英语/普通话）"
+      },
+      "zh_hmt_employer": {
+        "label": "港澳台资中文简历",
+        "message": "目标单位为港澳台资时，中文简历也应更结果导向、减少空泛自我评价",
+        "suggestion": "突出量化成果、跨文化/跨境协作与语言能力（粤语/英语/普通话）"
+      },
+      "zh_npo_mission": {
+        "label": "公益/志愿经历",
+        "message": "非营利组织岗位重视社会使命与项目/志愿服务经历",
+        "suggestion": "补充 NGO 项目、志愿服务、社会影响力相关描述"
+      },
+      "zh_soe_photo": {
+        "label": "国央企/体制内证件照",
+        "message": "您选择了国央企/体制内方向，证件照几乎是硬性要求",
+        "suggestion": "请补充白底/浅蓝底正装一寸照"
+      },
+      "en_no_photo_warn": {
+        "label": "个人照片",
+        "message": "欧美英文简历严禁放照片（涉嫌歧视，会直接淘汰）",
+        "suggestion": "请移除照片；港澳台/新加坡金融前台类可酌情保留专业证件照"
+      },
+      "en_no_photo_ok": {
+        "label": "无个人照片",
+        "message": "符合欧美英文简历规范（不放照片）",
+        "suggestion": ""
+      },
+      "en_name": {
+        "label": "姓名（页眉）",
+        "message": "英文简历以姓名为页面最大标题，不写 Resume/CV 大字",
+        "suggestion": "仅写 FirstName LastName"
+      },
+      "en_phone": {
+        "label": "电话",
+        "message": "需填写手机号码",
+        "suggestion": "如有需要可注明国家区号"
+      },
+      "en_email": {
+        "label": "邮箱",
+        "message": "需使用专业邮箱地址",
+        "suggestion": "使用正式邮箱，避免昵称邮箱"
+      },
+      "en_city": {
+        "label": "城市",
+        "message": "英文简历只写城市，不写详细住址",
+        "suggestion": "如：Guangzhou, China"
+      },
+      "en_linkedin": {
+        "label": "LinkedIn",
+        "message": "英文简历强烈建议附 LinkedIn 链接",
+        "suggestion": "https://linkedin.com/in/yourname"
+      },
+      "en_forbid_age": {
+        "label": "年龄",
+        "message": "英文简历不应出现年龄（欧美职场反歧视规范）",
+        "suggestion": "请从简历中删除该信息"
+      },
+      "en_forbid_gender": {
+        "label": "性别",
+        "message": "英文简历不应出现性别（欧美职场反歧视规范）",
+        "suggestion": "请从简历中删除该信息"
+      },
+      "en_forbid_marital": {
+        "label": "婚姻状况",
+        "message": "英文简历不应出现婚姻状况（欧美职场反歧视规范）",
+        "suggestion": "请从简历中删除该信息"
+      },
+      "en_forbid_ethnicity": {
+        "label": "籍贯/民族/身高",
+        "message": "英文简历不应出现籍贯、民族或身高（欧美职场反歧视规范）",
+        "suggestion": "请从简历中删除该信息"
+      },
+      "en_forbid_political": {
+        "label": "政治面貌/身份证号",
+        "message": "英文简历不应出现政治面貌或身份证号（欧美职场反歧视规范）",
+        "suggestion": "请从简历中删除该信息"
+      },
+      "en_forbid_dob": {
+        "label": "出生日期",
+        "message": "英文简历不应出现出生日期（欧美职场反歧视规范）",
+        "suggestion": "请从简历中删除该信息"
+      },
+      "en_summary": {
+        "label": "Professional Summary",
+        "message": "英文简历用 3-4 行 Professional Summary 替代中文大段自我评价",
+        "suggestion": "精简概括核心技能与成果，避免空泛形容词"
+      },
+      "en_summary_long": {
+        "label": "Summary 过长",
+        "message": "英文简历的 Summary 建议控制在 3-4 行",
+        "suggestion": "删减至核心卖点，控制整份简历页数"
+      },
+      "en_experience": {
+        "label": "Work Experience",
+        "message": "英文简历工作经历优先于教育背景",
+        "suggestion": "动词开头 + 量化结果，如：Led X, improved Y by 20%"
+      },
+      "en_quantified": {
+        "label": "量化成果",
+        "message": "英文经历描述需动词开头并含量化数据",
+        "suggestion": "行动动词 + 任务 + 可衡量结果"
+      },
+      "en_education": {
+        "label": "Education",
+        "message": "教育背景放在 Work Experience 之后",
+        "suggestion": "用英文写学位，如 B.S. in Computer Science"
+      },
+      "en_skills": {
+        "label": "Skills",
+        "message": "Skills 放在经历之后，紧凑列表",
+        "suggestion": "按类别分组，逗号分隔"
+      },
+      "en_lang_cert_cet": {
+        "label": "语言证书",
+        "message": "海外/欧美英文简历中 CET-4/6 认可度低",
+        "suggestion": "如有雅思/托福成绩请补充；否则写 Fluent English"
+      },
+      "en_lang_cert": {
+        "label": "英语能力",
+        "message": "英文简历建议注明英语能力",
+        "suggestion": "IELTS 7.0 / TOEFL 100 / Fluent English"
+      },
+      "en_lang_cert_ok": {
+        "label": "英语能力",
+        "message": "已标注国际认可的语言能力",
+        "suggestion": ""
+      },
+      "en_one_page": {
+        "label": "页数限制",
+        "message": "英文简历建议控制在推荐页数以内",
+        "suggestion": "删减次要内容，保持简洁"
+      },
+      "en_no_subjective": {
+        "label": "主观形容词",
+        "message": "英文简历避免堆砌主观形容词",
+        "suggestion": "改用量化成果和行为动词描述"
+      }
     },
     "checklist": {
       "photo": "证件照",
@@ -1143,10 +1324,18 @@
     "saveConfirmedNote": "确认保存后存储在账户中，直至您删除",
     "exportWithoutSaveNote": "您可随时选择仅导出而不保存",
     "saveAndExport": "保存到账户并导出",
+    "saveOverwriteAndExport": "覆盖会话记录并导出",
+    "saveAsNewAndExport": "另存为新记录并导出",
     "exportOnly": "仅导出（不保存）",
     "cancelExport": "取消",
+    "uploadOverwriteTitle": "是否覆盖当前简历？",
+    "uploadOverwriteBody": "上传新简历将替换本会话中已解析的资料与已生成的简历内容；账户中其他已保存记录不受影响，除非您在保存时选择覆盖会话记录。",
+    "uploadConfirmOverwrite": "确认覆盖并解析新简历",
+    "uploadSaveAsNew": "另存当前简历后再上传",
+    "saveModalOverwriteBody": "本会话在您的账户中已有保存记录。再次「保存到账户」将覆盖该会话记录；您也可以选择另存为新的命名记录。",
     "toast": {
       "savedToAccount": "简历已保存到您的账户",
+      "savedAsNewRecord": "已另存为新记录：{name}",
       "saveFailed": "保存失败：{msg}",
       "jdFromCache": "已从缓存加载建议岗位描述 — 您可编辑后再继续",
       "jdGenerated": "已生成建议岗位描述 — 您可编辑后再继续",
@@ -1207,6 +1396,7 @@
       "printFailed": "浏览器打印失败：{msg}",
       "exportFailed": "导出失败：{msg}",
       "pdfFallbackConfirm": "服务端 PDF 导出暂不可用。\n\n是否改用浏览器打印？\n请在打印对话框中选择「另存为 PDF」或「Microsoft Print to PDF」。",
+      "demoExportUnavailable": "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印。",
       "savingToAccount": "正在保存到您的账户…",
       "savingProfile": "正在保存资料到您的账户…",
       "profileSaved": "简历资料已保存到您的账户",
@@ -1266,7 +1456,35 @@
       "removed": "已移除证件照",
       "readFailed": "无法读取图片",
       "invalidImage": "图片格式无效"
-    }
+    },
+    "savedRecordsTitle": "已保存的资料",
+    "savedRecordsRefresh": "刷新",
+    "savedRecordsHint": "每次保存为独立记录。上传新简历仅替换当前工作副本。",
+    "savedRecordsEmpty": "暂无已保存资料。点击「保存到账户」创建一条记录。",
+    "exportPdf": "PDF",
+    "exportDocx": "DOCX",
+    "exportHtml": "HTML",
+    "exportMarkdown": "Markdown",
+    "exportJson": "JSON",
+    "exportPlainText": "纯文本",
+    "exportWord": "Word",
+    "chineseResumes": "中文简历",
+    "englishResumes": "英文简历",
+    "parsedName": "姓名",
+    "parsedEmail": "邮箱",
+    "parsedPhone": "电话",
+    "parsedCity": "城市",
+    "parsedGithub": "GitHub",
+    "parsedSummary": "个人总结",
+    "parsedResumeTitle": "简历内容",
+    "parsedBasicInfo": "基本信息",
+    "factTypeEducation": "教育",
+    "factTypeSkill": "技能",
+    "factTypeInternship": "实习/工作",
+    "factTypeProject": "项目",
+    "factTypeAward": "奖项",
+    "factTypePaper": "论文",
+    "factTypeOther": "其他"
   },
   "strings": {
     "GBA Platform": "大湾区平台",
@@ -1376,7 +1594,45 @@
     "What statistics are shown on the home page?": "首页展示哪些统计数据？",
     "The hero and signup sections display live platform statistics — registered job seekers, partner companies, active job openings, and strong match rates — updated regularly from our database. If data is temporarily unavailable, placeholders are shown.": "首页英雄区与注册区展示平台实时统计：注册求职者、合作企业、在招岗位与高匹配率，数据定期更新。若暂时无法加载，将显示占位符。",
     "What languages does the platform support?": "平台支持哪些语言？",
-    "The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.": "平台支持简体中文、繁体中文、英文和葡语，覆盖大湾区多元语言环境。可随时通过顶部导航的语言选择器切换。"
+    "The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.": "平台支持简体中文、繁体中文、英文和葡语，覆盖大湾区多元语言环境。可随时通过顶部导航的语言选择器切换。",
+    "PDF": "PDF",
+    "Word": "Word",
+    "DOCX": "DOCX",
+    "Plain text": "纯文本",
+    "Markdown": "Markdown",
+    "extracts text only": "仅提取文字",
+    "Chinese resumes": "中文简历",
+    "English resumes": "英文简历",
+    "Simplified Chinese": "简体中文",
+    "Traditional Chinese": "繁体中文",
+    "English": "English",
+    "Portuguese": "Portuguese",
+    "Português": "Português",
+    "Technology & Software": "科技与软件",
+    "Finance & Banking": "金融与银行",
+    "E-commerce & Retail": "电商与零售",
+    "Healthcare & Medical": "医疗与健康",
+    "Education & Training": "教育与培训",
+    "Manufacturing": "制造业",
+    "State-owned (国央企)": "国央企",
+    "Public Sector (体制内)": "体制内",
+    "Foreign Enterprise (外企)": "外企",
+    "Private Enterprise (民企)": "民企",
+    "Non-profit (NPO/NGO)": "非营利组织（NPO/NGO）",
+    "HK/Macau/TW-funded (港澳台资)": "港澳台资企业",
+    "Other (其他)": "其他",
+    "Employer type / 单位性质": "单位性质",
+    "Experience level / 经验等级": "经验等级",
+    "Entry Level": "初级",
+    "Mid Level": "中级",
+    "Senior Level": "高级",
+    "Executive": "管理层",
+    "Technology": "科技",
+    "Finance": "金融",
+    "E-commerce": "电商",
+    "Healthcare": "医疗",
+    "Education": "教育",
+    "Note": "说明"
   },
   "portal": {
     "documentTitle": "GBA 跨区域就业赋能平台 — 个人端门户",
@@ -1460,6 +1716,11 @@
     "interviewStyle": "面试风格",
     "questionLanguageLabel": "面试题语言",
     "questionLanguageHint": "面试题与参考答案将使用该语言，可与页面语言、反馈语言分别设置。",
+    "questionLanguageEarlyTitle": "面试题语言（请先选择）",
+    "questionLanguageEarlyHint": "在生成题库或开始模拟面试之前，请先选择面试题语言；生成后将沿用此语言。",
+    "questionLanguageRegenHint": "生成后如需更换语言，请重新生成题库或重新开始模拟面试。",
+    "questionLanguageSelected": "已选择：{lang}",
+    "questionLanguageDefault": "当前默认（页面语言）：{lang} — 请点击上方按钮确认",
     "feedbackLanguageLabel": "反馈语言",
     "feedbackLanguageHint": "AI 反馈与复盘将使用该语言，可与页面语言、面试题语言分别设置。",
     "toneProfessional": "专业",
@@ -1518,11 +1779,22 @@
     "customUploadTitle": "上传你的面试题",
     "customUploadDesc": "粘贴或上传题目，AI 将根据你的资料与岗位生成个性化参考答案。",
     "uploadTxt": "上传 .txt 文件",
+    "customQuestionsPlaceholder": "每行一题，例如：\n请介绍一下你最有成就感的项目\n你如何处理跨部门协作中的冲突？\n为什么选择这个岗位？",
     "removeFile": "移除文件",
     "yourAnswer": "你的回答",
     "answerPlaceholder": "在此输入回答。行为题建议使用 STAR 法则（情境、任务、行动、结果）...",
     "answerTip": "提示：请具体说明并给出实例",
     "submitAnswer": "提交回答",
+    "questionNumberLabel": "第 {n} 题",
+    "questionNumberPrefix": "题目",
+    "questionPlaceholder": "面试题目将显示在这里…",
+    "btnPrevious": "上一题",
+    "btnNext": "下一题",
+    "sendAnswer": "发送回答",
+    "interactiveAnswersHint": "回答将实时驱动追问生成",
+    "debriefTitle": "面试复盘",
+    "interactiveSaveLoginSuffix": "以将此次模拟面试保存到您的账户。",
+    "downloadDebrief": "下载复盘",
     "referenceAnswer": "参考答案",
     "show": "显示",
     "hide": "隐藏",
@@ -1596,15 +1868,63 @@
       "sessionReset": "会话已重置",
       "noQuestionsGenerated": "未生成面试题。请确保资料、岗位描述与简历已完整。",
       "noReferenceAnswers": "未生成参考答案。请确保资料、岗位描述与简历已完整。",
-      "savedToAccount": "模拟面试已保存到您的账户"
+      "selectQuestionLanguageFirst": "请先选择面试题语言",
+      "savedToAccount": "模拟面试已保存到您的账户",
+      "waitingFollowUps": "请等待追问生成完成"
+    },
+    "selectEmployerType": "单位性质",
+    "selectExperienceLevel": "经验等级",
+    "specialTechnical": "只练技术/专业题",
+    "specialNegotiation": "只练终面谈判",
+    "specialDeepDive": "只练简历深挖",
+    "confirmEndInterview": "结束模拟面试并生成复盘报告？",
+    "confirmSaveInterview": "将此模拟面试与复盘保存到您的账户？",
+    "confirmNewSession": "开始新的面试会话？当前进度将丢失。",
+    "phasePrimary": "请按顺序回答每道题；点评将异步显示。",
+    "phaseWaitingFollowUps": "预设题已答完，正在生成追问与点评，请稍候…",
+    "phaseFollowUp": "追问阶段 — 请按顺序回答。",
+    "phaseCompleted": "面试已结束。",
+    "loadingGeneratingResume": "正在生成定制简历内容…",
+    "loadingGeneratingDebrief": "正在生成复盘报告…",
+    "loadingSavingInterview": "正在保存到您的账户…",
+    "chat": {
+      "briefFeedback": "简要点评",
+      "stageTransition": "阶段过渡",
+      "interviewer": "面试官",
+      "you": "你"
     }
+  },
+  "savedProfile": {
+    "useSavedTitle": "使用已保存的资料",
+    "useSavedHint": "选择已保存的简历可跳过重新上传，但仍需提交目标岗位描述。"
+  },
+  "profileReview": {
+    "parsedTitle": "解析后的简历（可编辑）",
+    "parsedHint": "请检查并编辑提取的内容。继续前请点击「应用修改」同步变更。",
+    "applyEdits": "应用修改",
+    "saveNew": "保存到账户",
+    "overwrite": "覆盖已保存记录"
   },
   "learningPath": {
     "title": "个性化学习路径",
     "pageTitle": "个性化学习路径 — GBA Platform",
     "sessionLabel": "会话",
     "notStarted": "未开始",
+    "contentLanguageEarlyTitle": "内容语言（请先选择）",
+    "contentLanguageEarlyHint": "在分析技能差距与生成学习路径之前，请先选择内容语言；生成后将沿用此语言。",
+    "contentLanguageRegenHint": "生成后如需更换语言，请重新分析并生成学习路径。",
+    "contentLanguageSelected": "已选择：{lang}",
+    "contentLanguageDefault": "当前默认（页面语言）：{lang} — 请点击上方按钮确认",
     "goalsTitle": "设定职业目标",
+    "prerequisitesTitle": "分析前准备",
+    "prereqProfile": "已提交简历/资料",
+    "prereqJob": "已提交目标岗位描述",
+    "step1Profile": "步骤 1：你的简历 / 资料",
+    "uploadResume": "上传简历文件（PDF、DOCX、TXT、MD）",
+    "removeFile": "移除",
+    "submitProfile": "解析并提交资料",
+    "step2Jd": "步骤 2：目标岗位描述",
+    "submitJd": "提交岗位描述",
     "targetJob": "目标岗位",
     "targetJobPlaceholder": "例如：高级软件工程师",
     "currentRole": "当前职位（可选）",
@@ -1685,6 +2005,7 @@
     "selectType": "选择类型",
     "selectLevel": "选择等级",
     "toast": {
+      "selectContentLanguageFirst": "请先选择内容语言",
       "targetJobRequired": "请输入目标岗位名称",
       "skillsRequired": "请填写现有技能、职位或资料详情",
       "gapCompleted": "技能差距分析完成！请选择每日学习时长。",
@@ -1864,7 +2185,20 @@
     "loadTestDataFirst": "请先加载 test-data/browser-bundle.js。",
     "apiNotLoaded": "API 客户端未加载，请以企业账号登录。",
     "individualOnlyProfile": "仅个人账号可编辑此页面。",
-    "invalidHealthCheck": "健康检查响应无效。"
+    "invalidHealthCheck": "健康检查响应无效。",
+    "backendUnavailable": "后端不可用，请确认 API 服务已启动。",
+    "backendUnavailableTitle": "后端不可用",
+    "backendHealthCheckFailed": "无法连接后端（健康检查失败）。地址：{url}。请启动：cd backend && python main.py",
+    "backendRetry": "重试连接",
+    "backendRestored": "已连接后端 — 可以重试您的操作",
+    "networkErrorWithUrl": "网络错误 — 无法从 {url} 获得响应。请确认后端已启动（cd backend && python main.py）。",
+    "apiErrorWithStatus": "HTTP {status} — {detail} [{url}]",
+    "http401": "HTTP 401 未授权 — {detail} [{url}]",
+    "http403": "HTTP 403 禁止访问 — {detail} [{url}]",
+    "http404": "HTTP 404 未找到 — {detail} [{url}]",
+    "http422": "HTTP 422 请求无效 — {detail} [{url}]",
+    "http500": "HTTP 500 服务器内部错误 — {detail} [{url}]",
+    "http503": "HTTP 503 服务不可用 — {detail} [{url}]"
   },
   "apiMessages": {
     "SESSION_BUSY": "该会话已有 AI 任务正在处理，请稍候完成后再试",
@@ -1924,7 +2258,25 @@
     "面试已结束": "面试已结束",
     "请继续回答": "请继续回答",
     "复盘报告已生成（demo mode）": "复盘报告已生成（演示模式）",
-    "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印": "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印"
+    "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印": "演示模式不支持服务端 PDF/DOCX，请连接后端或使用浏览器打印",
+    "INTERVIEW_STARTED": "模拟面试已开始，请回答面试官的问题。",
+    "INTERVIEW_TURN_ENDED": "面试已结束，可查看复盘报告。",
+    "INTERVIEW_TURN_WAITING": "预设题已答完，正在生成追问与点评，请稍候…",
+    "INTERVIEW_TURN_NEXT": "请继续回答下一题；点评将异步显示。",
+    "INTERVIEW_TURN_RECORDED": "回答已记录，请稍候下一题或点评。",
+    "INTERVIEW_POLL_ENDED": "面试已结束。",
+    "INTERVIEW_POLL_WAITING_FU": "追问生成中，请稍候…",
+    "INTERVIEW_POLL_FEEDBACK": "点评生成中…",
+    "INTERVIEW_POLL_SYNCED": "已同步最新状态。",
+    "INTERVIEW_DEBRIEF_READY": "复盘报告已生成。",
+    "INTERVIEW_ERR_NO_PREREQUISITES": "缺少岗位、候选人画像或简历内容，无法开始模拟面试",
+    "INTERVIEW_ERR_NO_BANK": "未能生成面试题库，请补充岗位或简历信息后重试",
+    "INTERVIEW_ERR_ALREADY_ACTIVE": "已有进行中的模拟面试，请先结束或完成当前会话",
+    "INTERVIEW_ERR_NOT_ACTIVE": "没有进行中的模拟面试",
+    "INTERVIEW_ERR_EMPTY_ANSWER": "请提供回答内容",
+    "INTERVIEW_ERR_NO_CURRENT_QUESTION": "当前没有待回答的面试题",
+    "INTERVIEW_ERR_NO_POLL_SESSION": "没有可轮询的模拟面试会话",
+    "INTERVIEW_ERR_NO_TURNS": "没有面试对话记录"
   },
   "app": {
     "connected": "已连接后端服务器",
@@ -2629,5 +2981,97 @@
     "test3bPass": "✓ 回答已评估 | 代理：{agents}",
     "test3Done": "✓ 面试工作流执行成功",
     "test3Fail": "✗ 面试工作流失败：{msg}"
+  },
+  "siteGuide": {
+    "fabLabel": "使用指引",
+    "welcomeTitle": "欢迎使用大湾区就业赋能平台",
+    "welcomeBody": "接下来将用几步介绍网站主要功能。可随时跳过，之后也可通过左下角按钮重温指引。",
+    "stepOf": "第 {current} / {total} 步",
+    "skip": "跳过指引",
+    "back": "上一步",
+    "next": "下一步",
+    "finish": "完成",
+    "replay": "重温指引",
+    "close": "关闭",
+    "steps": {
+      "home": [
+        {
+          "title": "欢迎使用大湾区就业赋能平台",
+          "body": "本平台连接大湾区求职者与包容型企业，提供 AI 简历/面试、岗位匹配与法律支持等服务。"
+        },
+        {
+          "title": "选择入口",
+          "body": "个人用户进入「个人端」，企业用户进入「企业端」。两端共享同一套平台能力。"
+        },
+        {
+          "title": "平台能力",
+          "body": "了解智能简历、面试准备、学习路径、政策工具与包容招聘等功能，助力跨境就业。"
+        },
+        {
+          "title": "运作方式",
+          "body": "从注册建档、智能匹配到投递、面试与入职跟进，一站式完成就业闭环。"
+        },
+        {
+          "title": "常见问题",
+          "body": "查阅访问权限、捐款解锁、数据安全与无障碍等说明，点击问题展开详情。"
+        },
+        {
+          "title": "语言与无障碍",
+          "body": "可切换英文、中文与葡语。"
+        }
+      ],
+      "individual": [
+        {
+          "title": "个人端使用指引",
+          "body": "仪表盘集中了 AI 职业工具、岗位匹配、投递记录与捐款/法律服务入口。"
+        },
+        {
+          "title": "个人仪表盘",
+          "body": "在此查看全部工具入口与访问状态横幅，建议先完善资料再开始使用。"
+        },
+        {
+          "title": "智能简历",
+          "body": "上传简历与目标岗位描述，AI 分析差距并生成定制版简历。"
+        },
+        {
+          "title": "面试准备",
+          "body": "针对目标岗位练习 AI 生成的面试题，获得反馈后再参加真实面试。"
+        },
+        {
+          "title": "岗位匹配",
+          "body": "按人群类型与简历评分浏览推荐岗位，平台内可直接投递。"
+        },
+        {
+          "title": "捐款与法律服务",
+          "body": "弱势群体免费使用；其他用户可向法律服务捐款箱捐款（金额不限）以解锁功能。"
+        }
+      ],
+      "corporate": [
+        {
+          "title": "企业端使用指引",
+          "body": "在一个门户中管理包容招聘、发布带目标条件的岗位，并查看评分排序的申请人。"
+        },
+        {
+          "title": "招聘仪表盘",
+          "body": "查看多样性指标、招聘漏斗数据与快捷操作。"
+        },
+        {
+          "title": "HR 与合规工具",
+          "body": "使用盲筛、合规测算、DEI 分析与远程包容工作就绪检查。"
+        },
+        {
+          "title": "岗位管理",
+          "body": "查看已发布岗位、编辑要求并监控申请量。"
+        },
+        {
+          "title": "发布岗位",
+          "body": "创建带目标人群条件的包容型岗位，以便系统准确匹配评分。"
+        },
+        {
+          "title": "语言",
+          "body": "在此切换界面语言。"
+        }
+      ]
+    }
   }
 }

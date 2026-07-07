@@ -139,6 +139,20 @@ class MySQLStore:
     async def get_candidate_profile(self, session_id: str) -> dict | None:
         return await self._get_by_session("candidate_profiles", session_id)
 
+    async def session_has_persisted_resume(self, session_id: str) -> bool:
+        """Whether this session_id already has session-level resume rows in MySQL."""
+        sql = """
+            SELECT 1 AS found FROM candidate_profiles WHERE session_id = %s
+            UNION ALL
+            SELECT 1 FROM resume_contents WHERE session_id = %s
+            LIMIT 1
+        """
+        async with self._pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql, (session_id, session_id))
+                row = await cur.fetchone()
+        return row is not None
+
     async def get_latest_candidate_profile_for_user(
         self, user_id: int | str,
     ) -> dict[str, Any] | None:
@@ -435,14 +449,29 @@ class MySQLStore:
         record_name: str,
         candidate_name: str,
         data: dict,
+        *,
+        overwrite: bool = False,
     ) -> None:
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         json_str = json.dumps(data, ensure_ascii=False, default=str)
-        sql = """
-            INSERT INTO saved_profile_records
-                (id, session_id, user_id, record_name, candidate_name, data, saved_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
+        if overwrite:
+            sql = """
+                INSERT INTO saved_profile_records
+                    (id, session_id, user_id, record_name, candidate_name, data, saved_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    session_id = VALUES(session_id),
+                    record_name = VALUES(record_name),
+                    candidate_name = VALUES(candidate_name),
+                    data = VALUES(data),
+                    saved_at = VALUES(saved_at)
+            """
+        else:
+            sql = """
+                INSERT INTO saved_profile_records
+                    (id, session_id, user_id, record_name, candidate_name, data, saved_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
         async with self._pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(sql, (

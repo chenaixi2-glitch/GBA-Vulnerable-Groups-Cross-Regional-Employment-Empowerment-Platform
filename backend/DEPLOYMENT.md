@@ -166,19 +166,22 @@ FASTAPI_WORKERS=1
 
 ### 4. 配置 Node 认证后端
 
-见 `server/README.md`，使用 `server/.env.production`（库名 `gba_website`）。
+见 `server/README.md`：
+```bash
+cd server
+cp env.production.example .env.production
+# 库名 gba_website，RDS 与 Python 后端同实例
+pm2 start ecosystem.config.js --env production
+```
 
 ## 三、本地开发（XAMPP）
 
 1. 启动 XAMPP MySQL
 2. 安装并启动 Redis（Windows 可用 Memurai 或 WSL Redis）
-3. 配置 `backend/.env`（已提供本地默认值）：
-   ```ini
-   MYSQL_HOST=127.0.0.1
-   MYSQL_USER=root
-   MYSQL_PASSWORD=
-   MYSQL_DATABASE=ai_career_copilot
-   REDIS_HOST=127.0.0.1
+3. 配置 `backend/.env`：
+   ```bash
+   cp env.development.example .env
+   # 填入 AI API Keys；XAMPP root 有密码时改 MYSQL_PASSWORD
    ```
 4. 初始化本地 AI 库：
    ```bash

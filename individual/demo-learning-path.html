@@ -144,8 +144,51 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Content language — must be chosen before generating learning path -->
+        <section id="learning-path-language-section" class="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-sm ring-1 ring-orange-100 mb-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                <i class="fas fa-language text-orange-600"></i>
+                <span data-i18n="learningPath.contentLanguageEarlyTitle">Content Language (choose first)</span>
+            </h2>
+            <p class="text-xs text-orange-800 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2 mb-2" data-i18n="learningPath.contentLanguageEarlyHint">Select the content language before analyzing skill gaps and generating your learning path. This language is used for all generated content.</p>
+            <p class="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-3" data-i18n="learningPath.contentLanguageRegenHint">To change the language after generation, re-run the analysis and regenerate your learning path.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl">
+                <button type="button" data-learning-path-lang="zh" onclick="selectLearningPathLanguage('zh')"
+                    class="px-2 py-2 border border-red-300 rounded-lg text-xs font-medium text-red-800 hover:bg-red-50">
+                    <i class="fas fa-comments mr-1"></i><span class="interview-lang-label">Simplified Chinese</span>
+                </button>
+                <button type="button" data-learning-path-lang="zh-TW" onclick="selectLearningPathLanguage('zh-TW')"
+                    class="px-2 py-2 border border-rose-300 rounded-lg text-xs font-medium text-rose-800 hover:bg-rose-50">
+                    <i class="fas fa-comments mr-1"></i><span class="interview-lang-label">Traditional Chinese</span>
+                </button>
+                <button type="button" data-learning-path-lang="en" onclick="selectLearningPathLanguage('en')"
+                    class="px-2 py-2 border border-blue-300 rounded-lg text-xs font-medium text-blue-800 hover:bg-blue-50">
+                    <i class="fas fa-globe mr-1"></i><span class="interview-lang-label">English</span>
+                </button>
+                <button type="button" data-learning-path-lang="pt" onclick="selectLearningPathLanguage('pt')"
+                    class="px-2 py-2 border border-emerald-300 rounded-lg text-xs font-medium text-emerald-800 hover:bg-emerald-50">
+                    <i class="fas fa-globe mr-1"></i><span class="interview-lang-label">Portuguese</span>
+                </button>
+            </div>
+            <p id="learning-path-language-status" class="text-xs text-gray-500 mt-2"></p>
+        </section>
+
         <!-- Skill Assessment Input -->
         <section id="assessment-section" class="bg-white rounded-xl p-6 border shadow-sm mb-8">
+            <div id="lp-saved-profile-banner" class="hidden mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-800 flex items-start gap-2"></div>
+
+            <div id="lp-saved-profiles-section" class="hidden mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-900" data-i18n="savedProfile.useSavedTitle">Use a saved profile</h3>
+                    <button type="button" onclick="bootstrapSavedProfileForLearningPath()" class="text-xs text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-sync-alt mr-1"></i><span data-i18n="resume.savedRecordsRefresh">Refresh</span>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mb-3" data-i18n="savedProfile.useSavedHint">Pick a saved resume to skip re-uploading. You still need to submit a target JD.</p>
+                <p id="lp-saved-profiles-empty" class="hidden text-xs text-gray-500" data-i18n="resume.savedRecordsEmpty">No saved profiles yet.</p>
+                <div id="lp-saved-profiles-list" class="space-y-2"></div>
+            </div>
+
             <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <i class="fas fa-compass text-orange-600"></i>
                 <span data-i18n="learningPath.goalsTitle">Define Your Career Goals</span>
@@ -166,37 +209,37 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.industryFocus">Industry Focus</label>
                     <select id="industry-focus" class="w-full border border-gray-300 rounded-lg p-3">
                         <option value="" data-i18n="learningPath.selectIndustry">Select industry</option>
-                        <option value="tech">Technology & Software</option>
-                        <option value="finance">Finance & Banking</option>
-                        <option value="ecommerce">E-commerce & Retail</option>
-                        <option value="healthcare">Healthcare & Medical</option>
-                        <option value="education">Education & Training</option>
-                        <option value="manufacturing">Manufacturing</option>
+                        <option value="tech" data-i18n="resume.tech">Technology &amp; Software</option>
+                        <option value="finance" data-i18n="resume.finance">Finance &amp; Banking</option>
+                        <option value="ecommerce" data-i18n="resume.ecommerce">E-commerce &amp; Retail</option>
+                        <option value="healthcare" data-i18n="resume.healthcare">Healthcare &amp; Medical</option>
+                        <option value="education" data-i18n="resume.education">Education &amp; Training</option>
+                        <option value="manufacturing" data-i18n="resume.manufacturing">Manufacturing</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.employerType">Employer Type / 单位性质</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.employerType">Employer type</label>
                     <select id="learning-employer-type" class="w-full border border-gray-300 rounded-lg p-3">
                         <option value="" data-i18n="learningPath.selectType">Select type</option>
-                        <option value="soe">State-owned (国央企)</option>
-                        <option value="public">Public Sector (体制内)</option>
-                        <option value="foreign">Foreign Enterprise (外企)</option>
-                        <option value="private">Private Enterprise (民企)</option>
-                        <option value="npo">Non-profit (NPO/NGO)</option>
-                        <option value="hmt">HK/Macau/TW-funded (港澳台资)</option>
-                        <option value="other">Other (其他)</option>
+                        <option value="soe" data-i18n="resume.soe">State-owned enterprise</option>
+                        <option value="public" data-i18n="resume.publicSector">Public sector</option>
+                        <option value="foreign" data-i18n="resume.foreign">Foreign enterprise</option>
+                        <option value="private" data-i18n="resume.private">Private enterprise</option>
+                        <option value="npo" data-i18n="resume.npo">Non-profit (NPO/NGO)</option>
+                        <option value="hmt" data-i18n="resume.hmt">HK/Macau/TW-funded</option>
+                        <option value="other" data-i18n="resume.employerOther">Other</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.experienceLevel">Experience Level / 经验等级</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.experienceLevel">Experience level</label>
                     <select id="learning-experience-level" class="w-full border border-gray-300 rounded-lg p-3">
                         <option value="" data-i18n="learningPath.selectLevel">Select level</option>
-                        <option value="entry">Entry Level</option>
-                        <option value="mid">Mid Level</option>
-                        <option value="senior">Senior Level</option>
-                        <option value="executive">Executive</option>
+                        <option value="entry" data-i18n="resume.entry">Entry Level</option>
+                        <option value="mid" data-i18n="resume.mid">Mid Level</option>
+                        <option value="senior" data-i18n="resume.senior">Senior Level</option>
+                        <option value="executive" data-i18n="resume.executive">Executive</option>
                     </select>
                 </div>
             </div>
@@ -206,15 +249,71 @@
                 <textarea id="current-skills" rows="3" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.currentSkillsPlaceholder" placeholder="e.g., JavaScript, React, Node.js, Git"></textarea>
             </div>
 
-            <div class="mt-6 grid md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.profileDetails">Profile Details (Optional)</label>
-                    <textarea id="profile-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.profilePlaceholder" placeholder="Paste resume summary or experience details for gap_agent..."></textarea>
+            <!-- Prerequisites -->
+            <div class="mt-6 p-4 bg-orange-50 border border-orange-100 rounded-lg">
+                <p class="text-sm font-medium text-gray-800 mb-3" data-i18n="learningPath.prerequisitesTitle">Before analysis</p>
+                <div class="space-y-2 text-sm">
+                    <div id="lp-prereq-profile" class="flex items-center gap-2">
+                        <i class="prereq-icon fas fa-circle text-gray-300"></i>
+                        <span data-i18n="learningPath.prereqProfile">Resume / profile submitted</span>
+                    </div>
+                    <div id="lp-prereq-job" class="flex items-center gap-2">
+                        <i class="prereq-icon fas fa-circle text-gray-300"></i>
+                        <span data-i18n="learningPath.prereqJob">Target job description submitted</span>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.jdOptional">Target Job Description (Optional)</label>
-                    <textarea id="jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.jdPlaceholder" placeholder="Paste full JD for more accurate gap analysis..."></textarea>
+            </div>
+
+            <!-- Step 1: Profile -->
+            <div class="mt-6 border-t border-gray-100 pt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.step1Profile">Step 1: Your Resume / Profile</label>
+                <input type="file" id="learning-resume-file" accept=".pdf,.docx,.txt,.md" class="hidden">
+                <button type="button" onclick="document.getElementById('learning-resume-file').click()"
+                    class="w-full md:w-auto border border-dashed border-gray-300 rounded-lg py-2 px-4 text-sm text-gray-600 hover:border-orange-500 transition-colors">
+                    <i class="fas fa-upload mr-1"></i>
+                    <span data-i18n="learningPath.uploadResume">Upload resume file (PDF, DOCX, TXT, MD)</span>
+                </button>
+                <div id="learning-file-info" class="hidden mt-2 text-xs text-gray-600 flex items-center justify-between max-w-md">
+                    <span id="learning-file-name"></span>
+                    <button type="button" onclick="clearLearningResumeFile()" class="text-red-500" data-i18n="learningPath.removeFile">Remove</button>
                 </div>
+                <textarea id="profile-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3 mt-3 font-mono text-sm" data-i18n-placeholder="learningPath.profilePlaceholder" placeholder="Or paste resume summary or experience details..."></textarea>
+                <button type="button" onclick="submitLearningProfile()" id="btn-learning-submit-profile"
+                    class="mt-3 w-full md:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-user-check mr-2"></i>
+                    <span data-i18n="learningPath.submitProfile">Parse & Submit Profile</span>
+                </button>
+
+                <div id="learning-profile-review" class="hidden mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50/60">
+                    <label class="block text-sm font-medium text-gray-800 mb-2" data-i18n="profileReview.parsedTitle">Parsed resume (editable)</label>
+                    <p class="text-xs text-gray-600 mb-3" data-i18n="profileReview.parsedHint">Review and edit the extracted content. Click Apply edits to sync changes before gap analysis.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="btn-learning-apply-profile"
+                            class="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                            <i class="fas fa-sync-alt mr-1"></i><span data-i18n="profileReview.applyEdits">Apply edits</span>
+                        </button>
+                        <button type="button" id="btn-learning-save-profile"
+                            class="hidden px-4 py-2 text-sm font-medium bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50">
+                            <i class="fas fa-cloud-upload-alt mr-1"></i><span data-i18n="profileReview.saveNew">Save to account</span>
+                        </button>
+                        <button type="button" id="btn-learning-overwrite-profile"
+                            class="hidden px-4 py-2 text-sm font-medium bg-white border border-amber-300 text-amber-800 rounded-lg hover:bg-amber-50">
+                            <i class="fas fa-save mr-1"></i><span data-i18n="profileReview.overwrite">Overwrite saved record</span>
+                        </button>
+                    </div>
+                    <p id="learning-profile-save-status" class="hidden text-xs text-green-700 mt-2 font-medium"></p>
+                </div>
+            </div>
+
+            <!-- Step 2: JD -->
+            <div id="learning-jd-section" class="hidden mt-6 border-t border-gray-100 pt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="learningPath.step2Jd">Step 2: Target Job Description</label>
+                <textarea id="jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.jdPlaceholder" placeholder="Paste full JD for more accurate gap analysis..."></textarea>
+                <button type="button" onclick="submitLearningJd()" id="btn-learning-submit-jd"
+                    class="mt-3 w-full md:w-auto px-6 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                    <i class="fas fa-briefcase mr-2"></i>
+                    <span data-i18n="learningPath.submitJd">Submit Job Description</span>
+                </button>
             </div>
 
             <p class="mt-4 text-sm text-gray-500">
@@ -222,7 +321,8 @@
                 <span data-i18n="learningPath.stepHint">Step 1 analyzes skill gaps and resources; Step 2 builds your timeline after you choose daily study hours.</span>
             </p>
             
-            <button onclick="generateLearningPathAnalysis()" id="btn-generate-path" class="mt-6 w-full md:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-red-700 transition-all">
+            <button onclick="generateLearningPathAnalysis()" id="btn-generate-path" disabled
+                class="mt-6 w-full md:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 <i class="fas fa-magic mr-2"></i>
                 <span data-i18n="learningPath.analyzeBtn">Analyze Skill Gaps & Resources</span>
             </button>
@@ -483,6 +583,9 @@
     <script src="../test-data/browser-bundle.js"></script>
     <script src="assets/js/target-job-context.js"></script>
     <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/profile-text-utils.js"></script>
+    <script src="assets/js/saved-profile-bootstrap.js"></script>
+    <script src="assets/js/candidate-jd-setup.js"></script>
     <script src="assets/js/learning-path.js"></script>
 </body>
 </html>

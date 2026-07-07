@@ -12,6 +12,8 @@
         <a href="../index.html" class="text-blue-700 font-semibold"><i class="fas fa-arrow-left mr-1"></i><span data-i18n="friendlyEmployers.home">Home</span></a>
         <div class="flex items-center gap-3">
             <div id="header-lang-slot"></div>
+            <a href="portal.html" class="text-slate-600 hover:underline" data-i18n="home.footerIndividualPortal">Individual Portal</a>
+            <a href="my-applications.html" class="text-slate-600 hover:underline" data-i18n="home.navMyApplications">My applications</a>
             <a href="demo-jobs-database.html?friendly=1" class="text-emerald-700 font-medium" data-i18n="friendlyEmployers.viewJobs">View friendly jobs</a>
         </div>
     </header>
@@ -24,15 +26,61 @@
         <p class="sr-only" data-i18n="friendlyEmployers.empty">No friendly employers yet — companies are welcome to post inclusive jobs.</p>
         <p class="sr-only" data-i18n="friendlyEmployers.badge">Vulnerable-group friendly</p>
         <p class="sr-only" data-i18n="friendlyEmployers.noIndustry">Industry not specified</p>
-        <p class="sr-only" data-i18n="friendlyEmployers.defaultDesc">This company posted vulnerable-group friendly jobs.</p>
+        <p class="sr-only" data-i18n="friendlyEmployers.loadError">Could not load employers. Please try again later.</p>
+        <p class="sr-only" data-i18n="friendlyEmployers.footerHome">Home</p>
+        <p class="sr-only" data-i18n="friendlyEmployers.footerPortal">Individual Portal</p>
+        <p class="sr-only" data-i18n="home.signup">Sign up</p>
+        <p class="sr-only" data-i18n="home.footerHrTools">HR interactive tools</p>
+        <p class="sr-only" data-i18n="common.platformBrand">GBA Platform</p>
+        <p class="sr-only" data-i18n="common.retry">Please try again</p>
     </main>
-    <footer class="max-w-5xl mx-auto px-4 py-8 text-center text-sm text-slate-600 border-t border-slate-200">
-        <a href="../index.html" class="hover:text-blue-700" data-i18n="friendlyEmployers.footerHome">Home</a>
-        <span class="mx-2">·</span>
-        <a href="demo-jobs-database.html?friendly=1" class="text-emerald-700 hover:underline font-medium" data-i18n="friendlyEmployers.viewJobs">View friendly jobs</a>
-        <span class="mx-2">·</span>
-        <a href="portal.html" class="text-emerald-700 hover:underline font-medium" data-i18n="friendlyEmployers.footerPortal">Individual Portal</a>
+    <footer class="gba-site-footer bg-slate-800 text-slate-100 py-10 mt-10" data-gba-footer="1">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-sm">
+                <div>
+                    <p class="font-bold text-white mb-2" data-i18n="home.brandName">GBA Platform</p>
+                    <p class="text-slate-300 leading-relaxed" data-i18n="home.footerTagline">Empowering vulnerable groups with inclusive employment opportunities, smart matching, and AI career tools across the Greater Bay Area.</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-white mb-2" data-i18n="home.footerQuickLinks">Quick Links</p>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li><a href="../index.html#features" class="hover:text-white" data-i18n="nav-features">Features</a></li>
+                        <li><a href="../index.html#how-it-works" class="hover:text-white" data-i18n="home.howItWorks">How It Works</a></li>
+                        <li><a href="../index.html#benefits" class="hover:text-white" data-i18n="section-benefits-title">Benefits</a></li>
+                        <li><a href="../index.html#faq" class="hover:text-white" data-i18n="nav-faq">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="font-semibold text-white mb-2" data-i18n="home.footerUserAccess">User Access</p>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li><a href="portal.html" class="hover:text-white" data-i18n="home.footerIndividualPortal">Individual Portal</a></li>
+                        <li><a href="../corporate/portal.html" class="hover:text-white" data-i18n="home.footerCorporatePortal">Corporate Portal</a></li>
+                        <li><a href="demo-jobs-database.html" class="hover:text-white" data-i18n="home.navFriendlyJobs">Friendly jobs</a></li>
+                        <li><a href="friendly-employers.html" class="hover:text-white" data-i18n="home.navFriendlyEmployers">Friendly employers</a></li>
+                        <li><a href="my-applications.html" class="hover:text-white" data-i18n="home.navMyApplications">My applications</a></li>
+                        <li><a href="auth.html" class="hover:text-white" data-i18n="home.login">Log in</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="font-semibold text-white mb-2" data-i18n="home.footerContact">Contact Us</p>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li data-i18n="home.footerAddress">GBA Innovation Center, 123 Bay Area Blvd, Shenzhen, China</li>
+                        <li data-i18n="home.footerPhone">+86 400-123-4567</li>
+                        <li data-i18n="home.footerEmail">info@gba-platform.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 pt-6 border-t border-slate-600 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+                <p data-i18n="home.footerCopyright">&copy; 2026 GBA Cross-Border Employment Empowerment Platform. All rights reserved.</p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="#" class="hover:text-white" data-i18n="portal.privacy">Privacy Policy</a>
+                    <a href="#" class="hover:text-white" data-i18n="portal.terms">Terms of Service</a>
+                    <a href="#" class="hover:text-white" data-i18n="portal.contact">Contact Support</a>
+                </div>
+            </div>
+        </div>
     </footer>
+    <script src="../assets/js/node-api-base.js"></script>
     <script src="assets/js/platform-api.js"></script>
     <script src="../assets/i18n/i18n.js"></script>
     <script>

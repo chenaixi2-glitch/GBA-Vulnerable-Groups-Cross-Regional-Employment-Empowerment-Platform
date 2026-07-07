@@ -10,10 +10,16 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen" data-page="individual">
     <header class="border-b border-slate-700 px-4 py-3 flex flex-wrap justify-between items-center gap-3">
-        <nav class="text-sm flex gap-3"><a href="portal.html#ai-features" class="text-blue-400" data-i18n="olivia.navTools">Interactive tools</a><span class="opacity-60">/</span><span class="font-semibold" data-i18n="olivia.title">Olivia</span></nav>
+        <nav class="text-sm flex gap-3 flex-wrap items-center">
+            <a href="../index.html" class="text-slate-400 hover:text-white" data-i18n="olivia.footerWelcome">Welcome page</a>
+            <span class="opacity-60">/</span>
+            <a href="portal.html#ai-features" class="text-blue-400" data-i18n="olivia.navTools">Interactive tools</a>
+            <span class="opacity-60">/</span>
+            <span class="font-semibold" data-i18n="olivia.title">Olivia</span>
+        </nav>
         <div class="flex items-center gap-3">
             <div class="text-xs text-slate-400" data-i18n="olivia.inclusiveMode">Inclusive mode · oversized tap targets · optional speech</div>
-            <div id="header-lang-slot"></div>
+            <div id="header-lang-slot" class="gba-lang-on-dark"></div>
         </div>
     </header>
 
@@ -46,10 +52,60 @@
         </div>
     </div>
 
-    <footer class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-slate-500 border-t border-slate-800">
-        <a href="../index.html" class="hover:text-blue-400" data-i18n="olivia.footerWelcome">Welcome</a>
-        <span class="mx-2 text-slate-600">·</span>
-        <a href="portal.html#feedback" class="text-emerald-400 hover:underline font-medium" data-i18n="olivia.footerFeedback">User feedback</a>
+    <p class="sr-only" data-i18n="olivia.welcome">Hello, I'm Olivia…</p>
+    <p class="sr-only" data-i18n="olivia.micListening">Listening…</p>
+    <p class="sr-only" data-i18n="olivia.micUnsupported">Speech input not supported in this browser — please type instead.</p>
+    <p class="sr-only" data-i18n="olivia.micError">Microphone error — please check permissions.</p>
+    <p class="sr-only" data-i18n="olivia.footerWelcome">Welcome page</p>
+    <p class="sr-only" data-i18n="olivia.footerFeedback">User feedback</p>
+    <p class="sr-only" data-i18n="home.signup">Sign up</p>
+    <p class="sr-only" data-i18n="common.languageUpdated">Language updated.</p>
+
+    <footer class="gba-site-footer bg-slate-800 text-slate-100 py-10 mt-10" data-gba-footer="1">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-sm">
+                <div>
+                    <p class="font-bold text-white mb-2" data-i18n="home.brandName">GBA Platform</p>
+                    <p class="text-slate-300 leading-relaxed" data-i18n="home.footerTagline">Empowering vulnerable groups with inclusive employment opportunities, smart matching, and AI career tools across the Greater Bay Area.</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-white mb-2" data-i18n="home.footerQuickLinks">Quick Links</p>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li><a href="../index.html#features" class="hover:text-white" data-i18n="nav-features">Features</a></li>
+                        <li><a href="../index.html#how-it-works" class="hover:text-white" data-i18n="home.howItWorks">How It Works</a></li>
+                        <li><a href="../index.html#benefits" class="hover:text-white" data-i18n="section-benefits-title">Benefits</a></li>
+                        <li><a href="../index.html#faq" class="hover:text-white" data-i18n="nav-faq">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="font-semibold text-white mb-2" data-i18n="home.footerUserAccess">User Access</p>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li><a href="portal.html" class="hover:text-white" data-i18n="home.footerIndividualPortal">Individual Portal</a></li>
+                        <li><a href="../corporate/portal.html" class="hover:text-white" data-i18n="home.footerCorporatePortal">Corporate Portal</a></li>
+                        <li><a href="demo-jobs-database.html" class="hover:text-white" data-i18n="home.navFriendlyJobs">Friendly jobs</a></li>
+                        <li><a href="friendly-employers.html" class="hover:text-white" data-i18n="home.navFriendlyEmployers">Friendly employers</a></li>
+                        <li><a href="my-applications.html" class="hover:text-white" data-i18n="home.navMyApplications">My applications</a></li>
+                        <li><a href="auth.html" class="hover:text-white" data-i18n="home.login">Log in</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="font-semibold text-white mb-2" data-i18n="home.footerContact">Contact Us</p>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li data-i18n="home.footerAddress">GBA Innovation Center, 123 Bay Area Blvd, Shenzhen, China</li>
+                        <li data-i18n="home.footerPhone">+86 400-123-4567</li>
+                        <li data-i18n="home.footerEmail">info@gba-platform.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 pt-6 border-t border-slate-600 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+                <p data-i18n="home.footerCopyright">&copy; 2026 GBA Cross-Border Employment Empowerment Platform. All rights reserved.</p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="#" class="hover:text-white" data-i18n="portal.privacy">Privacy Policy</a>
+                    <a href="#" class="hover:text-white" data-i18n="portal.terms">Terms of Service</a>
+                    <a href="#" class="hover:text-white" data-i18n="portal.contact">Contact Support</a>
+                </div>
+            </div>
+        </div>
     </footer>
 
     <script src="../assets/i18n/i18n.js"></script>

@@ -126,6 +126,47 @@ class SaveProfileRequest(BaseModel):
     session_id: str
     draft: ResumeDraftPayload | None = None
     record_name: str = Field(default="", description="User-defined name for this saved record")
+    record_id: str = Field(default="", description="If set, overwrite this existing saved record")
+
+
+@router.get("/session/status")
+async def get_session_resume_status(session_id: str, request: Request) -> dict:
+    """Report whether the session has working resume data and/or persisted MySQL rows."""
+    from api.chat import _aload_state
+    from storage.mysql_client import get_mysql_pool, MySQLStore
+
+    user = get_optional_user(request)
+    await ensure_session_access(session_id, user)
+
+    client = await get_redis_client()
+    store = RedisSessionStore(session_id, client)
+    saved = await _aload_state(store)
+
+    has_working_profile = False
+    has_generated_resume = False
+    if saved:
+        state = CopilotState.model_validate(saved)
+        has_working_profile = state.candidate_profile is not None
+        has_generated_resume = state.resume_content_json is not None
+
+    draft_store = RedisDraftStore(client, session_id, user.get("sub") if user else None)
+    if await draft_store.load_draft():
+        has_working_profile = True
+
+    has_session_persisted = False
+    try:
+        pool = await get_mysql_pool()
+        db = MySQLStore(pool)
+        has_session_persisted = await db.session_has_persisted_resume(session_id)
+    except Exception as exc:
+        logger.warning("Session persist check skipped for %s: %s", session_id, exc)
+
+    return {
+        "session_id": session_id,
+        "has_working_profile": has_working_profile,
+        "has_generated_resume": has_generated_resume,
+        "has_session_persisted": has_session_persisted,
+    }
 
 
 @router.get("/draft")
@@ -260,10 +301,18 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
 
     candidate_name = (draft.get("profile_basic") or {}).get("name") or ""
     record_name = req.record_name.strip() or candidate_name or "Resume profile"
-    row_id = f"spr_{uuid.uuid4().hex[:16]}"
+    row_id = req.record_id.strip() or f"spr_{uuid.uuid4().hex[:16]}"
 
     pool = await get_mysql_pool()
     db = MySQLStore(pool)
+
+    if req.record_id.strip():
+        existing = await db.get_profile_record_for_user(row_id, user_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="记录不存在或无权覆盖")
+        if not req.record_name.strip() or record_name == "Resume profile":
+            record_name = existing.get("record_name") or record_name
+
     try:
         await db.upsert_session(req.session_id, user_id=user_id)
         await db.save_profile_record(
@@ -276,6 +325,7 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
                 "draft": draft,
                 "candidate_profile": state.candidate_profile.model_dump(),
             },
+            overwrite=bool(req.record_id.strip()),
         )
     except Exception as exc:
         logger.error("Profile record save failed: %s", exc, exc_info=True)

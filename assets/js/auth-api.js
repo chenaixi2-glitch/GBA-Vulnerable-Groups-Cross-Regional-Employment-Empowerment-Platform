@@ -19,6 +19,9 @@
   const AUTH_TOKEN_KEY = 'gba_auth_token';
 
   function apiBase() {
+    if (typeof global.resolveNodeApiBase === 'function') {
+      return global.resolveNodeApiBase();
+    }
     const host = (global.location && global.location.hostname) || 'localhost';
     return `http://${host}:3000/api`;
   }

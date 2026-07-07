@@ -442,7 +442,7 @@
                             <span class="icon"><i class="fas fa-heart"></i></span>
                             <span data-i18n="postJob.inclusiveTargeting">Inclusive Targeting</span>
                         </div>
-                        <p class="text-sm text-gray-500 mb-4" data-i18n="postJob.inclusiveHint">硬性匹配：所有非「不限」条件须同时满足（AND）。勾选「优先推荐弱势群体」后岗位对全员可见，企业查看应聘者时弱势群体排序靠前。</p>
+                        <p class="text-sm text-gray-500 mb-4" data-i18n="postJob.inclusiveHint">Hard matching: all non-&quot;any&quot; conditions must be met (AND). With &quot;prioritize vulnerable groups&quot; checked, the role stays visible to everyone; vulnerable candidates rank first when reviewing applicants.</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="form-label" for="target-age-range" data-i18n="postJob.targetAge">Age range</label>
@@ -492,8 +492,8 @@
                                 <label class="flex items-start gap-3 cursor-pointer">
                                     <input type="checkbox" id="prioritize-vulnerable" class="w-4 h-4 mt-1 accent-emerald-600">
                                     <span>
-                                        <span class="text-sm font-medium text-gray-800 block" data-i18n="postJob.prioritizeVulnerable">优先向弱势群体推荐此岗位</span>
-                                        <span class="text-xs text-gray-500" data-i18n="postJob.prioritizeVulnerableHint">岗位仍对所有人可见；查看应聘者时，已识别弱势群体将排在前面。</span>
+                                        <span class="text-sm font-medium text-gray-800 block" data-i18n="postJob.prioritizeVulnerable">Prioritize vulnerable groups for this role</span>
+                                        <span class="text-xs text-gray-500" data-i18n="postJob.prioritizeVulnerableHint">Role remains visible to everyone; identified vulnerable candidates rank first when reviewing applicants.</span>
                                     </span>
                                 </label>
                             </div>
@@ -1066,6 +1066,7 @@
             }
         };
     </script>
+    <script src="../assets/js/node-api-base.js"></script>
     <script src="../assets/js/auth-api.js"></script>
     <script src="../assets/js/portal-auth.js"></script>
     <script src="../test-data/browser-bundle.js"></script>

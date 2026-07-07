@@ -5,6 +5,9 @@
 
 let learningPathData = null;
 let timelineEditMode = false;
+let learningPathSetup = null;
+let learningPathLanguage = '';
+let learningPathLanguageUserSelected = false;
 
 function uiT(key, fallback, vars) {
     if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
@@ -15,10 +18,126 @@ function uiT(key, fallback, vars) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeLearningPath();
+    initLearningPathLanguages();
 });
+
+function normalizeLearningPathLang(code) {
+    if (typeof normalizeResumeLang === 'function') return normalizeResumeLang(code);
+    return String(code || 'zh');
+}
+
+function learningPathLangDisplayLabel(code) {
+    if (typeof window.GBAI18n !== 'undefined' && GBAI18n.resumeLangLabel) {
+        return GBAI18n.resumeLangLabel(code);
+    }
+    return code;
+}
+
+function getDefaultLearningPathLang() {
+    if (typeof apiClient !== 'undefined' && apiClient.getPageLanguage) {
+        return apiClient.getPageLanguage();
+    }
+    if (typeof window.GBAI18n !== 'undefined' && GBAI18n.uiLangToApiLang) {
+        return normalizeLearningPathLang(GBAI18n.uiLangToApiLang(GBAI18n.getLang()));
+    }
+    return 'zh';
+}
+
+function initLearningPathLanguages() {
+    const defaultLang = getDefaultLearningPathLang();
+    learningPathLanguage = defaultLang;
+    syncLearningPathLanguageButtons();
+    updateLearningPathLanguageStatus();
+    window.addEventListener('gba:language-changed', () => {
+        if (!learningPathLanguageUserSelected) {
+            learningPathLanguage = getDefaultLearningPathLang();
+            syncLearningPathLanguageButtons();
+            updateLearningPathLanguageStatus();
+        }
+    });
+}
+
+function updateLearningPathLanguageStatus() {
+    const el = document.getElementById('learning-path-language-status');
+    if (!el) return;
+    const lang = getSelectedLearningPathLanguage();
+    const label = learningPathLangDisplayLabel(lang);
+    if (learningPathLanguageUserSelected) {
+        el.textContent = uiT('learningPath.contentLanguageSelected', 'Selected: {lang}', { lang: label });
+        el.className = 'text-xs text-orange-700 mt-2 font-medium';
+    } else {
+        el.textContent = uiT('learningPath.contentLanguageDefault', 'Default from page language: {lang} — tap to confirm', { lang: label });
+        el.className = 'text-xs text-gray-500 mt-2';
+    }
+}
+
+function syncLearningPathLanguageButtons() {
+    const active = normalizeLearningPathLang(learningPathLanguage || getDefaultLearningPathLang());
+    document.querySelectorAll('[data-learning-path-lang]').forEach((btn) => {
+        const code = normalizeLearningPathLang(btn.dataset.learningPathLang);
+        const isActive = code === active;
+        btn.classList.toggle('ring-2', isActive);
+        btn.classList.toggle('ring-orange-400', isActive);
+        btn.classList.toggle('bg-orange-50', isActive);
+        const labelEl = btn.querySelector('.interview-lang-label');
+        if (labelEl) labelEl.textContent = learningPathLangDisplayLabel(code);
+    });
+}
+
+function getSelectedLearningPathLanguage() {
+    return normalizeLearningPathLang(learningPathLanguage || getDefaultLearningPathLang());
+}
+
+async function selectLearningPathLanguage(language) {
+    learningPathLanguage = normalizeLearningPathLang(language);
+    learningPathLanguageUserSelected = true;
+    syncLearningPathLanguageButtons();
+    updateLearningPathLanguageStatus();
+}
 
 function initializeLearningPath() {
     apiClient.ensureSessionStarted();
+
+    learningPathSetup = new CandidateJdSetup({
+        parsedTextRows: 14,
+        ids: {
+            fileInput: 'learning-resume-file',
+            profileText: 'profile-text',
+            fileName: 'learning-file-name',
+            fileInfo: 'learning-file-info',
+            jdText: 'jd-text',
+            jdSection: 'learning-jd-section',
+            profileReviewSection: 'learning-profile-review',
+            profileSaveStatus: 'learning-profile-save-status',
+            profileApplyBtn: 'btn-learning-apply-profile',
+            profileSaveBtn: 'btn-learning-save-profile',
+            profileOverwriteBtn: 'btn-learning-overwrite-profile',
+        },
+        targetJobFields: {
+            jdText: ['jd-text'],
+            industry: ['industry-focus'],
+            employerType: ['learning-employer-type'],
+            experienceLevel: ['learning-experience-level'],
+        },
+        prereqIds: {
+            profile: 'lp-prereq-profile',
+            job: 'lp-prereq-job',
+        },
+        i18n: {
+            profileRequired: ['learningPath.toast.profileRequired', 'Please upload a resume or paste profile text'],
+            profileSuccess: ['learningPath.toast.profileSubmitted', 'Profile submitted successfully'],
+            profileFailed: ['learningPath.toast.profileFailed', 'Failed to submit profile: {msg}'],
+            jdRequired: ['learningPath.toast.jdRequired', 'Please paste a job description or complete target job fields'],
+            jdSuccess: ['learningPath.toast.jdSubmitted', 'Job description submitted successfully'],
+            jdFailed: ['learningPath.toast.jdFailed', 'Failed to submit JD: {msg}'],
+        },
+        buildProfileFallback: buildLearningProfileFallback,
+        onPrerequisitesChange: updateLearningAnalyzeButton,
+        onProfileSaved: () => bootstrapSavedProfileForLearningPath(),
+    });
+    learningPathSetup.init();
+
+    bootstrapSavedProfileForLearningPath();
 
     document.querySelectorAll('input[name="daily-hours"]').forEach(radio => {
         radio.addEventListener('change', onDailyHoursChange);
@@ -28,6 +147,89 @@ function initializeLearningPath() {
         customInput.addEventListener('input', updateProjectedWeeksHint);
     }
     updateSaveLoginHint();
+}
+
+function buildLearningProfileFallback() {
+    const inputs = getFormInputs();
+    const skills = inputs.currentSkillsText
+        ? inputs.currentSkillsText.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+    const skillsLine = skills.length ? skills.join(', ') : 'Not specified';
+    return [
+        'Here is my candidate profile.',
+        inputs.currentRole ? `Current role: ${inputs.currentRole}.` : '',
+        `Current skills: ${skillsLine}.`,
+        inputs.targetJob ? `Career goal: ${inputs.targetJob}.` : '',
+    ].filter(Boolean).join(' ');
+}
+
+function updateLearningAnalyzeButton() {
+    const btn = document.getElementById('btn-generate-path');
+    if (!btn || !learningPathSetup) return;
+    btn.disabled = !learningPathSetup.isReady();
+}
+
+async function bootstrapSavedProfileForLearningPath() {
+    if (typeof SavedProfileBootstrap === 'undefined') return;
+
+    await SavedProfileBootstrap.renderSavedRecordsPanel({
+        sectionId: 'lp-saved-profiles-section',
+        listId: 'lp-saved-profiles-list',
+        emptyId: 'lp-saved-profiles-empty',
+        currentPage: 'learning',
+        onLoadInPlace: loadSavedProfileForLearningPath,
+    });
+
+    await SavedProfileBootstrap.restoreFromUrl({
+        setup: learningPathSetup,
+        bannerId: 'lp-saved-profile-banner',
+        onRestored: () => updateLearningAnalyzeButton(),
+    });
+}
+
+async function loadSavedProfileForLearningPath(recordId) {
+    if (!recordId || typeof SavedProfileBootstrap === 'undefined') return;
+    const url = SavedProfileBootstrap.buildPageUrl('demo-learning-path.html', recordId);
+    if (SavedProfileBootstrap.getRecordIdFromUrl() === recordId) {
+        await SavedProfileBootstrap.restoreFromUrl({
+            recordId,
+            setup: learningPathSetup,
+            bannerId: 'lp-saved-profile-banner',
+            onRestored: () => updateLearningAnalyzeButton(),
+        });
+        return;
+    }
+    window.location.href = url;
+}
+
+function clearLearningResumeFile() {
+    learningPathSetup?.clearFile();
+}
+
+async function submitLearningProfile() {
+    const inputs = getFormInputs();
+    if (!inputs.targetJob) {
+        Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter your target job title'));
+        return;
+    }
+    const skills = inputs.currentSkillsText
+        ? inputs.currentSkillsText.split(',').map(s => s.trim()).filter(s => s)
+        : [];
+    if (!learningPathSetup?.getProfileText() && !learningPathSetup?.selectedFile
+        && skills.length === 0 && !inputs.currentRole) {
+        Utils.showToast(uiT('learningPath.toast.skillsRequired', 'Please provide current skills, role, or profile details'));
+        return;
+    }
+    await learningPathSetup.submitProfile();
+}
+
+async function submitLearningJd() {
+    const inputs = getFormInputs();
+    if (!inputs.targetJob) {
+        Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter your target job title'));
+        return;
+    }
+    await learningPathSetup.submitJd({ targetJobTitle: inputs.targetJob });
 }
 
 function updateSaveLoginHint() {
@@ -69,25 +271,31 @@ function getFormInputs() {
     };
 }
 
-function validateFormInputs({ targetJob, currentSkillsText, currentRole, profileText }) {
+function validateFormInputs({ targetJob }) {
     if (!targetJob) {
         Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter your target job title'));
         return false;
     }
-
-    const currentSkills = currentSkillsText
-        ? currentSkillsText.split(',').map(s => s.trim()).filter(s => s)
-        : [];
-
-    if (!profileText && currentSkills.length === 0 && !currentRole) {
-        Utils.showToast(uiT('learningPath.toast.skillsRequired', 'Please provide current skills, role, or profile details'));
+    if (!learningPathSetup?.isReady()) {
+        Utils.showToast(uiT('learningPath.toast.submitProfileJdFirst', 'Please submit your profile and job description first'));
         return false;
     }
-
     return true;
 }
 
 async function generateLearningPathAnalysis() {
+    if (!learningPathLanguageUserSelected) {
+        Utils.showToast(uiT('learningPath.toast.selectContentLanguageFirst', 'Please select content language first'));
+        document.getElementById('learning-path-language-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    if (learningPathSetup?.profileDirty) {
+        Utils.showToast(uiT('profileReview.applyBeforeAnalyze', 'Apply profile edits before running gap analysis'));
+        document.getElementById('learning-profile-review')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
     const inputs = getFormInputs();
     if (!validateFormInputs(inputs)) return;
 
@@ -108,9 +316,10 @@ async function generateLearningPathAnalysis() {
             employerType: inputs.employerType || '',
             experienceLevel: inputs.experienceLevel || '',
             currentSkills,
-            profileText: inputs.profileText,
             jdText: inputs.jdText,
             targetContext: inputs.targetContext,
+            sessionReady: true,
+            language: getSelectedLearningPathLanguage(),
         });
 
         learningPathData = processAnalysisResponse(response, {
@@ -167,7 +376,11 @@ async function generateLearningPathTimeline() {
                 },
             })
             : null;
-        const response = await apiClient.generateLearningPathTimeline(dailyHours, targetContext);
+        const response = await apiClient.generateLearningPathTimeline(
+            dailyHours,
+            targetContext,
+            getSelectedLearningPathLanguage()
+        );
 
         learningPathData.dailyHours = dailyHours;
         learningPathData.timeline = response.timeline || [];
