@@ -14,14 +14,15 @@ from workflow.state import RenderConfig, PageMargin
 
 
 def _base_config(**kwargs) -> RenderConfig:
-  return RenderConfig(
-      font_size=13,
-      line_height=1.35,
-      dense_mode=True,
-      spacing_scale="compact",
-      page_margin=PageMargin(top=20, right=20, bottom=20, left=20),
-      **kwargs,
-  )
+    defaults = dict(
+        font_size=13,
+        line_height=1.35,
+        dense_mode=True,
+        spacing_scale="compact",
+        page_margin=PageMargin(top=20, right=20, bottom=20, left=20),
+    )
+    defaults.update(kwargs)
+    return RenderConfig(**defaults)
 
 
 class TestNormalizeTypographyFitMode:
