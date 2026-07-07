@@ -32,6 +32,14 @@ function errorHandler(err, req, res, next) {
     return res.status(503).json({ success: false, message: '数据库暂不可用，请稍后再试' });
   }
 
+  // 表结构未迁移（常见于旧库只执行过 init.sql）
+  if (err && (err.code === 'ER_BAD_FIELD_ERROR' || err.code === 'ER_NO_SUCH_TABLE')) {
+    return res.status(503).json({
+      success: false,
+      message: '数据库表结构需要更新，请在 server 目录执行 npm run db:migrate',
+    });
+  }
+
   console.error('[UnhandledError]', err);
   return res.status(500).json({
     success: false,

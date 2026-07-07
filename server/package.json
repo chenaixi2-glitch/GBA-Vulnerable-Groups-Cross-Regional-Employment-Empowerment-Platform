@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "start:prod": "cross-env NODE_ENV=production node src/server.js",
-    "db:init": "node src/scripts/initDb.js"
+    "db:init": "node src/scripts/initDb.js && node src/scripts/runMigrations.js",
+    "db:migrate": "node src/scripts/runMigrations.js"
   },
   "keywords": [
     "express",

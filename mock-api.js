@@ -449,6 +449,9 @@ const API = {
     AUTH_TOKEN_KEY: 'gba_auth_token',
 
     nodeApiBase() {
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.apiBase) {
+            return AuthAPI.apiBase();
+        }
         const g = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : {});
         if (typeof g.resolveNodeApiBase === 'function') {
             return g.resolveNodeApiBase();

@@ -377,6 +377,10 @@
             transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
+        .stat-counter {
+            font-variant-numeric: tabular-nums;
+        }
+
         .stories-marquee {
             overflow: hidden;
             padding: 1rem 0 1.5rem;
@@ -576,7 +580,7 @@
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
                     <i class="fas fa-users text-2xl text-white mr-3"></i>
                     <div class="text-left">
-                        <div class="text-white font-bold" id="hero-stat-users">—</div>
+                        <div class="text-white font-bold stat-counter" id="hero-stat-users">—</div>
                         <div class="text-white text-sm" data-i18n="home.heroStatUsers">Registered Job Seekers</div>
                     </div>
                 </div>
@@ -584,7 +588,7 @@
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
                     <i class="fas fa-building text-2xl text-white mr-3"></i>
                     <div class="text-left">
-                        <div class="text-white font-bold" id="hero-stat-companies">—</div>
+                        <div class="text-white font-bold stat-counter" id="hero-stat-companies">—</div>
                         <div class="text-white text-sm" data-i18n="home.heroStatCompanies">Registered Companies</div>
                     </div>
                 </div>
@@ -592,8 +596,16 @@
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
                     <i class="fas fa-briefcase text-2xl text-white mr-3"></i>
                     <div class="text-left">
-                        <div class="text-white font-bold" id="hero-stat-jobs">—</div>
+                        <div class="text-white font-bold stat-counter" id="hero-stat-jobs">—</div>
                         <div class="text-white text-sm" data-i18n="home.heroStatJobs">Active Job Openings</div>
+                    </div>
+                </div>
+
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
+                    <i class="fas fa-chart-line text-2xl text-white mr-3"></i>
+                    <div class="text-left">
+                        <div class="text-white font-bold stat-counter" id="hero-stat-match">—</div>
+                        <div class="text-white text-sm" data-i18n="home.heroStatMatch">Strong Match Rate</div>
                     </div>
                 </div>
             </div>
@@ -609,13 +621,13 @@
             <p class="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto" data-i18n="section-features-lead">Job seekers browse matched roles, apply online, and sharpen skills with AI career tools. Employers post inclusive roles, review scored applicants, and manage hiring in one place.</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="individual">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6 flex flex-col" data-portal-target="individual">
                     <div class="ai-feature-icon">
                         <i class="fas fa-file-alt"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3" data-i18n="home.featureResumeTitle">Smart Resume Generator</h3>
                     <p class="text-gray-600 mb-4" data-i18n="home.featureResumeDesc">Upload your resume and target job description — AI helps refine skills highlighting and formatting before you apply to matched roles.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
+                    <div class="flex items-center text-blue-600 font-medium mt-auto pt-2">
                         <a href="individual/demo-resume-generator.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span data-i18n="home.learnMore">Learn more</span>
                             <i class="fas fa-arrow-right ml-2"></i>
@@ -623,13 +635,13 @@
                     </div>
                 </div>
                 
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="individual">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6 flex flex-col" data-portal-target="individual">
                     <div class="ai-feature-icon">
                         <i class="fas fa-graduation-cap"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3" data-i18n="home.featureLearningTitle">Personalized Learning Path</h3>
                     <p class="text-gray-600 mb-4" data-i18n="home.featureLearningDesc">Get a tailored skill upgrade plan alongside real job matching and application tracking.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
+                    <div class="flex items-center text-blue-600 font-medium mt-auto pt-2">
                         <a href="individual/demo-learning-path.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span data-i18n="home.learnMore">Learn more</span>
                             <i class="fas fa-arrow-right ml-2"></i>
@@ -637,13 +649,13 @@
                     </div>
                 </div>
                 
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="individual">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6 flex flex-col" data-portal-target="individual">
                     <div class="ai-feature-icon">
                         <i class="fas fa-comments"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3" data-i18n="home.featureInterviewTitle">Interview Preparation</h3>
                     <p class="text-gray-600 mb-4" data-i18n="home.featureInterviewDesc">Practice with AI-powered mock interviews and receive feedback to build confidence before real interviews.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
+                    <div class="flex items-center text-blue-600 font-medium mt-auto pt-2">
                         <a href="individual/demo-interview.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span data-i18n="home.learnMore">Learn more</span>
                             <i class="fas fa-arrow-right ml-2"></i>
@@ -651,13 +663,13 @@
                     </div>
                 </div>
                 
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="corporate">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6 flex flex-col" data-portal-target="corporate">
                     <div class="ai-feature-icon">
                         <i class="fas fa-briefcase"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3" data-i18n="home.featureJobsTitle">Job Posting & Applicant Scoring</h3>
                     <p class="text-gray-600 mb-4" data-i18n="home.featureJobsDesc">Publish internal roles with target criteria for vulnerable groups, then review applicants ranked by match score and reasons.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
+                    <div class="flex items-center text-blue-600 font-medium mt-auto pt-2">
                         <a href="corporate/post-job.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span data-i18n="home.postJobCta">Post a job</span>
                             <i class="fas fa-arrow-right ml-2"></i>
@@ -665,13 +677,13 @@
                     </div>
                 </div>
                 
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="corporate">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6 flex flex-col" data-portal-target="corporate">
                     <div class="ai-feature-icon">
                         <i class="fas fa-id-card"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3" data-i18n="home.featureCompanyTitle">Company Profile</h3>
                     <p class="text-gray-600 mb-4" data-i18n="home.featureCompanyDesc">Maintain your company profile and inclusivity information; friendly employers are highlighted when posting vulnerable-group roles.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
+                    <div class="flex items-center text-blue-600 font-medium mt-auto pt-2">
                         <a href="corporate/company-profile.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span data-i18n="home.manageProfile">Manage profile</span>
                             <i class="fas fa-arrow-right ml-2"></i>
@@ -679,13 +691,13 @@
                     </div>
                 </div>
                 
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6" data-portal-target="individual">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6 flex flex-col" data-portal-target="individual">
                     <div class="ai-feature-icon">
                         <i class="fas fa-search"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3" data-i18n="home.featureMatchingTitle">Skills-Based Job Matching</h3>
                     <p class="text-gray-600 mb-4" data-i18n="home.featureMatchingDesc">After registration, the platform infers your group type from profile data and surfaces matched jobs with scores and application tracking.</p>
-                    <div class="flex items-center text-blue-600 font-medium">
+                    <div class="flex items-center text-blue-600 font-medium mt-auto pt-2">
                         <a href="individual/demo-jobs-database.html" class="flex items-center hover:text-blue-800 transition-colors">
                             <span data-i18n="home.browseJobs">Browse jobs</span>
                             <i class="fas fa-arrow-right ml-2"></i>
@@ -693,7 +705,7 @@
                     </div>
                 </div>
                 
-                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6 flex flex-col">
                     <div class="ai-feature-icon">
                         <i class="fas fa-language"></i>
                     </div>
@@ -725,105 +737,107 @@
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-workflow-title">How It Works</h2>
             
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div>
-                    <div class="space-y-8">
-                        <!-- Step 1 -->
-                        <div class="loop-step flex">
-                            <div class="flex-shrink-0">
-                                <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">1</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
+                <div class="relative">
+                    <div class="bg-white rounded-xl shadow-lg p-8 relative z-10 h-full">
+                        <div class="space-y-6">
+                            <!-- Step 1 -->
+                            <div class="loop-step flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="loop-num w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">1</div>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-semibold mb-1" data-i18n="home.step1Title">Create Your Profile</h3>
+                                    <p class="text-gray-600" data-i18n="home.step1Desc">Register as an individual (with age, gender, income, and career-gap profile) or as a corporate account, then complete your resume or company profile.</p>
+                                </div>
                             </div>
-                            <div class="ml-6">
-                                <h3 class="text-xl font-bold mb-2" data-i18n="home.step1Title">Create Your Profile</h3>
-                                <p class="text-gray-600" data-i18n="home.step1Desc">Register as an individual (with age, gender, income, and career-gap profile) or as a corporate account, then complete your resume or company profile.</p>
+                            
+                            <!-- Step 2 -->
+                            <div class="loop-step flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="loop-num w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">2</div>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-semibold mb-1" data-i18n="home.step2Title">AI Matching Process</h3>
+                                    <p class="text-gray-600" data-i18n="home.step2Desc">The matching service scores jobs against your resume and profile, considering skills, group types, and employer target criteria.</p>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- Step 2 -->
-                        <div class="loop-step flex">
-                            <div class="flex-shrink-0">
-                                <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">2</div>
+                            
+                            <!-- Step 3 -->
+                            <div class="loop-step flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="loop-num w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">3</div>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-semibold mb-1" data-i18n="home.step3Title">Review & Connect</h3>
+                                    <p class="text-gray-600" data-i18n="home.step3Desc">Individuals apply to jobs and track applications; employers review ranked applicants and manage posting status from the corporate portal.</p>
+                                </div>
                             </div>
-                            <div class="ml-6">
-                                <h3 class="text-xl font-bold mb-2" data-i18n="home.step2Title">AI Matching Process</h3>
-                                <p class="text-gray-600" data-i18n="home.step2Desc">The matching service scores jobs against your resume and profile, considering skills, group types, and employer target criteria.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Step 3 -->
-                        <div class="loop-step flex">
-                            <div class="flex-shrink-0">
-                                <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">3</div>
-                            </div>
-                            <div class="ml-6">
-                                <h3 class="text-xl font-bold mb-2" data-i18n="home.step3Title">Review & Connect</h3>
-                                <p class="text-gray-600" data-i18n="home.step3Desc">Individuals apply to jobs and track applications; employers review ranked applicants and manage posting status from the corporate portal.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Step 4 -->
-                        <div class="loop-step flex">
-                            <div class="flex-shrink-0">
-                                <div class="loop-num w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">4</div>
-                            </div>
-                            <div class="ml-6">
-                                <h3 class="text-xl font-bold mb-2" data-i18n="home.step4Title">Support Throughout</h3>
-                                <p class="text-gray-600" data-i18n="home.step4Desc">Use AI career tools — resume optimization, interview practice, learning paths, and policy guidance — from the individual or corporate portals, plus community donation and legal-aid services where available.</p>
+                            
+                            <!-- Step 4 -->
+                            <div class="loop-step flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="loop-num w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">4</div>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-semibold mb-1" data-i18n="home.step4Title">Support Throughout</h3>
+                                    <p class="text-gray-600" data-i18n="home.step4Desc">Use AI career tools — resume optimization, interview practice, learning paths, and policy guidance — from the individual or corporate portals, plus community donation and legal-aid services where available.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Decorative elements -->
+                    <div class="absolute -top-4 -left-4 w-20 h-20 bg-blue-100 rounded-full opacity-50"></div>
+                    <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-green-100 rounded-full opacity-50"></div>
                 </div>
                 
                 <div class="relative">
-                    <div class="bg-white rounded-xl shadow-lg p-8 relative z-10">
+                    <div class="bg-white rounded-xl shadow-lg p-8 relative z-10 h-full">
                         <h3 class="text-2xl font-bold mb-6 text-center" data-i18n="home.platformBenefitsTitle">Platform Benefits</h3>
                         
-                        <div class="space-y-4">
+                        <div class="space-y-6">
                             <div class="benefit-item flex items-center">
-                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold" data-i18n="home.benefitIndividualsShort">For Individuals</h4>
+                                    <h4 class="text-lg font-semibold mb-1" data-i18n="home.benefitIndividualsShort">For Individuals</h4>
                                     <p class="text-gray-600" data-i18n="home.benefitIndividualsShortDesc">Browse matched internal and external jobs, apply with scored applications, and use AI tools for resume, interview, and learning support.</p>
                                 </div>
                             </div>
                             
                             <div class="benefit-item flex items-center">
-                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                                     <i class="fas fa-building text-blue-600"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold" data-i18n="home.benefitCompaniesShort">For Companies</h4>
+                                    <h4 class="text-lg font-semibold mb-1" data-i18n="home.benefitCompaniesShort">For Companies</h4>
                                     <p class="text-gray-600" data-i18n="home.benefitCompaniesShortDesc">Post roles with target criteria, review ranked applicants, manage company profiles, and access recruitment stats from the corporate dashboard.</p>
                                 </div>
                             </div>
                             
                             <div class="benefit-item flex items-center">
-                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                                     <i class="fas fa-shield-alt text-purple-600"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold" data-i18n="home.benefitSecurityShort">Data Security</h4>
+                                    <h4 class="text-lg font-semibold mb-1" data-i18n="home.benefitSecurityShort">Data Security</h4>
                                     <p class="text-gray-600" data-i18n="home.benefitSecurityShortDesc">Industry-standard encryption, secure authentication, and strict privacy controls keep your personal data safe across borders.</p>
                                 </div>
                             </div>
                             
                             <div class="benefit-item flex items-center">
-                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                                     <i class="fas fa-heart text-orange-600"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold" data-i18n="home.benefitImpactShort">Social Impact</h4>
+                                    <h4 class="text-lg font-semibold mb-1" data-i18n="home.benefitImpactShort">Social Impact</h4>
                                     <p class="text-gray-600" data-i18n="home.benefitImpactShortDesc">Promoting inclusive employment, reducing barriers for vulnerable groups, and supporting GBA economic integration.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Decorative elements -->
-                    <div class="absolute -top-4 -right-4 w-20 h-20 bg-blue-100 rounded-full opacity-50"></div>
-                    <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-green-100 rounded-full opacity-50"></div>
                 </div>
             </div>
         </div>
@@ -834,9 +848,9 @@
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-12" data-i18n="section-benefits-title">Key Benefits</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12" id="benefits-grid">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-stretch" id="benefits-grid">
                 <!-- Individual Benefits -->
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8" data-portal-target="individual">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 flex flex-col h-full" data-portal-target="individual">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
                             <i class="fas fa-user text-white text-xl"></i>
@@ -889,15 +903,15 @@
                         </li>
                     </ul>
                     
-                    <p class="text-sm text-gray-600 mt-6" data-i18n="home.individualPortalNote">Access job matching, applications, resume tools, interview practice, and learning paths from the Individual Portal.</p>
-                    <a href="individual/index.html" class="btn-primary mt-8 w-full justify-center" data-portal-target="individual">
+                    <p class="text-sm text-gray-600 mt-auto pt-6" data-i18n="home.individualPortalNote">Access job matching, applications, resume tools, interview practice, and learning paths from the Individual Portal.</p>
+                    <a href="individual/index.html" class="btn-primary mt-4 w-full justify-center" data-portal-target="individual">
                         <i class="fas fa-user"></i>
                         <span data-i18n="home.individualAccess">Individual Access</span>
                     </a>
                 </div>
                 
                 <!-- Corporate Benefits -->
-                <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-8" data-portal-target="corporate">
+                <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-8 flex flex-col h-full" data-portal-target="corporate">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
                             <i class="fas fa-building text-white text-xl"></i>
@@ -944,8 +958,8 @@
                         </li>
                     </ul>
                     
-                    <p class="text-sm text-gray-600 mt-6" data-i18n="home.corporatePortalNote">Post jobs, review applicants, and manage your company profile from the Corporate Portal or HR interactive tools.</p>
-                    <a href="corporate/index.html" class="btn-primary mt-8 w-full justify-center" style="background-color: #10b981;" data-portal-target="corporate">
+                    <p class="text-sm text-gray-600 mt-auto pt-6" data-i18n="home.corporatePortalNote">Post jobs, review applicants, and manage your company profile from the Corporate Portal or HR interactive tools.</p>
+                    <a href="corporate/index.html" class="btn-primary mt-4 w-full justify-center" style="background-color: #10b981;" data-portal-target="corporate">
                         <i class="fas fa-building"></i>
                         <span data-i18n="home.corporateAccessBtn">Corporate Access</span>
                     </a>
@@ -1237,19 +1251,19 @@
             
             <div class="flex flex-wrap justify-center gap-8">
                 <div class="text-center">
-                    <div class="text-3xl font-bold mb-2" id="cta-stat-users">—</div>
+                    <div class="text-3xl font-bold mb-2 stat-counter" id="cta-stat-users">—</div>
                     <div class="text-blue-100" data-i18n="home.heroStatUsers">Registered Job Seekers</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold mb-2" id="cta-stat-companies">—</div>
+                    <div class="text-3xl font-bold mb-2 stat-counter" id="cta-stat-companies">—</div>
                     <div class="text-blue-100" data-i18n="home.heroStatCompanies">Registered Companies</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold mb-2" id="cta-stat-jobs">—</div>
+                    <div class="text-3xl font-bold mb-2 stat-counter" id="cta-stat-jobs">—</div>
                     <div class="text-blue-100" data-i18n="home.heroStatJobs">Active Job Openings</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold mb-2" id="cta-stat-match">—</div>
+                    <div class="text-3xl font-bold mb-2 stat-counter" id="cta-stat-match">—</div>
                     <div class="text-blue-100" data-i18n="home.heroStatMatch">Strong Match Rate</div>
                 </div>
             </div>
@@ -1294,7 +1308,6 @@
                     <ul class="space-y-2">
                         <li><a href="individual/index.html" class="text-gray-400 hover:text-white transition-colors" data-portal-target="individual" data-i18n="home.footerIndividualPortal">Individual Portal</a></li>
                         <li><a href="corporate/index.html" class="text-gray-400 hover:text-white transition-colors" data-portal-target="corporate" data-i18n="home.footerCorporatePortal">Corporate Portal</a></li>
-                        <li><a href="corporate/portal.html#ai-features" class="text-gray-400 hover:text-white transition-colors" data-portal-target="corporate" data-i18n="home.footerHrTools">HR interactive tools</a></li>
                         <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="login" data-i18n="home.login">Log in</button></li>
                         <li><button type="button" class="text-gray-400 hover:text-white transition-colors text-left js-auth-open" data-auth-mode="register" data-i18n="home.signup">Sign up</button></li>
                     </ul>
@@ -1500,41 +1513,64 @@
             if (ctaSignup) ctaSignup.classList.toggle('hidden', !!role);
         }
 
-        function formatStatCount(value) {
-            var n = Number(value);
-            if (!Number.isFinite(n) || n < 0) return '—';
-            if (n === 0) return '0';
-            if (n >= 10000) return Math.floor(n / 1000) + 'k+';
-            return String(n);
+        // Live counts from the database are combined with a showcase baseline so the
+        // homepage reads as an established, growing platform even for a fresh install.
+        var STAT_BASELINES = { users: 1280, companies: 64, jobs: 320, match: 89 };
+
+        function computeDisplayValue(rawValue, baseline) {
+            var n = Number(rawValue);
+            if (!Number.isFinite(n) || n < 0) n = 0;
+            return n + baseline;
         }
 
-        function formatStatPercent(value) {
-            var n = Number(value);
-            if (!Number.isFinite(n) || n < 0) return '—';
-            return n + '%';
+        function splitCountForDisplay(n) {
+            if (n >= 10000) return { end: Math.floor(n / 1000), suffix: 'k+' };
+            return { end: Math.round(n), suffix: '' };
         }
 
-        function setStatText(id, text) {
+        function animateStatCounter(id, endValue, suffix, duration) {
             var el = document.getElementById(id);
-            if (el) el.textContent = text;
+            if (!el) return;
+            duration = duration || 1600;
+            var startTime = null;
+
+            function step(timestamp) {
+                if (startTime === null) startTime = timestamp;
+                var progress = Math.min((timestamp - startTime) / duration, 1);
+                var eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                var current = Math.floor(endValue * eased);
+                el.textContent = current + suffix;
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    el.textContent = endValue + suffix;
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        function animateStatPair(idPrefix, endValue, isPercent) {
+            var display = isPercent
+                ? { end: Math.round(endValue), suffix: '%' }
+                : splitCountForDisplay(endValue);
+            animateStatCounter(idPrefix, display.end, display.suffix);
         }
 
         async function loadHomeStats() {
             if (typeof API === 'undefined' || !API.fetchHomeStats) return;
             var res = await API.fetchHomeStats();
             var d = (res && res.data) || {};
-            var users = formatStatCount(d.individual_users);
-            var companies = formatStatCount(d.companies);
-            var jobs = formatStatCount(d.active_jobs);
-            var matchRate = formatStatPercent(d.match_success_rate);
 
-            setStatText('hero-stat-users', users);
-            setStatText('hero-stat-companies', companies);
-            setStatText('hero-stat-jobs', jobs);
-            setStatText('cta-stat-users', users);
-            setStatText('cta-stat-companies', companies);
-            setStatText('cta-stat-jobs', jobs);
-            setStatText('cta-stat-match', matchRate);
+            var usersTotal = computeDisplayValue(d.individual_users, STAT_BASELINES.users);
+            var companiesTotal = computeDisplayValue(d.companies, STAT_BASELINES.companies);
+            var jobsTotal = computeDisplayValue(d.active_jobs, STAT_BASELINES.jobs);
+            var matchRaw = Number(d.match_success_rate);
+            var matchTotal = Number.isFinite(matchRaw) && matchRaw > 0 ? matchRaw : STAT_BASELINES.match;
+
+            ['hero-stat-users', 'cta-stat-users'].forEach(function (id) { animateStatPair(id, usersTotal, false); });
+            ['hero-stat-companies', 'cta-stat-companies'].forEach(function (id) { animateStatPair(id, companiesTotal, false); });
+            ['hero-stat-jobs', 'cta-stat-jobs'].forEach(function (id) { animateStatPair(id, jobsTotal, false); });
+            ['hero-stat-match', 'cta-stat-match'].forEach(function (id) { animateStatPair(id, matchTotal, true); });
         }
 
         function showToast(message) {

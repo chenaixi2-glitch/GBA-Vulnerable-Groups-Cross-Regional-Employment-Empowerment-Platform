@@ -20,16 +20,13 @@ CREATE TABLE IF NOT EXISTS company_org_members (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ALTER TABLE company_profiles
-    ADD COLUMN org_id BIGINT UNSIGNED DEFAULT NULL COMMENT '所属企业组织',
-    ADD KEY idx_company_org (org_id);
+    ADD COLUMN IF NOT EXISTS org_id BIGINT UNSIGNED DEFAULT NULL COMMENT '所属企业组织';
 
 ALTER TABLE job_postings
-    ADD COLUMN company_org_id BIGINT UNSIGNED DEFAULT NULL COMMENT '所属企业组织',
-    ADD KEY idx_job_org (company_org_id);
+    ADD COLUMN IF NOT EXISTS company_org_id BIGINT UNSIGNED DEFAULT NULL COMMENT '所属企业组织';
 
 ALTER TABLE job_applications
-    ADD COLUMN status_updated_by BIGINT UNSIGNED DEFAULT NULL COMMENT '最近更新状态的企业用户',
-    ADD KEY idx_app_status_updater (status_updated_by);
+    ADD COLUMN IF NOT EXISTS status_updated_by BIGINT UNSIGNED DEFAULT NULL COMMENT '最近更新状态的企业用户';
 
 -- 为已有企业账号回填组织（MySQL 8+）
 INSERT INTO company_orgs (name, invite_code, created_by_user_id)

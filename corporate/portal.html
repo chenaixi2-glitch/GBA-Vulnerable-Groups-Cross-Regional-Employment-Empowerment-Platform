@@ -587,7 +587,7 @@
             <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto" data-i18n="corpPortal.heroSubtitle">Connect with diverse talent across the Greater Bay Area through our AI-powered recruitment platform</p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4 items-center">
-                <a href="#dashboard" class="btn-primary text-lg">
+                <a href="#dashboard" class="inline-flex items-center justify-center gap-2 text-lg font-medium px-8 py-3 rounded-lg border-2 border-white/90 text-white hover:bg-white/10 transition-colors">
                     <i class="fas fa-chart-line"></i>
                     <span data-i18n="corpPortal.viewDashboard">View Recruitment Dashboard</span>
                 </a>
@@ -2168,7 +2168,6 @@
     <script src="assets/js/api-client.js"></script>
     <script src="../assets/js/portal-auth.js"></script>
     <script src="../assets/js/platform-access.js"></script>
-    <script src="../assets/js/donation-box.js"></script>
     <script src="assets/js/my-jobs.js"></script>
     <script src="assets/js/dashboard-stats.js"></script>
     <script>
@@ -2202,10 +2201,6 @@
             PortalAuth.initPortalAuth({ portal: 'corporate', requireAuth: false });
             PlatformAccess.guardFeatureLinks('[data-require-access]');
             PlatformAccess.guardPremiumFeatureLinks('[data-require-premium-access]');
-            const miniRoot = document.getElementById('corporate-donation-mini');
-            if (miniRoot && typeof DonationBox !== 'undefined') {
-                DonationBox.renderDonationBox(miniRoot, { portal: 'corporate' });
-            }
             try {
                 const access = await PlatformAccess.fetchAccess();
                 renderPortalAccessBanner(access);
