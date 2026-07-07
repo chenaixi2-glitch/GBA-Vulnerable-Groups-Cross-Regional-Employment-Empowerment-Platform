@@ -411,6 +411,7 @@ class CopilotState(BaseModel):
     workflow_trace: list[WorkflowTraceItem] = Field(default_factory=list)
     profile_replace_mode: bool = False  # runtime: new upload replaces existing profile instead of merging
     forced_intent: str = ""  # runtime: API/client bypasses LLM intent classification when set
+    context_scope: str = ""  # runtime: narrows Planner intent space (e.g. resume_edit)
     resume_language_target: str = ""  # runtime: zh | zh-TW | en | pt for language_convert intent
     chat_output_language: str = ""  # runtime: per-request page UI locale
     chat_question_output_language: str = ""  # runtime: per-request interview question locale

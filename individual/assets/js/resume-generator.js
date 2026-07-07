@@ -1573,6 +1573,7 @@ async function submitResumeChatEdit() {
         const response = await apiClient.chat(message, [], {
             language: currentResumeLanguage,
             usePageLanguage: false,
+            contextScope: 'resume_edit',
         });
 
         const messages = document.getElementById('resume-chat-messages');

@@ -1701,6 +1701,7 @@ class APIClient {
                 language: chatLanguage,
                 replace_profile: Boolean(options.replaceProfile),
                 forced_intent: options.forcedIntent || '',
+                context_scope: options.contextScope || '',
                 language_scope: options.languageScope === 'interview_question' ? 'interview_question'
                     : options.languageScope === 'interview_feedback' ? 'interview_feedback'
                     : 'page',
@@ -1712,7 +1713,12 @@ class APIClient {
             if (this._isSessionAccessError(error) && retryOnAccessDenied) {
                 this.clearSession();
                 this.generateSessionId();
-                return this.chat(message, attachments, { retryOnAccessDenied: false, language: chatLanguage, languageScope: options.languageScope });
+                return this.chat(message, attachments, {
+                    retryOnAccessDenied: false,
+                    language: chatLanguage,
+                    languageScope: options.languageScope,
+                    contextScope: options.contextScope,
+                });
             }
             throw this.handleError(error);
         }

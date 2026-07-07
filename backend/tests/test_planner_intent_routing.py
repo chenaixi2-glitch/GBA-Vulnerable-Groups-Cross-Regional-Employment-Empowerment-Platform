@@ -64,3 +64,33 @@ def test_short_gap_analysis_command_unchanged_without_profile():
     state = CopilotState(session_id="s1")
     intent = resolve_intent("gap_analysis", "Analyze my skill gaps for resume optimization.", state)
     assert intent == "gap_analysis"
+
+
+def test_resume_edit_scope_clamps_gap_analysis_to_content_edit():
+    state = CopilotState(session_id="s1", context_scope="resume_edit")
+    intent = resolve_intent("gap_analysis", "Analyze skill gaps in my resume wording.", state)
+    assert intent == "content_edit"
+
+
+def test_resume_edit_scope_routes_section_reorder_to_render_edit():
+    state = CopilotState(session_id="s1", context_scope="resume_edit")
+    intent = resolve_intent("content_edit", "把项目经历放到实习经历前面", state)
+    assert intent == "render_edit"
+
+
+def test_resume_edit_scope_routes_language_convert():
+    state = CopilotState(session_id="s1", context_scope="resume_edit")
+    intent = resolve_intent("content_edit", "请把简历转成英文", state)
+    assert intent == "language_convert"
+
+
+def test_resume_edit_scope_routes_question_to_ask_question():
+    state = CopilotState(session_id="s1", context_scope="resume_edit")
+    intent = resolve_intent("content_edit", "简历里有哪些项目？", state)
+    assert intent == "ask_question"
+
+
+def test_resume_edit_plan_triggers_render_agent_for_render_edit():
+    state = CopilotState(session_id="s1", context_scope="resume_edit")
+    plan = _build_execution_plan("render_edit", state)
+    assert plan == ["render_agent"]

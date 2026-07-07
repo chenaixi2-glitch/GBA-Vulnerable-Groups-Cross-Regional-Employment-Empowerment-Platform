@@ -9,7 +9,10 @@ from typing import Any
 
 from agents.json_contracts import IntentClassificationOutput
 from models.llm import get_llm, ainvoke_json_with_schema
-from prompts.intent_classification import INTENT_CLASSIFICATION_PROMPT
+from prompts.intent_classification import (
+    INTENT_CLASSIFICATION_PROMPT,
+    RESUME_EDIT_INTENT_CLASSIFICATION_PROMPT,
+)
 from workflow.state import CopilotState
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
@@ -55,9 +58,74 @@ _DAILY_HOURS_PATTERN = re.compile(
 )
 _VALID_FORCED_INTENTS = frozenset(_INTENT_PLAN.keys())
 
+_CONTEXT_SCOPE_ALLOWED: dict[str, frozenset[str]] = {
+    "resume_edit": frozenset({
+        "content_edit",
+        "language_convert",
+        "render_edit",
+        "ask_question",
+        "export",
+    }),
+}
+
+_RESUME_EDIT_LANGUAGE_PATTERN = re.compile(
+    r"(translate|convert|互转|转成|转换|翻成|译成|"
+    r"(英文|中文|葡文|繁体|简体).*(简历|resume)|"
+    r"(简历|resume).*(英文|中文|葡文|繁体|简体))",
+    re.IGNORECASE,
+)
+_RESUME_EDIT_RENDER_PATTERN = re.compile(
+    r"(排序|顺序|先后|放到.*前面|移到.*前|section order|reorder|"
+    r"layout|font|spacing|margin|column|字号|行距|布局|间距|边距|双栏|单栏|字体|排版)",
+    re.IGNORECASE,
+)
+_RESUME_EDIT_QUESTION_PATTERN = re.compile(
+    r"(\?|？|^(what|which|how many|list|show)\b|"
+    r"^(什么|哪些|多少|有没有|是否|列出|显示|告诉我))",
+    re.IGNORECASE,
+)
+
+
+def _normalize_context_scope(scope: str) -> str:
+    return (scope or "").strip().lower()
+
+
+def _clamp_intent_to_scope(intent: str, context_scope: str) -> str:
+    allowed = _CONTEXT_SCOPE_ALLOWED.get(context_scope)
+    if not allowed:
+        return intent
+    normalized = (intent or "content_edit").strip()
+    if normalized in allowed:
+        return normalized
+    logger.info(
+        "Intent clamp: %s -> content_edit (context_scope=%s)",
+        normalized,
+        context_scope,
+    )
+    return "content_edit"
+
+
+def _resolve_resume_edit_intent(raw_intent: str, user_message: str) -> str:
+    """Deterministic routing within resume_edit context scope."""
+    message = (user_message or "").strip()
+    intent = (raw_intent or "content_edit").strip()
+
+    if message and _RESUME_EDIT_LANGUAGE_PATTERN.search(message):
+        return "language_convert"
+    if message and _RESUME_EDIT_RENDER_PATTERN.search(message):
+        return "render_edit"
+    if message and _RESUME_EDIT_QUESTION_PATTERN.search(message):
+        return "ask_question"
+
+    return _clamp_intent_to_scope(intent, "resume_edit")
+
 
 def resolve_intent(raw_intent: str, user_message: str, state: CopilotState | None = None) -> str:
     """Apply deterministic routing rules after LLM intent classification."""
+    context_scope = _normalize_context_scope(state.context_scope if state else "")
+    if context_scope == "resume_edit":
+        return _resolve_resume_edit_intent(raw_intent, user_message)
+
     intent = (raw_intent or "ask_question").strip()
     message = (user_message or "").strip()
     if not message:
@@ -94,7 +162,13 @@ def resolve_intent(raw_intent: str, user_message: str, state: CopilotState | Non
 
 async def _classify_intent_async(state: CopilotState) -> IntentClassificationOutput:
     """异步调用 LLM 进行意图分类。"""
-    prompt = INTENT_CLASSIFICATION_PROMPT.format(
+    context_scope = _normalize_context_scope(state.context_scope)
+    prompt_template = (
+        RESUME_EDIT_INTENT_CLASSIFICATION_PROMPT
+        if context_scope == "resume_edit"
+        else INTENT_CLASSIFICATION_PROMPT
+    )
+    prompt = prompt_template.format(
         has_job=state.job is not None,
         has_profile=state.candidate_profile is not None,
         has_resume=state.resume_content_json is not None,
@@ -121,6 +195,7 @@ def _build_execution_plan(intent: str, state: CopilotState) -> list[str]:
 async def planner_node_async(state: CopilotState) -> dict[str, Any]:
     """Planner Agent 异步节点函数。"""
     logger.info("Planner Agent started for session %s", state.session_id)
+    context_scope = _normalize_context_scope(state.context_scope)
 
     forced = (state.forced_intent or "").strip()
     if forced in _VALID_FORCED_INTENTS:
@@ -147,9 +222,12 @@ async def planner_node_async(state: CopilotState) -> dict[str, Any]:
                 ),
             }
 
-        intent = intent_result.intent or "ask_question"
+        intent = intent_result.intent or ("content_edit" if context_scope == "resume_edit" else "ask_question")
         reason = intent_result.reason or ""
         intent = resolve_intent(intent, state.user_message, state)
+
+    if context_scope and not forced:
+        intent = _clamp_intent_to_scope(intent, context_scope)
 
     # 2. 构建执行计划
     plan = _build_execution_plan(intent, state)
@@ -172,6 +250,7 @@ async def planner_node_async(state: CopilotState) -> dict[str, Any]:
                 "reason": reason,
                 "execution_plan": plan,
                 "forced_intent": bool(forced),
+                "context_scope": context_scope or None,
             },
         ),
     }
