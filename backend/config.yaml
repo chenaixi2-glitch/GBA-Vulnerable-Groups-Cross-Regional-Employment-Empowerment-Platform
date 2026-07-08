@@ -38,6 +38,24 @@ rerank:
   api_key_env: "DASHSCOPE_API_KEY"
   top_n: 5
 
+vector_store:
+  enabled: true
+  provider: chromadb
+  persist_directory: "./data/chroma"
+
+rag:
+  enabled: true
+  search_top_k: 10
+  rerank_top_n: 5
+  min_score: 0.0
+
+dialogue_memory:
+  raw_turn_limit: 6
+  compress_threshold: 10
+  max_turn_chars: 800
+  summary_max_chars: 2000
+  cross_session_enabled: true
+
 redis:
   host_from: "server"          # 可被 REDIS_HOST 覆盖；线上建议 REDIS_HOST=127.0.0.1
   port: 6379

@@ -1775,6 +1775,8 @@ class APIClient {
                 replace_profile: Boolean(options.replaceProfile),
                 forced_intent: options.forcedIntent || '',
                 context_scope: options.contextScope || '',
+                skip_render: Boolean(options.skipRender),
+                clear_generated_resume: Boolean(options.clearGeneratedResume),
                 language_scope: options.languageScope === 'interview_question' ? 'interview_question'
                     : options.languageScope === 'interview_feedback' ? 'interview_feedback'
                     : 'page',
@@ -2267,9 +2269,13 @@ class APIClient {
     }
 
     /**
-     * Generate customized resume - triggers content_agent + render_agent
+     * Generate customized resume - triggers content_agent (+ render_agent unless skipRender)
      */
-    async generateResume(instruction = 'Please generate a customized resume based on my experience and target position. Polish each experience entry to align with the target job, add quantified results only when supported by my profile facts, follow industry-standard resume conventions, and never fabricate numbers or achievements. Keep all content within one A4 page.', targetContext = null) {
+    async generateResume(
+        instruction = 'Please generate a customized resume based on my experience and target position. Polish each experience entry to align with the target job, add quantified results only when supported by my profile facts, follow industry-standard resume conventions, and never fabricate numbers or achievements. Keep all content within one A4 page.',
+        targetContext = null,
+        options = {}
+    ) {
         try {
             await this.syncTargetJobContext(targetContext);
             await this.syncResumeLanguageToSession();
@@ -2277,11 +2283,33 @@ class APIClient {
             const response = await this.chat(fullInstruction, [], {
                 language: this.getPageLanguage(),
                 usePageLanguage: true,
+                forcedIntent: options.forcedIntent || 'content_edit',
+                skipRender: Boolean(options.skipRender),
+                clearGeneratedResume: Boolean(options.clearGeneratedResume),
             });
             return response;
         } catch (error) {
             console.error('Resume generation error:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Render HTML preview when resume_content_json exists but resume_html is empty.
+     */
+    async ensureResumeRendered() {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+            await this.ensureBackendAvailable();
+            const response = await this.client.post('/resume/ensure-render', {
+                session_id: this.sessionId,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Ensure resume render error:', error);
+            throw this.handleError(error);
         }
     }
 
@@ -2303,6 +2331,28 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('Get resume HTML error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * Get Markdown preview text (same source as Markdown export).
+     */
+    async getResumeMarkdownPreview() {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+
+            await this.ensureBackendAvailable();
+
+            const response = await this.client.get('/resume/preview-markdown', {
+                params: { session_id: this.sessionId },
+            });
+
+            return response.data;
+        } catch (error) {
+            console.error('Get resume Markdown preview error:', error);
             throw this.handleError(error);
         }
     }

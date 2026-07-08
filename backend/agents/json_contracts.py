@@ -138,6 +138,12 @@ class ResumeGenerationOutput(BaseModel):
     )
 
 
+class ResumeModulePolishOutput(BaseModel):
+    """Single resume section batch output for modular JD-tailored generation."""
+
+    items: list[ResumeSectionItemOutput] = Field(default_factory=list)
+
+
 class PageMarginOutput(BaseModel):
     top: int = 24
     right: int = 24

@@ -85,6 +85,9 @@
     return chain.then(function () {
       initAuthNav();
       flushReady();
+      if (global.GBAI18n && typeof global.GBAI18n.scheduleApplyLanguage === 'function') {
+        global.GBAI18n.scheduleApplyLanguage(global.GBAI18n.getLang());
+      }
     });
   }
 
@@ -92,9 +95,6 @@
     var portal = detectPortal();
     if (global.PortalAuth && typeof global.PortalAuth.refreshPortalAuthNav === 'function') {
       global.PortalAuth.refreshPortalAuthNav(portal);
-    }
-    if (global.GBAI18n && typeof global.GBAI18n.applyLanguage === 'function') {
-      global.GBAI18n.applyLanguage(global.GBAI18n.getLang());
     }
   });
 

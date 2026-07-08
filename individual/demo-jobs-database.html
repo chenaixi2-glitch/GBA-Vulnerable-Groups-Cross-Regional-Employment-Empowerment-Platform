@@ -353,7 +353,15 @@
         });
 
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadJobs);
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.GBAI18n && GBAI18n.initLanguage) {
+                    GBAI18n.initLanguage().then(loadJobs);
+                } else {
+                    loadJobs();
+                }
+            });
+        } else if (window.GBAI18n && GBAI18n.initLanguage) {
+            GBAI18n.initLanguage().then(loadJobs);
         } else {
             loadJobs();
         }

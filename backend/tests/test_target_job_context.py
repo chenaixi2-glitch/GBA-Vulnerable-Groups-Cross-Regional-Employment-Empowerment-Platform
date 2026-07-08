@@ -42,3 +42,21 @@ def test_build_enriched_job_dict_meta_only():
     enriched = build_enriched_job_dict(state)
     assert enriched["user_target_context"]["jd_text"] == "产品经理"
     assert enriched["title"] == "产品经理"
+
+
+def test_build_compact_job_dict_from_meta():
+    from tools.target_job_context import build_compact_job_dict
+
+    state = CopilotState(
+        session_id="sess_test",
+        meta=Meta(
+            target_jd_text="Long JD " * 100,
+            target_industry="Finance",
+            target_experience_level="Entry Level",
+            employer_type="soe",
+        ),
+    )
+    compact = build_compact_job_dict(state)
+    assert compact["industry"] == "Finance"
+    assert compact["experience_requirement"] == "Entry Level"
+    assert "jd_text" not in compact

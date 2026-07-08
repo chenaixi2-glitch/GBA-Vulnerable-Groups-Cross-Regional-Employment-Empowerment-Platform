@@ -14,8 +14,8 @@ from api.export import (
     _export_resume_json,
     _export_resume_markdown,
 )
-from tools.resume_export import resume_content_to_docx_bytes
-from workflow.state import CopilotState, ResumeContent, ResumeContentMeta, ResumeProfile, SectionItem
+from tools.resume_export import html_to_docx_bytes
+from workflow.state import CopilotState, ResumeContent
 
 _FIXTURES = Path(__file__).resolve().parents[1] / "evaluation" / "resume_rag" / "fixtures" / "golden_cases.json"
 _GOLDEN = json.loads(_FIXTURES.read_text(encoding="utf-8"))
@@ -101,13 +101,26 @@ class TestOptimizedResumeExport:
             names = zf.namelist()
             assert "word/document.xml" in names
             xml = zf.read("word/document.xml").decode("utf-8")
-            assert "Chen Aixi" in xml or "Compliance FAQ" in xml
+            assert "Alex Chen" in xml or "Chen" in xml or "Compliance" in xml
 
     def test_docx_via_tool_matches_api(self, optimized_en_state: CopilotState):
         api_bytes, _, _ = _export_resume_docx(optimized_en_state)
-        tool_bytes = resume_content_to_docx_bytes(optimized_en_state.resume_content_json)
-        assert len(api_bytes) == len(tool_bytes)
-        assert api_bytes == tool_bytes
+        tool_bytes = html_to_docx_bytes(optimized_en_state.resume_html.html)
+        assert len(api_bytes) > 2000
+        assert len(tool_bytes) > 2000
+        for payload in (api_bytes, tool_bytes):
+            with zipfile.ZipFile(BytesIO(payload)) as zf:
+                xml = zf.read("word/document.xml").decode("utf-8")
+                assert "Alex Chen" in xml or "Chen" in xml
+
+    def test_docx_requires_html(self, optimized_en_state: CopilotState):
+        state = CopilotState(
+            resume_content_json=optimized_en_state.resume_content_json,
+            resume_html={"html": ""},
+        )
+        with pytest.raises(Exception) as exc:
+            _export_resume_docx(state)
+        assert "HTML" in str(exc.value)
 
 
 class TestTranslatedResumeExport:
@@ -145,12 +158,10 @@ class TestExportEdgeCases:
         assert md.startswith("# 简历内容")
 
     def test_minimal_resume_docx(self):
-        content = ResumeContent(
-            profile=ResumeProfile(name="Test User", email="t@example.com"),
-            summary="Brief summary",
-            skills=[SectionItem(id="s1", title="Skills", content="Python")],
-            meta=ResumeContentMeta(language="en", target_role="Engineer"),
-        )
-        docx = resume_content_to_docx_bytes(content)
+        html = "<h1>Test User</h1><p>Brief summary</p><p>Python</p>"
+        docx = html_to_docx_bytes(html)
         assert docx[:2] == b"PK"
         assert len(docx) > 2000
+        with zipfile.ZipFile(BytesIO(docx)) as zf:
+            xml = zf.read("word/document.xml").decode("utf-8")
+            assert "Test User" in xml

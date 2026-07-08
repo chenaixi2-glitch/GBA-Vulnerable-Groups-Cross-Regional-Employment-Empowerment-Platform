@@ -10,13 +10,14 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from api.chat_input import prepare_chat_input
-from auth.jwt import get_optional_user
+from auth.jwt import extract_bearer_token, get_optional_user
 from auth.session_access import bind_session_owner, ensure_session_access
 from workflow.graph import compile_graph
-from workflow.state import CopilotState
+from workflow.state import CopilotState, ResumeHtml
 from storage.redis_client import get_redis_client, RedisSessionStore, RedisDraftStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
 from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+from services import dialogue_memory, rag_service
 from tools.output_language import (
     apply_chat_output_language,
     apply_interview_feedback_language,
@@ -78,6 +79,8 @@ class ChatRequest(BaseModel):
     replace_profile: bool = False  # True when uploading a new resume — overwrite Redis working copy
     forced_intent: str = ""  # Optional: skip LLM intent classification (upload_profile, upload_jd, gap_analysis, …)
     context_scope: str = ""  # Optional: narrow Planner intents (resume_edit, …)
+    skip_render: bool = False  # content_edit: generate resume_content_json only, defer HTML render
+    clear_generated_resume: bool = False  # clear resume_content_json/html before graph run (JD regen from profile)
 
 
 class ChatResponse(BaseModel):
@@ -154,6 +157,25 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         logger.info("Profile replace mode: cleared Redis draft for session %s", session_id)
     state.forced_intent = (req.forced_intent or "").strip()
     state.context_scope = (req.context_scope or "").strip().lower()
+    state.skip_render = bool(req.skip_render)
+    state.auth_token = extract_bearer_token(request) or ""
+
+    if req.clear_generated_resume:
+        state.resume_content_json = None
+        state.resume_html = ResumeHtml()
+        logger.info("Cleared generated resume content for session %s before graph run", session_id)
+
+    # 跨会话摘要 + 会话内对话记忆上下文
+    cross_summary = ""
+    if user and user.get("sub"):
+        try:
+            cross_summary = await dialogue_memory.load_user_summary(user["sub"])
+        except Exception as exc:
+            logger.warning("load_user_summary failed: %s", exc)
+    state.memory_context = dialogue_memory.build_memory_context(state)
+    if cross_summary:
+        prefix = f"【跨会话摘要】\n{cross_summary}"
+        state.memory_context = f"{prefix}\n\n{state.memory_context}".strip() if state.memory_context else prefix
 
     # 执行 workflow graph，加上config指定langsmith的run_name，方便在LangSmith上查看每次API调用的执行详情
     graph = _get_graph()
@@ -171,6 +193,15 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     # 构建响应状态
     final_state = CopilotState.model_validate(result)
 
+    # 追加本轮对话记忆（写入 meta，随 Redis 持久化）
+    user_msg = prepared_input.user_message
+    final_state = dialogue_memory.append_turn(
+        final_state,
+        user_message=user_msg,
+        assistant_reply=final_state.reply_message,
+        intent=final_state.current_intent or "",
+    )
+
     # 持久化到 Redis
     persist_data = final_state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
                                                      "execution_plan", "reply_message", "triggered_agents",
@@ -178,8 +209,14 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
                                                      "profile_replace_mode", "forced_intent", "context_scope",
                                                      "chat_output_language",
                                                      "chat_question_output_language",
-                                                     "chat_feedback_output_language"})
+                                                     "chat_feedback_output_language",
+                                                     "memory_context",
+                                                     "auth_token",
+                                                     "skip_render"})
     await _asave_state(store, persist_data)
+
+    # 后台：对话压缩、RAG 索引、跨会话摘要
+    background_tasks.add_task(_post_chat_background, final_state, user.get("sub") if user else None)
 
     # 草稿暂存 Redis；数据库持久化仅在用户确认保存（POST /api/resume/save）时执行
     logger.debug("Session %s persisted to Redis only (MySQL on explicit save)", session_id)
@@ -212,6 +249,28 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         estimated_total_hours=final_state.learning_path_estimated_hours,
         daily_hours=final_state.learning_path_daily_hours,
     )
+
+
+async def _post_chat_background(state: CopilotState, user_id: str | int | None) -> None:
+    """Chat 响应后后台任务：压缩对话、索引 RAG、持久化跨会话摘要。"""
+    try:
+        state = await dialogue_memory.maybe_compress_safe(state)
+        if user_id and state.meta.dialogue_summary:
+            redis_client = await get_redis_client()
+            store = RedisSessionStore(state.session_id, redis_client)
+            await _asave_state(store, state.model_dump(exclude={
+                "user_message", "user_attachments", "current_intent",
+                "execution_plan", "reply_message", "triggered_agents",
+                "workflow_trace", "resume_language_target",
+                "profile_replace_mode", "forced_intent", "context_scope",
+                "chat_output_language", "chat_question_output_language",
+                "chat_feedback_output_language", "memory_context", "auth_token",
+            }))
+            await dialogue_memory.persist_user_summary_safe(user_id, state)
+    except Exception as exc:
+        logger.warning("post_chat dialogue background failed: %s", exc)
+
+    await rag_service.index_session_safe(state)
 
 
 async def _persist_to_mysql(state: CopilotState, user_id: int | str | None = None) -> None:

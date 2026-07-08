@@ -229,6 +229,11 @@ def get_vector_store_config() -> dict:
     return get_config().get("vector_store", {})
 
 
+def get_dialogue_memory_config() -> dict:
+    """返回多轮对话记忆配置。"""
+    return get_config().get("dialogue_memory", {})
+
+
 def get_template_config() -> dict:
     """返回模板路径配置（default_md, default_tex）。"""
     return get_config().get("templates", {})

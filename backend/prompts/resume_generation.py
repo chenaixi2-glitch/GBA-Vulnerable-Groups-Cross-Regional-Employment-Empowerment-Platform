@@ -142,3 +142,44 @@ RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用�
 5. 修改后的内容须保持目标语言一致，禁止中英混用
 6. 即使指令不明确，也必须返回合法 JSON 对象
 """
+
+RESUME_MODULE_SECTION_PROMPT = """你是简历内容生成专家。请仅针对下列候选人经历片段，结合目标岗位生成「{section_label}」板块的 STAR 格式条目。
+
+目标语言：{target_language_label}（language 字段设为 "{target_language}"）
+
+{resume_output_language_instruction}
+
+{RESUME_A4_ONE_PAGE_CONSTRAINTS}
+
+{RESUME_EXPERIENCE_POLISH_GUIDELINES}
+
+目标岗位（摘要）：
+{job_json}
+
+本批次候选人经历（仅可使用下列事实，禁止捏造）：
+{facts_json}
+
+机器协议：
+- 返回且仅返回一个合法 JSON 对象
+- 不要输出 Markdown、代码块、注释或额外说明
+- 所有 key 必须使用双引号
+
+返回格式：
+{{
+    "items": [
+        {{
+            "id": "沿用或基于 fact id",
+            "title": "标题",
+            "content": "STAR 格式正文",
+            "source_refs": [],
+            "updated_at": ""
+        }}
+    ]
+}}
+
+注意：
+1. 仅输出 items 数组，每条对应一条输入经历
+2. 不得捏造量化数据；无数据时用客观描述
+3. 措辞须贴合目标岗位关键词
+4. 所有正文字段须统一使用目标语言
+"""

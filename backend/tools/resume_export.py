@@ -175,6 +175,21 @@ def count_pdf_pages_from_html(html: str) -> int | None:
         return None
 
 
+def html_to_docx_bytes(html: str) -> bytes:
+    """Convert rendered resume HTML to a Word document."""
+    from docx import Document
+    from htmldocx import HtmlToDocx
+
+    if not html or not html.strip():
+        raise ValueError("Empty HTML")
+
+    doc = Document()
+    HtmlToDocx().add_html_to_document(html, doc)
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    return buffer.getvalue()
+
+
 def resume_content_to_docx_bytes(content: "ResumeContent") -> bytes:
     """Build a Word document from structured resume content."""
     from docx import Document

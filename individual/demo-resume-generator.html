@@ -330,11 +330,11 @@
                         <i class="fas fa-briefcase text-green-600"></i>
                         <span data-i18n="resume.step2Title">Step 2: JD-based polish (optional)</span>
                     </h2>
-                    <p class="text-xs text-gray-500 mb-3" data-i18n="resume.step2OptionalDesc">Optional — tailor and optimize your resume against a target job. You can already preview and export from Step 1 without a JD.</p>
+                    <p class="text-xs text-gray-500 mb-3" data-i18n="resume.step2OptionalDesc">Optional — tailor your resume to a target job. In Step 1, generate content, review in the editor, then export PDF/HTML.</p>
 
                     <div id="jd-export-shortcut-hint" class="hidden mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-900">
                         <i class="fas fa-file-export text-purple-600 mr-1"></i>
-                        <span id="jd-export-shortcut-text" data-i18n="resume.jdExportShortcutProfile">Step 2 is optional. You can skip JD tailoring: in «Resume Analysis Results» on the right, choose a resume language and click «Generate preview & export» to download directly.</span>
+                        <span id="jd-export-shortcut-text" data-i18n="resume.jdExportShortcutProfile">Step 2 is optional. Skip JD tailoring: generate resume content on the right, review, then click «Generate preview &amp; export PDF/HTML».</span>
                     </div>
                     
                     <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="resume.jdLabel">Paste the job description you're targeting</label>
@@ -533,8 +533,13 @@
                             <span id="resume-a4-badge" class="hidden px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                 <i class="fas fa-file-alt mr-1"></i><span data-i18n="resume.a4Badge">A4 Single Page</span>
                             </span>
+                            <span id="resume-preview-format-badge" class="hidden px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800"></span>
                         </div>
                         <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="previewResumeFormat('pdf')" class="px-2 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs" data-i18n="resume.previewPdf">PDF preview</button>
+                            <button type="button" onclick="previewResumeFormat('html')" class="px-2 py-1.5 border border-purple-300 text-purple-800 rounded-lg hover:bg-purple-50 transition-colors text-xs" data-i18n="resume.previewHtml">HTML preview</button>
+                            <button type="button" onclick="previewResumeFormat('docx')" class="px-2 py-1.5 border border-blue-300 text-blue-800 rounded-lg hover:bg-blue-50 transition-colors text-xs" data-i18n="resume.previewDocx">DOCX preview</button>
+                            <button type="button" onclick="previewResumeFormat('markdown')" class="px-2 py-1.5 border border-teal-300 text-teal-800 rounded-lg hover:bg-teal-50 transition-colors text-xs" data-i18n="resume.previewMarkdown">Markdown preview</button>
                             <button type="button" data-resume-translate="zh" onclick="translateResumeToChinese()" class="px-3 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm">
                                 <i class="fas fa-language mr-1"></i><span class="resume-lang-label">Simplified Chinese</span>
                             </button>
@@ -560,11 +565,11 @@
                             </button>
                             <button onclick="promptExportResume('markdown')" class="px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm">
                                 <i class="fas fa-file-lines mr-1"></i>
-                                <span data-i18n="resume.exportMarkdown">Markdown</span>
+                                <span data-i18n="resume.exportMarkdown">Export Markdown</span>
                             </button>
                             <button onclick="promptExportResume('docx')" class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
                                 <i class="fas fa-file-word mr-1"></i>
-                                <span data-i18n="resume.exportDocx">DOCX</span>
+                                <span data-i18n="resume.exportDocx">Generate preview &amp; export DOCX</span>
                             </button>
                             <button onclick="promptExportResume('pdf')" class="px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm">
                                 <i class="fas fa-file-pdf mr-1"></i>
@@ -702,7 +707,7 @@
                     <div id="resume-language-section" class="mb-6 p-4 border border-blue-100 bg-blue-50/40 rounded-lg">
                         <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="resume.languageLabel">Resume Language</label>
                         <p class="text-xs text-gray-500 mb-2" data-i18n="resume.selectHint">After selection, we check missing items for that resume format.</p>
-                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.languageActionHint">Switch language to generate a preview and export — no job description required.</p>
+                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.languageActionHint">Choose a resume language, then click «Generate resume content» to review in the editor — no job description required.</p>
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" data-resume-lang="zh" onclick="onResumeLanguageSelected('zh')"
                                 class="px-3 py-2.5 border border-red-300 rounded-lg text-sm font-medium text-red-800 hover:bg-red-50 ring-2 ring-blue-500 bg-blue-50">
@@ -732,17 +737,28 @@
                         </div>
                         <button type="button" id="btn-generate-profile-resume" onclick="generateResumeFromProfile()"
                             class="mt-3 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors">
-                            <i class="fas fa-eye mr-2"></i>
-                            <span data-i18n="resume.generateProfilePreview">Generate preview &amp; export</span>
+                            <i class="fas fa-file-lines mr-2"></i>
+                            <span data-i18n="resume.generateProfilePreview">Generate resume content</span>
                         </button>
-                        <div id="profile-export-actions" class="hidden mt-3 flex flex-wrap gap-2">
-                            <button type="button" onclick="promptExportResume('pdf')" class="px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900" data-i18n="resume.exportPdf">PDF</button>
-                            <button type="button" onclick="promptExportResume('docx')" class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700" data-i18n="resume.exportDocx">DOCX</button>
-                            <button type="button" onclick="promptExportResume('html')" class="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700" data-i18n="resume.exportHtml">HTML</button>
-                            <button type="button" onclick="promptExportResume('markdown')" class="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700" data-i18n="resume.exportMarkdown">Markdown</button>
-                            <button type="button" onclick="switchResumeView('preview')" class="px-3 py-1.5 text-xs border border-purple-300 text-purple-800 rounded-lg hover:bg-purple-50">
+                        <div id="profile-export-actions" class="hidden mt-3">
+                            <p class="text-xs text-gray-600 mb-2" data-i18n="resume.profileExportHint">After review, preview or export in any format:</p>
+                            <p class="text-xs text-gray-500 mb-1" data-i18n="resume.previewActionsLabel">Preview:</p>
+                            <div class="flex flex-wrap gap-2 mb-2">
+                                <button type="button" onclick="previewResumeFormat('pdf')" class="px-3 py-1.5 text-xs border border-gray-400 text-gray-800 rounded-lg hover:bg-gray-50" data-i18n="resume.previewPdf">PDF</button>
+                                <button type="button" onclick="previewResumeFormat('html')" class="px-3 py-1.5 text-xs border border-purple-300 text-purple-800 rounded-lg hover:bg-purple-50" data-i18n="resume.previewHtml">HTML</button>
+                                <button type="button" onclick="previewResumeFormat('docx')" class="px-3 py-1.5 text-xs border border-blue-300 text-blue-800 rounded-lg hover:bg-blue-50" data-i18n="resume.previewDocx">DOCX</button>
+                                <button type="button" onclick="previewResumeFormat('markdown')" class="px-3 py-1.5 text-xs border border-teal-300 text-teal-800 rounded-lg hover:bg-teal-50" data-i18n="resume.previewMarkdown">Markdown</button>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-1" data-i18n="resume.exportActionsLabel">Export:</p>
+                            <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="promptExportResume('pdf')" class="px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900" data-i18n="resume.exportPdf">Generate preview &amp; export PDF</button>
+                            <button type="button" onclick="promptExportResume('docx')" class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700" data-i18n="resume.exportDocx">Generate preview &amp; export DOCX</button>
+                            <button type="button" onclick="promptExportResume('html')" class="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700" data-i18n="resume.exportHtml">Generate preview &amp; export HTML</button>
+                            <button type="button" onclick="promptExportResume('markdown')" class="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700" data-i18n="resume.exportMarkdown">Export Markdown</button>
+                            <button type="button" onclick="previewResumeFormat('html')" class="px-3 py-1.5 text-xs border border-purple-300 text-purple-800 rounded-lg hover:bg-purple-50">
                                 <span data-i18n="resume.openPreview">Open full preview</span>
                             </button>
+                            </div>
                         </div>
                     </div>
 
@@ -806,7 +822,7 @@
                     <div id="profile-continue-section" class="hidden mt-6 pt-4 border-t border-gray-200">
                         <button type="button" id="btn-profile-continue" onclick="proceedToJdStep()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors">
                             <i class="fas fa-arrow-right mr-2"></i>
-                            <span data-i18n="resume.profileContinueStep2">Confirm and continue to Step 2</span>
+                            <span data-i18n="resume.profileContinueStep2">Confirm and continue to Step 2: JD-based polish (optional)</span>
                         </button>
                         <p class="mt-2 text-xs text-gray-500 text-center">
                             <i class="fas fa-info-circle mr-1"></i>

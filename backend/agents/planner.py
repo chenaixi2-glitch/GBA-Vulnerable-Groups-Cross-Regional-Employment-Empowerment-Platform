@@ -21,7 +21,7 @@ logger = get_logger("agent")
 
 # Intent → 执行链路
 _INTENT_PLAN: dict[str, list[str]] = {
-    "upload_jd": ["jd_agent", "gap_agent"],
+    "upload_jd": ["jd_agent"],  # gap 由前端 runGapAnalysis 单独触发，避免与 JD 提交重复调用
     "upload_profile": ["profile_agent"],
     "gap_analysis": ["gap_agent"],
     "learning_path": ["learning_path_agent"],
@@ -174,6 +174,9 @@ async def _classify_intent_async(state: CopilotState) -> IntentClassificationOut
         has_resume=state.resume_content_json is not None,
         user_message=state.user_message,
     )
+    memory_block = (state.memory_context or "").strip()
+    if memory_block:
+        prompt = f"{prompt}\n\n近期对话记忆（供指代消解与意图判断）：\n{memory_block}"
     llm = get_llm()
     result = await ainvoke_json_with_schema(llm, prompt, IntentClassificationOutput, logger, "Planner Agent")
     logger.info("Intent classified: %s (reason: %s)", result.intent, result.reason)
@@ -184,10 +187,8 @@ def _build_execution_plan(intent: str, state: CopilotState) -> list[str]:
     """根据 intent 和当前状态构建执行计划。"""
     base_plan = _INTENT_PLAN.get(intent, [])
 
-    # 跳过逻辑
-    if intent == "upload_jd" and state.candidate_profile is None:
-        # 没有候选人数据，不能生成简历
-        return ["jd_agent"]
+    if state.skip_render and "render_agent" in base_plan:
+        return [node for node in base_plan if node != "render_agent"]
 
     return list(base_plan)
 

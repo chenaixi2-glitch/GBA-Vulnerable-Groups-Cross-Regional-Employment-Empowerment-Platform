@@ -23,7 +23,8 @@ def verify_token(token: str) -> dict[str, Any] | None:
         return None
 
 
-def _extract_bearer_token(request: Request) -> str | None:
+def extract_bearer_token(request: Request) -> str | None:
+    """从 Authorization 头提取 Bearer Token（原始字符串，不做校验）。"""
     header = request.headers.get("authorization") or ""
     parts = header.split(" ", 1)
     if len(parts) != 2 or parts[0].lower() != "bearer":
@@ -34,7 +35,7 @@ def _extract_bearer_token(request: Request) -> str | None:
 
 def get_optional_user(request: Request) -> dict[str, Any] | None:
     """从请求头解析可选登录用户，未登录或 token 无效时返回 None。"""
-    token = _extract_bearer_token(request)
+    token = extract_bearer_token(request)
     if not token:
         return None
     return verify_token(token)

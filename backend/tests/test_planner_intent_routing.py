@@ -94,3 +94,15 @@ def test_resume_edit_plan_triggers_render_agent_for_render_edit():
     state = CopilotState(session_id="s1", context_scope="resume_edit")
     plan = _build_execution_plan("render_edit", state)
     assert plan == ["render_agent"]
+
+
+def test_upload_jd_plan_runs_jd_agent_only():
+    state = CopilotState(session_id="s1")
+    plan = _build_execution_plan("upload_jd", state)
+    assert plan == ["jd_agent"]
+
+
+def test_skip_render_omits_render_agent_from_content_edit():
+    state = CopilotState(session_id="s1", skip_render=True)
+    plan = _build_execution_plan("content_edit", state)
+    assert plan == ["content_agent"]

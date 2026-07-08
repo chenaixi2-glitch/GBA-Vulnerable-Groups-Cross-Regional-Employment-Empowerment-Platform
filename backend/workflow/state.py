@@ -318,6 +318,13 @@ class ConversationEvent(BaseModel):
     status: str = "success"
 
 
+class DialogueTurn(BaseModel):
+    role: str  # user | assistant
+    content: str = ""
+    intent: str = ""
+    created_at: str = ""
+
+
 class WorkflowTraceItem(BaseModel):
     node: str
     status: str = "success"  # success / skipped / failed
@@ -349,6 +356,9 @@ class Meta(BaseModel):
     interview_question_language: str = ""  # 用户选择的面试题/追问输出语言
     interview_feedback_language: str = ""  # 用户选择的面试反馈/复盘输出语言
     dirty_flags: DirtyFlags = Field(default_factory=DirtyFlags)
+    dialogue_turns: list[DialogueTurn] = Field(default_factory=list)
+    dialogue_summary: str = ""
+    extracted_facts: list[str] = Field(default_factory=list)
 
 
 class PendingAction(BaseModel):
@@ -417,3 +427,6 @@ class CopilotState(BaseModel):
     chat_output_language: str = ""  # runtime: per-request page UI locale
     chat_question_output_language: str = ""  # runtime: per-request interview question locale
     chat_feedback_output_language: str = ""  # runtime: per-request interview feedback locale
+    memory_context: str = ""  # runtime: dialogue memory injected before graph run
+    auth_token: str = ""  # runtime: Bearer JWT for MCP / Node API tool calls
+    skip_render: bool = False  # runtime: content_edit 仅生成 resume_content_json，跳过 render_agent

@@ -2198,6 +2198,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            if (window.GBAI18n && GBAI18n.initLanguage) {
+                await GBAI18n.initLanguage();
+            }
             PortalAuth.initPortalAuth({ portal: 'corporate', requireAuth: false });
             PlatformAccess.guardFeatureLinks('[data-require-access]');
             PlatformAccess.guardPremiumFeatureLinks('[data-require-premium-access]');

@@ -49,3 +49,44 @@ def build_enriched_job_dict(state: CopilotState) -> dict[str, Any]:
 
 def build_enriched_job_json(state: CopilotState, *, indent: int = 2) -> str:
     return json.dumps(build_enriched_job_dict(state), ensure_ascii=False, indent=indent)
+
+
+def _unique_strings(*groups: list[str] | None, limit: int = 0) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for group in groups:
+        for item in group or []:
+            text = str(item).strip()
+            if not text:
+                continue
+            key = text.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(text)
+            if limit and len(out) >= limit:
+                return out
+    return out
+
+
+def build_compact_job_dict(state: CopilotState) -> dict[str, Any]:
+    """Resume generation prompt — title/skills/keywords only, no full JD body."""
+    enriched = build_enriched_job_dict(state)
+    ctx = enriched.get("user_target_context") or {}
+    return {
+        "title": enriched.get("title") or "",
+        "industry": enriched.get("industry") or ctx.get("industry") or "",
+        "experience_requirement": enriched.get("experience_requirement") or ctx.get("experience_level") or "",
+        "employer_type": ctx.get("employer_type_label") or ctx.get("employer_type") or "",
+        "hard_skills": _unique_strings(
+            enriched.get("hard_skills"),
+            enriched.get("tech_stack"),
+            limit=24,
+        ),
+        "soft_skills": _unique_strings(enriched.get("soft_skills"), limit=12),
+        "keywords": _unique_strings(enriched.get("keywords"), limit=28),
+    }
+
+
+def build_compact_job_json(state: CopilotState, *, indent: int = 2) -> str:
+    return json.dumps(build_compact_job_dict(state), ensure_ascii=False, indent=indent)

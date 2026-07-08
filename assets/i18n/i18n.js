@@ -42,8 +42,32 @@
     };
 
     var RESUME_LANG_CODES = ['zh', 'zh-TW', 'en', 'pt'];
+    /** Legacy flat data-i18n keys → dotted locale keys (home page / shared footer) */
+    var LEGACY_I18N_KEYS = {
+        'nav-features': 'home.features',
+        'nav-faq': 'home.faq',
+        'nav-dashboard': 'home.dashboard',
+        'nav-demos': 'home.demos',
+        'nav-resources': 'home.resources',
+        'nav-stories': 'home.stories',
+        'nav-jobs': 'home.jobs',
+        'nav-analytics': 'home.analytics',
+        'hero-title': 'home.title',
+        'hero-subtitle': 'home.subtitle',
+        'hero-individual': 'home.individual',
+        'hero-corporate': 'home.corporate',
+        'hero-open-demos': 'home.open',
+        'section-features-title': 'home.features',
+        'section-features-lead': 'home.featuresLead',
+        'section-workflow-title': 'home.workflow',
+        'section-benefits-title': 'home.benefits',
+        'section-stories-title': 'home.stories',
+        'section-faq-title': 'home.faq',
+        'section-cta-title': 'home.cta'
+    };
     var localeCache = {};
     var currentLang = 'en';
+    var applyLanguageTimer = null;
 
     /** English locale file (assets/i18n/locales/en.json) supplements inline fallbacks in JS */
     var META_FB = {
@@ -397,29 +421,58 @@
         });
     }
 
+    function resolveI18nKey(key) {
+        if (!key) return '';
+        if (key.indexOf('.') !== -1) return key;
+        return LEGACY_I18N_KEYS[key] || key;
+    }
+
+    function snapshotI18nDefaults() {
+        document.querySelectorAll('[data-i18n]').forEach(function (node) {
+            if (node.dataset.i18nDefault || node.id === 'session-id' || node.dataset.i18nDynamic === '1') return;
+            var fbAttr = node.getAttribute('data-i18n-fallback');
+            var raw = (node.textContent || node.getAttribute('value') || '').trim();
+            if (fbAttr && fbAttr.trim()) {
+                node.dataset.i18nDefault = fbAttr.trim();
+            } else if (raw) {
+                node.dataset.i18nDefault = raw;
+            }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function (node) {
+            if (node.dataset.i18nPlaceholderDefault) return;
+            var fb = node.getAttribute('data-i18n-fallback') || node.getAttribute('placeholder') || '';
+            if (fb) node.dataset.i18nPlaceholderDefault = fb;
+        });
+    }
+
     function applyDataI18n(lang) {
         document.querySelectorAll('[data-i18n]').forEach(function (node) {
             var key = node.getAttribute('data-i18n');
-            if (!key || key.indexOf('.') === -1) return;
+            var lookupKey = resolveI18nKey(key);
+            if (!lookupKey || lookupKey.indexOf('.') === -1) return;
             if (node.id === 'session-id' || node.dataset.i18nDynamic === '1') return;
             if (!node.dataset.i18nDefault) {
                 var raw = (node.textContent || node.getAttribute('value') || '').trim();
                 var fbAttr = node.getAttribute('data-i18n-fallback');
-                node.dataset.i18nDefault = fbAttr && !/[\u4e00-\u9fff]/.test(fbAttr) ? fbAttr.trim() : raw;
+                node.dataset.i18nDefault = fbAttr && fbAttr.trim() ? fbAttr.trim() : raw;
             }
             var fb = node.dataset.i18nDefault;
-            var text = t(key, fb);
+            var text = t(lookupKey, fb);
             if (text) {
-                if (node.tagName === 'OPTION') {
-                    node.textContent = text;
-                } else {
-                    node.textContent = text;
+                node.textContent = text;
+                if (node.tagName === 'TITLE') {
+                    document.title = text;
                 }
             }
         });
         document.querySelectorAll('[data-i18n-placeholder]').forEach(function (node) {
             var key = node.getAttribute('data-i18n-placeholder');
-            var fb = node.getAttribute('data-i18n-fallback') || node.getAttribute('placeholder') || '';
+            if (!key) return;
+            if (!node.dataset.i18nPlaceholderDefault) {
+                var initFb = node.getAttribute('data-i18n-fallback') || node.getAttribute('placeholder') || '';
+                if (initFb) node.dataset.i18nPlaceholderDefault = initFb;
+            }
+            var fb = node.dataset.i18nPlaceholderDefault || node.getAttribute('placeholder') || '';
             var text = t(key, fb);
             if (text) node.setAttribute('placeholder', text);
         });
@@ -503,6 +556,16 @@
         applyResumeLangButtonLabels();
     }
 
+    /** Re-apply after other scripts refresh dynamic DOM on language change / page boot */
+    function scheduleApplyLanguage(lang) {
+        lang = LABELS[lang] ? lang : getLang();
+        if (applyLanguageTimer) clearTimeout(applyLanguageTimer);
+        applyLanguageTimer = setTimeout(function () {
+            applyLanguageTimer = null;
+            applyLanguage(lang);
+        }, 0);
+    }
+
     function setLang(lang) {
         if (!LABELS[lang]) return;
         try {
@@ -513,6 +576,7 @@
             try {
                 window.dispatchEvent(new CustomEvent('gba:language-changed', { detail: { lang: lang } }));
             } catch (e2) {}
+            scheduleApplyLanguage(lang);
         });
     }
 
@@ -656,6 +720,7 @@
     function initLanguage() {
         if (initPromise) return initPromise;
         initPromise = Promise.resolve().then(function () {
+            snapshotI18nDefaults();
             injectLanguageSwitcherStyles();
             ensureLanguageSwitcher();
             bindLanguageSwitcherToggles();
@@ -663,6 +728,7 @@
             var lang = getLang();
             return loadLocale(lang).then(function () {
                 applyLanguage(lang);
+                scheduleApplyLanguage(lang);
             });
         });
         return initPromise;
@@ -702,6 +768,8 @@
         getLang: getLang,
         setLang: setLang,
         applyLanguage: applyLanguage,
+        scheduleApplyLanguage: scheduleApplyLanguage,
+        snapshotI18nDefaults: snapshotI18nDefaults,
         applyResumeLangButtonLabels: applyResumeLangButtonLabels,
         t: t,
         uiText: uiText,

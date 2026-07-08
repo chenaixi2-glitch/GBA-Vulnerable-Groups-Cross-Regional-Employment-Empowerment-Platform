@@ -8,10 +8,14 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from agents.json_contracts import ResumeGenerationOutput
+from agents.json_contracts import ResumeGenerationOutput, ResumeModulePolishOutput
 from models.llm import get_llm
 from tools.output_language_guard import ainvoke_json_with_language_guard
-from prompts.resume_generation import RESUME_GENERATION_PROMPT, RESUME_SECTION_UPDATE_PROMPT
+from prompts.resume_generation import (
+    RESUME_GENERATION_PROMPT,
+    RESUME_MODULE_SECTION_PROMPT,
+    RESUME_SECTION_UPDATE_PROMPT,
+)
 from prompts.resume_language_convert import RESUME_LANGUAGE_CONVERT_PROMPT
 from prompts.resume_constraints import RESUME_PAGE_COMPRESS_PROMPT, RESUME_EXPERIENCE_POLISH_GUIDELINES
 from tools.resume_page_policy import (
@@ -29,21 +33,40 @@ from tools.resume_layout import (
     resolve_section_order,
 )
 from tools.output_language import resolve_resume_target_language
-from tools.target_job_context import build_enriched_job_json
+from tools.target_job_context import build_compact_job_json, build_enriched_job_json
+from tools.resume_profile_context import (
+    batch_facts_by_size,
+    build_relevant_profile_json,
+    facts_of_type,
+    should_use_modular_generation,
+)
 from workflow.state import (
     CopilotState, ResumeContent, ResumeProfile, ResumeContentMeta,
-    SectionItem, Education,
+    SectionItem, Education, Fact,
 )
 from workflow.trace import append_trace, summarize_user_message
 from log import get_logger
 
 logger = get_logger("agent")
 
+_MODULE_SECTIONS: tuple[tuple[str, str, str], ...] = (
+    ("internships", "internship", "实习/工作经历"),
+    ("projects", "project", "项目经历"),
+)
+
 
 def _resolve_target_language(state: CopilotState) -> str:
     if state.current_intent == "language_convert" and state.resume_language_target:
         return normalize_language(state.resume_language_target)
     return resolve_resume_target_language(state)
+
+
+def _job_json_for_prompt(state: CopilotState, *, compact: bool = True) -> str:
+    if not state.job and not state.meta.target_jd_text:
+        return "{}"
+    if compact:
+        return build_compact_job_json(state)
+    return build_enriched_job_json(state)
 
 
 def _merge_profile_extras_from_candidate(
@@ -152,6 +175,118 @@ def _build_resume_from_parsed(
     )
 
 
+async def _invoke_resume_generation_prompt(
+    llm: Any,
+    prompt: str,
+    guard_lang: str,
+) -> ResumeGenerationOutput:
+    return await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        ResumeGenerationOutput,
+        logger,
+        "Resume Content Agent",
+        guard_lang,
+    )
+
+
+async def _polish_module_section_async(
+    llm: Any,
+    *,
+    state: CopilotState,
+    guard_lang: str,
+    job_json: str,
+    section_key: str,
+    section_label: str,
+    facts: list[Fact],
+) -> list[Any]:
+    if not facts:
+        return []
+    facts_json = json.dumps([fact.model_dump() for fact in facts], ensure_ascii=False, indent=2)
+    prompt = RESUME_MODULE_SECTION_PROMPT.format(
+        section_label=section_label,
+        target_language=guard_lang,
+        target_language_label=language_label(guard_lang),
+        resume_output_language_instruction=resume_output_language_instruction(guard_lang),
+        RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
+        RESUME_EXPERIENCE_POLISH_GUIDELINES=RESUME_EXPERIENCE_POLISH_GUIDELINES,
+        job_json=job_json,
+        facts_json=facts_json,
+    )
+    parsed = await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        ResumeModulePolishOutput,
+        logger,
+        f"Resume Content Agent ({section_key})",
+        guard_lang,
+    )
+    return list(parsed.items)
+
+
+async def _generate_resume_from_profile_async(
+    state: CopilotState,
+    llm: Any,
+    *,
+    guard_lang: str,
+    edit_instruction: str,
+) -> ResumeGenerationOutput:
+    job_json = _job_json_for_prompt(state, compact=True)
+    profile_json = build_relevant_profile_json(state) if state.candidate_profile else "{}"
+
+    if not should_use_modular_generation(profile_json):
+        prompt = RESUME_GENERATION_PROMPT.format(
+            target_language=guard_lang,
+            target_language_label=language_label(guard_lang),
+            resume_output_language_instruction=resume_output_language_instruction(guard_lang),
+            RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
+            RESUME_EXPERIENCE_POLISH_GUIDELINES=RESUME_EXPERIENCE_POLISH_GUIDELINES,
+            job_json=job_json,
+            profile_json=profile_json,
+            edit_instruction=edit_instruction,
+        )
+        return await _invoke_resume_generation_prompt(llm, prompt, guard_lang)
+
+    logger.info("Modular resume generation: profile_json len=%d", len(profile_json))
+    skeleton_instruction = (
+        f"{edit_instruction}\n\n"
+        "【分步生成-第1步】仅生成 profile、summary、skills、awards、papers、section_order；"
+        "internships 与 projects 必须返回空数组 []。"
+    ).strip()
+    prompt = RESUME_GENERATION_PROMPT.format(
+        target_language=guard_lang,
+        target_language_label=language_label(guard_lang),
+        resume_output_language_instruction=resume_output_language_instruction(guard_lang),
+        RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
+        RESUME_EXPERIENCE_POLISH_GUIDELINES=RESUME_EXPERIENCE_POLISH_GUIDELINES,
+        job_json=job_json,
+        profile_json=profile_json,
+        edit_instruction=skeleton_instruction,
+    )
+    parsed = await _invoke_resume_generation_prompt(llm, prompt, guard_lang)
+
+    for section_key, fact_type, section_label in _MODULE_SECTIONS:
+        facts = facts_of_type(state, fact_type)
+        if not facts:
+            continue
+        merged_items: list[Any] = []
+        for batch in batch_facts_by_size(facts):
+            merged_items.extend(
+                await _polish_module_section_async(
+                    llm,
+                    state=state,
+                    guard_lang=guard_lang,
+                    job_json=job_json,
+                    section_key=section_key,
+                    section_label=section_label,
+                    facts=batch,
+                )
+            )
+        setattr(parsed, section_key, merged_items)
+
+    return parsed
+
+
 async def content_node_async(state: CopilotState) -> dict[str, Any]:
     """Resume Content Agent 异步节点函数。"""
     logger.info("Resume Content Agent started for session %s", state.session_id)
@@ -182,9 +317,23 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             target_language=target_lang,
             resume_output_language_instruction=resume_output_language_instruction(target_lang),
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
-            job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
+            job_json=_job_json_for_prompt(state, compact=False),
             RESUME_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
         )
+        try:
+            parsed = await _invoke_resume_generation_prompt(llm, prompt, guard_lang)
+        except RuntimeError as exc:
+            logger.error("Resume Content Agent failed: %s", exc)
+            return {
+                "workflow_trace": append_trace(
+                    state,
+                    node="content_agent",
+                    status="failed",
+                    input_summary=f"中英文简历互转：{summarize_user_message(state.user_message)}",
+                    output_summary="简历语言转换失败：模型输出格式异常，请重试。",
+                    error=str(exc),
+                ),
+            }
     elif intent == "content_edit" and state.resume_content_json:
         lang = guard_lang
         prompt = RESUME_SECTION_UPDATE_PROMPT.format(
@@ -193,50 +342,46 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             target_language_label=language_label(lang),
             resume_output_language_instruction=resume_output_language_instruction(lang),
             current_resume_json=state.resume_content_json.model_dump_json(indent=2),
-            job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
+            job_json=_job_json_for_prompt(state, compact=True),
             edit_instruction=state.user_message,
         )
+        try:
+            parsed = await _invoke_resume_generation_prompt(llm, prompt, guard_lang)
+        except RuntimeError as exc:
+            logger.error("Resume Content Agent failed: %s", exc)
+            return {
+                "workflow_trace": append_trace(
+                    state,
+                    node="content_agent",
+                    status="failed",
+                    input_summary=f"根据岗位、候选人画像和用户指令生成简历内容：{summarize_user_message(state.user_message)}",
+                    output_summary="简历内容生成失败：模型输出格式异常，请重试。",
+                    error=str(exc),
+                ),
+            }
     else:
-        lang = guard_lang
-        job_json = build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}"
-        profile_json = state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}"
-
         edit_instruction = ""
         if intent == "content_edit":
             edit_instruction = f"用户修改指令：{state.user_message}"
-
-        prompt = RESUME_GENERATION_PROMPT.format(
-            target_language=lang,
-            target_language_label=language_label(lang),
-            resume_output_language_instruction=resume_output_language_instruction(lang),
-            RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
-            RESUME_EXPERIENCE_POLISH_GUIDELINES=RESUME_EXPERIENCE_POLISH_GUIDELINES,
-            job_json=job_json,
-            profile_json=profile_json,
-            edit_instruction=edit_instruction,
-        )
-
-    try:
-        parsed = await ainvoke_json_with_language_guard(
-            llm,
-            prompt,
-            ResumeGenerationOutput,
-            logger,
-            "Resume Content Agent",
-            guard_lang,
-        )
-    except RuntimeError as exc:
-        logger.error("Resume Content Agent failed: %s", exc)
-        return {
-            "workflow_trace": append_trace(
+        try:
+            parsed = await _generate_resume_from_profile_async(
                 state,
-                node="content_agent",
-                status="failed",
-                input_summary=f"根据岗位、候选人画像和用户指令生成简历内容：{summarize_user_message(state.user_message)}",
-                output_summary="简历内容生成失败：模型输出格式异常，请重试。",
-                error=str(exc),
-            ),
-        }
+                llm,
+                guard_lang=guard_lang,
+                edit_instruction=edit_instruction,
+            )
+        except RuntimeError as exc:
+            logger.error("Resume Content Agent failed: %s", exc)
+            return {
+                "workflow_trace": append_trace(
+                    state,
+                    node="content_agent",
+                    status="failed",
+                    input_summary=f"根据岗位、候选人画像和用户指令生成简历内容：{summarize_user_message(state.user_message)}",
+                    output_summary="简历内容生成失败：模型输出格式异常，请重试。",
+                    error=str(exc),
+                ),
+            }
 
     target_lang = normalize_language(guard_lang)
     logger.info(
@@ -280,6 +425,8 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             f"简历已转换为{language_label(resume_content.meta.language)}版本"
             f"（v{resume_content.meta.version}，{layout_label}）。"
         )
+    if state.skip_render:
+        output_summary += " HTML 预览将在导出时生成。"
 
     return {
         "resume_content_json": resume_content,
@@ -298,6 +445,9 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
                 "project_count": len(resume_content.projects),
                 "internship_count": len(resume_content.internships),
                 "content_hash": resume_content.meta.content_hash,
+                "modular_generation": should_use_modular_generation(
+                    build_relevant_profile_json(state) if state.candidate_profile else ""
+                ),
             },
         ),
     }
@@ -316,7 +466,6 @@ async def compress_resume_for_page_limit_async(
     page_limit: int,
 ) -> ResumeContent:
     """LLM-compress resume when PDF page count exceeds the allowed limit."""
-    from tools.target_job_context import build_enriched_job_json
     from tools.resume_page_policy import resume_constraints_for_state
 
     llm = get_llm()
@@ -327,7 +476,7 @@ async def compress_resume_for_page_limit_async(
         resume_page_constraints=resume_constraints_for_state(state),
         resume_output_language_instruction=resume_output_language_instruction(lang),
         current_resume_json=resume_content.model_dump_json(indent=2),
-        job_json=build_enriched_job_json(state) if state.job or state.meta.target_jd_text else "{}",
+        job_json=_job_json_for_prompt(state, compact=True),
     )
     parsed = await ainvoke_json_with_language_guard(
         llm,

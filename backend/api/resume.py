@@ -56,6 +56,68 @@ async def get_resume_html(session_id: str, request: Request):
     return {"resume_html": state.resume_html.model_dump()}
 
 
+class EnsureRenderRequest(BaseModel):
+    session_id: str
+
+
+@router.post("/ensure-render")
+async def ensure_resume_render(req: EnsureRenderRequest, request: Request, background_tasks: BackgroundTasks):
+    """若已有 resume_content_json 但尚无 HTML，运行 render_agent 生成预览。"""
+    from api.chat import _aload_state, _asave_state, _persist_to_mysql_safe
+    from agents.render_agent import render_node_async
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+    if user:
+        await bind_session_owner(req.session_id, user)
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    saved = await _aload_state(store)
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    state = CopilotState.model_validate(saved)
+    if state.resume_content_json is None:
+        raise HTTPException(status_code=400, detail="简历内容尚未生成，请先生成简历")
+
+    if state.resume_html and state.resume_html.html:
+        return {
+            "rendered": False,
+            "resume_html": state.resume_html.model_dump(),
+            "render_config": state.render_config.model_dump(),
+        }
+
+    try:
+        async with llm_queue_slot(req.session_id):
+            updates = await render_node_async(state)
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except Exception as exc:
+        logger.error("Ensure render failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"预览渲染失败: {exc}") from exc
+
+    data = state.model_dump()
+    data.update(updates)
+    final = CopilotState.model_validate(data)
+
+    persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
+    await _asave_state(store, persist_data)
+
+    if user:
+        background_tasks.add_task(_persist_to_mysql_safe, final, user.get("sub"))
+
+    if not final.resume_html or not final.resume_html.html:
+        raise HTTPException(status_code=500, detail="预览渲染结果为空，请重试")
+
+    return {
+        "rendered": True,
+        "resume_html": final.resume_html.model_dump(),
+        "render_config": final.render_config.model_dump(),
+    }
+
+
 @router.get("/preview")
 async def preview_resume_html(session_id: str, request: Request):
     """直接返回 HTML 用于浏览器预览。"""
@@ -73,6 +135,26 @@ async def preview_resume_html(session_id: str, request: Request):
     if not state.resume_html.html:
         raise HTTPException(status_code=404, detail="简历 HTML 尚未生成")
     return Response(content=state.resume_html.html, media_type="text/html")
+
+
+@router.get("/preview-markdown")
+async def preview_resume_markdown(session_id: str, request: Request):
+    """返回 Markdown 文本用于预览（由结构化 JSON 生成，与导出一致）。"""
+    from api.chat import _aload_state
+    from api.export import _export_resume_markdown
+
+    user = get_optional_user(request)
+    await ensure_session_access(session_id, user)
+
+    client = await get_redis_client()
+    store = RedisSessionStore(session_id, client)
+    saved = await _aload_state(store)
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    state = CopilotState.model_validate(saved)
+    if state.resume_content_json is None:
+        raise HTTPException(status_code=404, detail="简历内容尚未生成")
+    return {"markdown": _export_resume_markdown(state)}
 
 
 class GenerateJdRequest(BaseModel):
@@ -913,14 +995,23 @@ async def _load_or_bootstrap_state(
     return state_with_draft(state, draft)
 
 
-async def _run_profile_resume_pipeline(state: CopilotState) -> CopilotState:
-    """Generate resume HTML from candidate profile only — no JD, no gap analysis."""
+async def _run_profile_resume_pipeline(state: CopilotState, *, defer_render: bool = True) -> CopilotState:
+    """Generate resume content from candidate profile — HTML render deferred until export by default."""
     from agents.content_agent import content_node_async
     from agents.render_agent import render_node_async
+    from workflow.state import ResumeHtml
 
     state.current_intent = "generate_profile"
+    if defer_render:
+        state.skip_render = True
+        state.resume_html = ResumeHtml()
+
     data = state.model_dump()
-    for agent_fn in (content_node_async, render_node_async):
+    agents = [content_node_async]
+    if not defer_render:
+        agents.append(render_node_async)
+
+    for agent_fn in agents:
         updates = await agent_fn(CopilotState.model_validate(data))
         data.update(updates)
     return CopilotState.model_validate(data)
@@ -1006,16 +1097,21 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
     if state.candidate_profile is None:
         raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
 
+    from workflow.state import ResumeHtml
+
+    state.resume_content_json = None
+    state.resume_html = ResumeHtml()
+
     try:
         async with llm_queue_slot(req.session_id):
-            final = await _run_profile_resume_pipeline(state)
+            final = await _run_profile_resume_pipeline(state, defer_render=True)
     except SessionBusyError:
         raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as e:
         logger.error("Profile resume generation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
 
-    if final.resume_content_json is None or not (final.resume_html.html if final.resume_html else ""):
+    if final.resume_content_json is None:
         raise HTTPException(status_code=500, detail="简历生成结果为空，请重试")
 
     persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
@@ -1033,6 +1129,7 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
         "reply_message": final.reply_message,
         "language_checklist": checklist,
         "from_profile_only": True,
+        "preview_deferred": True,
     }
 
 

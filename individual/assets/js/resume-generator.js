@@ -18,6 +18,7 @@ let resumeChatBusy = false;
 const RESUME_UNDO_MAX = 20;
 let resumeUndoStack = [];
 let resumeRedoStack = [];
+let currentPreviewFormat = 'html';
 
 const INDUSTRY_LABEL_KEYS = {
     tech: 'resume.tech',
@@ -237,12 +238,12 @@ function showJdExportShortcutHint() {
     if (resumeGenerated) {
         textEl.textContent = uiT(
             'resume.jdExportShortcutReady',
-            'Step 2 is optional. Your resume is already generated — scroll to the right panel to preview, or use the export buttons in «Resume Analysis Results» (PDF, DOCX, HTML).'
+            'Step 2 is optional. Resume content is ready — review in the editor, or use «Generate preview & export PDF/HTML» to download.'
         );
     } else {
         textEl.textContent = uiT(
             'resume.jdExportShortcutProfile',
-            'Step 2 is optional. You can skip JD tailoring: in «Resume Analysis Results» on the right, choose a resume language and click «Generate preview & export» to download directly.'
+            'Step 2 is optional. Skip JD tailoring: generate resume content on the right, review, then click «Generate preview & export PDF/HTML».'
         );
     }
 }
@@ -784,7 +785,114 @@ function switchResumeView(mode) {
         ProfileEditor.draft = ProfileEditor.collectDraftFromForm();
     }
 
+    if (mode === 'preview' && resumeGenerated) {
+        previewResumeFormat('html').then((ok) => {
+            if (ok !== false) setResumeView(mode, { scroll: true });
+        });
+        return;
+    }
+
     setResumeView(mode, { scroll: true });
+}
+
+async function ensureResumePreviewRendered() {
+    return previewResumeFormat('html', { scroll: false, showLoading: true });
+}
+
+function escapeHtmlForPreview(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function updatePreviewFormatBadge(format) {
+    const badge = document.getElementById('resume-preview-format-badge');
+    if (!badge) return;
+    const normalized = String(format || 'html').toLowerCase();
+    const labelMap = {
+        html: uiT('resume.previewFormatHtml', 'HTML preview'),
+        pdf: uiT('resume.previewFormatPdf', 'PDF preview (same layout as export)'),
+        docx: uiT('resume.previewFormatDocx', 'DOCX preview (same layout as export)'),
+        markdown: uiT('resume.previewFormatMarkdown', 'Markdown preview'),
+        md: uiT('resume.previewFormatMarkdown', 'Markdown preview'),
+    };
+    badge.textContent = labelMap[normalized] || labelMap.html;
+    badge.classList.remove('hidden');
+}
+
+async function previewResumeFormat(format = 'html', options = {}) {
+    const { scroll = true, showLoading = true } = options;
+    const normalized = String(format || 'html').toLowerCase();
+
+    if (!resumeGenerated && !apiClient.sessionId) {
+        Utils.showToast(uiT('resume.toast.generateFirst', 'Please generate resume first'));
+        return false;
+    }
+
+    currentPreviewFormat = normalized;
+
+    try {
+        if (showLoading) {
+            Utils.showLoading(uiT('resume.toast.generatingPreview', 'Generating preview...'));
+        }
+
+        if (normalized === 'markdown' || normalized === 'md') {
+            const resp = await apiClient.getResumeMarkdownPreview();
+            displayMarkdownPreview(resp?.markdown || '');
+        } else {
+            const renderResult = await apiClient.ensureResumeRendered();
+            const html = renderResult?.resume_html?.html;
+            if (!html) {
+                Utils.showToast(uiT('resume.toast.previewUnavailable', 'Preview not available yet — try exporting first'));
+                return false;
+            }
+            displayResume(html, { format: normalized });
+        }
+
+        document.getElementById('resume-preview-section')?.classList.remove('hidden');
+        updateResumeViewSwitcher();
+        updatePreviewFormatBadge(normalized);
+        if (scroll) {
+            setResumeView('preview', { scroll: true });
+        }
+        return true;
+    } catch (error) {
+        Utils.showAiTaskErrorToast(error, 'resume.toast.previewRenderFailed', 'Could not render preview: {msg}', { msg: error.message });
+        return false;
+    } finally {
+        if (showLoading) {
+            Utils.hideLoading();
+        }
+    }
+}
+
+function displayMarkdownPreview(markdownText) {
+    const previewContainer = document.getElementById('resume-preview');
+    if (!previewContainer) return;
+    currentPreviewFormat = 'markdown';
+    const escaped = escapeHtmlForPreview(markdownText);
+    previewContainer.innerHTML = `
+        <div class="markdown-preview p-6 bg-gray-50 rounded-lg border border-teal-100">
+            <div class="flex items-center gap-2 mb-3 text-sm text-teal-800">
+                <i class="fas fa-file-lines"></i>
+                <span>${escapeHtmlForPreview(uiT('resume.markdownPreviewHint', 'Markdown preview — export uses the same text'))}</span>
+            </div>
+            <pre class="whitespace-pre-wrap text-sm font-mono text-gray-800 overflow-auto max-h-[70vh]">${escaped}</pre>
+        </div>`;
+}
+
+/**
+ * Display generated resume
+ */
+function displayResume(htmlContent, options = {}) {
+    const previewContainer = document.getElementById('resume-preview');
+    if (!previewContainer) return;
+    const format = options.format || 'html';
+    currentPreviewFormat = format;
+    previewContainer.innerHTML = htmlContent;
 }
 
 /**
@@ -968,10 +1076,12 @@ function updateProfileExportUi() {
 }
 
 function applyResumeGenerationResult(response, lang, options = {}) {
-    const { beforeDraftSnapshot = null } = options;
-    if (response?.resume_html?.html) {
+    const { beforeDraftSnapshot = null, deferPreview = false } = options;
+
+    if (!deferPreview && response?.resume_html?.html) {
         displayResume(response.resume_html.html);
     }
+
     updateResumeLanguageBadge(response?.language || lang);
     if (response?.language_checklist) {
         renderLanguageChecklistPanel(response.language_checklist);
@@ -981,8 +1091,13 @@ function applyResumeGenerationResult(response, lang, options = {}) {
     resumeGenerated = true;
     updateResumeViewSwitcher();
     updateProfileExportUi();
-    document.getElementById('resume-preview-section')?.classList.remove('hidden');
-    showResumeChatPanel();
+
+    if (deferPreview) {
+        document.getElementById('resume-preview-section')?.classList.add('hidden');
+    } else {
+        document.getElementById('resume-preview-section')?.classList.remove('hidden');
+        showResumeChatPanel();
+    }
 
     if (response?.resume_content_json
         && typeof ProfileEditor !== 'undefined'
@@ -990,14 +1105,18 @@ function applyResumeGenerationResult(response, lang, options = {}) {
         const changed = ProfileEditor.syncDraftFromResumeContent(response.resume_content_json, {
             beforeSnapshot: beforeDraftSnapshot,
         });
-        if (changed > 0) {
+        if (changed > 0 && !deferPreview) {
             setResumeView('edit', { scroll: false });
             Utils.showToast(uiT(
                 'resume.toast.translationReviewFields',
                 '{count} title-level field(s) highlighted (name, school, company/project) — please review',
                 { count: changed }
             ));
+        } else if (deferPreview) {
+            setResumeView('edit', { scroll: true });
         }
+    } else if (deferPreview) {
+        setResumeView('edit', { scroll: true });
     }
 }
 
@@ -1018,7 +1137,7 @@ async function generateResumeFromProfile(options = {}) {
         : (language || currentResumeLanguage || 'zh');
 
     if (resumeGenerated && lang === normalizeResumeLang(currentResumeLanguage)) {
-        setResumeView('preview', { scroll: true });
+        setResumeView('edit', { scroll: true });
         return true;
     }
 
@@ -1045,13 +1164,16 @@ async function generateResumeFromProfile(options = {}) {
             await applyResumeLanguageSelection(lang);
         }
         const response = await apiClient.generateResumeFromProfile(lang, draft);
-        applyResumeGenerationResult(response, lang, { beforeDraftSnapshot });
+        applyResumeGenerationResult(response, lang, { beforeDraftSnapshot, deferPreview: true });
         resetResumeUndoHistory();
         if (!silent) {
             Utils.hideLoading();
-            Utils.showToast(uiT('resume.toast.profileResumeReady', 'Resume ready — you can preview and export below'));
+            Utils.showToast(uiT(
+                'resume.toast.generatedEditBeforeExport',
+                'Resume content ready in the editor — review and export when ready (preview renders on export)'
+            ));
         }
-        setResumeView('preview', { scroll: !silent });
+        setResumeView('edit', { scroll: !silent });
         return true;
     } catch (error) {
         if (!silent) Utils.hideLoading();
@@ -1214,33 +1336,22 @@ async function generateResume() {
 
         const resumeResponse = await apiClient.generateResume(
             'Please generate a customized resume based on my experience and target position. Polish each experience entry to align with the target job, add quantified results only when supported by my profile facts, follow industry-standard resume conventions, and never fabricate numbers or achievements. Keep all content within one A4 page.',
-            targetContext
+            targetContext,
+            {
+                forcedIntent: 'content_edit',
+                skipRender: true,
+                clearGeneratedResume: true,
+            }
         );
 
         updateAgentStatus('agent-content', 'completed');
-        updateAgentStatus('agent-render', 'running');
+        updateAgentStatus('agent-render', 'pending');
 
-        let highlightCount = 0;
-        if (resumeResponse.resume_html && resumeResponse.resume_html.html) {
-            highlightCount = applyResumeGenerationResult(
-                resumeResponse,
-                resumeResponse.resume_content_json?.meta?.language || currentResumeLanguage,
-                { beforeDraftSnapshot }
-            );
-        } else {
-            const resumeData = await apiClient.getResumeHtml();
-            if (resumeData.resume_html && resumeData.resume_html.html) {
-                highlightCount = applyResumeGenerationResult(
-                    { resume_html: resumeData.resume_html },
-                    currentResumeLanguage,
-                    { beforeDraftSnapshot }
-                );
-            } else {
-                throw new Error(uiT('errors.resumeHtmlUnavailable', 'Resume HTML not available'));
-            }
-        }
-
-        updateAgentStatus('agent-render', 'completed');
+        applyResumeGenerationResult(
+            resumeResponse,
+            resumeResponse.resume_content_json?.meta?.language || currentResumeLanguage,
+            { beforeDraftSnapshot, deferPreview: true }
+        );
         Utils.hideLoading();
 
         document.getElementById('gap-analysis-section').classList.remove('hidden');
@@ -1249,9 +1360,12 @@ async function generateResume() {
 
         resetResumeUndoHistory();
 
-        Utils.showToast(uiT('resume.toast.generated', 'Resume generated successfully!'));
+        Utils.showToast(uiT(
+            'resume.toast.generatedEditBeforeExport',
+            'Resume content ready in the editor — review and export when ready (preview renders on export)'
+        ));
 
-        setResumeView(highlightCount > 0 ? 'edit' : 'preview', { scroll: true });
+        setResumeView('edit', { scroll: true });
 
         console.log('Resume generation complete:', resumeResponse);
     } catch (error) {
@@ -1365,14 +1479,6 @@ function getSeverityClass(severity) {
         default:
             return 'bg-gray-100 text-gray-800';
     }
-}
-
-/**
- * Display generated resume
- */
-function displayResume(htmlContent) {
-    const previewContainer = document.getElementById('resume-preview');
-    previewContainer.innerHTML = htmlContent;
 }
 
 async function captureCurrentResumeSnapshot() {
@@ -1558,6 +1664,9 @@ function renderResumeChatSuggestions() {
         { key: 'resume.chatSuggestion1', fallback: 'Highlight my project experience' },
         { key: 'resume.chatSuggestion2', fallback: 'Add quantified results where supported by my profile' },
         { key: 'resume.chatSuggestion3', fallback: 'Shorten the summary to save space' },
+        { key: 'resume.chatSuggestion4', fallback: 'What skill gaps do I have?' },
+        { key: 'resume.chatSuggestion5', fallback: 'What are the core requirements for my target role?' },
+        { key: 'resume.chatSuggestion6', fallback: 'Recommend jobs that match my profile' },
     ];
 
     container.innerHTML = '';
@@ -1594,7 +1703,7 @@ function initResumeChatWelcome() {
         'assistant',
         uiT(
             'resume.chatWelcome',
-            'Your resume is ready. Tell me what to change — e.g. polish a section, remove an entry, or adjust wording for the target job.'
+            'Your resume is ready. You can ask me to edit sections, or tap a suggested question below — e.g. skill gaps, job requirements, or matched job recommendations.'
         )
     );
     renderResumeChatSuggestions();
@@ -1686,6 +1795,7 @@ async function submitResumeChatEdit() {
         }
 
         appendResumeChatMessage('assistant', formatResumeChatReply(response));
+        renderResumeChatSuggestions();
 
         if (response.resume_html?.html) {
             Utils.showToast(uiT('resume.toast.chatUpdated', 'Resume updated'));
@@ -2005,10 +2115,42 @@ async function exportResume(format = 'pdf') {
     const normalized = String(format || 'pdf').toLowerCase();
     const loadingMsg = normalized === 'pdf'
         ? uiT('resume.toast.exportingPdf', 'Exporting PDF...')
-        : uiT('resume.toast.exporting', 'Exporting resume...');
+        : normalized === 'docx'
+            ? uiT('resume.toast.exportingDocx', 'Exporting DOCX...')
+            : uiT('resume.toast.exporting', 'Exporting resume...');
 
     try {
         Utils.showLoading(loadingMsg);
+        const needsHtmlPreview = normalized === 'pdf' || normalized === 'html' || normalized === 'docx';
+        const needsMarkdownPreview = normalized === 'markdown' || normalized === 'md';
+
+        if (needsHtmlPreview && apiClient.sessionId) {
+            try {
+                const renderResult = await apiClient.ensureResumeRendered();
+                const html = renderResult?.resume_html?.html;
+                if (html) {
+                    displayResume(html, { format: normalized });
+                    document.getElementById('resume-preview-section')?.classList.remove('hidden');
+                    updateResumeViewSwitcher();
+                    updatePreviewFormatBadge(normalized);
+                }
+            } catch (renderErr) {
+                if (normalized === 'pdf' || normalized === 'docx') {
+                    throw renderErr;
+                }
+                console.warn('HTML preview render skipped:', renderErr.message);
+            }
+        } else if (needsMarkdownPreview && apiClient.sessionId) {
+            try {
+                const resp = await apiClient.getResumeMarkdownPreview();
+                displayMarkdownPreview(resp?.markdown || '');
+                document.getElementById('resume-preview-section')?.classList.remove('hidden');
+                updateResumeViewSwitcher();
+                updatePreviewFormatBadge('markdown');
+            } catch (previewErr) {
+                console.warn('Markdown preview skipped:', previewErr.message);
+            }
+        }
         const blob = await apiClient.exportResumeFormat(normalized);
         const filename = await resolveExportFilename(normalized);
         Utils.downloadFile(blob, filename);

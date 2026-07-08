@@ -91,13 +91,13 @@ def _export_resume_pdf(state: CopilotState) -> tuple[bytes, str, str]:
 
 
 def _export_resume_docx(state: CopilotState) -> tuple[bytes, str, str]:
-    from tools.resume_export import resume_content_to_docx_bytes
+    from tools.resume_export import html_to_docx_bytes
 
-    if state.resume_content_json is None:
-        raise HTTPException(status_code=404, detail="简历内容尚未生成")
+    if not state.resume_html.html:
+        raise HTTPException(status_code=404, detail="简历 HTML 尚未生成")
 
     try:
-        docx_bytes = resume_content_to_docx_bytes(state.resume_content_json)
+        docx_bytes = html_to_docx_bytes(state.resume_html.html)
     except Exception as exc:
         logger.error("DOCX export failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail="DOCX 导出失败，请稍后重试") from exc
@@ -426,7 +426,7 @@ async def export_resume_pdf(req: SessionExportRequest, request: Request):
 
 @router.post("/export/docx")
 async def export_resume_docx(req: SessionExportRequest, request: Request):
-    """导出简历 DOCX（由结构化 JSON 生成）。"""
+    """导出简历 DOCX（由 HTML 渲染）。"""
     state = await _load_session_state(req.session_id, request)
     docx_bytes, media_type, filename = _export_resume_docx(state)
     return _build_binary_response(docx_bytes, media_type, filename)
