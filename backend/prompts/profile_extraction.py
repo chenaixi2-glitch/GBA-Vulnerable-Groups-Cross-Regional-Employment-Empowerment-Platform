@@ -21,7 +21,18 @@ PROFILE_EXTRACTION_PROMPT = """你是一个候选人画像构建专家。请从�
         "email": "邮箱",
         "phone": "电话",
         "city": "城市",
-        "school": "最高学历学校（如有，仅一所；多段学历请写入 facts）"
+        "school": "最高学历学校（如有，仅一所；多段学历请写入 facts）",
+        "extras": {{
+            "visa_type": "签证/逗留身份（如有，如 Student Visa / 工作签证）",
+            "resident_type": "居留身份（如有，如 HK permanent resident）",
+            "address": "详细住址（如有）",
+            "age": "年龄（如有）",
+            "gender": "性别（如有）",
+            "native_place": "籍贯（如有）",
+            "political_status": "政治面貌（如有）",
+            "summary": "个人总结（如有）",
+            "linkedin": "LinkedIn（如有）"
+        }}
     }},
     "facts": [
         {{
@@ -45,11 +56,13 @@ PROFILE_EXTRACTION_PROMPT = """你是一个候选人画像构建专家。请从�
 1. type 只能是: education, skill, project, internship, award, paper 之一
 2. **每条经历/技能/项目/奖项/论文必须单独一条 fact**，禁止合并多条为一条；禁止把多段实习/工作写入同一条 fact 的 responsibilities
 3. 若简历有 3 段工作经历，facts 中必须有 3 条 type=internship 的记录（与教育经历分条规则相同）
-3. education 的 content JSON 格式：{{"school":"","major":"","degree":"","start_date":"","end_date":""}}，每所学校一条
-4. skill 的 content：单个技能名称或 {{"skill":"","level":"","context":""}}，每个技能一条 fact
-5. internship / project 的 content JSON：{{"title":"","company":"","role":"","start_date":"","end_date":"","tech_stack":[],"responsibilities":"","achievements":""}}，每段经历一条
-6. award / paper 同理，每项一条
-7. 即使信息不足，也必须返回合法 JSON 对象
-8. 保留已有画像中的信息，只添加或更新
-9. 若用户明确列出 CONFIRMED_REMOVALS 要求删除的经历（按 fact_id 或 title），不得再输出或保留对应 fact
+4. education 的 content JSON 格式：{{"school":"","major":"","degree":"","start_date":"","end_date":""}}，每所学校一条
+5. skill 的 content：单个技能名称或 {{"skill":"","level":"","context":""}}，每个技能一条 fact
+6. internship / project 的 content JSON：{{"title":"","company":"","role":"","start_date":"","end_date":"","tech_stack":[],"responsibilities":"","achievements":""}}，每段经历一条
+7. award / paper 同理，每项一条
+8. 签证类型、居留身份、年龄、性别、籍贯、政治面貌、住址、个人总结等**个人信息补充字段必须写入 profile_basic.extras**，禁止放入 facts（尤其不得标为 award / skill / custom）
+9. 若材料出现 "Visa Status: Student Visa" 或「签证类型：学生签证」，应写入 extras.visa_type="Student Visa"（或对应中文值），不要创建 fact
+10. 即使信息不足，也必须返回合法 JSON 对象；extras 中无值的 key 可省略
+11. 保留已有画像中的信息，只添加或更新
+12. 若用户明确列出 CONFIRMED_REMOVALS 要求删除的经历（按 fact_id 或 title），不得再输出或保留对应 fact
 """

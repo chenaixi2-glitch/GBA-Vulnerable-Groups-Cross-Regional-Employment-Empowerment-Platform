@@ -721,8 +721,8 @@ def _check_english_resume(
     items.append(_item("en_email", "contact", "email", "Email", "required", "Professional email required", "Use a clean address, not a nickname", bool(email)))
 
     city = _profile_field(state, resume, "city")
-    items.append(_item("en_city", "contact", "city", "City only", "required",
-                      "英文简历只写城市，不写详细住址", "e.g. Guangzhou, China — not full street address", bool(city)))
+    items.append(_item("en_city", "contact", "city", "City only", "recommended",
+                      "建议填写所在城市，不写详细住址", "e.g. Guangzhou, China — not full street address", bool(city)))
 
     linkedin = getattr(profile, "linkedin", "") if profile else ""
     linkedin = linkedin or _profile_extra(state, resume, "linkedin")
@@ -749,9 +749,9 @@ def _check_english_resume(
 
     # Professional Summary
     has_summary = _has_professional_summary(state, resume, text)
-    items.append(_item("en_summary", "content", "summary", "Professional Summary", "required",
-                      "英文 Resume 用 3-4 行 Professional Summary 替代中文大段自我评价",
-                      "精简概括核心技能与成果，不用 'hardworking, outgoing' 等空泛形容词", has_summary))
+    items.append(_item("en_summary", "content", "summary", "Professional Summary", "recommended",
+                      "建议用 3-4 行 Professional Summary 概括核心技能与成果",
+                      "避免空泛形容词堆砌，突出量化成果", has_summary))
 
     if resume and resume.summary and len(resume.summary.strip()) > (400 if page_limit <= 1 else 700):
         items.append(_warn_item("en_summary_long", "format", "summary", "Summary too long",
@@ -760,8 +760,15 @@ def _check_english_resume(
 
     # Work Experience before Education
     has_work = _has_work_experience(state, resume, text)
-    items.append(_item("en_experience", "content", "internships", "Work Experience", "required",
-                      "英文 Resume 工作经历优先于教育背景", "动词开头 + 量化结果，如：Led X, improved Y by 20%", has_work))
+    items.append(_item("en_experience", "content", "internships", "Work Experience", "recommended",
+                      "可补充工作/实习经历以突出实践背景",
+                      "动词开头 + 量化结果，如：Led X, improved Y by 20%", has_work))
+
+    has_any_exp = _has_any_experience_track(state, resume, text)
+    items.append(_item("en_experience_any", "content", "experience_any",
+                      "实习/工作/校内/志愿经历（至少一项）", "required",
+                      "需至少填写一类经历：实习、工作、校内活动或志愿服务",
+                      "可添加实习/工作、项目（校内）、或其他（志愿）条目", has_any_exp))
 
     # 量化描述检查
     has_quant = _has_pattern(text, [r"\d+\s*%", r"\d+\s*(users|clients|projects|k|m)", r"increased|reduced|improved|boosted|by \d"])

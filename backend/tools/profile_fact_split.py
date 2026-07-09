@@ -17,6 +17,134 @@ _EXPERIENCE_BLOCK_RE = re.compile(
     r"(?m)^(?=[^\n].*(?:\d{4}[\./\-年]\d{1,2}|Present|至今|—|-\s*[A-Z]))"
 )
 
+# Personal-info labels that belong in profile_basic.extras, not facts.
+_EXTRA_FIELD_RULES: tuple[tuple[str, tuple[re.Pattern[str], ...]], ...] = (
+    (
+        "visa_type",
+        (
+            re.compile(r"visa\s*(?:status|type|category)", re.I),
+            re.compile(r"immigration\s*status", re.I),
+            re.compile(r"签[证證](?:类型|状态|種類|狀態)?"),
+            re.compile(r"逗留身份"),
+        ),
+    ),
+    (
+        "resident_type",
+        (
+            re.compile(r"residen(?:t|cy|ce)\s*(?:status|type|category)", re.I),
+            re.compile(r"居留(?:身份|类型|狀態)?"),
+            re.compile(r"居民身份"),
+            re.compile(r"身份类型"),
+        ),
+    ),
+)
+
+_VALUE_FIELDS = ("description", "content", "issuer", "skill", "title", "venue", "date")
+
+
+def _parse_fact_fields(content: str) -> dict[str, Any]:
+    text = (content or "").strip()
+    if not text:
+        return {}
+    try:
+        parsed = json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _matches_extra_label(text: str, patterns: tuple[re.Pattern[str], ...]) -> bool:
+    normalized = (text or "").strip()
+    if not normalized:
+        return False
+    return any(pattern.search(normalized) for pattern in patterns)
+
+
+def classify_profile_extra_fact(fact: ProfileFactOutput) -> str | None:
+    """Return extras key when a fact is really profile supplement info."""
+    fields = _parse_fact_fields(fact.content)
+    title = str(fields.get("title") or "").strip()
+    blob = "\n".join(
+        part for part in (
+            title,
+            str(fields.get("description") or "").strip(),
+            str(fields.get("content") or "").strip(),
+            (fact.content or "").strip(),
+        ) if part
+    )
+
+    for extra_key, patterns in _EXTRA_FIELD_RULES:
+        if _matches_extra_label(title, patterns) or _matches_extra_label(blob, patterns):
+            return extra_key
+    return None
+
+
+def _value_after_label(text: str, patterns: tuple[re.Pattern[str], ...]) -> str:
+    normalized = (text or "").strip()
+    if not normalized:
+        return ""
+    for pattern in patterns:
+        match = pattern.search(normalized)
+        if not match:
+            continue
+        tail = normalized[match.end():].lstrip(" :：-\t")
+        if tail and not _matches_extra_label(tail, patterns):
+            return tail.strip()
+    return ""
+
+
+def extract_profile_extra_value(fact: ProfileFactOutput, extra_key: str) -> str:
+    """Extract the stored value for a rerouted profile extra."""
+    patterns = next(p for key, p in _EXTRA_FIELD_RULES if key == extra_key)
+    fields = _parse_fact_fields(fact.content)
+    title = str(fields.get("title") or "").strip()
+
+    if _matches_extra_label(title, patterns):
+        for field_key in _VALUE_FIELDS:
+            if field_key == "title":
+                continue
+            candidate = str(fields.get(field_key) or "").strip()
+            if candidate and not _matches_extra_label(candidate, patterns):
+                return candidate
+
+    plain = (fact.content or "").strip()
+    if plain and not plain.startswith("{"):
+        colon_value = _value_after_label(plain, patterns)
+        if colon_value:
+            return colon_value
+
+    for field_key in _VALUE_FIELDS:
+        candidate = str(fields.get(field_key) or "").strip()
+        if candidate and not _matches_extra_label(candidate, patterns):
+            return candidate
+    return ""
+
+
+def reroute_profile_extras(
+    facts: list[ProfileFactOutput],
+    extras: dict[str, str] | None = None,
+) -> tuple[list[ProfileFactOutput], dict[str, str]]:
+    """Move misclassified personal-info facts into profile_basic.extras."""
+    merged_extras = {
+        str(key): str(value).strip()
+        for key, value in (extras or {}).items()
+        if value is not None and str(value).strip()
+    }
+    kept: list[ProfileFactOutput] = []
+
+    for fact in facts:
+        extra_key = classify_profile_extra_fact(fact)
+        if not extra_key:
+            kept.append(fact)
+            continue
+        value = extract_profile_extra_value(fact, extra_key)
+        if value:
+            merged_extras.setdefault(extra_key, value)
+            continue
+        kept.append(fact)
+
+    return kept, merged_extras
+
 
 def detect_material_language(material_text: str) -> str:
     """Heuristic: 'en' | 'zh' | 'mixed' from resume body (ignores upload wrapper text)."""

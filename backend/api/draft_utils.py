@@ -161,6 +161,26 @@ def draft_to_profile(draft: dict[str, Any]) -> CandidateProfile:
     return CandidateProfile(profile_basic=basic, materials=[], facts=facts)
 
 
+def profile_has_substance(profile: CandidateProfile | None) -> bool:
+    """True when the editor profile has enough content for resume generation."""
+    if profile is None:
+        return False
+    basic = profile.profile_basic
+    if not str(basic.name or "").strip():
+        return False
+    if str(basic.school or "").strip():
+        return True
+    for fact in profile.facts:
+        if len(str(fact.content or "").strip()) > 8:
+            return True
+    extras = basic.extras or {}
+    summary = str(extras.get("summary") or "").strip()
+    if summary and len(summary) > 10:
+        return True
+    has_contact = bool(str(basic.email or "").strip() and str(basic.phone or "").strip())
+    return has_contact and bool(str(basic.city or "").strip())
+
+
 def state_with_draft(state: CopilotState, draft: dict[str, Any] | None) -> CopilotState:
     """Overlay the latest profile-editor draft onto session state for validation/display."""
     if not draft:

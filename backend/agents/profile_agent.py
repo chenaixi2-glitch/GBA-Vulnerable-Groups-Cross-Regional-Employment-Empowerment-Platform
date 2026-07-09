@@ -7,11 +7,15 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from agents.json_contracts import ProfileExtractionOutput, ProfilePatchOutput
+from agents.json_contracts import ProfileExtractionOutput, ProfilePatchOutput, ProfileFactOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.profile_extraction import PROFILE_EXTRACTION_PROMPT
 from prompts.profile_clarification_patch import PROFILE_CLARIFICATION_PATCH_PROMPT
-from tools.profile_fact_split import expand_profile_facts, material_language_instruction
+from tools.profile_fact_split import (
+    expand_profile_facts,
+    material_language_instruction,
+    reroute_profile_extras,
+)
 from tools.resume_profile_context import build_profile_json
 from workflow.state import (
     CopilotState, CandidateProfile, ProfileBasic, Material, Fact,
@@ -126,8 +130,28 @@ async def _patch_profile_from_feedback_async(
             }
         existing_facts = _merge_fact_updates(existing_facts, parsed.facts, now=now)
 
+    rerouted_as_output = [
+        ProfileFactOutput(id=f.id, type=f.type, content=f.content, source_refs=list(f.source_refs), updated_at=f.updated_at)
+        for f in existing_facts
+    ]
+    kept_facts, merged_extras = reroute_profile_extras(
+        rerouted_as_output,
+        dict(existing.profile_basic.extras or {}),
+    )
+    existing_facts = [
+        Fact(
+            id=f.id,
+            type=f.type,
+            content=f.content,
+            source_refs=f.source_refs or ["user_clarification"],
+            updated_at=f.updated_at or now,
+        )
+        for f in kept_facts
+    ]
+    profile_basic = existing.profile_basic.model_copy(update={"extras": merged_extras})
+
     profile = CandidateProfile(
-        profile_basic=existing.profile_basic,
+        profile_basic=profile_basic,
         materials=list(existing.materials),
         facts=existing_facts,
     )
@@ -193,7 +217,12 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
     llm = get_llm()
     try:
         parsed = await ainvoke_json_with_schema(llm, prompt, ProfileExtractionOutput, logger, "Profile Agent")
-        parsed = parsed.model_copy(update={"facts": expand_profile_facts(parsed.facts)})
+        expanded_facts = expand_profile_facts(parsed.facts)
+        rerouted_facts, merged_extras = reroute_profile_extras(
+            expanded_facts,
+            dict(getattr(parsed.profile_basic, "extras", None) or {}),
+        )
+        parsed = parsed.model_copy(update={"facts": rerouted_facts})
     except RuntimeError as exc:
         logger.error("Profile Agent failed: %s", exc)
         return {
@@ -209,12 +238,20 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
 
     # 构建 profile
     basic_data = parsed.profile_basic
+    base_extras: dict[str, str] = {}
+    if existing and not replace_mode:
+        base_extras = dict(existing.profile_basic.extras or {})
+    for key, value in merged_extras.items():
+        if value:
+            base_extras[key] = value
+
     new_basic = ProfileBasic(
         name=basic_data.name,
         email=basic_data.email,
         phone=basic_data.phone,
         city=basic_data.city,
         school=basic_data.school,
+        extras=base_extras,
     )
 
     # 增量合并 basic（仅非覆盖模式）
@@ -229,6 +266,9 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
             new_basic.city = existing.profile_basic.city
         if not new_basic.school and existing.profile_basic.school:
             new_basic.school = existing.profile_basic.school
+        for key, value in (existing.profile_basic.extras or {}).items():
+            if value and not new_basic.extras.get(key):
+                new_basic.extras[key] = value
 
     # 新材料
     new_material = Material(

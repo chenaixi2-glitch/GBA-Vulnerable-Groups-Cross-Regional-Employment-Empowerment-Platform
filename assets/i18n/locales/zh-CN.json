@@ -1256,7 +1256,7 @@
       },
       "en_city": {
         "label": "城市",
-        "message": "英文简历只写城市，不写详细住址",
+        "message": "建议填写所在城市，不写详细住址",
         "suggestion": "如：Guangzhou, China"
       },
       "en_linkedin": {
@@ -1296,8 +1296,8 @@
       },
       "en_summary": {
         "label": "Professional Summary",
-        "message": "英文简历用 3-4 行 Professional Summary 替代中文大段自我评价",
-        "suggestion": "精简概括核心技能与成果，避免空泛形容词"
+        "message": "建议用 3-4 行 Professional Summary 概括核心技能与成果",
+        "suggestion": "避免空泛形容词堆砌，突出量化成果"
       },
       "en_summary_long": {
         "label": "Summary 过长",
@@ -1306,8 +1306,13 @@
       },
       "en_experience": {
         "label": "Work Experience",
-        "message": "英文简历工作经历优先于教育背景",
+        "message": "可补充工作/实习经历以突出实践背景",
         "suggestion": "动词开头 + 量化结果，如：Led X, improved Y by 20%"
+      },
+      "en_experience_any": {
+        "label": "实习/工作/校内/志愿经历（至少一项）",
+        "message": "需至少填写一类经历：实习、工作、校内活动或志愿服务",
+        "suggestion": "可添加实习/工作、项目（校内）、或其他（志愿）条目"
       },
       "en_quantified": {
         "label": "量化成果",

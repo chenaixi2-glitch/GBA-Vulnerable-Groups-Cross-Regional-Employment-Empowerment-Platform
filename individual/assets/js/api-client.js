@@ -2651,12 +2651,13 @@ class APIClient {
             if (draft) {
                 await this.ensureSessionFromDraft(draft);
             }
-            await this.syncResumeLanguageToSession();
+            await this.setResumeLanguage(lang);
             await this.ensureBackendAvailable();
 
             const response = await this.client.post('/resume/generate-from-profile', {
                 session_id: this.sessionId,
                 language: lang,
+                draft: draft || undefined,
             });
             return response.data;
         };
@@ -2681,22 +2682,41 @@ class APIClient {
     /**
      * Convert resume between Chinese and English
      */
-    async translateResume(targetLanguage) {
-        try {
+    async translateResume(targetLanguage, draft = null) {
+        const run = async () => {
             if (!this.sessionId) {
                 throw new Error(apiT('errors.noActiveSession', 'No active session'));
             }
 
+            const lang = this.normalizeResumeLanguage(targetLanguage || this.getChatLanguage());
+            if (draft) {
+                await this.ensureSessionFromDraft(draft);
+            }
+            await this.setResumeLanguage(lang);
             await this.ensureBackendAvailable();
 
             const response = await this.client.post('/resume/translate', {
                 session_id: this.sessionId,
-                target_language: targetLanguage,
+                target_language: lang,
+                draft: draft || undefined,
             });
 
             return response.data;
+        };
+
+        try {
+            return await this._resumeCallWithSessionRetry(run, { draft });
         } catch (error) {
             console.error('Resume translation error:', error);
+            const status = error.response?.status;
+            if (status === 404 && draft) {
+                try {
+                    await this.ensureSessionFromDraft(draft);
+                    return await run();
+                } catch (retryErr) {
+                    console.error('Resume translation retry failed:', retryErr);
+                }
+            }
             throw this.handleError(error);
         }
     }

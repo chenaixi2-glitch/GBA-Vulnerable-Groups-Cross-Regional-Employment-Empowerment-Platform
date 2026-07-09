@@ -971,6 +971,7 @@ class RenderRequest(BaseModel):
 class GenerateFromProfileRequest(BaseModel):
     session_id: str
     language: str = Field(default="", description="Target language: zh, zh-TW, en, or pt")
+    draft: ResumeDraftPayload | None = None
 
 
 class GenerateStreamRequest(BaseModel):
@@ -988,6 +989,7 @@ class GenerateStreamRequest(BaseModel):
 class TranslateResumeRequest(BaseModel):
     session_id: str
     target_language: str = Field(description="Target language: zh, zh-TW, en, or pt")
+    draft: ResumeDraftPayload | None = None
 
 
 class ModuleActionRequest(BaseModel):
@@ -1036,6 +1038,38 @@ async def _load_or_bootstrap_state(
 
     state = CopilotState.model_validate(saved)
     return state_with_draft(state, draft)
+
+
+async def _persist_request_draft_if_present(
+    client,
+    session_id: str,
+    user,
+    draft: ResumeDraftPayload | None,
+) -> None:
+    """Persist profile-editor draft from the request body before AI generate/translate."""
+    if draft is None:
+        return
+    from api.draft_utils import sync_draft_to_session
+    from datetime import datetime, timezone
+
+    payload = draft.model_dump()
+    payload["updated_at"] = datetime.now(timezone.utc).isoformat()
+    draft_store = RedisDraftStore(client, session_id, user.get("sub") if user else None)
+    store = RedisSessionStore(session_id, client)
+    await draft_store.save_draft(payload, logged_in=user is not None)
+    await sync_draft_to_session(store, session_id, payload)
+
+
+def _require_generatable_profile(state: CopilotState) -> None:
+    from api.draft_utils import profile_has_substance
+
+    if state.candidate_profile is None:
+        raise HTTPException(status_code=400, detail="请先上传简历或在右侧编辑器填写资料后再生成")
+    if not profile_has_substance(state.candidate_profile):
+        raise HTTPException(
+            status_code=400,
+            detail="资料内容不足：请填写姓名，并至少补充一段教育或工作/项目经历后再生成",
+        )
 
 
 async def _run_profile_resume_pipeline(state: CopilotState, *, defer_render: bool = True) -> CopilotState:
@@ -1280,10 +1314,10 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
+    await _persist_request_draft_if_present(client, req.session_id, user, req.draft)
     state = await _load_or_bootstrap_state(store, req.session_id, client, user)
     state.render_config = state.render_config.model_copy(update={"language": target})
-    if state.candidate_profile is None:
-        raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
+    _require_generatable_profile(state)
 
     from workflow.state import ResumeHtml
 
@@ -1477,11 +1511,15 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
+    await _persist_request_draft_if_present(client, req.session_id, user, req.draft)
     state = await _load_or_bootstrap_state(store, req.session_id, client, user)
 
-    if state.resume_content_json is None:
-        if state.candidate_profile is None:
-            raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
+    use_profile_pipeline = state.resume_content_json is None or req.draft is not None
+    if use_profile_pipeline:
+        _require_generatable_profile(state)
+        if req.draft is not None:
+            state.resume_content_json = None
+            state.resume_html = ResumeHtml()
         state.render_config = state.render_config.model_copy(update={"language": target})
         try:
             async with llm_queue_slot(req.session_id):

@@ -194,7 +194,7 @@ def _merge_profile_extras_from_candidate(
             if prev_photo:
                 resume_content.profile.extras["photo_url"] = prev_photo
                 resume_content.profile.extras["has_photo"] = "true"
-        for key in ("age", "gender", "native_place", "political_status"):
+        for key in ("age", "gender", "native_place", "political_status", "visa_type", "resident_type"):
             if merged.get(key) and not resume_content.profile.extras.get(key):
                 resume_content.profile.extras[key] = merged[key]
     else:

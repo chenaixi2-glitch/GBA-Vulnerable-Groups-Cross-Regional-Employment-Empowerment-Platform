@@ -46,6 +46,7 @@ class ProfileBasicOutput(BaseModel):
     phone: str = ""
     city: str = ""
     school: str = ""
+    extras: dict[str, str] = Field(default_factory=dict)
 
 
 class ProfileFactOutput(BaseModel):

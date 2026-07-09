@@ -470,6 +470,44 @@ function hasParsedProfileOnPage() {
 }
 
 /**
+ * Sync profile editor → backend session, apply target resume language, return fresh draft.
+ */
+async function prepareEditorDraftForAiTask(language) {
+    const lang = typeof normalizeResumeLang === 'function'
+        ? normalizeResumeLang(language || currentResumeLanguage || 'zh')
+        : (language || currentResumeLanguage || 'zh');
+
+    currentResumeLanguage = lang;
+    if (typeof updateResumeLanguageBadge === 'function') {
+        updateResumeLanguageBadge(lang);
+    }
+    if (typeof ProfileEditor !== 'undefined' && ProfileEditor.updatePhotoVisibility) {
+        ProfileEditor.updatePhotoVisibility(lang);
+    }
+    if (typeof syncResumeLanguageButtons === 'function') {
+        syncResumeLanguageButtons();
+    }
+
+    await syncDraftBeforeGenerate({ required: true, showLoading: false });
+
+    const draft = (typeof ProfileEditor !== 'undefined' && ProfileEditor.collectDraftFromForm)
+        ? ProfileEditor.collectDraftFromForm()
+        : null;
+    if (typeof ProfileEditor !== 'undefined' && draft) {
+        ProfileEditor.draft = draft;
+    }
+
+    apiClient.ensureSessionStarted();
+    try {
+        await apiClient.setResumeLanguage(lang);
+    } catch (error) {
+        console.warn('Resume language sync before AI task failed:', error.message);
+    }
+
+    return { draft, lang };
+}
+
+/**
  * Push editor draft to backend session so generate works after page restore (no re-upload).
  */
 async function syncDraftBeforeGenerate(options = {}) {
@@ -1163,15 +1201,23 @@ async function generateResumeFromProfile(options = {}) {
         const beforeDraftSnapshot = (typeof ProfileEditor !== 'undefined' && ProfileEditor.captureDraftSnapshot)
             ? ProfileEditor.captureDraftSnapshot()
             : null;
-        await syncDraftBeforeGenerate({ required: true, showLoading: false });
-        const draft = (typeof ProfileEditor !== 'undefined' && ProfileEditor.collectDraftFromForm)
-            ? ProfileEditor.collectDraftFromForm()
-            : null;
-        if (typeof applyResumeLanguageSelection === 'function') {
-            await applyResumeLanguageSelection(lang);
+
+        if (typeof refreshAndValidateRequiredFields === 'function') {
+            const { valid, required } = await refreshAndValidateRequiredFields();
+            if (!valid && required.length) {
+                if (!silent) Utils.hideLoading();
+                const labels = required.slice(0, 5).map((item) => item.label).join(', ');
+                Utils.showToast(uiT('resume.toast.requiredFieldsMissing', 'Please complete required fields first: {labels}', { labels }));
+                if (typeof scrollToChecklistField === 'function') {
+                    scrollToChecklistField(required[0]);
+                }
+                return false;
+            }
         }
-        const response = await apiClient.generateResumeFromProfile(lang, draft);
-        applyResumeGenerationResult(response, lang, { beforeDraftSnapshot, deferPreview: true });
+
+        const { draft, lang: targetLang } = await prepareEditorDraftForAiTask(lang);
+        const response = await apiClient.generateResumeFromProfile(targetLang, draft);
+        applyResumeGenerationResult(response, targetLang, { beforeDraftSnapshot, deferPreview: true });
         resetResumeUndoHistory();
         if (!silent) {
             Utils.hideLoading();
@@ -1930,14 +1976,15 @@ async function translateResume(targetLanguage) {
     try {
         beginAiTaskAttempt();
         Utils.showLoading(loadingMsgs[lang] || loadingMsgs.en);
+        const { draft, lang: targetLang } = await prepareEditorDraftForAiTask(lang);
         const beforeSnapshot = await captureCurrentResumeSnapshot();
         const beforeDraftSnapshot = (typeof ProfileEditor !== 'undefined' && ProfileEditor.captureDraftSnapshot)
             ? ProfileEditor.captureDraftSnapshot()
             : null;
-        const response = await apiClient.translateResume(lang);
+        const response = await apiClient.translateResume(targetLang, draft);
 
         const deferPreview = Boolean(response.preview_deferred);
-        const highlightCount = applyResumeGenerationResult(response, lang, { beforeDraftSnapshot, deferPreview });
+        const highlightCount = applyResumeGenerationResult(response, targetLang, { beforeDraftSnapshot, deferPreview });
         if (response.resume_content_json) {
             pushResumeUndoSnapshot(beforeSnapshot);
         }

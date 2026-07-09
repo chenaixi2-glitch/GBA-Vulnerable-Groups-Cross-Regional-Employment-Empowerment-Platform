@@ -1246,7 +1246,7 @@
       },
       "en_city": {
         "label": "城市",
-        "message": "英文履歷只寫城市，不寫詳細住址",
+        "message": "建議填寫所在城市，不寫詳細住址",
         "suggestion": "如：Guangzhou, China"
       },
       "en_linkedin": {
@@ -1286,8 +1286,8 @@
       },
       "en_summary": {
         "label": "Professional Summary",
-        "message": "英文履歷用 3-4 行 Professional Summary 替代中文大段自我評價",
-        "suggestion": "精簡概括核心技能與成果，避免空泛形容詞"
+        "message": "建議用 3-4 行 Professional Summary 概括核心技能與成果",
+        "suggestion": "避免空泛形容詞堆砌，突出量化成果"
       },
       "en_summary_long": {
         "label": "Summary 過長",
@@ -1296,8 +1296,13 @@
       },
       "en_experience": {
         "label": "Work Experience",
-        "message": "英文履歷工作經歷優先於教育背景",
+        "message": "可補充工作/實習經歷以突出實踐背景",
         "suggestion": "動詞開頭 + 量化結果，如：Led X, improved Y by 20%"
+      },
+      "en_experience_any": {
+        "label": "實習/工作/校內/志願經歷（至少一項）",
+        "message": "需至少填寫一類經歷：實習、工作、校內活動或志願服務",
+        "suggestion": "可添加實習/工作、項目（校內）、或其他（志願）條目"
       },
       "en_quantified": {
         "label": "量化成果",

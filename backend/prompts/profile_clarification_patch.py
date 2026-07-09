@@ -15,6 +15,7 @@ PROFILE_CLARIFICATION_PATCH_PROMPT = """你是候选人画像增量更新专家�
 - 若用户回答能补充量化数据、技术栈、职责细节等，更新对应 fact 的 content（保留原 id）
 - 若用户提供了全新经历/技能，新增 fact 并分配 fact_<type>_<序号> 形式的 id
 - 禁止编造用户未提供的信息或数字
+- 签证/居留/年龄/性别/籍贯/政治面貌/住址/总结等补充个人信息不属于 facts；若用户补充此类信息，不要新增 fact（由 profile_basic.extras 维护，本 patch 仅处理 facts）
 
 返回格式：
 {{

@@ -1171,6 +1171,11 @@ const ProfileEditor = {
         this.translatingModuleIds.push(moduleId);
         this.render({ preserveDraft: true });
         try {
+            if (typeof syncDraftBeforeGenerate === 'function') {
+                await syncDraftBeforeGenerate({ required: false, showLoading: false });
+            } else {
+                await this.persistDraft();
+            }
             const response = await apiClient.translateResumeModule(payload);
             const result = response.module || {};
             const moduleType = kind === 'education' ? 'education' : (payload.module_type || 'custom');

@@ -139,3 +139,61 @@ def test_zh_tw_missing_visa_and_resident_type():
     fields = _required_fields(result)
     assert "visa_type" in fields
     assert "resident_type" in fields
+
+
+def test_en_uses_optional_summary_city_and_work():
+    state = CopilotState(
+        session_id="test-session",
+        candidate_profile=CandidateProfile(
+            profile_basic=ProfileBasic(
+                name="Alex Chen",
+                email="alex@example.com",
+                phone="+852 9123 4567",
+            ),
+            facts=[
+                Fact(
+                    id="edu_1",
+                    type="education",
+                    content='{"school": "HKU", "major": "CS", "degree": "BSc"}',
+                    updated_at="2026-01-01T00:00:00Z",
+                ),
+                Fact(
+                    id="proj_1",
+                    type="project",
+                    content="Campus coding club lead",
+                    updated_at="2026-01-01T00:00:00Z",
+                ),
+            ],
+        ),
+    )
+    result = check_resume_language_requirements(state, "en")
+    fields = _required_fields(result)
+    assert "city" not in fields
+    assert "summary" not in fields
+    assert "internships" not in fields
+    assert "experience_any" not in fields
+
+
+def test_en_missing_all_experience_tracks_is_required():
+    state = CopilotState(
+        session_id="test-session",
+        candidate_profile=CandidateProfile(
+            profile_basic=ProfileBasic(
+                name="Alex Chen",
+                email="alex@example.com",
+                phone="+852 9123 4567",
+            ),
+            facts=[
+                Fact(
+                    id="edu_1",
+                    type="education",
+                    content='{"school": "HKU", "major": "CS", "degree": "BSc"}',
+                    updated_at="2026-01-01T00:00:00Z",
+                ),
+            ],
+        ),
+    )
+    result = check_resume_language_requirements(state, "en")
+    fields = _required_fields(result)
+    assert "experience_any" in fields
+    assert "internships" not in fields

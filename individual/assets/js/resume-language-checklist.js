@@ -81,7 +81,7 @@ const CHECKLIST_ITEM_FALLBACKS = {
     en_name: { label: 'Name (header)', message: 'Name is the largest header; do not use a big “Resume/CV” title', suggestion: 'FirstName LastName only' },
     en_phone: { label: 'Phone', message: 'Mobile number required', suggestion: 'Include country code if applicable' },
     en_email: { label: 'Email', message: 'Professional email required', suggestion: 'Use a clean address, not a nickname' },
-    en_city: { label: 'City only', message: 'English resumes list city only, not full street address', suggestion: 'e.g. Guangzhou, China' },
+    en_city: { label: 'City only', message: 'City is recommended; list city only, not full street address', suggestion: 'e.g. Guangzhou, China' },
     en_linkedin: { label: 'LinkedIn', message: 'LinkedIn URL is strongly recommended', suggestion: 'https://linkedin.com/in/yourname' },
     en_forbid_age: { label: 'Age', message: 'Age must not appear on Western English resumes', suggestion: 'Remove age from the resume' },
     en_forbid_gender: { label: 'Gender', message: 'Gender must not appear on Western English resumes', suggestion: 'Remove gender from the resume' },
@@ -89,9 +89,10 @@ const CHECKLIST_ITEM_FALLBACKS = {
     en_forbid_ethnicity: { label: 'Ethnicity / height / native place', message: 'Ethnicity, height, or native place should not appear', suggestion: 'Remove these fields from the resume' },
     en_forbid_political: { label: 'Political status / ID number', message: 'Political status or ID numbers must not appear', suggestion: 'Remove these fields from the resume' },
     en_forbid_dob: { label: 'Date of birth', message: 'Date of birth must not appear on Western English resumes', suggestion: 'Remove date of birth from the resume' },
-    en_summary: { label: 'Professional Summary', message: 'Use a 3–4 line Professional Summary instead of a long self-evaluation', suggestion: 'Summarize core skills and results; avoid vague traits like “hardworking”' },
+    en_summary: { label: 'Professional Summary', message: 'A 3–4 line Professional Summary is recommended', suggestion: 'Summarize core skills and results; avoid vague traits like “hardworking”' },
     en_summary_long: { label: 'Summary too long', message: 'Keep the summary to 3–4 lines', suggestion: 'Trim to key selling points and keep the resume within the page limit' },
-    en_experience: { label: 'Work Experience', message: 'Work experience should appear before education', suggestion: 'Start bullets with action verbs and quantify results' },
+    en_experience: { label: 'Work Experience', message: 'Work or internship experience is optional but strengthens your profile', suggestion: 'Start bullets with action verbs and quantify results' },
+    en_experience_any: { label: 'Experience (at least one)', message: 'At least one of: internship, work, campus, or volunteer experience is required', suggestion: 'Add work/internship, project (campus), or other (volunteer) entries' },
     en_quantified: { label: 'Quantified results', message: 'Experience bullets should use action verbs and metrics', suggestion: 'Action verb + task + measurable result' },
     en_education: { label: 'Education', message: 'Education follows work experience', suggestion: 'Degree in English, e.g. B.S. in Computer Science' },
     en_skills: { label: 'Skills', message: 'Skills section after experience, compact list', suggestion: 'Group by category, comma-separated' },
@@ -535,18 +536,13 @@ function getRequiredMissingFromDraft(draft, language) {
         if (!(basic.name || '').trim()) push('name', 'resume.checklist.name', 'Name');
         if (!(basic.phone || '').trim()) push('phone', 'resume.checklist.phone', 'Phone');
         if (!(basic.email || '').trim()) push('email', 'resume.checklist.email', 'Email');
-        if (!(basic.city || '').trim()) push('city', 'resume.checklist.city', 'City');
-        if ((extras.summary || '').trim().length < 10) {
-            push('summary', 'resume.checklist.summary', 'Professional Summary');
-        }
-        const hasWork = (draft.modules || []).some(
-            (m) => m.type === 'internship' && String(m.content || m.title || '').trim()
-        );
-        if (!hasWork) push('internships', 'resume.checklist.work', 'Work Experience');
         const hasEdu = (draft.education || []).some(
             (e) => String(e.school || e.major || e.degree || '').trim()
         );
         if (!hasEdu) push('education', 'resume.checklist.education', 'Education');
+        if (!draftHasAnyExperienceTrack(draft)) {
+            push('experience_any', 'resume.checklist.experienceAny', 'Experience (at least one)');
+        }
     }
 
     return missing;
@@ -743,7 +739,7 @@ async function applyResumeLanguageSelection(language) {
 
     try {
         if (typeof syncDraftBeforeGenerate === 'function') {
-            await syncDraftBeforeGenerate();
+            await syncDraftBeforeGenerate({ required: false, showLoading: false });
         }
         const result = await apiClient.setResumeLanguage(currentResumeLanguage);
         renderLanguageChecklistPanel(result.language_checklist);
