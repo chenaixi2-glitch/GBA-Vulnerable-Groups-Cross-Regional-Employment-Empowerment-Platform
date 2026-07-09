@@ -1,0 +1,608 @@
+{
+  "version": 1,
+  "description": "岗位匹配功能测试集：4 家企业 × 3-4 岗位 + 6 份差异化用户简历",
+  "password": "MatchTest123",
+  "companies": [
+    {
+      "id": "corp_sz_trade",
+      "company_name": "深港跨境数贸科技有限公司",
+      "industry": "跨境电商",
+      "description": "专注大湾区跨境 B2C 贸易，提供包容型就业机会。",
+      "address": "深圳市南山区科技园",
+      "is_friendly_employer": true,
+      "friendly_tags": ["career_returner", "disability_inclusive"],
+      "jobs": [
+        {
+          "title": "跨境电商客服专员",
+          "department": "客户服务部",
+          "location": "深圳",
+          "salary_min": 6000,
+          "salary_max": 9000,
+          "education": "专科及以上",
+          "work_experience": "1年以上",
+          "description": "负责跨境订单咨询、退换货协调及 CRM 工单处理，需流利英语与粤语。",
+          "skills": ["Customer Service", "English", "Cantonese", "E-commerce", "CRM"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "yes",
+            "prioritize_vulnerable": true
+          }
+        },
+        {
+          "title": "前端开发工程师",
+          "department": "技术研发部",
+          "location": "深圳",
+          "salary_min": 12000,
+          "salary_max": 20000,
+          "education": "本科及以上",
+          "work_experience": "3年以上",
+          "description": "负责跨境电商平台前端页面开发与性能优化，熟悉 React 技术栈。",
+          "skills": ["JavaScript", "React", "TypeScript", "HTML", "CSS"],
+          "target_criteria": {
+            "age_range": "30_below",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "no",
+            "prioritize_vulnerable": false
+          }
+        },
+        {
+          "title": "数据运营分析师",
+          "department": "运营部",
+          "location": "深圳",
+          "salary_min": 8000,
+          "salary_max": 14000,
+          "education": "本科及以上",
+          "work_experience": "2年以上",
+          "description": "分析店铺流量、转化与库存数据，输出运营报表与增长建议。",
+          "skills": ["Excel", "SQL", "Data Analysis", "E-commerce"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "any",
+            "prioritize_vulnerable": true
+          }
+        },
+        {
+          "title": "仓储物流协调员",
+          "department": "供应链部",
+          "location": "东莞",
+          "salary_min": 7000,
+          "salary_max": 11000,
+          "education": "高中及以上",
+          "work_experience": "3年以上",
+          "description": "协调跨境仓入库、分拣、发货及供应商对接，需熟悉仓储物流流程。",
+          "skills": ["Logistics", "Warehouse", "Supply Chain", "Forklift"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "no",
+            "prioritize_vulnerable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "corp_dg_mfg",
+      "company_name": "大湾区包容制造有限公司",
+      "industry": "智能制造",
+      "description": "电子配件制造企业，推行弱势群体友好用工政策。",
+      "address": "东莞市松山湖高新区",
+      "is_friendly_employer": true,
+      "friendly_tags": ["disability_inclusive", "elderly_45plus"],
+      "jobs": [
+        {
+          "title": "质检员（包容岗位）",
+          "department": "品质部",
+          "location": "东莞",
+          "salary_min": 5000,
+          "salary_max": 7500,
+          "education": "高中及以上",
+          "work_experience": "无经验可培训",
+          "description": "负责生产线产品外观与功能抽检，欢迎残疾人士及再就业群体。",
+          "skills": ["Quality Inspection", "Attention to Detail", "Manufacturing"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "open",
+            "disability_types": ["physical", "hearing", "visual"],
+            "career_gap": "any",
+            "prioritize_vulnerable": true
+          }
+        },
+        {
+          "title": "生产线操作员",
+          "department": "生产部",
+          "location": "东莞",
+          "salary_min": 4500,
+          "salary_max": 6500,
+          "education": "高中及以上",
+          "work_experience": "无经验可培训",
+          "description": "从事电子配件组装与产线安全操作，需遵守车间规范。",
+          "skills": ["Assembly", "Production Line", "Safety"],
+          "target_criteria": {
+            "age_range": "30_below",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "any",
+            "prioritize_vulnerable": false
+          }
+        },
+        {
+          "title": "机械维修技师",
+          "department": "设备部",
+          "location": "东莞",
+          "salary_min": 8000,
+          "salary_max": 13000,
+          "education": "专科及以上",
+          "work_experience": "5年以上",
+          "description": "负责产线设备日常维护、故障排查与焊接维修。",
+          "skills": ["Mechanical Repair", "Welding", "Equipment Maintenance"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "no",
+            "prioritize_vulnerable": false
+          }
+        },
+        {
+          "title": "生产计划专员",
+          "department": "计划部",
+          "location": "东莞",
+          "salary_min": 7000,
+          "salary_max": 11000,
+          "education": "本科及以上",
+          "work_experience": "2年以上",
+          "description": "编制生产排程、物料需求计划，熟练使用 ERP 系统。",
+          "skills": ["ERP", "Production Planning", "Excel"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "any",
+            "prioritize_vulnerable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "corp_hk_finance",
+      "company_name": "港澳金融合规咨询有限公司",
+      "industry": "金融服务",
+      "description": "为跨境金融机构提供合规、反洗钱与尽职调查服务。",
+      "address": "香港中环金融街 88 号",
+      "is_friendly_employer": true,
+      "friendly_tags": ["disability_inclusive"],
+      "jobs": [
+        {
+          "title": "金融合规分析师",
+          "department": "合规部",
+          "location": "香港",
+          "salary_min": 18000,
+          "salary_max": 28000,
+          "education": "本科及以上",
+          "work_experience": "2年以上",
+          "description": "解读监管政策、撰写合规报告，熟悉 AML 与风险管理框架。",
+          "skills": ["Financial Compliance", "AML", "Risk Management"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "any",
+            "prioritize_vulnerable": true
+          }
+        },
+        {
+          "title": "AML反洗钱专员",
+          "department": "风控部",
+          "location": "香港",
+          "salary_min": 15000,
+          "salary_max": 24000,
+          "education": "本科及以上",
+          "work_experience": "1年以上",
+          "description": "执行客户 KYC 审查、可疑交易监测与监管报送。",
+          "skills": ["Anti-Money Laundering", "KYC", "Financial Regulation"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "open",
+            "disability_types": ["physical", "hearing", "visual", "other"],
+            "career_gap": "any",
+            "prioritize_vulnerable": true
+          }
+        },
+        {
+          "title": "跨境支付产品经理",
+          "department": "产品部",
+          "location": "香港",
+          "salary_min": 20000,
+          "salary_max": 35000,
+          "education": "本科及以上",
+          "work_experience": "3年以上",
+          "description": "规划跨境支付产品路线，协调技术、合规与商务团队。",
+          "skills": ["Product Management", "FinTech", "Cross-border Payment"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "no",
+            "prioritize_vulnerable": false
+          }
+        },
+        {
+          "title": "客户尽职调查专员",
+          "department": "合规部",
+          "location": "香港",
+          "salary_min": 12000,
+          "salary_max": 20000,
+          "education": "本科及以上",
+          "work_experience": "1年以上",
+          "description": "开展客户背景调查、文件审核与英文书面报告撰写。",
+          "skills": ["Due Diligence", "KYC", "Customer Investigation", "English"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "any",
+            "prioritize_vulnerable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "corp_gz_health",
+      "company_name": "智慧康养服务集团",
+      "industry": "健康养老",
+      "description": "大湾区社区养老与康复服务机构，重点吸纳中老年再就业者。",
+      "address": "广州市天河区体育西路",
+      "is_friendly_employer": true,
+      "friendly_tags": ["elderly_45plus", "career_returner", "disability_inclusive"],
+      "jobs": [
+        {
+          "title": "养老护理员（包容岗位）",
+          "department": "护理部",
+          "location": "广州",
+          "salary_min": 5000,
+          "salary_max": 8000,
+          "education": "高中及以上",
+          "work_experience": "无经验可培训",
+          "description": "为长者提供日常起居照料与情感陪伴，需耐心细致、会粤语。",
+          "skills": ["Elderly Care", "Nursing", "Patience", "Cantonese"],
+          "target_criteria": {
+            "age_range": "45_plus",
+            "gender": "any",
+            "disability": "open",
+            "disability_types": ["physical", "hearing"],
+            "career_gap": "any",
+            "prioritize_vulnerable": true
+          }
+        },
+        {
+          "title": "健康管理师",
+          "department": "健康部",
+          "location": "广州",
+          "salary_min": 7000,
+          "salary_max": 12000,
+          "education": "专科及以上",
+          "work_experience": "2年以上",
+          "description": "为长者制定营养与慢病管理方案，开展健康宣教活动。",
+          "skills": ["Health Management", "Nutrition", "Chronic Disease"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "any",
+            "prioritize_vulnerable": true
+          }
+        },
+        {
+          "title": "社工协调员",
+          "department": "社工部",
+          "location": "广州",
+          "salary_min": 6000,
+          "salary_max": 10000,
+          "education": "本科及以上",
+          "work_experience": "1年以上",
+          "description": "协调社区资源、组织关爱活动，欢迎有职业空窗经历的女性回归职场。",
+          "skills": ["Social Work", "Community Service", "Communication"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "female",
+            "career_gap": "yes",
+            "disability": "any",
+            "prioritize_vulnerable": true
+          }
+        },
+        {
+          "title": "康复训练助理",
+          "department": "康复部",
+          "location": "广州",
+          "salary_min": 5500,
+          "salary_max": 8500,
+          "education": "专科及以上",
+          "work_experience": "无经验可培训",
+          "description": "协助康复师开展肢体训练与长者活动引导。",
+          "skills": ["Rehabilitation", "Physical Therapy", "Elderly Care"],
+          "target_criteria": {
+            "age_range": "any",
+            "gender": "any",
+            "disability": "any",
+            "career_gap": "any",
+            "prioritize_vulnerable": true
+          }
+        }
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "id": "candidate_aixi",
+      "label": "陈艾希 — 金融合规应届生",
+      "user": {
+        "username": "match_aixi",
+        "email": "match_aixi@test.gba.local",
+        "full_name": "陈艾希",
+        "phone": "13800001001",
+        "age": 28,
+        "gender": "female",
+        "disability_type": "none",
+        "career_gap_years": 0,
+        "current_income": 12000
+      },
+      "resume": {
+        "skills_text": "Financial Compliance, AML, KYC, Risk Management, English, Cantonese",
+        "content_json": {
+          "summary": "香港大学金融专业，具备跨境金融合规与反洗钱实务经验。",
+          "skills": ["Financial Compliance", "AML", "KYC", "Risk Management", "English", "Cantonese"],
+          "facts": [
+            {
+              "type": "education",
+              "content": "{\"school\":\"香港大学\",\"major\":\"金融学\",\"degree\":\"Bachelor\",\"start_date\":\"2018-09\",\"end_date\":\"2022-06\"}"
+            },
+            {
+              "type": "skill",
+              "content": "Financial Compliance"
+            },
+            {
+              "type": "skill",
+              "content": "AML"
+            },
+            {
+              "type": "skill",
+              "content": "KYC"
+            },
+            {
+              "type": "internship",
+              "content": "{\"title\":\"合规分析实习生\",\"company\":\"港澳金融合规咨询有限公司\",\"start_date\":\"2022-07\",\"end_date\":\"2023-06\",\"achievements\":\"协助完成 30+ 客户尽职调查报告\"}"
+            },
+            {
+              "type": "project",
+              "content": "{\"title\":\"反洗钱案例研究\",\"role\":\"负责人\",\"achievements\":\"整理跨境支付可疑交易识别规则\"}"
+            }
+          ]
+        }
+      },
+      "expected_top_jobs": ["金融合规分析师", "客户尽职调查专员"],
+      "expected_top1_jobs": ["金融合规分析师", "客户尽职调查专员"],
+      "expected_filtered_jobs": ["AML反洗钱专员", "养老护理员（包容岗位）", "社工协调员", "质检员（包容岗位）", "跨境电商客服专员"],
+      "min_match_score": 45
+    },
+    {
+      "id": "candidate_liming",
+      "label": "李志明 — 资深仓储物流技工",
+      "user": {
+        "username": "match_liming",
+        "email": "match_liming@test.gba.local",
+        "full_name": "李志明",
+        "phone": "13800001002",
+        "age": 52,
+        "gender": "male",
+        "disability_type": "none",
+        "career_gap_years": 0,
+        "current_income": 7500
+      },
+      "resume": {
+        "skills_text": "Logistics, Warehouse, Supply Chain, Forklift, Mechanical Repair, Welding",
+        "content_json": {
+          "summary": "20 年仓储物流与设备维修经验，熟悉大湾区供应链运作。",
+          "skills": ["Logistics", "Warehouse", "Supply Chain", "Forklift", "Mechanical Repair", "Welding"],
+          "facts": [
+            {
+              "type": "education",
+              "content": "{\"school\":\"东莞市技师学院\",\"major\":\"机电一体化\",\"degree\":\"Diploma\",\"start_date\":\"1990-09\",\"end_date\":\"1993-06\"}"
+            },
+            {
+              "type": "work",
+              "content": "{\"title\":\"仓储主管\",\"company\":\"华南物流集团\",\"start_date\":\"2005-03\",\"end_date\":\"2024-12\",\"achievements\":\"管理 8000㎡ 跨境仓，优化分拣效率 22%\"}"
+            },
+            {
+              "type": "work",
+              "content": "{\"title\":\"设备维修技师\",\"company\":\"大湾区包容制造有限公司\",\"start_date\":\"1998-07\",\"end_date\":\"2005-02\",\"achievements\":\"负责产线焊接与设备保养\"}"
+            },
+            {
+              "type": "skill",
+              "content": "Forklift"
+            }
+          ]
+        }
+      },
+      "expected_top_jobs": ["仓储物流协调员", "机械维修技师"],
+      "expected_top1_jobs": ["仓储物流协调员"],
+      "expected_filtered_jobs": ["前端开发工程师", "生产线操作员", "AML反洗钱专员", "社工协调员", "跨境电商客服专员"],
+      "min_match_score": 50
+    },
+    {
+      "id": "candidate_xiaomei",
+      "label": "王小梅 — 职场回归客服",
+      "user": {
+        "username": "match_xiaomei",
+        "email": "match_xiaomei@test.gba.local",
+        "full_name": "王小梅",
+        "phone": "13800001003",
+        "age": 38,
+        "gender": "female",
+        "disability_type": "none",
+        "career_gap_years": 3,
+        "current_income": 5500
+      },
+      "resume": {
+        "skills_text": "Customer Service, English, Cantonese, E-commerce, CRM",
+        "content_json": {
+          "summary": "三年育儿空窗后重返职场，擅长跨境电商客服与 CRM 工单处理。",
+          "skills": ["Customer Service", "English", "Cantonese", "E-commerce", "CRM"],
+          "facts": [
+            {
+              "type": "education",
+              "content": "{\"school\":\"深圳职业技术学院\",\"major\":\"商务英语\",\"degree\":\"Diploma\",\"start_date\":\"2008-09\",\"end_date\":\"2011-06\"}"
+            },
+            {
+              "type": "internship",
+              "content": "{\"title\":\"客服专员\",\"company\":\"深港跨境数贸科技\",\"start_date\":\"2015-04\",\"end_date\":\"2019-08\",\"achievements\":\"日均处理 100+ 跨境咨询，客户满意度 96%\"}"
+            },
+            {
+              "type": "skill",
+              "content": "CRM"
+            },
+            {
+              "type": "project",
+              "content": "{\"title\":\"客服知识库优化\",\"role\":\"执行\",\"achievements\":\"更新跨境退换货 FAQ 50 条\"}"
+            }
+          ]
+        }
+      },
+      "expected_top_jobs": ["跨境电商客服专员"],
+      "expected_top1_jobs": ["跨境电商客服专员"],
+      "expected_filtered_jobs": ["前端开发工程师", "仓储物流协调员", "机械维修技师"],
+      "min_match_score": 55
+    },
+    {
+      "id": "candidate_haoran",
+      "label": "张浩然 — 青年前端开发",
+      "user": {
+        "username": "match_haoran",
+        "email": "match_haoran@test.gba.local",
+        "full_name": "张浩然",
+        "phone": "13800001004",
+        "age": 26,
+        "gender": "male",
+        "disability_type": "none",
+        "career_gap_years": 0,
+        "current_income": 7000
+      },
+      "resume": {
+        "skills_text": "JavaScript, React, TypeScript, HTML, CSS, Node.js",
+        "content_json": {
+          "summary": "2 年前端开发经验，熟悉 React 技术栈与跨境电商平台页面优化。",
+          "skills": ["JavaScript", "React", "TypeScript", "HTML", "CSS", "Node.js"],
+          "facts": [
+            {
+              "type": "education",
+              "content": "{\"school\":\"华南理工大学\",\"major\":\"计算机科学\",\"degree\":\"Bachelor\",\"start_date\":\"2017-09\",\"end_date\":\"2021-06\"}"
+            },
+            {
+              "type": "internship",
+              "content": "{\"title\":\"前端开发工程师\",\"company\":\"深港跨境数贸科技\",\"start_date\":\"2022-03\",\"end_date\":\"Present\",\"achievements\":\"重构商品详情页，首屏加载提速 35%\"}"
+            },
+            {
+              "type": "project",
+              "content": "{\"title\":\"跨境结算看板\",\"role\":\"前端负责人\",\"achievements\":\"使用 React + TypeScript 搭建数据可视化\"}"
+            }
+          ]
+        }
+      },
+      "expected_top_jobs": ["前端开发工程师"],
+      "expected_top1_jobs": ["前端开发工程师"],
+      "expected_filtered_jobs": ["养老护理员（包容岗位）", "质检员（包容岗位）", "AML反洗钱专员", "社工协调员"],
+      "min_match_score": 70
+    },
+    {
+      "id": "candidate_huizhen",
+      "label": "林慧珍 — 听力残疾养老护理",
+      "user": {
+        "username": "match_huizhen",
+        "email": "match_huizhen@test.gba.local",
+        "full_name": "林慧珍",
+        "phone": "13800001005",
+        "age": 48,
+        "gender": "female",
+        "disability_type": "hearing",
+        "career_gap_years": 1,
+        "current_income": 4800
+      },
+      "resume": {
+        "skills_text": "Elderly Care, Nursing, Rehabilitation, Patience, Cantonese",
+        "content_json": {
+          "summary": "8 年社区养老护理经验，持有养老护理员证书，擅长康复辅助训练。",
+          "skills": ["Elderly Care", "Nursing", "Rehabilitation", "Patience", "Cantonese"],
+          "facts": [
+            {
+              "type": "education",
+              "content": "{\"school\":\"广州市卫生职业学校\",\"major\":\"护理\",\"degree\":\"Diploma\",\"start_date\":\"1995-09\",\"end_date\":\"1998-06\"}"
+            },
+            {
+              "type": "work",
+              "content": "{\"title\":\"养老护理员\",\"company\":\"越秀区社区养老中心\",\"start_date\":\"2016-01\",\"end_date\":\"Present\",\"achievements\":\"服务 20+ 长者，零重大事故\"}"
+            },
+            {
+              "type": "project",
+              "content": "{\"title\":\"康复训练小组\",\"role\":\"助理\",\"achievements\":\"协助肢体康复训练 3 次/周\"}"
+            },
+            {
+              "type": "skill",
+              "content": "Rehabilitation"
+            }
+          ]
+        }
+      },
+      "expected_top_jobs": ["康复训练助理", "养老护理员（包容岗位）"],
+      "expected_top1_jobs": ["康复训练助理", "养老护理员（包容岗位）"],
+      "expected_filtered_jobs": ["前端开发工程师", "仓储物流协调员", "机械维修技师", "生产线操作员"],
+      "min_match_score": 45
+    },
+    {
+      "id": "candidate_xiaotong",
+      "label": "赵晓彤 — 低收入青年产线质检",
+      "user": {
+        "username": "match_xiaotong",
+        "email": "match_xiaotong@test.gba.local",
+        "full_name": "赵晓彤",
+        "phone": "13800001006",
+        "age": 24,
+        "gender": "female",
+        "disability_type": "none",
+        "career_gap_years": 0,
+        "current_income": 4500
+      },
+      "resume": {
+        "skills_text": "Quality Inspection, Assembly, Production Line, Safety, Attention to Detail",
+        "content_json": {
+          "summary": "2 年电子制造产线经验，熟悉质检流程与安全规范。",
+          "skills": ["Quality Inspection", "Assembly", "Production Line", "Safety", "Attention to Detail"],
+          "facts": [
+            {
+              "type": "education",
+              "content": "{\"school\":\"东莞市职业技术学校\",\"major\":\"电子技术\",\"degree\":\"High School\",\"start_date\":\"2017-09\",\"end_date\":\"2020-06\"}"
+            },
+            {
+              "type": "internship",
+              "content": "{\"title\":\"质检员\",\"company\":\"大湾区包容制造\",\"start_date\":\"2022-08\",\"end_date\":\"Present\",\"achievements\":\"日检 500+ 件，不良率下降 8%\"}"
+            },
+            {
+              "type": "work",
+              "content": "{\"title\":\"生产线操作员\",\"company\":\"电子配件厂\",\"start_date\":\"2020-07\",\"end_date\":\"2022-07\",\"achievements\":\"熟练 SMT 组装与安全操作\"}"
+            }
+          ]
+        }
+      },
+      "expected_top_jobs": ["生产线操作员"],
+      "expected_top1_jobs": ["生产线操作员"],
+      "expected_filtered_jobs": ["质检员（包容岗位）", "AML反洗钱专员", "养老护理员（包容岗位）", "社工协调员"],
+      "min_match_score": 50
+    }
+  ]
+}

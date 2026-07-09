@@ -5,18 +5,38 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import time
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from typing import Any
 
-from agents.json_contracts import ResumeGenerationOutput, ResumeModulePolishOutput
-from models.llm import get_llm
+from agents.json_contracts import (
+    ResumeEducationTranslateOutput,
+    ResumeGenerationOutput,
+    ResumeModulePolishOutput,
+    ResumeModuleTranslateOutput,
+    ResumeSectionItemOutput,
+)
+from models.llm import get_resume_generation_llm, get_translation_llm
 from tools.output_language_guard import ainvoke_json_with_language_guard
+from tools.module_field_schema import (
+    apply_polish_to_fields,
+    build_translation_module_json,
+    derive_title_and_content,
+    fields_to_fact_content,
+    merge_translated_fields,
+    parse_fact_content,
+)
 from prompts.resume_generation import (
     RESUME_GENERATION_PROMPT,
     RESUME_MODULE_SECTION_PROMPT,
     RESUME_SECTION_UPDATE_PROMPT,
 )
 from prompts.resume_language_convert import RESUME_LANGUAGE_CONVERT_PROMPT
+from prompts.resume_module_translate import (
+    RESUME_EDUCATION_TRANSLATE_PROMPT,
+    RESUME_MODULE_TRANSLATE_PROMPT,
+)
 from prompts.resume_constraints import RESUME_PAGE_COMPRESS_PROMPT, RESUME_EXPERIENCE_POLISH_GUIDELINES
 from tools.resume_page_policy import (
     apply_render_config_for_experience,
@@ -36,16 +56,17 @@ from tools.output_language import resolve_resume_target_language
 from tools.target_job_context import build_compact_job_json, build_enriched_job_json
 from tools.resume_profile_context import (
     batch_facts_by_size,
-    build_relevant_profile_json,
+    build_profile_json,
     facts_of_type,
     should_use_modular_generation,
 )
+from services.jd_experience_match import extract_fact_title
 from workflow.state import (
     CopilotState, ResumeContent, ResumeProfile, ResumeContentMeta,
     SectionItem, Education, Fact,
 )
 from workflow.trace import append_trace, summarize_user_message
-from log import get_logger
+from log import get_logger, elapsed_ms, log_stage_timing
 
 logger = get_logger("agent")
 
@@ -53,6 +74,80 @@ _MODULE_SECTIONS: tuple[tuple[str, str, str], ...] = (
     ("internships", "internship", "实习/工作经历"),
     ("projects", "project", "项目经历"),
 )
+
+_MODULE_TYPE_TO_SECTION: dict[str, str] = {
+    "skill": "skills",
+    "internship": "internships",
+    "project": "projects",
+    "award": "awards",
+    "paper": "papers",
+    "custom": "skills",
+}
+
+_SECTION_LABELS: dict[str, str] = {
+    "internship": "实习/工作经历",
+    "project": "项目经历",
+}
+
+_POLISH_PLACEHOLDER: dict[str, str] = {
+    "zh": "正在润色…",
+    "zh-TW": "正在潤色…",
+    "en": "Polishing in progress…",
+    "pt": "Polimento em curso…",
+}
+
+PolishProgressCallback = Callable[[ResumeGenerationOutput, dict[str, Any]], Awaitable[None]]
+
+
+def polish_placeholder_for_language(language: str) -> str:
+    lang = normalize_language(language)
+    return _POLISH_PLACEHOLDER.get(lang, _POLISH_PLACEHOLDER["en"])
+
+
+def _placeholder_item_from_fact(fact: Fact, *, placeholder: str) -> ResumeSectionItemOutput:
+    return ResumeSectionItemOutput(
+        id=fact.id,
+        title=extract_fact_title(fact),
+        content=placeholder,
+        source_refs=[fact.id],
+    )
+
+
+def _merge_polished_items(
+    current: list[Any],
+    polished: list[Any],
+    *,
+    pending_fact_ids: set[str],
+) -> list[Any]:
+    polished_by_id: dict[str, Any] = {}
+    for item in polished:
+        item_id = getattr(item, "id", "") or ""
+        if item_id:
+            polished_by_id[item_id] = item
+        for ref in getattr(item, "source_refs", []) or []:
+            polished_by_id[str(ref)] = item
+
+    merged: list[Any] = []
+    replaced: set[str] = set()
+    for item in current:
+        item_id = getattr(item, "id", "") or ""
+        refs = set(getattr(item, "source_refs", []) or [])
+        keys = {item_id, *refs}
+        replacement = next((polished_by_id[key] for key in keys if key in polished_by_id), None)
+        if replacement is not None:
+            merged.append(replacement)
+            replaced.update(keys)
+        else:
+            merged.append(item)
+
+    for item in polished:
+        item_id = getattr(item, "id", "") or ""
+        refs = set(getattr(item, "source_refs", []) or [])
+        if item_id in replaced or refs & replaced:
+            continue
+        if item_id in pending_fact_ids or refs & pending_fact_ids:
+            merged.append(item)
+    return merged
 
 
 def _resolve_target_language(state: CopilotState) -> str:
@@ -86,10 +181,19 @@ def _merge_profile_extras_from_candidate(
     lang = normalize_language(resume_content.meta.language)
 
     if is_cjk_resume_language(lang):
-        photo = merged.get("photo_url") or merged.get("photo_data")
-        if photo:
-            resume_content.profile.extras["photo_url"] = photo
+        cand_photo = (cand_extras.get("photo_url") or cand_extras.get("photo_data") or "").strip()
+        if cand_photo:
+            resume_content.profile.extras["photo_url"] = cand_photo
             resume_content.profile.extras["has_photo"] = "true"
+        elif cand_extras.get("has_photo") == "false":
+            resume_content.profile.extras.pop("photo_url", None)
+            resume_content.profile.extras.pop("photo_data", None)
+            resume_content.profile.extras["has_photo"] = "false"
+        else:
+            prev_photo = (prev_extras.get("photo_url") or prev_extras.get("photo_data") or "").strip()
+            if prev_photo:
+                resume_content.profile.extras["photo_url"] = prev_photo
+                resume_content.profile.extras["has_photo"] = "true"
         for key in ("age", "gender", "native_place", "political_status"):
             if merged.get(key) and not resume_content.profile.extras.get(key):
                 resume_content.profile.extras[key] = merged[key]
@@ -179,8 +283,12 @@ async def _invoke_resume_generation_prompt(
     llm: Any,
     prompt: str,
     guard_lang: str,
+    *,
+    stage: str,
+    session_id: str = "",
 ) -> ResumeGenerationOutput:
-    return await ainvoke_json_with_language_guard(
+    t0 = time.perf_counter()
+    result = await ainvoke_json_with_language_guard(
         llm,
         prompt,
         ResumeGenerationOutput,
@@ -188,6 +296,14 @@ async def _invoke_resume_generation_prompt(
         "Resume Content Agent",
         guard_lang,
     )
+    log_stage_timing(
+        logger,
+        stage,
+        elapsed_ms(t0),
+        session_id=session_id,
+        language=guard_lang,
+    )
+    return result
 
 
 async def _polish_module_section_async(
@@ -202,6 +318,7 @@ async def _polish_module_section_async(
 ) -> list[Any]:
     if not facts:
         return []
+    t0 = time.perf_counter()
     facts_json = json.dumps([fact.model_dump() for fact in facts], ensure_ascii=False, indent=2)
     prompt = RESUME_MODULE_SECTION_PROMPT.format(
         section_label=section_label,
@@ -220,8 +337,306 @@ async def _polish_module_section_async(
         logger,
         f"Resume Content Agent ({section_key})",
         guard_lang,
+        retry_unresolved_modules=True,
+    )
+    log_stage_timing(
+        logger,
+        f"content_agent.polish.{section_key}",
+        elapsed_ms(t0),
+        session_id=state.session_id,
+        facts=len(facts),
     )
     return list(parsed.items)
+
+
+def _fact_for_module(
+    state: CopilotState,
+    *,
+    module_id: str,
+    module_type: str,
+    title: str,
+    content: str,
+    fields: dict[str, Any] | None = None,
+) -> Fact:
+    if state.candidate_profile:
+        for fact in state.candidate_profile.facts:
+            if fact.id == module_id:
+                return fact
+    if fields:
+        payload = fields_to_fact_content(module_type, fields)
+    else:
+        payload = json.dumps({"title": title, "content": content}, ensure_ascii=False)
+    return Fact(
+        id=module_id,
+        type=module_type,
+        content=payload or json.dumps({"title": title, "content": content}, ensure_ascii=False),
+    )
+
+
+def _bump_resume_content_version(resume_content: ResumeContent) -> ResumeContent:
+    now = datetime.now(timezone.utc).isoformat()
+    content_json = json.dumps(resume_content.model_dump(), ensure_ascii=False, sort_keys=True)
+    content_hash = hashlib.sha256(content_json.encode()).hexdigest()[:16]
+    meta = resume_content.meta.model_copy(update={
+        "version": resume_content.meta.version + 1,
+        "last_updated_at": now,
+        "content_hash": content_hash,
+    })
+    return resume_content.model_copy(update={"meta": meta})
+
+
+def apply_translated_module_to_resume(
+    resume_content: ResumeContent,
+    *,
+    module_type: str,
+    module_id: str,
+    title: str = "",
+    content: str = "",
+    school: str = "",
+    major: str = "",
+    degree: str = "",
+    fields: dict[str, Any] | None = None,
+) -> ResumeContent:
+    now = datetime.now(timezone.utc).isoformat()
+    if module_type == "education":
+        edu_fields = dict(fields or {})
+        if not edu_fields:
+            edu_fields = {"school": school, "major": major, "degree": degree}
+        education = list(resume_content.profile.education)
+        for index, entry in enumerate(education):
+            if entry.id != module_id:
+                continue
+            education[index] = entry.model_copy(update={
+                "school": str(edu_fields.get("school") or entry.school),
+                "major": str(edu_fields.get("major") or entry.major),
+                "degree": str(edu_fields.get("degree") or entry.degree),
+                "start_date": str(edu_fields.get("start_date") or entry.start_date),
+                "end_date": str(edu_fields.get("end_date") or entry.end_date),
+            })
+            break
+        profile = resume_content.profile.model_copy(update={"education": education})
+        updated = resume_content.model_copy(update={"profile": profile})
+        return _bump_resume_content_version(updated)
+
+    module_fields = dict(fields or {})
+    if module_fields:
+        title, content = derive_title_and_content(module_type, module_fields)
+    section_key = _MODULE_TYPE_TO_SECTION.get(module_type)
+    if not section_key:
+        raise ValueError(f"Unsupported module type: {module_type}")
+
+    items = list(getattr(resume_content, section_key))
+    replaced = False
+    for index, item in enumerate(items):
+        if item.id != module_id:
+            continue
+        items[index] = item.model_copy(update={
+            "title": title,
+            "content": content,
+            "updated_at": now,
+        })
+        replaced = True
+        break
+    if not replaced:
+        items.append(SectionItem(
+            id=module_id,
+            title=title,
+            content=content,
+            source_refs=[module_id],
+            updated_at=now,
+        ))
+    updated = resume_content.model_copy(update={section_key: items})
+    return _bump_resume_content_version(updated)
+
+
+async def translate_resume_module_async(
+    state: CopilotState,
+    *,
+    module_id: str,
+    module_type: str,
+    title: str = "",
+    content: str = "",
+    school: str = "",
+    major: str = "",
+    degree: str = "",
+    fields: dict[str, Any] | None = None,
+    target_language: str,
+) -> dict[str, Any]:
+    target_lang = normalize_language(target_language)
+    source_lang = normalize_language(
+        state.resume_content_json.meta.language
+        if state.resume_content_json
+        else state.render_config.language
+    )
+    llm = get_translation_llm()
+    t0 = time.perf_counter()
+
+    if module_type == "education":
+        edu_fields = dict(fields or {})
+        if not edu_fields:
+            edu_fields = {
+                "school": school,
+                "major": major,
+                "degree": degree,
+            }
+        module_json = json.dumps(
+            build_translation_module_json(module_id, "education", edu_fields),
+            ensure_ascii=False,
+        )
+        prompt = RESUME_EDUCATION_TRANSLATE_PROMPT.format(
+            source_language_label=language_label(source_lang),
+            target_language_label=language_label(target_lang),
+            resume_output_language_instruction=resume_output_language_instruction(target_lang),
+            job_json=_job_json_for_prompt(state, compact=True),
+            RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
+            module_json=module_json,
+        )
+        parsed = await ainvoke_json_with_language_guard(
+            llm,
+            prompt,
+            ResumeEducationTranslateOutput,
+            logger,
+            "Resume Module Translate (education)",
+            target_lang,
+            retry_unresolved_modules=True,
+        )
+        merged_fields = merge_translated_fields(
+            edu_fields,
+            parsed.fields or {
+                "school": parsed.school,
+                "major": parsed.major,
+                "degree": parsed.degree,
+            },
+        )
+        log_stage_timing(
+            logger,
+            "content_agent.translate_module.education",
+            elapsed_ms(t0),
+            session_id=state.session_id,
+            module_id=module_id,
+            target=target_lang,
+        )
+        return {
+            "module_id": parsed.id or module_id,
+            "module_type": module_type,
+            "school": str(merged_fields.get("school") or ""),
+            "major": str(merged_fields.get("major") or ""),
+            "degree": str(merged_fields.get("degree") or ""),
+            "fields": merged_fields,
+        }
+
+    module_fields = dict(fields or {})
+    if not module_fields:
+        module_fields = parse_fact_content(module_type, content, title=title)
+    module_json = json.dumps(
+        build_translation_module_json(module_id, module_type, module_fields),
+        ensure_ascii=False,
+    )
+    prompt = RESUME_MODULE_TRANSLATE_PROMPT.format(
+        source_language_label=language_label(source_lang),
+        target_language_label=language_label(target_lang),
+        resume_output_language_instruction=resume_output_language_instruction(target_lang),
+        job_json=_job_json_for_prompt(state, compact=True),
+        RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
+        module_json=module_json,
+    )
+    parsed = await ainvoke_json_with_language_guard(
+        llm,
+        prompt,
+        ResumeModuleTranslateOutput,
+        logger,
+        "Resume Module Translate",
+        target_lang,
+        retry_unresolved_modules=True,
+    )
+    merged_fields = merge_translated_fields(module_fields, parsed.fields or {})
+    if not parsed.fields and (parsed.title or parsed.content):
+        merged_fields = apply_polish_to_fields(
+            module_type,
+            merged_fields,
+            title=parsed.title,
+            content=parsed.content,
+        )
+    out_title, out_content = derive_title_and_content(module_type, merged_fields)
+    if parsed.title:
+        out_title = parsed.title
+    if parsed.content:
+        out_content = parsed.content
+    log_stage_timing(
+        logger,
+        "content_agent.translate_module",
+        elapsed_ms(t0),
+        session_id=state.session_id,
+        module_id=module_id,
+        target=target_lang,
+    )
+    return {
+        "module_id": parsed.id or module_id,
+        "module_type": module_type,
+        "title": out_title,
+        "content": out_content,
+        "fields": merged_fields,
+    }
+
+
+async def polish_resume_module_async(
+    state: CopilotState,
+    *,
+    module_id: str,
+    module_type: str,
+    title: str = "",
+    content: str = "",
+    fields: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    if module_type not in _SECTION_LABELS:
+        raise ValueError(f"Module type '{module_type}' cannot be polished")
+
+    guard_lang = _resolve_target_language(state)
+    llm = get_resume_generation_llm()
+    module_fields = dict(fields or {})
+    if not module_fields:
+        module_fields = parse_fact_content(module_type, content, title=title)
+    fact = _fact_for_module(
+        state,
+        module_id=module_id,
+        module_type=module_type,
+        title=title,
+        content=content,
+        fields=module_fields,
+    )
+    section_key = _MODULE_TYPE_TO_SECTION[module_type]
+    items = await _polish_module_section_async(
+        llm,
+        state=state,
+        guard_lang=guard_lang,
+        job_json=_job_json_for_prompt(state, compact=True),
+        section_key=section_key,
+        section_label=_SECTION_LABELS[module_type],
+        facts=[fact],
+    )
+    if not items:
+        return {
+            "module_id": module_id,
+            "title": title,
+            "content": content,
+            "fields": module_fields,
+        }
+
+    polished = items[0]
+    polished_title = getattr(polished, "title", "") or title
+    polished_content = getattr(polished, "content", "") or content
+    merged_fields = apply_polish_to_fields(
+        module_type,
+        module_fields,
+        title=polished_title,
+        content=polished_content,
+    )
+    return {
+        "module_id": getattr(polished, "id", None) or module_id,
+        "title": polished_title,
+        "content": polished_content,
+        "fields": merged_fields,
+    }
 
 
 async def _generate_resume_from_profile_async(
@@ -230,9 +645,10 @@ async def _generate_resume_from_profile_async(
     *,
     guard_lang: str,
     edit_instruction: str,
+    on_progress: PolishProgressCallback | None = None,
 ) -> ResumeGenerationOutput:
     job_json = _job_json_for_prompt(state, compact=True)
-    profile_json = build_relevant_profile_json(state) if state.candidate_profile else "{}"
+    profile_json = build_profile_json(state) if state.candidate_profile else "{}"
 
     if not should_use_modular_generation(profile_json):
         prompt = RESUME_GENERATION_PROMPT.format(
@@ -245,7 +661,16 @@ async def _generate_resume_from_profile_async(
             profile_json=profile_json,
             edit_instruction=edit_instruction,
         )
-        return await _invoke_resume_generation_prompt(llm, prompt, guard_lang)
+        parsed = await _invoke_resume_generation_prompt(
+            llm,
+            prompt,
+            guard_lang,
+            stage="content_agent.generate.single",
+            session_id=state.session_id,
+        )
+        if on_progress is not None:
+            await on_progress(parsed, {"phase": "complete_single"})
+        return parsed
 
     logger.info("Modular resume generation: profile_json len=%d", len(profile_json))
     skeleton_instruction = (
@@ -263,16 +688,24 @@ async def _generate_resume_from_profile_async(
         profile_json=profile_json,
         edit_instruction=skeleton_instruction,
     )
-    parsed = await _invoke_resume_generation_prompt(llm, prompt, guard_lang)
+    parsed = await _invoke_resume_generation_prompt(
+        llm,
+        prompt,
+        guard_lang,
+        stage="content_agent.generate.skeleton",
+        session_id=state.session_id,
+    )
 
+    polish_specs: list[tuple[str, list[Fact], Any]] = []
     for section_key, fact_type, section_label in _MODULE_SECTIONS:
         facts = facts_of_type(state, fact_type)
         if not facts:
             continue
-        merged_items: list[Any] = []
         for batch in batch_facts_by_size(facts):
-            merged_items.extend(
-                await _polish_module_section_async(
+            polish_specs.append((
+                section_key,
+                batch,
+                _polish_module_section_async(
                     llm,
                     state=state,
                     guard_lang=guard_lang,
@@ -280,11 +713,131 @@ async def _generate_resume_from_profile_async(
                     section_key=section_key,
                     section_label=section_label,
                     facts=batch,
-                )
+                ),
+            ))
+
+    if polish_specs and on_progress is not None:
+        placeholder = polish_placeholder_for_language(guard_lang)
+        pending_fact_ids = {fact.id for _, batch, _ in polish_specs for fact in batch}
+        placeholders_by_section: dict[str, list[ResumeSectionItemOutput]] = {
+            key: [] for key, _, _ in _MODULE_SECTIONS
+        }
+        for section_key, batch, _ in polish_specs:
+            placeholders_by_section[section_key].extend(
+                _placeholder_item_from_fact(fact, placeholder=placeholder) for fact in batch
             )
-        setattr(parsed, section_key, merged_items)
+        for section_key, items in placeholders_by_section.items():
+            if items:
+                setattr(parsed, section_key, items)
+        await on_progress(parsed, {
+            "phase": "skeleton_with_placeholders",
+            "pending_fact_ids": sorted(pending_fact_ids),
+            "pending_batches": len(polish_specs),
+        })
+
+        polish_t0 = time.perf_counter()
+        task_map = {
+            asyncio.create_task(coro): (section_key, batch)
+            for section_key, batch, coro in polish_specs
+        }
+        completed_batches = 0
+        for task in asyncio.as_completed(task_map.keys()):
+            section_key, batch = task_map[task]
+            items = await task
+            completed_batches += 1
+            batch_fact_ids = {fact.id for fact in batch}
+            pending_fact_ids -= batch_fact_ids
+            current_items = list(getattr(parsed, section_key, []) or [])
+            merged_items = _merge_polished_items(
+                current_items,
+                items,
+                pending_fact_ids=batch_fact_ids,
+            )
+            setattr(parsed, section_key, merged_items)
+            await on_progress(parsed, {
+                "phase": "module_polished",
+                "section_key": section_key,
+                "completed_fact_ids": sorted(batch_fact_ids),
+                "pending_fact_ids": sorted(pending_fact_ids),
+                "completed_batches": completed_batches,
+                "total_batches": len(polish_specs),
+            })
+        log_stage_timing(
+            logger,
+            "content_agent.generate.polish_parallel",
+            elapsed_ms(polish_t0),
+            session_id=state.session_id,
+            batches=len(polish_specs),
+        )
+    elif polish_specs:
+        polish_t0 = time.perf_counter()
+        polish_results = await asyncio.gather(*[coro for _, _, coro in polish_specs])
+        log_stage_timing(
+            logger,
+            "content_agent.generate.polish_parallel",
+            elapsed_ms(polish_t0),
+            session_id=state.session_id,
+            batches=len(polish_specs),
+        )
+        merged_by_section: dict[str, list[Any]] = {key: [] for key, _, _ in _MODULE_SECTIONS}
+        for (section_key, _, _), items in zip(polish_specs, polish_results):
+            merged_by_section[section_key].extend(items)
+        for section_key, _, _ in _MODULE_SECTIONS:
+            items = merged_by_section.get(section_key, [])
+            if items:
+                setattr(parsed, section_key, items)
+    elif on_progress is not None:
+        await on_progress(parsed, {"phase": "skeleton_complete", "pending_fact_ids": []})
 
     return parsed
+
+
+async def generate_resume_content_with_progress(
+    state: CopilotState,
+    *,
+    edit_instruction: str = "",
+    on_progress: PolishProgressCallback | None = None,
+) -> tuple[ResumeContent, RenderConfig, dict[str, Any]]:
+    """Generate resume content; optionally emit partial results after each polish batch."""
+    guard_lang = _resolve_target_language(state)
+    llm = get_resume_generation_llm()
+    if edit_instruction:
+        instruction = edit_instruction
+    elif state.user_message:
+        instruction = f"用户修改指令：{state.user_message}"
+    else:
+        instruction = ""
+    parsed = await _generate_resume_from_profile_async(
+        state,
+        llm,
+        guard_lang=guard_lang,
+        edit_instruction=instruction,
+        on_progress=on_progress,
+    )
+    target_lang = normalize_language(guard_lang)
+    resume_content = _build_resume_from_parsed(parsed, state, language=target_lang)
+    resume_content = _merge_profile_extras_from_candidate(resume_content, state)
+    render_config = apply_render_config_for_experience(
+        state.render_config,
+        resume_content.meta.language,
+        resolve_experience_level(state),
+    )
+    section_order = resolve_section_order(
+        resume_content,
+        resume_content.meta.language,
+        explicit=parsed.section_order or None,
+    )
+    render_config = render_config.model_copy(update={"section_order": section_order})
+    meta = state.meta.model_copy(update={
+        "active_resume_content_version": resume_content.meta.version,
+        "dirty_flags": state.meta.dirty_flags.model_copy(update={
+            "content_dirty": False,
+            "render_dirty": True,
+            "interview_dirty": True,
+            "export_dirty": True,
+        })
+    })
+    return resume_content, render_config, {"meta": meta}
 
 
 async def content_node_async(state: CopilotState) -> dict[str, Any]:
@@ -292,8 +845,8 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
     logger.info("Resume Content Agent started for session %s", state.session_id)
 
     intent = state.current_intent
-    llm = get_llm()
     guard_lang = _resolve_target_language(state)
+    llm = get_translation_llm() if intent == "language_convert" else get_resume_generation_llm()
 
     if intent == "language_convert":
         if state.resume_content_json is None:
@@ -321,7 +874,13 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             RESUME_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
         )
         try:
-            parsed = await _invoke_resume_generation_prompt(llm, prompt, guard_lang)
+            parsed = await _invoke_resume_generation_prompt(
+                llm,
+                prompt,
+                guard_lang,
+                stage="content_agent.language_convert",
+                session_id=state.session_id,
+            )
         except RuntimeError as exc:
             logger.error("Resume Content Agent failed: %s", exc)
             return {
@@ -346,7 +905,13 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             edit_instruction=state.user_message,
         )
         try:
-            parsed = await _invoke_resume_generation_prompt(llm, prompt, guard_lang)
+            parsed = await _invoke_resume_generation_prompt(
+                llm,
+                prompt,
+                guard_lang,
+                stage="content_agent.content_edit",
+                session_id=state.session_id,
+            )
         except RuntimeError as exc:
             logger.error("Resume Content Agent failed: %s", exc)
             return {
@@ -446,7 +1011,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
                 "internship_count": len(resume_content.internships),
                 "content_hash": resume_content.meta.content_hash,
                 "modular_generation": should_use_modular_generation(
-                    build_relevant_profile_json(state) if state.candidate_profile else ""
+                    build_profile_json(state) if state.candidate_profile else ""
                 ),
             },
         ),
@@ -468,7 +1033,7 @@ async def compress_resume_for_page_limit_async(
     """LLM-compress resume when PDF page count exceeds the allowed limit."""
     from tools.resume_page_policy import resume_constraints_for_state
 
-    llm = get_llm()
+    llm = get_resume_generation_llm()
     lang = resume_content.meta.language
     prompt = RESUME_PAGE_COMPRESS_PROMPT.format(
         current_pages=current_pages,

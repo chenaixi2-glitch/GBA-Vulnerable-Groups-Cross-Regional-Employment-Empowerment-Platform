@@ -29,6 +29,9 @@ const FORMAT_CHECK_FIELD_TARGETS = {
     native_place: '#profile-native-place',
     political_status: '#profile-political-status',
     linkedin: '#profile-linkedin',
+    visa_type: '#profile-visa-type',
+    resident_type: '#profile-resident-type',
+    experience_any: '#profile-editor-body',
     education: '[data-section-type="education"]',
     internships: '[data-section-type="internship"]',
     projects: '[data-section-type="project"]',
@@ -51,8 +54,8 @@ const FORMAT_CHECK_HINT_ROW_BG = {
 
 /** Localize checklist item by stable id — never show raw backend label/message/suggestion. */
 const CHECKLIST_ITEM_FALLBACKS = {
-    zh_photo: { label: 'ID Photo', message: 'Chinese resumes often include a formal ID photo', suggestion: 'Upload a 1-inch photo on white/light blue background; optional for tech roles' },
-    zh_photo_strict: { label: 'ID Photo', message: 'SOE/public-sector roles require a formal ID photo', suggestion: 'Upload a 1-inch photo on white/light blue background' },
+    zh_photo: { label: 'ID Photo', message: 'Simplified Chinese resumes require a formal ID photo', suggestion: 'Upload a 1-inch photo on white/light blue background' },
+    zh_photo_strict: { label: 'ID Photo', message: 'Simplified Chinese resumes require a formal ID photo', suggestion: 'Upload a 1-inch photo on white/light blue background' },
     zh_name: { label: 'Name', message: 'Name is required at the top of a Chinese resume', suggestion: 'Fill in your name in basic info' },
     zh_phone: { label: 'Phone', message: 'Mobile number is required', suggestion: 'Format: 138 XXXX XXXX' },
     zh_email: { label: 'Email', message: 'Email is a standard contact on Chinese resumes', suggestion: 'e.g. xxx@163.com' },
@@ -63,7 +66,8 @@ const CHECKLIST_ITEM_FALLBACKS = {
     zh_political: { label: 'Political status', message: 'Some employers may ask for political status', suggestion: 'Party member / League member / Non-party' },
     zh_political_strict: { label: 'Political status', message: 'SOE/public-sector roles often require political status', suggestion: 'Party member / League member / Non-party' },
     zh_education: { label: 'Education', message: 'Education follows personal info on Chinese resumes', suggestion: 'School, major, degree, dates' },
-    zh_experience: { label: 'Work / Internship', message: 'Work or internship experience is required', suggestion: 'Reverse chronological order with duties and results' },
+    zh_experience: { label: 'Work / Internship', message: 'Work or internship experience is optional but strengthens your profile', suggestion: 'Reverse chronological order with duties and results' },
+    zh_experience_any: { label: 'Experience (at least one)', message: 'At least one of: internship, work, campus, or volunteer experience is required', suggestion: 'Add work/internship, project (campus), or other (volunteer) entries' },
     zh_projects: { label: 'Projects', message: 'Project experience is strongly recommended for tech roles', suggestion: 'Highlight stack and your contribution' },
     zh_skills: { label: 'Skills / Certificates', message: 'List skills and certifications', suggestion: 'e.g. CET-6, Computer Level 2, Python' },
     zh_awards: { label: 'Awards', message: 'Honors strengthen your profile', suggestion: 'List 2–4 key awards' },
@@ -96,6 +100,20 @@ const CHECKLIST_ITEM_FALLBACKS = {
     en_lang_cert_ok: { label: 'English proficiency', message: 'International language credentials are listed', suggestion: '' },
     en_one_page: { label: 'Page limit', message: 'Keep the English resume within the recommended page count', suggestion: 'Remove secondary content and stay concise' },
     en_no_subjective: { label: 'Subjective traits', message: 'Avoid subjective adjectives without evidence', suggestion: 'Replace with quantified outcomes and action verbs' },
+    tw_no_photo_warn: { label: 'Profile photo', message: 'Traditional Chinese cross-border resumes should not include a photo', suggestion: 'Remove the photo; professional headshots are optional only in some HK/SG finance roles' },
+    tw_no_photo_ok: { label: 'No profile photo', message: 'Meets cross-border resume convention (no photo)', suggestion: '' },
+    tw_name: { label: 'Name', message: 'Name is the largest header on the resume', suggestion: 'FirstName LastName only — no big Resume/CV title' },
+    tw_phone: { label: 'Phone', message: 'Mobile number required', suggestion: 'Include country code if applicable' },
+    tw_email: { label: 'Email', message: 'Professional email required', suggestion: 'Use a clean address, not a nickname' },
+    tw_city: { label: 'City', message: 'City is recommended on cross-border resumes', suggestion: 'e.g. Hong Kong / Guangzhou — not full street address' },
+    tw_visa_type: { label: 'Visa type', message: 'Cross-border resumes require visa/stay status', suggestion: 'e.g. Employment visa / Home Return Permit' },
+    tw_resident_type: { label: 'Resident type', message: 'Cross-border resumes require resident status', suggestion: 'e.g. HK permanent resident / Macau resident' },
+    tw_linkedin: { label: 'LinkedIn', message: 'LinkedIn URL is strongly recommended', suggestion: 'https://linkedin.com/in/yourname' },
+    tw_summary: { label: 'Professional Summary', message: 'A 3–4 line Professional Summary is recommended', suggestion: 'Summarize core skills and results; avoid vague traits' },
+    tw_experience: { label: 'Work Experience', message: 'Work experience is optional but strengthens your profile', suggestion: 'Start bullets with action verbs and quantify results' },
+    tw_experience_any: { label: 'Experience (at least one)', message: 'At least one of: internship, work, campus, or volunteer experience is required', suggestion: 'Add work/internship, project (campus), or other (volunteer) entries' },
+    tw_education: { label: 'Education', message: 'Education section is required', suggestion: 'Degree in English, e.g. B.S. in Computer Science' },
+    tw_one_page: { label: 'Page limit', message: 'Keep the resume within the recommended page count', suggestion: 'Remove secondary content and stay concise' },
 };
 
 /** Legacy field map — used only when item id is unknown */
@@ -111,6 +129,9 @@ const CHECKLIST_FIELD_I18N = {
     native_place: { label: ['resume.checklist.nativePlace', 'Native place'], message: ['resume.checklist.nativePlaceMsg', 'Native place is common on Chinese resumes'] },
     political_status: { label: ['resume.checklist.politicalStatus', 'Political status'], message: ['resume.checklist.politicalStatusMsg', 'Political status may be required for SOE/public sector roles'] },
     linkedin: { label: ['resume.checklist.linkedin', 'LinkedIn'], message: ['resume.checklist.linkedinMsg', 'English resumes strongly recommend a LinkedIn URL'] },
+    visa_type: { label: ['resume.checklist.visaType', 'Visa type'], message: ['resume.checklist.visaTypeMsg', 'Cross-border resumes require visa/stay status'] },
+    resident_type: { label: ['resume.checklist.residentType', 'Resident type'], message: ['resume.checklist.residentTypeMsg', 'Cross-border resumes require resident status'] },
+    experience_any: { label: ['resume.checklist.experienceAny', 'Experience (at least one)'], message: ['resume.checklist.experienceAnyMsg', 'At least one of internship, work, campus, or volunteer experience is required'] },
     education: { label: ['resume.checklist.education', 'Education'], message: ['resume.checklist.educationMsg', 'Education section is required'] },
     internships: { label: ['resume.checklist.work', 'Work / Internship'], message: ['resume.checklist.workMsg', 'Work or internship experience is required'] },
     projects: { label: ['resume.checklist.projects', 'Projects'], message: ['resume.checklist.projectsMsg', 'Project experience is recommended for tech roles'] },
@@ -128,8 +149,10 @@ function resolveChecklistItemKey(item, checklist) {
     const strict = employer === 'soe' || employer === 'public';
 
     if (id === 'zh_photo' && strict) return 'zh_photo_strict';
+    if (id === 'zh_photo') return 'zh_photo_strict';
     if (id === 'zh_political' && strict) return 'zh_political_strict';
     if (id === 'en_no_photo') return item.severity === 'warning' ? 'en_no_photo_warn' : 'en_no_photo_ok';
+    if (id === 'tw_no_photo') return item.severity === 'warning' ? 'tw_no_photo_warn' : 'tw_no_photo_ok';
     if (id === 'en_lang_cert') {
         if (item.severity === 'ok') return 'en_lang_cert_ok';
         if (item.severity === 'warning') return 'en_lang_cert_cet';
@@ -140,11 +163,12 @@ function resolveChecklistItemKey(item, checklist) {
 
 function checklistItemPart(itemKey, part, fallback) {
     const key = `resume.checklistItems.${itemKey}.${part}`;
-    const translated = uiText(key, '', null);
-    if (translated) return translated;
     const fb = CHECKLIST_ITEM_FALLBACKS[itemKey];
-    if (fb && fb[part]) return fb[part];
-    return fallback || '';
+    const defaultText = (fb && fb[part]) || fallback || '';
+    const translated = uiText(key, defaultText, null);
+    // GBAI18n.t returns the key itself when lookup misses and fallback is empty — never show that.
+    if (translated && translated !== key) return translated;
+    return defaultText;
 }
 
 function localizeChecklistItem(item, checklist) {
@@ -453,6 +477,19 @@ function applyFormatCheckToProfileEditor(checklist) {
     renderOrphanFormatHints(orphaned, labels);
 }
 
+function draftHasAnyExperienceTrack(draft) {
+    const modules = draft?.modules || [];
+    const hasContent = (module) => String(module.content || module.title || '').trim();
+    return modules.some((m) => m.type === 'internship' && hasContent(m))
+        || modules.some((m) => m.type === 'project' && hasContent(m))
+        || modules.some((m) => m.type === 'custom' && hasContent(m));
+}
+
+function draftHasPhoto(draft) {
+    const extras = draft?.profile_basic?.extras || {};
+    return !!(extras.photo_url || extras.has_photo === 'true');
+}
+
 function getRequiredMissingFromDraft(draft, language) {
     if (!draft) return [];
     const lang = normalizeResumeLang(language);
@@ -469,7 +506,32 @@ function getRequiredMissingFromDraft(draft, language) {
         });
     };
 
-    if (lang === 'en' || lang === 'pt') {
+    if (lang === 'zh') {
+        if (!(basic.name || '').trim()) push('name', 'resume.checklist.name', 'Name');
+        if (!(basic.phone || '').trim()) push('phone', 'resume.checklist.phone', 'Phone');
+        if (!(basic.email || '').trim()) push('email', 'resume.checklist.email', 'Email');
+        if (!draftHasPhoto(draft)) push('photo', 'resume.checklist.photo', 'ID Photo');
+        const hasEdu = (draft.education || []).some(
+            (e) => String(e.school || e.major || e.degree || '').trim()
+        );
+        if (!hasEdu) push('education', 'resume.checklist.education', 'Education');
+        if (!draftHasAnyExperienceTrack(draft)) {
+            push('experience_any', 'resume.checklist.experienceAny', 'Experience (at least one)');
+        }
+    } else if (lang === 'zh-TW') {
+        if (!(basic.name || '').trim()) push('name', 'resume.checklist.name', 'Name');
+        if (!(basic.phone || '').trim()) push('phone', 'resume.checklist.phone', 'Phone');
+        if (!(basic.email || '').trim()) push('email', 'resume.checklist.email', 'Email');
+        if (!(extras.visa_type || '').trim()) push('visa_type', 'resume.checklist.visaType', 'Visa type');
+        if (!(extras.resident_type || '').trim()) push('resident_type', 'resume.checklist.residentType', 'Resident type');
+        const hasEdu = (draft.education || []).some(
+            (e) => String(e.school || e.major || e.degree || '').trim()
+        );
+        if (!hasEdu) push('education', 'resume.checklist.education', 'Education');
+        if (!draftHasAnyExperienceTrack(draft)) {
+            push('experience_any', 'resume.checklist.experienceAny', 'Experience (at least one)');
+        }
+    } else if (lang === 'en' || lang === 'pt') {
         if (!(basic.name || '').trim()) push('name', 'resume.checklist.name', 'Name');
         if (!(basic.phone || '').trim()) push('phone', 'resume.checklist.phone', 'Phone');
         if (!(basic.email || '').trim()) push('email', 'resume.checklist.email', 'Email');
@@ -485,18 +547,6 @@ function getRequiredMissingFromDraft(draft, language) {
             (e) => String(e.school || e.major || e.degree || '').trim()
         );
         if (!hasEdu) push('education', 'resume.checklist.education', 'Education');
-    } else {
-        if (!(basic.name || '').trim()) push('name', 'resume.checklist.name', 'Name');
-        if (!(basic.phone || '').trim()) push('phone', 'resume.checklist.phone', 'Phone');
-        if (!(basic.email || '').trim()) push('email', 'resume.checklist.email', 'Email');
-        const hasEdu = (draft.education || []).some(
-            (e) => String(e.school || e.major || e.degree || '').trim()
-        );
-        if (!hasEdu) push('education', 'resume.checklist.education', 'Education');
-        const hasWork = (draft.modules || []).some(
-            (m) => m.type === 'internship' && String(m.content || m.title || '').trim()
-        );
-        if (!hasWork) push('internships', 'resume.checklist.work', 'Work / Internship');
     }
 
     return missing;

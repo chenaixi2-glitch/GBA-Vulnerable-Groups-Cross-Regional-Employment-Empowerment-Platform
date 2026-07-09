@@ -333,6 +333,7 @@ class WorkflowTraceItem(BaseModel):
     artifacts: dict[str, Any] = Field(default_factory=dict)
     error: str = ""
     created_at: str = ""
+    duration_ms: float = 0.0
 
 
 class DirtyFlags(BaseModel):

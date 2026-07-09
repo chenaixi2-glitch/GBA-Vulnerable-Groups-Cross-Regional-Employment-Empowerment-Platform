@@ -17,7 +17,7 @@ const {
 const SALT_ROUNDS = 10;
 
 function toAuthResponse(user) {
-  const token = signToken({ sub: user.id, username: user.username, role: user.role });
+  const token = signToken({ sub: String(user.id), username: user.username, role: user.role });
   return {
     token,
     user: {

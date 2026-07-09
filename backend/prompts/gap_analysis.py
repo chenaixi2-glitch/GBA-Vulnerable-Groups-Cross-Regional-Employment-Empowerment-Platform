@@ -10,6 +10,9 @@ GAP_ANALYSIS_PROMPT = """=== MANDATORY OUTPUT LANGUAGE (HIGHEST PRIORITY) ===
 目标岗位信息：
 {job_json}
 
+JD–经历语义匹配（embedding 预计算，按批次；可能为空数组）：
+{experience_match_json}
+
 候选人画像：
 {profile_json}
 
@@ -54,7 +57,7 @@ GAP_ANALYSIS_PROMPT = """=== MANDATORY OUTPUT LANGUAGE (HIGHEST PRIORITY) ===
             "fact_id": "fact_internship_2",
             "section_type": "internship | project | award | paper | skill | education",
             "title": "<experience title in the required output language>",
-            "reason": "<clear explanation why this entry should be omitted for the target role or A4 one-page layout, in the required output language>",
+            "reason": "<clear explanation why this entry is low-relevance or redundant for the target role — NOT for page length or layout, in the required output language>",
             "priority": "recommended | optional"
         }}
     ]
@@ -68,10 +71,13 @@ GAP_ANALYSIS_PROMPT = """=== MANDATORY OUTPUT LANGUAGE (HIGHEST PRIORITY) ===
 5. 对每段与目标岗位相关的核心实习/项目经历，若缺量化描述，questions_to_ask 中至少包含 1 条 medium 优先级追问（非必填，用户可留空）
 6. 当无法从简历判断与岗位的匹配方向时，questions_to_ask 至少包含 1 条 high 优先级问题
 7. 当 type 为 missing_experience 的 gap 存在时，questions_to_ask 中必须包含对应追问，并在 question 中明确请用户用文字描述可补充的经历（公司/项目、职责、成果等）
-8. 当某段经历与目标岗位相关度低、内容重复、或为实现 A4 单页需精简时，须在 experiences_to_remove 中列出，并写清 title 与 reason；仅建议移除，最终由用户确认
-9. experiences_to_remove 须引用候选人画像 facts 中的 fact_id（如有）；若无 id 则 fact_id 留空但 title 须可识别
-10. 即使没有 gaps，若存在技术方向不确定性或关键经历缺量化信息，也应输出 questions_to_ask
-11. 即使没有结果，也必须返回合法 JSON 对象
+8. experiences_to_remove 仅用于与目标岗位相关度极低或内容明显重复的经历（实习/项目/获奖/论文/技能等）；禁止因 A4 篇幅、页数、间距或排版原因建议删除任何条目
+9. 教育经历（education）为必要模块，禁止列入 experiences_to_remove；篇幅不足由简历生成阶段通过 compact 间距、精简 bullet 字数、合并技能分组等方式处理，不得建议删除教育、联系方式等核心信息
+10. 若 jd_experience_matches 中某条经历 relevance 为 very_low 或 jd_match_score < 0.35，应优先考虑列入 experiences_to_remove，并在 gaps 中补充 low_relevance 类型缺口（related_section_ids 引用 fact_id）
+11. jd_experience_matches 中 relevance=high 的经历，优先在 questions_to_ask 中追问量化细节；relevance=very_low 的经历优先建议移除
+12. experiences_to_remove 须引用候选人画像 facts 中的 fact_id（如有）；若无 id 则 fact_id 留空但 title 须可识别
+13. 即使没有 gaps，若存在技术方向不确定性或关键经历缺量化信息，也应输出 questions_to_ask
+14. 即使没有结果，也必须返回合法 JSON 对象
 
 === FINAL REMINDER ===
 Re-read the MANDATORY OUTPUT LANGUAGE block at the top. Every gaps[].description, questions_to_ask[].question, questions_to_ask[].reason, and experiences_to_remove[].title/reason MUST use that language only.

@@ -1,11 +1,9 @@
-"""Tests for compact job context and relevant profile filtering."""
+"""Tests for compact job context and profile prompt helpers."""
 
-from workflow.state import CopilotState, CandidateProfile, Fact, Job, Meta, ProfileBasic
+from workflow.state import CopilotState, CandidateProfile, Fact, Job, Material, Meta, ProfileBasic
 from tools.target_job_context import build_compact_job_dict
 from tools.resume_profile_context import (
-    build_relevant_profile_dict,
-    collect_jd_keywords,
-    score_fact_for_jd,
+    build_profile_dict,
     should_use_modular_generation,
 )
 
@@ -37,12 +35,13 @@ def test_build_compact_job_dict_omits_full_jd_body():
     assert "responsibilities" not in compact
 
 
-def test_build_relevant_profile_dict_prefers_jd_related_facts():
+def test_build_profile_dict_includes_all_facts():
     state = CopilotState(
         session_id="sess_test",
         job=Job(title="Python Backend Engineer", keywords=["Python", "FastAPI", "MySQL"]),
         candidate_profile=CandidateProfile(
             profile_basic=ProfileBasic(name="Alex"),
+            materials=[Material(material_id="mat_1", type="message", content="long raw upload", uploaded_at="")],
             facts=[
                 Fact(id="f1", type="skill", content='{"skill":"Python"}'),
                 Fact(id="f2", type="project", content='{"title":"RAG chatbot","tech_stack":["Python","FastAPI"]}'),
@@ -51,19 +50,15 @@ def test_build_relevant_profile_dict_prefers_jd_related_facts():
             ],
         ),
     )
-    keywords = collect_jd_keywords(state)
-    assert "python" in keywords
-    assert score_fact_for_jd(state.candidate_profile.facts[2], keywords) < score_fact_for_jd(
-        state.candidate_profile.facts[1], keywords
-    )
 
-    relevant = build_relevant_profile_dict(state, max_facts=10, min_score=0.35)
-    fact_ids = {item["id"] for item in relevant["facts"]}
-    assert "f1" in fact_ids
-    assert "f2" in fact_ids
-    assert "f4" in fact_ids
+    profile = build_profile_dict(state)
+    fact_ids = {item["id"] for item in profile["facts"]}
+    assert profile["profile_basic"]["name"] == "Alex"
+    assert fact_ids == {"f1", "f2", "f3", "f4"}
+    assert "materials" not in profile
 
 
 def test_should_use_modular_generation_threshold():
     assert not should_use_modular_generation("x" * 5000)
-    assert should_use_modular_generation("x" * 12000)
+    assert not should_use_modular_generation("x" * 12000)
+    assert should_use_modular_generation("x" * 16000)

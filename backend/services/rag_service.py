@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from typing import Any
 
 from config_loader import get_rag_config
-from log import get_logger
+from log import get_logger, elapsed_ms, log_stage_timing
 from models.embedding import aembed_documents, aembed_query
 from models.rerank import arerank_texts
 from storage.vector_client import get_session_chunks_collection, is_vector_store_enabled
@@ -149,6 +150,7 @@ async def index_session(state: CopilotState) -> None:
         return
 
     try:
+        index_t0 = time.perf_counter()
         collection = get_session_chunks_collection()
         existing = collection.get(where={"session_id": session_id})
         if existing and existing.get("ids"):
@@ -157,13 +159,28 @@ async def index_session(state: CopilotState) -> None:
         ids = [f"{session_id}:{cid}" for cid, _, _ in chunks]
         documents = [text for _, text, _ in chunks]
         metadatas = [meta for _, _, meta in chunks]
+        embed_t0 = time.perf_counter()
         embeddings = await aembed_documents(documents)
+        log_stage_timing(
+            logger,
+            "rag.index.embed",
+            elapsed_ms(embed_t0),
+            session=session_id,
+            chunks=len(ids),
+        )
 
         collection.upsert(
             ids=ids,
             documents=documents,
             metadatas=metadatas,
             embeddings=embeddings,
+        )
+        log_stage_timing(
+            logger,
+            "rag.index.total",
+            elapsed_ms(index_t0),
+            session=session_id,
+            chunks=len(ids),
         )
         logger.info("Indexed %d chunks for session %s", len(ids), session_id)
     except Exception as exc:
@@ -182,12 +199,28 @@ async def retrieve(session_id: str, query: str, top_k: int | None = None) -> lis
     rerank_n = cfg["rerank_top_n"]
 
     try:
+        retrieve_t0 = time.perf_counter()
         collection = get_session_chunks_collection()
+        embed_t0 = time.perf_counter()
         query_embedding = await aembed_query(query)
+        log_stage_timing(
+            logger,
+            "rag.retrieve.embed_query",
+            elapsed_ms(embed_t0),
+            session=session_id,
+        )
+        query_t0 = time.perf_counter()
         results = collection.query(
             query_embeddings=[query_embedding],
             n_results=min(top_k, 20),
             where={"session_id": session_id},
+        )
+        log_stage_timing(
+            logger,
+            "rag.retrieve.vector_search",
+            elapsed_ms(query_t0),
+            session=session_id,
+            top_k=top_k,
         )
 
         ids = (results.get("ids") or [[]])[0]
@@ -212,9 +245,17 @@ async def retrieve(session_id: str, query: str, top_k: int | None = None) -> lis
             ))
 
         if len(candidates) <= 1:
+            log_stage_timing(
+                logger,
+                "rag.retrieve.total",
+                elapsed_ms(retrieve_t0),
+                session=session_id,
+                hits=len(candidates),
+            )
             return candidates[:rerank_n]
 
         try:
+            rerank_t0 = time.perf_counter()
             reranked = await arerank_texts(
                 [c.text for c in candidates],
                 query,
@@ -227,6 +268,20 @@ async def retrieve(session_id: str, query: str, top_k: int | None = None) -> lis
                     chunk = candidates[idx]
                     chunk.score = float(item.get("relevance_score", chunk.score))
                     ordered.append(chunk)
+            log_stage_timing(
+                logger,
+                "rag.retrieve.rerank",
+                elapsed_ms(rerank_t0),
+                session=session_id,
+                candidates=len(candidates),
+            )
+            log_stage_timing(
+                logger,
+                "rag.retrieve.total",
+                elapsed_ms(retrieve_t0),
+                session=session_id,
+                hits=len(ordered or candidates[:rerank_n]),
+            )
             return ordered or candidates[:rerank_n]
         except Exception as rerank_exc:
             logger.warning("RAG rerank failed, using vector order: %s", rerank_exc)

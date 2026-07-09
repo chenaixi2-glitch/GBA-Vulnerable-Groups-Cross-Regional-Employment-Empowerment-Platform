@@ -4,8 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from agents.gap_analysis_core import build_gaps, build_questions, has_gap_analysis_context
-from agents.json_contracts import GapOutput, QuestionOutput
+from agents.gap_analysis_core import (
+    build_gaps,
+    build_questions,
+    has_gap_analysis_context,
+    sanitize_experience_removals,
+)
+from agents.json_contracts import GapOutput, QuestionOutput, ExperienceRemovalOutput
 from workflow.state import CopilotState, CandidateProfile, Job, Meta, ProfileBasic
 
 
@@ -57,3 +62,38 @@ def test_has_gap_analysis_context():
         candidate_profile=CandidateProfile(profile_basic=ProfileBasic(name="B")),
     )
     assert has_gap_analysis_context(with_jd_text) is True
+
+
+def test_sanitize_experience_removals_drops_education():
+    items = [
+        ExperienceRemovalOutput(
+            section_type="education",
+            title="某大学本科",
+            reason="为实现 A4 单页需精简",
+        ),
+    ]
+    assert sanitize_experience_removals(items) == []
+
+
+def test_sanitize_experience_removals_drops_page_length_only():
+    items = [
+        ExperienceRemovalOutput(
+            section_type="internship",
+            title="无关实习",
+            reason="为节省 A4 单页篇幅建议精简",
+        ),
+    ]
+    assert sanitize_experience_removals(items) == []
+
+
+def test_sanitize_experience_removals_keeps_low_relevance_even_with_page_mention():
+    items = [
+        ExperienceRemovalOutput(
+            section_type="internship",
+            title="销售实习",
+            reason="与目标岗位关联度较低，且为节省 A4 单页篇幅建议精简",
+        ),
+    ]
+    kept = sanitize_experience_removals(items)
+    assert len(kept) == 1
+    assert kept[0].title == "销售实习"

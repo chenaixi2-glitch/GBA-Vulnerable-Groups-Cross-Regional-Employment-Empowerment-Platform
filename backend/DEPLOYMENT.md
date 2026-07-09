@@ -174,6 +174,25 @@ cp env.production.example .env.production
 pm2 start ecosystem.config.js --env production
 ```
 
+### 5. Nginx 反代（含 MCP）
+
+浏览器 / Cursor 访问的是 **Nginx 80 端口**，不会直连 Python `:8000`。  
+因此 **`/mcp/*` 必须显式反代到 Python 后端**，否则 `/mcp/jobs/sse` 会 404 或被静态站点吞掉。
+
+| 路径前缀 | 转发目标 | 说明 |
+|----------|----------|------|
+| `/api/auth`、`/api/jobs` 等 | `127.0.0.1:3000` | Node 业务 API |
+| `/api/*`（其余） | `127.0.0.1:8000` | Python AI API |
+| **`/mcp/*`** | **`127.0.0.1:8000`** | **MCP SSE（与 FastAPI 同进程）** |
+| `/health` | `127.0.0.1:8000` | 健康检查 |
+
+完整示例见项目根目录 `scripts/nginx-gba-platform.conf.example`。  
+MCP 使用 SSE 长连接，Nginx 需 **`proxy_buffering off`** 并 **延长 `proxy_read_timeout`**（示例已配置）。
+
+**安全建议：** 若 MCP 只给本机 Cursor / 内网 Agent 用，可在 Nginx 对 `/mcp/` 加 `allow 127.0.0.1; deny all;`，不对外网开放。
+
+Docker 本地栈的配置见 `docker/frontend/nginx.conf`（已含 `/mcp/` 块）。
+
 ## 三、本地开发（XAMPP）
 
 1. 启动 XAMPP MySQL

@@ -50,7 +50,8 @@ const config = {
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'change_me',
+    // Keep in sync with backend/env.development.example JWT_SECRET for local dev
+    secret: process.env.JWT_SECRET || 'change_me_dev_only',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
 

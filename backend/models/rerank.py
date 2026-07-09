@@ -6,6 +6,61 @@ from typing import Any
 from config_loader import get_rerank_config
 
 
+class _SiliconFlowReranker:
+    """SiliconFlow /v1/rerank API 适配器（Qwen3-Reranker 等）。"""
+
+    def __init__(self, cfg: dict):
+        self._model = cfg["model"]
+        self._api_base = str(cfg.get("api_base", "")).rstrip("/")
+        self._api_key = cfg.get("api_key", "")
+        self._instruction = str(cfg.get("instruction", "") or "").strip()
+        self._timeout = int(cfg.get("timeout") or 60)
+
+    def rerank(self, documents: list[str], query: str, top_n: int) -> list[dict]:
+        import json
+        import urllib.error
+        import urllib.request
+
+        if not self._api_key:
+            raise ValueError("rerank.provider=siliconflow requires api_key_env in config.")
+
+        payload: dict[str, Any] = {
+            "model": self._model,
+            "query": query,
+            "documents": documents,
+            "top_n": top_n,
+            "return_documents": False,
+        }
+        if self._instruction:
+            payload["instruction"] = self._instruction
+
+        request = urllib.request.Request(
+            f"{self._api_base}/rerank",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self._api_key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=self._timeout) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"SiliconFlow rerank failed: HTTP {exc.code} {detail}") from exc
+
+        results: list[dict] = []
+        for item in data.get("results") or []:
+            if not isinstance(item, dict):
+                continue
+            results.append({
+                "index": int(item.get("index", 0)),
+                "relevance_score": float(item.get("relevance_score", item.get("score", 0.0))),
+            })
+        return results
+
+
 class _HuggingFaceCrossEncoderReranker:
     """本地 CrossEncoder 适配为统一 rerank 输出格式。"""
 
@@ -73,6 +128,9 @@ def get_reranker() -> Any:
             kwargs["dashscope_api_key"] = cfg["api_key"]
         return DashScopeRerank(**kwargs)
 
+    if provider in {"siliconflow", "openai_compatible", "openai"}:
+        return _SiliconFlowReranker(cfg)
+
     if provider in {"cohere"}:
         if not cfg.get("api_key"):
             raise ValueError("rerank.provider=cohere requires api_key_env in config.")
@@ -82,7 +140,7 @@ def get_reranker() -> Any:
         return _HuggingFaceCrossEncoderReranker(cfg["model"])
 
     raise ValueError(
-        "Unsupported rerank.provider='{}'. Supported providers: dashscope, cohere, huggingface".format(
+        "Unsupported rerank.provider='{}'. Supported providers: dashscope, siliconflow, cohere, huggingface".format(
             provider
         )
     )

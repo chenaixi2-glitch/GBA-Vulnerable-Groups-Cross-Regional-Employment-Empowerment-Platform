@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
+import time
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from storage.redis_client import get_redis_client, RedisSessionStore, RedisDraftStore
 from auth.jwt import get_optional_user
 from auth.session_access import bind_session_owner, ensure_session_access, extract_user_id
 from workflow.state import CopilotState
-from log import get_logger
+from api.request_timing import build_request_timing
+from log import get_logger, elapsed_ms, log_stage_timing, format_trace_breakdown
 
 logger = get_logger("api")
 
@@ -81,6 +87,13 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
     state = CopilotState.model_validate(saved)
     if state.resume_content_json is None:
         raise HTTPException(status_code=400, detail="简历内容尚未生成，请先生成简历")
+
+    from api.draft_utils import apply_profile_extras_to_resume_state
+
+    state, photo_changed = apply_profile_extras_to_resume_state(state)
+    if photo_changed:
+        persist_data = state.model_dump(exclude=_PERSIST_EXCLUDE)
+        await _asave_state(store, persist_data)
 
     if state.resume_html and state.resume_html.html:
         return {
@@ -429,7 +442,7 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
 @router.get("/profile/history")
 async def profile_save_history(request: Request, limit: int = 20) -> dict:
     """列出当前用户已保存的简历资料记录。"""
-    from storage.mysql_client import get_mysql_pool, MySQLStore
+    from storage.mysql_client import get_mysql_pool, MySQLStore, ensure_saved_profile_records_table
 
     user = get_optional_user(request)
     if not user:
@@ -440,8 +453,13 @@ async def profile_save_history(request: Request, limit: int = 20) -> dict:
         raise HTTPException(status_code=401, detail="无效的用户身份")
 
     pool = await get_mysql_pool()
+    await ensure_saved_profile_records_table(pool)
     db = MySQLStore(pool)
-    records = await db.list_profile_records_by_user(user_id, limit=min(limit, 50))
+    try:
+        records = await db.list_profile_records_by_user(user_id, limit=min(limit, 50))
+    except Exception as exc:
+        logger.error("Profile save history failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="无法读取已保存记录，请稍后重试") from exc
 
     for row in records:
         if row.get("saved_at") is not None:
@@ -955,15 +973,40 @@ class GenerateFromProfileRequest(BaseModel):
     language: str = Field(default="", description="Target language: zh, zh-TW, en, or pt")
 
 
+class GenerateStreamRequest(BaseModel):
+    session_id: str
+    instruction: str = ""
+    language: str = Field(default="", description="Target language: zh, zh-TW, en, or pt")
+    jd_text: str = ""
+    industry: str = ""
+    employer_type: str = ""
+    experience_level: str = ""
+    typography_fit_mode: str = ""
+    clear_generated_resume: bool = True
+
+
 class TranslateResumeRequest(BaseModel):
     session_id: str
     target_language: str = Field(description="Target language: zh, zh-TW, en, or pt")
 
 
+class ModuleActionRequest(BaseModel):
+    session_id: str
+    module_id: str
+    module_type: str = Field(description="skill | internship | project | award | paper | custom | education")
+    title: str = ""
+    content: str = ""
+    school: str = ""
+    major: str = ""
+    degree: str = ""
+    fields: dict[str, Any] = Field(default_factory=dict)
+    target_language: str = ""
+
+
 _PERSIST_EXCLUDE = {
     "user_message", "user_attachments", "current_intent",
     "execution_plan", "reply_message", "triggered_agents", "workflow_trace",
-    "resume_language_target",
+    "resume_language_target", "skip_render",
 }
 
 
@@ -1015,6 +1058,151 @@ async def _run_profile_resume_pipeline(state: CopilotState, *, defer_render: boo
         updates = await agent_fn(CopilotState.model_validate(data))
         data.update(updates)
     return CopilotState.model_validate(data)
+
+
+def _sse_event(payload: dict[str, Any]) -> str:
+    return f"data: {json.dumps(payload, ensure_ascii=False, default=str)}\n\n"
+
+
+async def _apply_target_context_to_state(state: CopilotState, req: GenerateStreamRequest) -> CopilotState:
+    from tools.resume_layout import normalize_employer_type, normalize_language
+    from tools.typography_ladder import normalize_typography_fit_mode
+
+    employer_type = normalize_employer_type(req.employer_type) if req.employer_type.strip() else state.meta.employer_type
+    typography_fit_mode = (
+        normalize_typography_fit_mode(req.typography_fit_mode)
+        if req.typography_fit_mode.strip()
+        else state.render_config.typography_fit_mode
+    )
+    state.meta = state.meta.model_copy(update={
+        "target_jd_text": req.jd_text.strip() or state.meta.target_jd_text,
+        "target_industry": req.industry.strip() or state.meta.target_industry,
+        "target_experience_level": req.experience_level.strip() or state.meta.target_experience_level,
+        "employer_type": employer_type or state.meta.employer_type,
+    })
+    if req.language.strip():
+        lang = normalize_language(req.language)
+        state.render_config = state.render_config.model_copy(update={
+            "language": lang,
+            "typography_fit_mode": typography_fit_mode,
+        })
+    else:
+        state.render_config = state.render_config.model_copy(update={
+            "typography_fit_mode": typography_fit_mode,
+        })
+    return state
+
+
+@router.post("/generate-stream")
+async def generate_resume_stream(req: GenerateStreamRequest, request: Request, background_tasks: BackgroundTasks):
+    """SSE stream: skeleton first, then overwrite each experience module as polish batches complete."""
+    from api.chat import _aload_state, _asave_state, _persist_to_mysql_safe
+    from agents.content_agent import generate_resume_content_with_progress
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
+    from tools.resume_language_checklist import check_resume_language_requirements
+    from workflow.state import ResumeHtml
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+    if user:
+        await bind_session_owner(req.session_id, user)
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    state = await _load_or_bootstrap_state(store, req.session_id, client, user)
+    if state.candidate_profile is None:
+        raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
+
+    state = await _apply_target_context_to_state(state, req)
+    target = normalize_language(req.language or state.render_config.language)
+    if target not in VALID_RESUME_LANGUAGES:
+        raise HTTPException(status_code=422, detail="language 必须为 zh、zh-TW、en 或 pt")
+    state.render_config = state.render_config.model_copy(update={"language": target})
+    if req.clear_generated_resume:
+        state.resume_content_json = None
+        state.resume_html = ResumeHtml()
+    state.skip_render = True
+    state.current_intent = "content_edit"
+
+    queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
+    persist_exclude = {
+        *_PERSIST_EXCLUDE,
+        "chat_output_language",
+        "chat_question_output_language",
+        "chat_feedback_output_language",
+    }
+
+    async def _run_generation() -> None:
+        final_state = state
+        try:
+            async with llm_queue_slot(req.session_id):
+                async def on_progress(parsed, meta: dict[str, Any]) -> None:
+                    nonlocal final_state
+                    from agents.content_agent import _build_resume_from_parsed, _merge_profile_extras_from_candidate
+
+                    partial_content = _build_resume_from_parsed(parsed, final_state, language=target)
+                    partial_content = _merge_profile_extras_from_candidate(partial_content, final_state)
+                    final_state = final_state.model_copy(update={
+                        "resume_content_json": partial_content,
+                    })
+                    persist_data = final_state.model_dump(exclude=persist_exclude)
+                    await _asave_state(store, persist_data)
+                    await queue.put({
+                        "type": "progress",
+                        "phase": meta.get("phase"),
+                        "resume_content_json": partial_content.model_dump(),
+                        "pending_fact_ids": meta.get("pending_fact_ids", []),
+                        "completed_fact_ids": meta.get("completed_fact_ids", []),
+                        "section_key": meta.get("section_key"),
+                        "completed_batches": meta.get("completed_batches"),
+                        "total_batches": meta.get("total_batches"),
+                    })
+
+                resume_content, render_config, updates = await generate_resume_content_with_progress(
+                    final_state,
+                    edit_instruction=req.instruction.strip(),
+                    on_progress=on_progress,
+                )
+                final_state = final_state.model_copy(update={
+                    "resume_content_json": resume_content,
+                    "render_config": render_config,
+                    **updates,
+                })
+                persist_data = final_state.model_dump(exclude=persist_exclude)
+                await _asave_state(store, persist_data)
+                checklist = check_resume_language_requirements(final_state, target)
+                await queue.put({
+                    "type": "complete",
+                    "resume_content_json": resume_content.model_dump(),
+                    "render_config": render_config.model_dump(),
+                    "language": resume_content.meta.language,
+                    "language_checklist": checklist,
+                    "preview_deferred": True,
+                })
+                if user:
+                    background_tasks.add_task(_persist_to_mysql_safe, final_state, user.get("sub"))
+        except SessionBusyError:
+            await queue.put({"type": "error", "detail": SESSION_BUSY_API_DETAIL})
+        except Exception as exc:
+            logger.error("Resume stream generation failed: %s", exc, exc_info=True)
+            await queue.put({"type": "error", "detail": f"简历生成失败: {exc}"})
+        finally:
+            await queue.put(None)
+
+    async def event_stream():
+        yield _sse_event({"type": "start", "session_id": req.session_id})
+        task = asyncio.create_task(_run_generation())
+        try:
+            while True:
+                event = await queue.get()
+                if event is None:
+                    break
+                yield _sse_event(event)
+        finally:
+            await task
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 class RestoreResumeSnapshotRequest(BaseModel):
@@ -1133,14 +1321,151 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
     }
 
 
+@router.post("/translate-module")
+async def translate_resume_module(req: ModuleActionRequest, request: Request, background_tasks: BackgroundTasks):
+    """单条简历模块翻译 — 用于全量翻译后遗漏模块的再次翻译。"""
+    from api.chat import _asave_state, _persist_to_mysql_safe
+    from agents.content_agent import apply_translated_module_to_resume, translate_resume_module_async
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+    if user:
+        await bind_session_owner(req.session_id, user)
+
+    target = normalize_language(req.target_language or "")
+    if target not in VALID_RESUME_LANGUAGES:
+        raise HTTPException(status_code=422, detail="target_language 必须为 zh、zh-TW、en 或 pt")
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    state = await _load_or_bootstrap_state(store, req.session_id, client, user)
+    if state.resume_content_json is None:
+        raise HTTPException(status_code=400, detail="请先生成或翻译简历后再翻译单条模块")
+
+    try:
+        async with llm_queue_slot(req.session_id):
+            result = await translate_resume_module_async(
+                state,
+                module_id=req.module_id,
+                module_type=req.module_type,
+                title=req.title,
+                content=req.content,
+                school=req.school,
+                major=req.major,
+                degree=req.degree,
+                fields=req.fields or None,
+                target_language=target,
+            )
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error("Module translate failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"模块翻译失败: {exc}") from exc
+
+    resume_content = apply_translated_module_to_resume(
+        state.resume_content_json,
+        module_type=req.module_type,
+        module_id=req.module_id,
+        title=result.get("title", req.title),
+        content=result.get("content", req.content),
+        school=result.get("school", req.school),
+        major=result.get("major", req.major),
+        degree=result.get("degree", req.degree),
+        fields=result.get("fields") or req.fields or None,
+    )
+    final = state.model_copy(update={
+        "resume_content_json": resume_content,
+        "render_config": state.render_config.model_copy(update={"language": target}),
+        "skip_render": True,
+    })
+    persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
+    await _asave_state(store, persist_data)
+    if user:
+        background_tasks.add_task(_persist_to_mysql_safe, final, user.get("sub"))
+
+    return {
+        "module": result,
+        "language": target,
+        "resume_content_json": resume_content.model_dump(),
+    }
+
+
+@router.post("/polish-module")
+async def polish_resume_module(req: ModuleActionRequest, request: Request, background_tasks: BackgroundTasks):
+    """单条经历模块润色 — 用户对润色结果不满意时可再次润色。"""
+    from api.chat import _asave_state, _persist_to_mysql_safe
+    from agents.content_agent import apply_translated_module_to_resume, polish_resume_module_async
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+    if user:
+        await bind_session_owner(req.session_id, user)
+
+    if req.module_type not in ("internship", "project"):
+        raise HTTPException(status_code=422, detail="仅实习/工作经历与项目经历支持单条润色")
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    state = await _load_or_bootstrap_state(store, req.session_id, client, user)
+    if state.resume_content_json is None:
+        raise HTTPException(status_code=400, detail="请先生成简历后再润色单条模块")
+
+    try:
+        async with llm_queue_slot(req.session_id):
+            result = await polish_resume_module_async(
+                state,
+                module_id=req.module_id,
+                module_type=req.module_type,
+                title=req.title,
+                content=req.content,
+                fields=req.fields or None,
+            )
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error("Module polish failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"模块润色失败: {exc}") from exc
+
+    resume_content = apply_translated_module_to_resume(
+        state.resume_content_json,
+        module_type=req.module_type,
+        module_id=req.module_id,
+        title=result.get("title", req.title),
+        content=result.get("content", req.content),
+        fields=result.get("fields") or req.fields or None,
+    )
+    final = state.model_copy(update={
+        "resume_content_json": resume_content,
+        "skip_render": True,
+    })
+    persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
+    await _asave_state(store, persist_data)
+    if user:
+        background_tasks.add_task(_persist_to_mysql_safe, final, user.get("sub"))
+
+    return {
+        "module": result,
+        "resume_content_json": resume_content.model_dump(),
+    }
+
+
 @router.post("/translate")
 async def translate_resume(req: TranslateResumeRequest, request: Request, background_tasks: BackgroundTasks):
-    """简历语言切换 — 已有 HTML 时互转；尚无 HTML 时从画像生成目标语言版本。"""
+    """简历语言切换 — 仅生成 resume_content_json，HTML 预览延迟到导出/预览时渲染。"""
     from api.chat import _ainvoke_graph, _aload_state, _asave_state, _get_graph, _persist_to_mysql_safe
     from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
     from tools.resume_layout import language_label, normalize_language, VALID_RESUME_LANGUAGES
     from tools.resume_language_checklist import check_resume_language_requirements
+    from workflow.state import ResumeHtml
 
+    request_t0 = time.perf_counter()
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
     if user:
@@ -1160,7 +1485,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
         state.render_config = state.render_config.model_copy(update={"language": target})
         try:
             async with llm_queue_slot(req.session_id):
-                final = await _run_profile_resume_pipeline(state)
+                final = await _run_profile_resume_pipeline(state, defer_render=True)
         except SessionBusyError:
             raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
         except Exception as e:
@@ -1176,6 +1501,8 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
         )
         state.resume_language_target = target
         state.current_intent = "language_convert"
+        state.skip_render = True
+        state.resume_html = ResumeHtml()
         state.execution_plan = ["content_agent", "render_agent"]
 
         graph = _get_graph()
@@ -1198,6 +1525,15 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 
     checklist = check_resume_language_requirements(final, target)
 
+    log_stage_timing(
+        logger,
+        "resume.translate.total",
+        elapsed_ms(request_t0),
+        session_id=req.session_id,
+        target=target,
+        breakdown=format_trace_breakdown(final.workflow_trace),
+    )
+
     return {
         "language": final.resume_content_json.meta.language if final.resume_content_json else target,
         "resume_content_json": final.resume_content_json.model_dump() if final.resume_content_json else None,
@@ -1205,6 +1541,11 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
         "resume_html": final.resume_html.model_dump(),
         "reply_message": final.reply_message,
         "language_checklist": checklist,
+        "preview_deferred": True,
+        "timing": build_request_timing(
+            total_ms=elapsed_ms(request_t0),
+            workflow_trace=final.workflow_trace,
+        ).model_dump(),
     }
 
 

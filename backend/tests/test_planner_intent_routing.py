@@ -106,3 +106,9 @@ def test_skip_render_omits_render_agent_from_content_edit():
     state = CopilotState(session_id="s1", skip_render=True)
     plan = _build_execution_plan("content_edit", state)
     assert plan == ["content_agent"]
+
+
+def test_skip_render_omits_render_agent_from_language_convert():
+    state = CopilotState(session_id="s1", skip_render=True)
+    plan = _build_execution_plan("language_convert", state)
+    assert plan == ["content_agent"]

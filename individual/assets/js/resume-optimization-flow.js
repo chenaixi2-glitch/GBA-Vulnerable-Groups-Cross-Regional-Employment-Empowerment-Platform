@@ -210,7 +210,7 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
             if (removalItems.length) {
                 removalsEl.innerHTML = `
                     <h4 class="text-sm font-semibold text-gray-900 mb-2">${uiT('resume.opt.removalsTitle', 'Suggested experience removals')}</h4>
-                    <p class="text-xs text-gray-500 mb-3">${uiT('resume.opt.removalsDesc', 'The system suggests omitting the entries below to fit one A4 page or improve role relevance. Each item includes a reason — check only those you agree to remove.')}</p>
+                    <p class="text-xs text-gray-500 mb-3">${uiT('resume.opt.removalsDesc', 'The system suggests omitting entries below due to low role relevance or duplication. Each item includes a reason — check only those you agree to remove. Page length is handled via compact layout and shorter wording, not by removing education or other essential sections.')}</p>
                     ${removalItems.map((item, i) => `
                     <div class="optimization-removal mb-3 p-3 border border-orange-200 bg-orange-50 rounded-lg"
                         data-removal-id="${escapeHtml(item.id || `rem_${i}`)}"

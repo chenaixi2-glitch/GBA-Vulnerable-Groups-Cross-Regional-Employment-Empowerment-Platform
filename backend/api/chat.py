@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 import uuid
 from typing import Any
 
@@ -23,7 +24,8 @@ from tools.output_language import (
     apply_interview_feedback_language,
     apply_interview_question_language,
 )
-from log import get_logger
+from api.request_timing import RequestTiming, build_request_timing
+from log import get_logger, elapsed_ms, log_stage_timing, format_trace_breakdown
 
 logger = get_logger("api")
 
@@ -77,7 +79,7 @@ class ChatRequest(BaseModel):
     language: str = ""  # UI locale → API lang: zh | zh-TW | en | pt
     language_scope: str = "page"  # page | interview_question | interview_feedback
     replace_profile: bool = False  # True when uploading a new resume — overwrite Redis working copy
-    forced_intent: str = ""  # Optional: skip LLM intent classification (upload_profile, upload_jd, gap_analysis, …)
+    forced_intent: str = ""  # Optional: skip LLM intent classification (upload_profile, profile_patch, upload_jd, gap_analysis, …)
     context_scope: str = ""  # Optional: narrow Planner intents (resume_edit, …)
     skip_render: bool = False  # content_edit: generate resume_content_json only, defer HTML render
     clear_generated_resume: bool = False  # clear resume_content_json/html before graph run (JD regen from profile)
@@ -107,11 +109,13 @@ class ChatResponse(BaseModel):
     resources: list[dict] = Field(default_factory=list)
     estimated_total_hours: int = 0
     daily_hours: float = 0.0
+    timing: RequestTiming | None = None
 
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundTasks) -> ChatResponse:
     """主对话接口。"""
+    request_t0 = time.perf_counter()
     session_id = req.session_id or f"sess_{uuid.uuid4().hex[:16]}"
     user = get_optional_user(request)
     await ensure_session_access(session_id, user)
@@ -126,9 +130,11 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     )
 
     # 从 Redis 加载或创建状态
+    load_t0 = time.perf_counter()
     redis_client = await get_redis_client()
     store = RedisSessionStore(session_id, redis_client)
     saved_state = await _aload_state(store)
+    load_ms = elapsed_ms(load_t0)
 
     if saved_state:
         state = CopilotState.model_validate(saved_state)
@@ -166,6 +172,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         logger.info("Cleared generated resume content for session %s before graph run", session_id)
 
     # 跨会话摘要 + 会话内对话记忆上下文
+    memory_t0 = time.perf_counter()
     cross_summary = ""
     if user and user.get("sub"):
         try:
@@ -176,9 +183,11 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     if cross_summary:
         prefix = f"【跨会话摘要】\n{cross_summary}"
         state.memory_context = f"{prefix}\n\n{state.memory_context}".strip() if state.memory_context else prefix
+    memory_ms = elapsed_ms(memory_t0)
 
     # 执行 workflow graph，加上config指定langsmith的run_name，方便在LangSmith上查看每次API调用的执行详情
     graph = _get_graph()
+    graph_t0 = time.perf_counter()
     try:
         async with llm_queue_slot(session_id):
             result = await _ainvoke_graph(
@@ -189,6 +198,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     except Exception as e:
         logger.error("Workflow execution failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"处理失败: {e}")
+    graph_ms = elapsed_ms(graph_t0)
 
     # 构建响应状态
     final_state = CopilotState.model_validate(result)
@@ -203,6 +213,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     )
 
     # 持久化到 Redis
+    save_t0 = time.perf_counter()
     persist_data = final_state.model_dump(exclude={"user_message", "user_attachments", "current_intent",
                                                      "execution_plan", "reply_message", "triggered_agents",
                                                      "workflow_trace", "resume_language_target",
@@ -214,12 +225,34 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
                                                      "auth_token",
                                                      "skip_render"})
     await _asave_state(store, persist_data)
+    save_ms = elapsed_ms(save_t0)
 
     # 后台：对话压缩、RAG 索引、跨会话摘要
     background_tasks.add_task(_post_chat_background, final_state, user.get("sub") if user else None)
 
     # 草稿暂存 Redis；数据库持久化仅在用户确认保存（POST /api/resume/save）时执行
     logger.debug("Session %s persisted to Redis only (MySQL on explicit save)", session_id)
+    log_stage_timing(
+        logger,
+        "chat.total",
+        elapsed_ms(request_t0),
+        session_id=session_id,
+        intent=final_state.current_intent or "",
+        load_ms=load_ms,
+        memory_ms=memory_ms,
+        graph_ms=graph_ms,
+        save_ms=save_ms,
+        breakdown=format_trace_breakdown(final_state.workflow_trace),
+    )
+
+    timing = build_request_timing(
+        total_ms=elapsed_ms(request_t0),
+        load_ms=load_ms,
+        memory_ms=memory_ms,
+        graph_ms=graph_ms,
+        save_ms=save_ms,
+        workflow_trace=final_state.workflow_trace,
+    )
 
     return ChatResponse(
         session_id=session_id,
@@ -248,11 +281,13 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         resources=[r.model_dump() for r in final_state.learning_path_resources],
         estimated_total_hours=final_state.learning_path_estimated_hours,
         daily_hours=final_state.learning_path_daily_hours,
+        timing=timing,
     )
 
 
 async def _post_chat_background(state: CopilotState, user_id: str | int | None) -> None:
     """Chat 响应后后台任务：压缩对话、索引 RAG、持久化跨会话摘要。"""
+    bg_t0 = time.perf_counter()
     try:
         state = await dialogue_memory.maybe_compress_safe(state)
         if user_id and state.meta.dialogue_summary:
@@ -270,7 +305,15 @@ async def _post_chat_background(state: CopilotState, user_id: str | int | None) 
     except Exception as exc:
         logger.warning("post_chat dialogue background failed: %s", exc)
 
+    rag_t0 = time.perf_counter()
     await rag_service.index_session_safe(state)
+    log_stage_timing(
+        logger,
+        "chat.background",
+        elapsed_ms(bg_t0),
+        session_id=state.session_id,
+        rag_ms=elapsed_ms(rag_t0),
+    )
 
 
 async def _persist_to_mysql(state: CopilotState, user_id: int | str | None = None) -> None:

@@ -23,6 +23,7 @@ logger = get_logger("agent")
 _INTENT_PLAN: dict[str, list[str]] = {
     "upload_jd": ["jd_agent"],  # gap 由前端 runGapAnalysis 单独触发，避免与 JD 提交重复调用
     "upload_profile": ["profile_agent"],
+    "profile_patch": ["profile_agent"],
     "gap_analysis": ["gap_agent"],
     "learning_path": ["learning_path_agent"],
     "content_edit": ["content_agent", "render_agent"],

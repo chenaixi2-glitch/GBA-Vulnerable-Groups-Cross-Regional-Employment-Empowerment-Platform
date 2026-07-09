@@ -3,17 +3,32 @@
 import asyncio
 import json
 import os
+import time
 from typing import Any, TypeVar
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ValidationError
 
-from config_loader import get_config, get_llm_config, get_judge_llm_config, _resolve_api_key
+from config_loader import (
+    get_config,
+    get_llm_config,
+    get_judge_llm_config,
+    get_resume_parse_config,
+    get_translation_config,
+    get_resume_generation_config,
+    _resolve_api_key,
+)
+from log import get_logger, elapsed_ms, log_stage_timing
+
+_timing_logger = get_logger("agent")
 
 
 _llm_instance: Any | None = None
 _judge_llm_instance: Any | None = None
+_resume_parse_llm_instance: Any | None = None
+_translation_llm_instance: Any | None = None
+_resume_generation_llm_instance: Any | None = None
 _SchemaT = TypeVar("_SchemaT", bound=BaseModel)
 
 
@@ -113,56 +128,60 @@ def setup_langsmith() -> str | None:
     return f"https://smith.langchain.com/o/default/projects?filter=name%3D{project}"
 
 
-def get_llm() -> Any:
-    """获取或创建共享的 LLM 实例。"""
-    global _llm_instance
-    if _llm_instance is not None:
-        return _llm_instance
-
-    cfg = get_llm_config()
+def create_llm_from_config(cfg: dict) -> Any:
+    """根据标准化 LLM 配置 dict 创建 Chat Model 实例。"""
     provider = _normalize_provider(cfg.get("provider", "openai"))
 
     if provider in {"openai", "deepseek", "qwen", "openai_compatible"}:
-        _llm_instance = _create_openai_compatible_llm(cfg)
-    elif provider in {"azure_openai", "azure"}:
-        _llm_instance = _create_azure_openai_llm(cfg)
-    elif provider in {"anthropic", "claude"}:
-        _llm_instance = _create_anthropic_llm(cfg)
-    elif provider in {"ollama", "local"}:
-        _llm_instance = _create_ollama_llm(cfg)
-    else:
-        raise ValueError(
-            "Unsupported llm.provider='{}'. Supported providers: openai, deepseek, "
-            "qwen, openai_compatible, azure_openai, anthropic, ollama".format(provider)
-        )
+        return _create_openai_compatible_llm(cfg)
+    if provider in {"azure_openai", "azure"}:
+        return _create_azure_openai_llm(cfg)
+    if provider in {"anthropic", "claude"}:
+        return _create_anthropic_llm(cfg)
+    if provider in {"ollama", "local"}:
+        return _create_ollama_llm(cfg)
 
-    return _llm_instance
+    raise ValueError(
+        "Unsupported llm.provider='{}'. Supported providers: openai, deepseek, "
+        "qwen, openai_compatible, azure_openai, anthropic, ollama".format(provider)
+    )
+
+
+def _get_or_create_llm(
+    cache_attr: str,
+    cfg_loader,
+) -> Any:
+    cached = globals().get(cache_attr)
+    if cached is not None:
+        return cached
+    instance = create_llm_from_config(cfg_loader())
+    globals()[cache_attr] = instance
+    return instance
+
+
+def get_llm() -> Any:
+    """获取或创建共享的 LLM 实例。"""
+    return _get_or_create_llm("_llm_instance", get_llm_config)
 
 
 def get_judge_llm() -> Any:
     """Get or create the LLM-as-judge instance (separate model config)."""
-    global _judge_llm_instance
-    if _judge_llm_instance is not None:
-        return _judge_llm_instance
+    return _get_or_create_llm("_judge_llm_instance", get_judge_llm_config)
 
-    cfg = get_judge_llm_config()
-    provider = _normalize_provider(cfg.get("provider", "openai"))
 
-    if provider in {"openai", "deepseek", "qwen", "openai_compatible"}:
-        _judge_llm_instance = _create_openai_compatible_llm(cfg)
-    elif provider in {"azure_openai", "azure"}:
-        _judge_llm_instance = _create_azure_openai_llm(cfg)
-    elif provider in {"anthropic", "claude"}:
-        _judge_llm_instance = _create_anthropic_llm(cfg)
-    elif provider in {"ollama", "local"}:
-        _judge_llm_instance = _create_ollama_llm(cfg)
-    else:
-        raise ValueError(
-            "Unsupported judge llm.provider='{}'. Supported providers: openai, deepseek, "
-            "qwen, openai_compatible, azure_openai, anthropic, ollama".format(provider)
-        )
+def get_resume_parse_llm() -> Any:
+    """简历 OCR / 画像解析专用 LLM。"""
+    return _get_or_create_llm("_resume_parse_llm_instance", get_resume_parse_config)
 
-    return _judge_llm_instance
+
+def get_translation_llm() -> Any:
+    """翻译专用 LLM（Hunyuan-MT）。"""
+    return _get_or_create_llm("_translation_llm_instance", get_translation_config)
+
+
+def get_resume_generation_llm() -> Any:
+    """简历内容生成专用 LLM。"""
+    return _get_or_create_llm("_resume_generation_llm_instance", get_resume_generation_config)
 
 
 def _extract_text_content(response: Any) -> str:
@@ -258,7 +277,15 @@ async def ainvoke_json_with_schema(
     last_error: Exception | None = None
 
     for attempt in range(2):
+        llm_t0 = time.perf_counter()
         response = await _ainvoke_model(json_llm, request_prompt)
+        log_stage_timing(
+            _timing_logger,
+            f"llm.{agent_name}",
+            elapsed_ms(llm_t0),
+            attempt=attempt + 1,
+            repair=attempt > 0,
+        )
         raw_output = _extract_text_content(response)
         try:
             parsed = parse_json_response(raw_output)

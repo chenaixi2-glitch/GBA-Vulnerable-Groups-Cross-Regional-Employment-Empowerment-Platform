@@ -34,14 +34,17 @@ PROFILE_EXTRACTION_PROMPT = """你是一个候选人画像构建专家。请从�
     ]
 }}
 
-语言要求：
-- facts 中 content 字段须与用户材料保持同一语言，禁止在同一字段内中英混用
+语言要求（最高优先级）：
+{material_language_instruction}
+- facts 中 content 的描述性文字须与用户材料保持同一语言，禁止在同一字段内中英混用
 - 若材料为中文则 content 用中文；若为英文则 content 用英文；不要擅自翻译
+- 上传说明、附件文件名、本提示语为中文，不影响上述语言要求
 - JSON 的 key 仍使用英文
 
 注意：
 1. type 只能是: education, skill, project, internship, award, paper 之一
-2. **每条经历/技能/项目必须单独一条 fact**，禁止合并多条为一条
+2. **每条经历/技能/项目/奖项/论文必须单独一条 fact**，禁止合并多条为一条；禁止把多段实习/工作写入同一条 fact 的 responsibilities
+3. 若简历有 3 段工作经历，facts 中必须有 3 条 type=internship 的记录（与教育经历分条规则相同）
 3. education 的 content JSON 格式：{{"school":"","major":"","degree":"","start_date":"","end_date":""}}，每所学校一条
 4. skill 的 content：单个技能名称或 {{"skill":"","level":"","context":""}}，每个技能一条 fact
 5. internship / project 的 content JSON：{{"title":"","company":"","role":"","start_date":"","end_date":"","tech_stack":[],"responsibilities":"","achievements":""}}，每段经历一条

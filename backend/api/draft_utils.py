@@ -7,8 +7,14 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from workflow.state import CandidateProfile, CopilotState, Fact, ProfileBasic
+from workflow.state import CandidateProfile, CopilotState, Fact, ProfileBasic, ResumeHtml
 
+
+from tools.module_field_schema import (
+    derive_title_and_content,
+    fields_to_fact_content,
+    parse_fact_content,
+)
 
 MODULE_TYPE_LABELS = {
     "education": "Education",
@@ -21,51 +27,27 @@ MODULE_TYPE_LABELS = {
 }
 
 
-def _parse_content_title(content: str, fallback: str = "") -> str:
-    text = (content or "").strip()
-    if not text:
-        return fallback
-    try:
-        parsed = json.loads(text)
-        if isinstance(parsed, dict):
-            for key in ("title", "name", "skill", "company", "school"):
-                value = parsed.get(key)
-                if value:
-                    return str(value)
-    except (json.JSONDecodeError, TypeError):
-        pass
-    first_line = text.split("\n", 1)[0].strip()
-    return first_line[:80] if first_line else fallback
-
-
-def _parse_education_content(content: str) -> dict[str, str]:
-    text = (content or "").strip()
-    empty = {"school": "", "major": "", "degree": "", "start_date": "", "end_date": ""}
-    if not text:
-        return empty
-    try:
-        parsed = json.loads(text)
-        if isinstance(parsed, dict):
-            return {
-                "school": str(parsed.get("school") or parsed.get("name") or ""),
-                "major": str(parsed.get("major") or ""),
-                "degree": str(parsed.get("degree") or ""),
-                "start_date": str(parsed.get("start_date") or parsed.get("start") or ""),
-                "end_date": str(parsed.get("end_date") or parsed.get("end") or ""),
-            }
-    except (json.JSONDecodeError, TypeError):
-        pass
-    return {**empty, "school": text.split("\n", 1)[0].strip()}
-
-
 def _education_entry_to_content(entry: dict[str, Any]) -> str:
-    return json.dumps({
-        "school": entry.get("school") or "",
-        "major": entry.get("major") or "",
-        "degree": entry.get("degree") or "",
-        "start_date": entry.get("start_date") or "",
-        "end_date": entry.get("end_date") or "",
-    }, ensure_ascii=False)
+    fields = entry.get("fields") if isinstance(entry.get("fields"), dict) else {}
+    payload = {
+        "school": entry.get("school") or fields.get("school") or "",
+        "major": entry.get("major") or fields.get("major") or "",
+        "degree": entry.get("degree") or fields.get("degree") or "",
+        "start_date": entry.get("start_date") or fields.get("start_date") or "",
+        "end_date": entry.get("end_date") or fields.get("end_date") or "",
+    }
+    return fields_to_fact_content("education", payload)
+
+
+def _module_draft_fields(module: dict[str, Any]) -> dict[str, Any]:
+    if isinstance(module.get("fields"), dict) and module["fields"]:
+        return dict(module["fields"])
+    mod_type = str(module.get("type") or "custom")
+    return parse_fact_content(
+        mod_type,
+        str(module.get("content") or ""),
+        title=str(module.get("title") or ""),
+    )
 
 
 def profile_to_draft(profile: CandidateProfile | None) -> dict[str, Any]:
@@ -83,18 +65,23 @@ def profile_to_draft(profile: CandidateProfile | None) -> dict[str, Any]:
 
     for fact in profile.facts:
         if fact.type == "education":
+            edu_fields = parse_fact_content("education", fact.content)
             education.append({
                 "id": fact.id or f"edu_{uuid.uuid4().hex[:8]}",
-                **_parse_education_content(fact.content),
+                **edu_fields,
+                "fields": edu_fields,
                 "is_custom": False,
             })
         else:
             mod_type = fact.type if fact.type in MODULE_TYPE_LABELS else "custom"
+            mod_fields = parse_fact_content(mod_type, fact.content)
+            title, content = derive_title_and_content(mod_type, mod_fields)
             modules.append({
                 "id": fact.id or f"mod_{uuid.uuid4().hex[:8]}",
                 "type": mod_type,
-                "title": _parse_content_title(fact.content, fact.type.title()),
-                "content": fact.content,
+                "title": title,
+                "content": content,
+                "fields": mod_fields,
                 "is_custom": False,
             })
 
@@ -159,9 +146,8 @@ def draft_to_profile(draft: dict[str, Any]) -> CandidateProfile:
         mod_type = str(module.get("type") or "custom")
         if mod_type == "custom":
             mod_type = "skill"
-        content = str(module.get("content") or "")
-        if not content and module.get("title"):
-            content = str(module.get("title"))
+        mod_fields = _module_draft_fields(module)
+        content = fields_to_fact_content(mod_type, mod_fields)
         if not content:
             continue
         facts.append(Fact(
@@ -208,6 +194,44 @@ async def bootstrap_session_from_draft(store, session_id: str, draft: dict[str, 
     await _asave_state(store, _persist_payload(state_dict))
 
 
+def _photo_url_from_extras(extras: dict[str, Any] | None) -> str:
+    extras = extras or {}
+    return str(extras.get("photo_url") or extras.get("photo_data") or "").strip()
+
+
+def apply_profile_extras_to_resume_state(state: CopilotState) -> tuple[CopilotState, bool]:
+    """Merge candidate profile extras (photo, etc.) into resume_content_json.
+
+    Returns (updated_state, photo_changed).
+    """
+    if not state.resume_content_json:
+        return state, False
+
+    from agents.content_agent import _merge_profile_extras_from_candidate
+
+    old_photo = _photo_url_from_extras(state.resume_content_json.profile.extras)
+    merged = _merge_profile_extras_from_candidate(
+        state.resume_content_json.model_copy(deep=True),
+        state,
+    )
+    new_photo = _photo_url_from_extras(merged.profile.extras)
+    photo_changed = old_photo != new_photo
+
+    data = state.model_dump()
+    data["resume_content_json"] = merged.model_dump()
+    if photo_changed and state.resume_html and state.resume_html.html:
+        data["resume_html"] = ResumeHtml(
+            html="",
+            version=state.resume_html.version,
+        ).model_dump()
+        meta = state.meta.model_copy(update={
+            "dirty_flags": state.meta.dirty_flags.model_copy(update={"render_dirty": True}),
+        })
+        data["meta"] = meta.model_dump()
+
+    return CopilotState.model_validate(data), photo_changed
+
+
 async def sync_draft_to_session(store, session_id: str, draft: dict[str, Any]) -> None:
     """Merge draft into Redis session state candidate_profile."""
     from api.chat import _aload_state, _asave_state
@@ -225,4 +249,6 @@ async def sync_draft_to_session(store, session_id: str, draft: dict[str, Any]) -
 
     state_dict = state.model_dump()
     state_dict["candidate_profile"] = profile.model_dump()
-    await _asave_state(store, _persist_payload(state_dict))
+    state = CopilotState.model_validate(state_dict)
+    state, _ = apply_profile_extras_to_resume_state(state)
+    await _asave_state(store, _persist_payload(state.model_dump()))

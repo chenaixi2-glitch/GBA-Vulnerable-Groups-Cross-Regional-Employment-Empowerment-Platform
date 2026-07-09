@@ -21,6 +21,7 @@ def append_trace(
     output_summary: str = "",
     artifacts: dict[str, Any] | None = None,
     error: str = "",
+    duration_ms: float = 0.0,
 ) -> list[WorkflowTraceItem]:
     """Return the current trace plus one new item."""
     item = WorkflowTraceItem(
@@ -31,6 +32,7 @@ def append_trace(
         artifacts=artifacts or {},
         error=error,
         created_at=datetime.now(timezone.utc).isoformat(),
+        duration_ms=duration_ms,
     )
     return [*state.workflow_trace, item]
 

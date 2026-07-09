@@ -1,0 +1,85 @@
+# GBA 平台 — Nginx 反代示例（2GB 轻量服务器，非 Docker）
+# 用法：
+#   sudo cp scripts/nginx-gba-platform.conf.example /etc/nginx/sites-available/gba-platform
+#   sudo ln -sf /etc/nginx/sites-available/gba-platform /etc/nginx/sites-enabled/
+#   sudo nginx -t && sudo systemctl reload nginx
+#
+# 路由原则：
+#   /api/auth|jobs|...  → Node  :3000
+#   /api/*               → Python :8000
+#   /mcp/*               → Python :8000（MCP SSE，与 FastAPI 同进程）
+#   /health              → Python :8000
+
+server {
+    listen 80;
+    server_name 120.77.249.179;   # 或你的域名
+
+    root /var/www/gba-platform;   # 静态前端目录
+    index index.html;
+
+    # Node 认证 / 岗位 / 企业等业务 API
+    location ~ ^/api/(auth|jobs|company|resumes|donations|legal-aid|stats)(/|$) {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Python AI 后端（LangGraph / 简历 / 导出等）
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+
+    # MCP（岗位 / 文档解析）— 必须反代到 Python 后端
+    # SSE 长连接：关闭缓冲，延长 read timeout
+    location /mcp/ {
+        proxy_pass http://127.0.0.1:8000/mcp/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection '';
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 86400s;
+    }
+
+    location /health {
+        proxy_pass http://127.0.0.1:8000/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    location /individual/ {
+        try_files $uri $uri/ /individual/portal.html;
+    }
+
+    location /corporate/ {
+        try_files $uri $uri/ /corporate/portal.html;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+# 可选：仅内网 / 本机访问 MCP（不对外暴露工具接口）
+# 将上面的 location /mcp/ 替换为：
+#
+# location /mcp/ {
+#     allow 127.0.0.1;
+#     deny all;
+#     proxy_pass http://127.0.0.1:8000/mcp/;
+#     ...
+# }

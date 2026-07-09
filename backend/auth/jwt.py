@@ -17,7 +17,13 @@ def verify_token(token: str) -> dict[str, Any] | None:
     """校验 Bearer Token，成功返回 payload，失败返回 None。"""
     try:
         cfg = get_jwt_config()
-        return jwt.decode(token, cfg["secret"], algorithms=["HS256"])
+        # Node auth signs `sub: user.id` (number). PyJWT 2.x requires sub to be a string per RFC 7519.
+        return jwt.decode(
+            token,
+            cfg["secret"],
+            algorithms=["HS256"],
+            options={"verify_sub": False},
+        )
     except jwt.PyJWTError as exc:
         logger.debug("JWT verification failed: %s", exc)
         return None

@@ -33,7 +33,37 @@ async def get_mysql_pool() -> aiomysql.Pool:
             cursorclass=aiomysql.DictCursor,
         )
         logger.info("MySQL async pool initialized: %s:%s/%s", cfg["host"], cfg["port"], cfg["database"])
+        await ensure_saved_profile_records_table(_pool)
     return _pool
+
+
+async def ensure_saved_profile_records_table(pool: aiomysql.Pool) -> None:
+    """幂等创建 saved_profile_records 表（兼容未跑 init_db 迁移的旧库）。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    sql = f"""
+        CREATE TABLE IF NOT EXISTS `{db_name}`.`saved_profile_records` (
+            id              VARCHAR(64)      PRIMARY KEY,
+            session_id      VARCHAR(64)      NOT NULL,
+            user_id         BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
+            record_name     VARCHAR(256)     NOT NULL DEFAULT '',
+            candidate_name  VARCHAR(128)     NOT NULL DEFAULT '',
+            data            JSON             NOT NULL,
+            saved_at        DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_spr_user (user_id),
+            INDEX idx_spr_session (session_id),
+            INDEX idx_spr_saved_at (saved_at),
+            FOREIGN KEY (session_id) REFERENCES `{db_name}`.`sessions`(session_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """
+    try:
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(sql)
+            await conn.commit()
+        logger.info("saved_profile_records table ready")
+    except Exception as exc:
+        logger.warning("saved_profile_records migration skipped: %s", exc)
 
 
 class MySQLStore:

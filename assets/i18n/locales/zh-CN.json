@@ -1036,6 +1036,14 @@
       "detailsPlaceholder": "职责、成果、技术栈…",
       "entryTitle": "标题",
       "entryTitlePlaceholder": "公司 / 项目名称",
+      "polishing": "正在润色…",
+      "translating": "正在翻译…",
+      "translateModule": "翻译",
+      "polishModule": "润色",
+      "moduleTranslated": "模块已翻译，请核对",
+      "modulePolished": "模块已润色，请核对",
+      "moduleTranslateFailed": "模块翻译失败：{msg}",
+      "modulePolishFailed": "模块润色失败：{msg}",
       "noEntries": "暂无条目 — 可在下方添加或填写空位。",
       "supplementTitle": "补充信息",
       "supplementHint": "请根据各输入框旁的提醒补充缺失内容。",
@@ -1053,19 +1061,72 @@
       "linkedinPlaceholder": "https://linkedin.com/in/yourname",
       "summary": "自我评价",
       "summaryPlaceholder": "2–4 句话概括优势与岗位匹配度",
+      "professionalSummary": "Professional Summary",
+      "professionalSummaryPlaceholder": "3–4 行概括核心技能与成果",
+      "visaType": "签证类型",
+      "visaTypePlaceholder": "如：工作签证 / 往来港澳通行证",
+      "residentType": "居民类型",
+      "residentTypePlaceholder": "如：香港永久居民 / 内地居民",
       "translatedBadge": "已翻译 · 请确认",
       "translatedFieldHint": "系统自动翻译，请核对是否正确（原文：{original}）",
-      "translationReviewBanner": "有 {count} 个标题级字段已自动翻译（姓名、学校名、公司/项目名），琥珀色高亮项请核对确认。"
+      "translationReviewBanner": "有 {count} 个字段已自动翻译，琥珀色高亮项请核对确认。",
+      "translationReviewConfirm": "确认已核对",
+      "fields": {
+        "fieldSchool": "学校",
+        "fieldSchoolPlaceholder": "大学 / 学校名称",
+        "fieldMajor": "专业",
+        "fieldMajorPlaceholder": "专业方向",
+        "fieldDegree": "学历",
+        "fieldDegreePlaceholder": "本科 / 硕士…",
+        "startDate": "开始",
+        "startDatePlaceholder": "2019-09",
+        "endDate": "结束",
+        "endDatePlaceholder": "2023-06",
+        "fieldCompany": "公司",
+        "fieldCompanyPlaceholder": "公司名称",
+        "fieldRole": "职位",
+        "fieldRolePlaceholder": "岗位 / 角色",
+        "fieldTechStack": "技术栈",
+        "fieldTechStackPlaceholder": "Python, React, MySQL",
+        "fieldResponsibilities": "工作职责",
+        "fieldResponsibilitiesPlaceholder": "主要职责与工作内容…",
+        "fieldAchievements": "工作成果",
+        "fieldAchievementsPlaceholder": "量化成果与亮点…",
+        "fieldProjectTitle": "项目名称",
+        "fieldProjectTitlePlaceholder": "项目名称",
+        "skillLabel": "技能",
+        "skillLabelPlaceholder": "如：Python",
+        "fieldLevel": "熟练程度",
+        "fieldLevelPlaceholder": "熟练 / 一般",
+        "fieldContext": "应用场景",
+        "fieldContextPlaceholder": "在何处如何使用该技能",
+        "fieldAwardTitle": "奖项名称",
+        "fieldAwardTitlePlaceholder": "奖项名称",
+        "fieldIssuer": "颁发机构",
+        "fieldIssuerPlaceholder": "颁发单位",
+        "fieldDate": "日期",
+        "fieldDatePlaceholder": "2023-06",
+        "fieldPaperTitle": "论文标题",
+        "fieldPaperTitlePlaceholder": "论文标题",
+        "fieldVenue": "发表 venue",
+        "fieldVenuePlaceholder": "期刊 / 会议",
+        "fieldDescription": "描述",
+        "fieldDescriptionPlaceholder": "简要说明",
+        "entryTitle": "标题",
+        "entryTitlePlaceholder": "公司 / 项目名称",
+        "details": "详情",
+        "detailsPlaceholder": "职责、成果、技术栈…"
+      }
     },
     "checklistItems": {
       "zh_photo": {
         "label": "证件照",
-        "message": "中文简历（国企/事业单位/银行/教师/传统行业）建议附正装证件照",
-        "suggestion": "请上传白底/浅蓝底一寸证件照，置于简历右上角；互联网技术岗可选"
+        "message": "简体中文简历需附正装证件照",
+        "suggestion": "请上传白底/浅蓝底一寸证件照，置于简历右上角"
       },
       "zh_photo_strict": {
         "label": "证件照",
-        "message": "国央企/体制内岗位必须附正装证件照",
+        "message": "简体中文简历需附正装证件照",
         "suggestion": "请上传白底/浅蓝底一寸证件照，置于简历右上角"
       },
       "zh_name": {
@@ -1120,8 +1181,13 @@
       },
       "zh_experience": {
         "label": "实习/工作经历",
-        "message": "中文简历需有实习或工作经历模块",
+        "message": "可补充实习或工作经历以突出实践背景",
         "suggestion": "按时间倒序，描述职责与成果"
+      },
+      "zh_experience_any": {
+        "label": "实习/工作/校内/志愿经历（至少一项）",
+        "message": "需至少填写一类经历：实习、工作、校内活动或志愿服务",
+        "suggestion": "可添加实习/工作、项目（校内）、或其他（志愿）条目"
       },
       "zh_projects": {
         "label": "项目经历",
@@ -1282,11 +1348,81 @@
         "label": "主观形容词",
         "message": "英文简历避免堆砌主观形容词",
         "suggestion": "改用量化成果和行为动词描述"
+      },
+      "tw_no_photo_warn": {
+        "label": "个人照片",
+        "message": "繁体中文跨境简历不宜放个人照片",
+        "suggestion": "请移除照片；港澳部分金融前台岗位可酌情保留专业证件照"
+      },
+      "tw_no_photo_ok": {
+        "label": "无个人照片",
+        "message": "符合跨境英文简历惯例（不放照片）",
+        "suggestion": ""
+      },
+      "tw_name": {
+        "label": "姓名",
+        "message": "简历顶部以姓名为最大标题",
+        "suggestion": "仅写姓名，勿用大号 Resume/CV 标题"
+      },
+      "tw_phone": {
+        "label": "电话",
+        "message": "需留手机号码",
+        "suggestion": "可含国家/区号，如 +852 9123 4567"
+      },
+      "tw_email": {
+        "label": "邮箱",
+        "message": "需留专业邮箱",
+        "suggestion": "使用正式邮箱地址，避免昵称"
+      },
+      "tw_city": {
+        "label": "城市",
+        "message": "建议填写所在城市",
+        "suggestion": "例：Hong Kong / 广州 — 不需写详细住址"
+      },
+      "tw_visa_type": {
+        "label": "签证类型",
+        "message": "跨境就业简历需标明签证/逗留身份",
+        "suggestion": "例：往来港澳通行证 / 人才签证 / 工作签证"
+      },
+      "tw_resident_type": {
+        "label": "居民类型",
+        "message": "跨境就业简历需标明居民/居留身份",
+        "suggestion": "例：香港永久居民 / 澳门居民 / 内地居民"
+      },
+      "tw_linkedin": {
+        "label": "LinkedIn",
+        "message": "建议附 LinkedIn 链接",
+        "suggestion": "https://linkedin.com/in/yourname"
+      },
+      "tw_summary": {
+        "label": "Professional Summary",
+        "message": "建议用 3-4 行 Professional Summary 概括核心技能与成果",
+        "suggestion": "避免空泛形容词堆砌，突出量化成果"
+      },
+      "tw_experience": {
+        "label": "Work Experience",
+        "message": "可补充工作/实习经历以突出实践背景",
+        "suggestion": "动词开头 + 量化结果"
+      },
+      "tw_experience_any": {
+        "label": "实习/工作/校内/志愿经历（至少一项）",
+        "message": "需至少填写一类经历：实习、工作、校内活动或志愿服务",
+        "suggestion": "可添加实习/工作、项目（校内）、或其他（志愿）条目"
+      },
+      "tw_education": {
+        "label": "Education",
+        "message": "教育背景为核心模块",
+        "suggestion": "Degree in English, e.g. B.S. in Computer Science"
+      },
+      "tw_one_page": {
+        "label": "页数限制",
+        "message": "建议将简历控制在推荐页数以内",
+        "suggestion": "删减次要内容，保持简洁"
       }
     },
     "checklist": {
       "photo": "证件照",
-      "photoMsg": "中文简历建议附正装证件照",
+      "photoMsg": "简体中文简历需附正装证件照",
       "name": "姓名",
       "nameMsg": "姓名是简历顶部必填项",
       "phone": "电话",
@@ -1310,7 +1446,13 @@
       "education": "教育经历",
       "educationMsg": "教育经历是必填模块",
       "work": "实习/工作经历",
-      "workMsg": "需有实习或工作经历模块",
+      "workMsg": "可补充实习或工作经历以突出实践背景",
+      "experienceAny": "实习/工作/校内/志愿经历（至少一项）",
+      "experienceAnyMsg": "需至少填写一类经历：实习、工作、校内活动或志愿服务",
+      "visaType": "签证类型",
+      "visaTypeMsg": "跨境就业简历需标明签证/逗留身份",
+      "residentType": "居民类型",
+      "residentTypeMsg": "跨境就业简历需标明居民/居留身份",
       "projects": "项目经历",
       "projectsMsg": "技术岗位强烈建议补充项目经历",
       "skills": "技能/证书",
@@ -1436,6 +1578,7 @@
       "profileResumeReady": "简历已就绪 — 可在下方预览并导出",
       "profileResumeFailed": "无法生成简历：{msg}",
       "generatingResume": "正在生成定制简历…",
+      "polishingModules": "骨架已就绪，经历模块正在并行润色…",
       "analyzingGaps": "正在分析差距以优化…",
       "applyingClarifications": "正在应用您的补充说明…",
       "optimizingA4": "正在优化为 A4 单页…",
@@ -1468,7 +1611,7 @@
       "quantHint": "部分经历缺少量化描述。若您有真实可验证的数据（如服务用户数、性能提升比例、团队规模等），请在下方补充；若无相关数据可留空，系统不会编造数字。",
       "quantAnswerPlaceholder": "如有真实数据请填写（如：服务 1 万用户、响应速度提升 30%）；无则留空",
       "removalsTitle": "建议删除的经历",
-      "removalsDesc": "为适配 A4 单页或提高岗位相关度，系统建议精简以下经历。每项均说明原因，请勾选您同意删除的条目。",
+      "removalsDesc": "系统建议精简以下与目标岗位相关度较低或重复的经历。每项均说明原因，请勾选您同意删除的条目。篇幅不足请通过优化排版与精简表述解决，不会建议删除教育等必要模块。",
       "removalReasonLabel": "原因",
       "sectionType": "类型",
       "unnamedExperience": "未命名经历",

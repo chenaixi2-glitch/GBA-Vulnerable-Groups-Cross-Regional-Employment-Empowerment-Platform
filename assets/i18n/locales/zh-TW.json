@@ -1029,6 +1029,14 @@
       "skillPlaceholder": "如：Python、熟練",
       "details": "詳情",
       "detailsPlaceholder": "職責、成果、技術棧…",
+      "polishing": "正在潤色…",
+      "translating": "正在翻譯…",
+      "translateModule": "翻譯",
+      "polishModule": "潤色",
+      "moduleTranslated": "模組已翻譯，請核對",
+      "modulePolished": "模組已潤色，請核對",
+      "moduleTranslateFailed": "模組翻譯失敗：{msg}",
+      "modulePolishFailed": "模組潤色失敗：{msg}",
       "entryTitle": "標題",
       "entryTitlePlaceholder": "公司 / 項目名稱",
       "noEntries": "暫無條目 — 可在下方添加或填寫空位。",
@@ -1048,9 +1056,62 @@
       "linkedinPlaceholder": "https://linkedin.com/in/yourname",
       "summary": "自我評價",
       "summaryPlaceholder": "2–4 句話概括優勢與崗位匹配度",
+      "professionalSummary": "Professional Summary",
+      "professionalSummaryPlaceholder": "3–4 行概括核心技能與成果",
+      "visaType": "簽證類型",
+      "visaTypePlaceholder": "如：工作簽證 / 往來港澳通行證",
+      "residentType": "居民類型",
+      "residentTypePlaceholder": "如：香港永久居民 / 內地居民",
       "translatedBadge": "已翻譯 · 請確認",
       "translatedFieldHint": "系統自動翻譯，請核對是否正確（原文：{original}）",
-      "translationReviewBanner": "有 {count} 個標題級欄位已自動翻譯（姓名、學校名、公司/項目名），琥珀色高亮項請核對確認。"
+      "translationReviewBanner": "有 {count} 個欄位已自動翻譯，琥珀色高亮項請核對確認。",
+      "translationReviewConfirm": "確認已核對",
+      "fields": {
+        "fieldSchool": "學校",
+        "fieldSchoolPlaceholder": "大學 / 學校名稱",
+        "fieldMajor": "專業",
+        "fieldMajorPlaceholder": "專業方向",
+        "fieldDegree": "學歷",
+        "fieldDegreePlaceholder": "本科 / 碩士…",
+        "startDate": "開始",
+        "startDatePlaceholder": "2019-09",
+        "endDate": "結束",
+        "endDatePlaceholder": "2023-06",
+        "fieldCompany": "公司",
+        "fieldCompanyPlaceholder": "公司名稱",
+        "fieldRole": "職位",
+        "fieldRolePlaceholder": "崗位 / 角色",
+        "fieldTechStack": "技術棧",
+        "fieldTechStackPlaceholder": "Python, React, MySQL",
+        "fieldResponsibilities": "工作職責",
+        "fieldResponsibilitiesPlaceholder": "主要職責與工作內容…",
+        "fieldAchievements": "工作成果",
+        "fieldAchievementsPlaceholder": "量化成果與亮點…",
+        "fieldProjectTitle": "項目名稱",
+        "fieldProjectTitlePlaceholder": "項目名稱",
+        "skillLabel": "技能",
+        "skillLabelPlaceholder": "如：Python",
+        "fieldLevel": "熟練程度",
+        "fieldLevelPlaceholder": "熟練 / 一般",
+        "fieldContext": "應用場景",
+        "fieldContextPlaceholder": "在何處如何使用該技能",
+        "fieldAwardTitle": "獎項名稱",
+        "fieldAwardTitlePlaceholder": "獎項名稱",
+        "fieldIssuer": "頒發機構",
+        "fieldIssuerPlaceholder": "頒發單位",
+        "fieldDate": "日期",
+        "fieldDatePlaceholder": "2023-06",
+        "fieldPaperTitle": "論文標題",
+        "fieldPaperTitlePlaceholder": "論文標題",
+        "fieldVenue": "發表 venue",
+        "fieldVenuePlaceholder": "期刊 / 會議",
+        "fieldDescription": "描述",
+        "fieldDescriptionPlaceholder": "簡要說明",
+        "entryTitle": "標題",
+        "entryTitlePlaceholder": "公司 / 項目名稱",
+        "details": "詳情",
+        "detailsPlaceholder": "職責、成果、技術棧…"
+      }
     },
     "checklistItems": {
       "zh_photo": {
@@ -1277,6 +1338,76 @@
         "label": "主觀形容詞",
         "message": "英文履歷避免堆砌主觀形容詞",
         "suggestion": "改用量化成果和行為動詞描述"
+      },
+      "tw_no_photo_warn": {
+        "label": "個人照片",
+        "message": "繁體中文跨境履歷不宜放個人照片",
+        "suggestion": "請移除照片；港澳部分金融前台崗位可酌情保留專業證件照"
+      },
+      "tw_no_photo_ok": {
+        "label": "無個人照片",
+        "message": "符合跨境英文履歷慣例（不放照片）",
+        "suggestion": ""
+      },
+      "tw_name": {
+        "label": "姓名",
+        "message": "履歷頂部以姓名為最大標題",
+        "suggestion": "僅寫姓名，勿用大號 Resume/CV 標題"
+      },
+      "tw_phone": {
+        "label": "電話",
+        "message": "需留手機號碼",
+        "suggestion": "可含國家/區號，如 +852 9123 4567"
+      },
+      "tw_email": {
+        "label": "郵箱",
+        "message": "需留專業郵箱",
+        "suggestion": "使用正式郵箱地址，避免暱稱"
+      },
+      "tw_city": {
+        "label": "城市",
+        "message": "建議填寫所在城市",
+        "suggestion": "例：Hong Kong / 廣州 — 不需寫詳細住址"
+      },
+      "tw_visa_type": {
+        "label": "簽證類型",
+        "message": "跨境就業履歷需標明簽證/逗留身份",
+        "suggestion": "例：往來港澳通行證 / 人才簽證 / 工作簽證"
+      },
+      "tw_resident_type": {
+        "label": "居民類型",
+        "message": "跨境就業履歷需標明居民/居留身份",
+        "suggestion": "例：香港永久居民 / 澳門居民 / 內地居民"
+      },
+      "tw_linkedin": {
+        "label": "LinkedIn",
+        "message": "建議附 LinkedIn 連結",
+        "suggestion": "https://linkedin.com/in/yourname"
+      },
+      "tw_summary": {
+        "label": "Professional Summary",
+        "message": "建議用 3-4 行 Professional Summary 概括核心技能與成果",
+        "suggestion": "避免空泛形容詞堆砌，突出量化成果"
+      },
+      "tw_experience": {
+        "label": "Work Experience",
+        "message": "可補充工作/實習經歷以突出實踐背景",
+        "suggestion": "動詞開頭 + 量化結果"
+      },
+      "tw_experience_any": {
+        "label": "實習/工作/校內/志願經歷（至少一項）",
+        "message": "需至少填寫一類經歷：實習、工作、校內活動或志願服務",
+        "suggestion": "可添加實習/工作、項目（校內）、或其他（志願）條目"
+      },
+      "tw_education": {
+        "label": "Education",
+        "message": "教育背景為核心模塊",
+        "suggestion": "Degree in English, e.g. B.S. in Computer Science"
+      },
+      "tw_one_page": {
+        "label": "頁數限制",
+        "message": "建議將履歷控制在推薦頁數以內",
+        "suggestion": "刪減次要內容，保持簡潔"
       }
     },
     "checklist": {
@@ -1305,7 +1436,13 @@
       "education": "教育經歷",
       "educationMsg": "教育經歷是必填模塊",
       "work": "實習/工作經歷",
-      "workMsg": "需有實習或工作經歷模塊",
+      "workMsg": "可補充實習或工作經歷以突出實踐背景",
+      "experienceAny": "實習/工作/校內/志願經歷（至少一項）",
+      "experienceAnyMsg": "需至少填寫一類經歷：實習、工作、校內活動或志願服務",
+      "visaType": "簽證類型",
+      "visaTypeMsg": "跨境就業履歷需標明簽證/逗留身份",
+      "residentType": "居民類型",
+      "residentTypeMsg": "跨境就業履歷需標明居民/居留身份",
       "projects": "項目經歷",
       "projectsMsg": "技術崗位強烈建議補充項目經歷",
       "skills": "技能/證書",
@@ -1463,7 +1600,7 @@
       "quantHint": "部分經歷缺少量化描述。若您有真實可驗證的數據（如服務用戶數、性能提升比例、團隊規模等），請在下方補充；若無相關數據可留空，系統不會編造數字。",
       "quantAnswerPlaceholder": "如有真實數據請填寫（如：服務 1 萬用戶、響應速度提升 30%）；無則留空",
       "removalsTitle": "建議刪除的經歷",
-      "removalsDesc": "為適配 A4 單頁或提高崗位相關度，系統建議精簡以下經歷。每項均說明原因，請勾選您同意刪除的條目。",
+      "removalsDesc": "系統建議精簡以下與目標崗位相關度較低或重複的經歷。每項均說明原因，請勾選您同意刪除的條目。篇幅不足請透過優化排版與精簡表述解決，不會建議刪除教育等必要模組。",
       "removalReasonLabel": "原因",
       "sectionType": "類型",
       "unnamedExperience": "未命名經歷",

@@ -7,6 +7,7 @@ from models.llm import get_llm
 from tools.output_language_guard import ainvoke_json_with_language_guard
 from prompts.jd_title_generation import JD_TITLE_GENERATION_PROMPT
 from tools.jd_cache import ensure_title_in_jd_text, extract_title_from_jd
+from tools.resume_profile_context import build_profile_json
 from tools.resume_layout import employer_type_label, normalize_employer_type, normalize_language, jd_output_language_instruction
 from workflow.state import CopilotState
 from log import get_logger
@@ -29,7 +30,7 @@ async def generate_jd_from_title_for_profile(
 
     employer_key = normalize_employer_type(employer_type or (state.meta.employer_type if state.meta else ""))
     employer_text = employer_type_label(employer_key) or "未指定"
-    profile_json = state.candidate_profile.model_dump_json(indent=2)
+    profile_json = build_profile_json(state)
 
     output_lang = normalize_language(language)
 

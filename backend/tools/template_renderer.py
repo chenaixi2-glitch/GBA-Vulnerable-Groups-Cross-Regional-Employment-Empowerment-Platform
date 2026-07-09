@@ -226,7 +226,8 @@ def _build_zh_template_variables(content: "ResumeContent", config: "RenderConfig
     """
 
     photo_url = (extras.get("photo_url") or extras.get("photo_data") or "").strip()
-    photo_html = f'<img class="profile-photo" src="{_esc(photo_url)}" alt="证件照" />' if photo_url else ""
+    # data: URLs must not be HTML-escaped — escaping breaks base64 src attributes
+    photo_html = f'<img class="profile-photo" src="{photo_url}" alt="证件照" />' if photo_url else ""
 
     edu_parts = []
     for edu in profile.education:

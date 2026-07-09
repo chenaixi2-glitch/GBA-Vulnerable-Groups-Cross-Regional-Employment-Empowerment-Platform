@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -57,6 +59,14 @@ class ProfileFactOutput(BaseModel):
 class ProfileExtractionOutput(BaseModel):
     profile_basic: ProfileBasicOutput = Field(default_factory=ProfileBasicOutput)
     facts: list[ProfileFactOutput] = Field(default_factory=list)
+
+
+class ProfilePatchOutput(BaseModel):
+    facts: list[ProfileFactOutput] = Field(default_factory=list)
+
+
+class BatchTranslationOutput(BaseModel):
+    translations: dict[str, str] = Field(default_factory=dict)
 
 
 class GapOutput(BaseModel):
@@ -142,6 +152,25 @@ class ResumeModulePolishOutput(BaseModel):
     """Single resume section batch output for modular JD-tailored generation."""
 
     items: list[ResumeSectionItemOutput] = Field(default_factory=list)
+
+
+class ResumeModuleTranslateOutput(BaseModel):
+    """Single resume module translation output — field-level when available."""
+
+    id: str = ""
+    title: str = ""
+    content: str = ""
+    fields: dict[str, Any] = Field(default_factory=dict)
+
+
+class ResumeEducationTranslateOutput(BaseModel):
+    """Single education entry translation output."""
+
+    id: str = ""
+    school: str = ""
+    major: str = ""
+    degree: str = ""
+    fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class PageMarginOutput(BaseModel):

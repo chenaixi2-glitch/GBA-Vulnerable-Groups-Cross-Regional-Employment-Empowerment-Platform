@@ -83,38 +83,54 @@ def get_server_host() -> str:
 
 def get_llm_config() -> dict:
     """Return LLM config (provider, model, api_base, api_key, temperature, max_tokens)."""
-    cfg = get_config()["llm"]
-    api_key_env = cfg.get("api_key_env", "")
-    return {
-        "provider": cfg.get("provider", "openai"),
-        "model": cfg["model"],
-        "api_base": cfg.get("api_base", ""),
-        "api_key": _resolve_api_key(api_key_env) if api_key_env else "",
-        "temperature": cfg.get("temperature", 0.3),
-        "max_tokens": cfg.get("max_tokens", 4096),
-        "api_version": cfg.get("api_version", ""),
-        "deployment": cfg.get("deployment", ""),
-        "model_kwargs": cfg.get("model_kwargs", {}),
-        "timeout": cfg.get("timeout", None),
-    }
+    return _build_llm_config(get_config()["llm"])
 
 
 def get_judge_llm_config() -> dict:
     """Return LLM-as-judge config; falls back to main llm if judge section absent."""
     cfg = get_config().get("judge") or get_config().get("llm", {})
+    return _build_llm_config(cfg, default_temperature=0.1, default_max_tokens=2048)
+
+
+def _build_llm_config(cfg: dict, *, default_temperature: float = 0.3, default_max_tokens: int = 4096) -> dict:
+    """将 config.yaml 中的 LLM 小节标准化为 models.llm 使用的 dict。"""
     api_key_env = cfg.get("api_key_env", "")
     return {
         "provider": cfg.get("provider", "openai"),
         "model": cfg["model"],
         "api_base": cfg.get("api_base", ""),
         "api_key": _resolve_api_key(api_key_env) if api_key_env else "",
-        "temperature": cfg.get("temperature", 0.1),
-        "max_tokens": cfg.get("max_tokens", 2048),
+        "temperature": cfg.get("temperature", default_temperature),
+        "max_tokens": cfg.get("max_tokens", default_max_tokens),
         "api_version": cfg.get("api_version", ""),
         "deployment": cfg.get("deployment", ""),
         "model_kwargs": cfg.get("model_kwargs", {}),
         "timeout": cfg.get("timeout", None),
+        "ocr_mode": cfg.get("ocr_mode", "grounding"),
+        "ocr_dpi": int(cfg.get("ocr_dpi", 200)),
+        "ocr_parallel_workers": int(cfg.get("ocr_parallel_workers", 4)),
     }
+
+
+def get_resume_parse_config() -> dict:
+    """返回简历 OCR / 画像解析模型配置。"""
+    root = get_config()
+    cfg = root.get("resume_parse") or root.get("llm", {})
+    return _build_llm_config(cfg, default_temperature=0.0, default_max_tokens=8192)
+
+
+def get_translation_config() -> dict:
+    """返回翻译模型配置。"""
+    root = get_config()
+    cfg = root.get("translation") or root.get("llm", {})
+    return _build_llm_config(cfg, default_temperature=0.1, default_max_tokens=4096)
+
+
+def get_resume_generation_config() -> dict:
+    """返回简历内容生成模型配置。"""
+    root = get_config()
+    cfg = root.get("resume_generation") or root.get("llm", {})
+    return _build_llm_config(cfg, default_temperature=0.3, default_max_tokens=8192)
 
 
 def get_embedding_config() -> dict:
@@ -143,6 +159,7 @@ def get_rerank_config() -> dict:
         "api_base": cfg.get("api_base", ""),
         "api_key": _resolve_api_key(api_key_env) if api_key_env else "",
         "top_n": cfg.get("top_n", 5),
+        "instruction": cfg.get("instruction", ""),
         "api_version": cfg.get("api_version", ""),
         "model_kwargs": cfg.get("model_kwargs", {}),
     }

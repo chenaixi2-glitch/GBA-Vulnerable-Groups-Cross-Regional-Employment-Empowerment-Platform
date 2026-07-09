@@ -7,9 +7,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from agents.json_contracts import ProfileExtractionOutput
+from agents.json_contracts import ProfileExtractionOutput, ProfilePatchOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.profile_extraction import PROFILE_EXTRACTION_PROMPT
+from prompts.profile_clarification_patch import PROFILE_CLARIFICATION_PATCH_PROMPT
+from tools.profile_fact_split import expand_profile_facts, material_language_instruction
+from tools.resume_profile_context import build_profile_json
 from workflow.state import (
     CopilotState, CandidateProfile, ProfileBasic, Material, Fact,
 )
@@ -56,6 +59,114 @@ def _filter_removed_facts(facts: list[Fact], user_message: str) -> list[Fact]:
     return kept
 
 
+def _is_optimization_feedback(state: CopilotState, user_message: str) -> bool:
+    if (state.forced_intent or "").strip() == "profile_patch":
+        return True
+    return "CLARIFICATIONS" in user_message or "CONFIRMED_REMOVALS" in user_message
+
+
+def _extract_clarifications_block(user_message: str) -> str:
+    if "CLARIFICATIONS" not in user_message:
+        return ""
+    return user_message[user_message.index("CLARIFICATIONS"):].strip()
+
+
+def _merge_fact_updates(existing_facts: list[Fact], updates: list[Any], *, now: str) -> list[Fact]:
+    merged = list(existing_facts)
+    for fd in updates:
+        fact = Fact(
+            id=fd.id or f"fact_{uuid.uuid4().hex[:8]}",
+            type=fd.type,
+            content=fd.content,
+            source_refs=fd.source_refs or ["user_clarification"],
+            updated_at=now,
+        )
+        found = False
+        for index, existing in enumerate(merged):
+            if existing.id == fact.id:
+                merged[index] = fact
+                found = True
+                break
+        if not found:
+            merged.append(fact)
+    return merged
+
+
+async def _patch_profile_from_feedback_async(
+    state: CopilotState,
+    existing: CandidateProfile,
+    user_message: str,
+) -> dict[str, Any]:
+    """Incremental profile update after gap-analysis clarifications — no full re-extraction."""
+    now = datetime.now(timezone.utc).isoformat()
+    existing_facts = _filter_removed_facts(list(existing.facts), user_message)
+    clarifications = _extract_clarifications_block(user_message)
+
+    if clarifications:
+        prompt = PROFILE_CLARIFICATION_PATCH_PROMPT.format(
+            existing_facts_json=build_profile_json(state),
+            clarifications=clarifications,
+        )
+        llm = get_llm()
+        try:
+            parsed = await ainvoke_json_with_schema(
+                llm, prompt, ProfilePatchOutput, logger, "Profile Patch Agent",
+            )
+        except RuntimeError as exc:
+            logger.error("Profile Patch Agent failed: %s", exc)
+            return {
+                "workflow_trace": append_trace(
+                    state,
+                    node="profile_agent",
+                    status="failed",
+                    input_summary=f"增量更新候选人画像：{summarize_user_message(user_message)}",
+                    output_summary="画像增量更新失败：模型输出格式异常，请重试。",
+                    error=str(exc),
+                ),
+            }
+        existing_facts = _merge_fact_updates(existing_facts, parsed.facts, now=now)
+
+    profile = CandidateProfile(
+        profile_basic=existing.profile_basic,
+        materials=list(existing.materials),
+        facts=existing_facts,
+    )
+
+    logger.info(
+        "Profile patched incrementally: %s, %d facts (clarifications=%s)",
+        profile.profile_basic.name,
+        len(existing_facts),
+        bool(clarifications),
+    )
+
+    meta = state.meta.model_copy(update={
+        "dirty_flags": state.meta.dirty_flags.model_copy(update={
+            "content_dirty": True,
+            "render_dirty": True,
+            "interview_dirty": True,
+        })
+    })
+
+    return {
+        "candidate_profile": profile,
+        "meta": meta,
+        "workflow_trace": append_trace(
+            state,
+            node="profile_agent",
+            input_summary=f"增量更新候选人画像：{summarize_user_message(user_message)}",
+            output_summary=(
+                f"已根据追问回答更新画像：{profile.profile_basic.name or '未命名候选人'}，"
+                f"共 {len(existing_facts)} 条事实记录。"
+            ),
+            artifacts={
+                "candidate_name": profile.profile_basic.name,
+                "fact_count": len(existing_facts),
+                "incremental_patch": True,
+            },
+        ),
+    }
+
+
 async def profile_node_async(state: CopilotState) -> dict[str, Any]:
     """Profile Agent 异步节点函数。"""
     logger.info("Profile Agent started for session %s", state.session_id)
@@ -68,15 +179,21 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
 
     # 已有画像（新上传时覆盖，不合并）
     existing = None if replace_mode else state.candidate_profile
-    existing_json = existing.model_dump_json(indent=2) if existing else "{}"
+
+    if existing and _is_optimization_feedback(state, material_text):
+        return await _patch_profile_from_feedback_async(state, existing, material_text)
+
+    existing_json = build_profile_json(state) if existing else "{}"
 
     prompt = PROFILE_EXTRACTION_PROMPT.format(
         material_text=material_text,
         existing_profile=existing_json,
+        material_language_instruction=material_language_instruction(material_text),
     )
     llm = get_llm()
     try:
         parsed = await ainvoke_json_with_schema(llm, prompt, ProfileExtractionOutput, logger, "Profile Agent")
+        parsed = parsed.model_copy(update={"facts": expand_profile_facts(parsed.facts)})
     except RuntimeError as exc:
         logger.error("Profile Agent failed: %s", exc)
         return {

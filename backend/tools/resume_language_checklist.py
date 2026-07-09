@@ -214,6 +214,45 @@ def _candidate_has_internship(state: CopilotState) -> bool:
     return any(f.type == "internship" and (f.content or "").strip() for f in cp.facts)
 
 
+def _candidate_has_project(state: CopilotState) -> bool:
+    cp = state.candidate_profile
+    if not cp:
+        return False
+    return any(f.type == "project" and (f.content or "").strip() for f in cp.facts)
+
+
+def _candidate_has_custom_module(state: CopilotState) -> bool:
+    cp = state.candidate_profile
+    if not cp:
+        return False
+    return any(f.type == "custom" and (f.content or "").strip() for f in cp.facts)
+
+
+def _has_campus_experience(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
+    if resume and resume.projects:
+        return True
+    if _candidate_has_project(state):
+        return True
+    return _has_pattern(
+        text,
+        [r"校内|社团|学生会|校园活动|學生會|社團|campus|student club|student council|student org"],
+    )
+
+
+def _has_volunteer_experience(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
+    if _candidate_has_custom_module(state):
+        return True
+    return _has_pattern(text, [r"志愿|志願|公益|ngo|npo|volunteer|慈善|社会服务|社會服務"])
+
+
+def _has_any_experience_track(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
+    return (
+        _has_work_experience(state, resume, text)
+        or _has_campus_experience(state, resume, text)
+        or _has_volunteer_experience(state, resume, text)
+    )
+
+
 def _candidate_has_skills(state: CopilotState) -> bool:
     cp = state.candidate_profile
     if not cp:
@@ -347,8 +386,11 @@ def check_resume_language_requirements(
 
     items.append(_check_language_mixing(resume, lang))
 
-    if is_cjk_resume_language(lang):
+    if lang == "zh":
         items.extend(_check_chinese_resume(state, resume, text))
+    elif lang == "zh-TW":
+        page_limit = page_limit_for_tier(resolve_experience_tier(state))
+        items.extend(_check_traditional_chinese_resume(state, resume, text, page_limit=page_limit))
     else:
         page_limit = page_limit_for_tier(resolve_experience_tier(state))
         items.extend(_check_english_resume(state, resume, text, page_limit=page_limit))
@@ -380,17 +422,28 @@ def _build_summary(
     recommended: list[CheckItem],
     warnings: list[CheckItem],
 ) -> str:
-    if is_cjk_resume_language(lang):
-        label = "繁體中文" if lang == "zh-TW" else "中文"
+    if lang == "zh":
         if not required and not recommended and not warnings:
-            return f"{label}简历核心内容已较完整，可继续优化措辞与排版。"
-        parts = [f"{label}简历待补充提醒："]
+            return "中文简历核心内容已较完整，可继续优化措辞与排版。"
+        parts = ["中文简历待补充提醒："]
         if required:
             parts.append(f"必填缺失 {len(required)} 项：" + "、".join(i["label"] for i in required[:5]))
         if recommended:
             parts.append(f"建议补充 {len(recommended)} 项：" + "、".join(i["label"] for i in recommended[:5]))
         if warnings:
             parts.append(f"格式注意 {len(warnings)} 项")
+        return " ".join(parts)
+
+    if lang == "zh-TW":
+        if not required and not recommended and not warnings:
+            return "繁體中文履歷核心內容已較完整，可繼續優化措辭與排版。"
+        parts = ["繁體中文履歷待補充提醒："]
+        if required:
+            parts.append(f"必填缺失 {len(required)} 項：" + "、".join(i["label"] for i in required[:5]))
+        if recommended:
+            parts.append(f"建議補充 {len(recommended)} 項：" + "、".join(i["label"] for i in recommended[:5]))
+        if warnings:
+            parts.append(f"格式注意 {len(warnings)} 項")
         return " ".join(parts)
 
     resume_kind = "Portuguese (Macau)" if lang == "pt" else "English"
@@ -416,13 +469,12 @@ def _check_chinese_resume(
     employer = _employer_type(state)
     strict_cn = employer in ("soe", "public")
 
-    # 照片
+    # 照片 — 简体中文简历一律必填
     has_photo = _has_profile_photo(state, resume, text)
-    photo_severity = "required" if strict_cn else "recommended"
-    photo_msg = "国央企/体制内岗位必须附正装证件照" if strict_cn else "中文简历（国企/事业单位/银行/教师/传统行业）建议附正装证件照"
     items.append(
-        _item("zh_photo", "photo", "photo", "证件照", photo_severity, photo_msg,
-              "请上传白底/浅蓝底一寸证件照，置于简历右上角；互联网技术岗可选",
+        _item("zh_photo", "photo", "photo", "证件照", "required",
+              "简体中文简历需附正装证件照",
+              "请上传白底/浅蓝底一寸证件照，置于简历右上角",
               has_photo)
     )
 
@@ -461,10 +513,16 @@ def _check_chinese_resume(
     items.append(_item("zh_education", "content", "education", "教育经历", "required",
                       "中文简历教育经历通常紧跟个人信息", "学校、专业、学位、起止时间", has_edu))
 
-    # 实习/工作
+    # 实习/工作 — 单项选填，但四类经历至少一项
     has_work = _has_work_experience(state, resume, text)
-    items.append(_item("zh_experience", "content", "internships", "实习/工作经历", "required",
-                      "中文简历需有实习或工作经历模块", "按时间倒序，描述职责与成果", has_work))
+    items.append(_item("zh_experience", "content", "internships", "实习/工作经历", "recommended",
+                      "可补充实习或工作经历以突出实践背景", "按时间倒序，描述职责与成果", has_work))
+
+    has_any_exp = _has_any_experience_track(state, resume, text)
+    items.append(_item("zh_experience_any", "content", "experience_any",
+                      "实习/工作/校内/志愿经历（至少一项）", "required",
+                      "需至少填写一类经历：实习、工作、校内活动或志愿服务",
+                      "可添加实习/工作、项目（校内）、或其他（志愿）条目", has_any_exp))
 
     # 项目经历
     has_proj = bool(resume and resume.projects) or _has_pattern(text, [r"项目"])
@@ -503,6 +561,131 @@ def _check_chinese_resume(
         items.append(_warn_item("zh_soe_photo", "photo", "photo", "国央企/体制内证件照",
                                 "您选择了国央企/体制内方向，证件照几乎是硬性要求",
                                 "请补充白底/浅蓝底正装一寸照"))
+
+    return items
+
+
+def _check_traditional_chinese_resume(
+    state: CopilotState,
+    resume: ResumeContent | None,
+    text: str,
+    *,
+    page_limit: int = 1,
+) -> list[CheckItem]:
+    """繁體中文履歷：沿用英文/葡語版式規範，並加入跨境必填項。"""
+    items: list[CheckItem] = []
+    profile = resume.profile if resume else None
+
+    has_photo = _has_profile_photo(state, resume, text)
+    if has_photo:
+        items.append(_warn_item("tw_no_photo", "forbidden", "photo", "個人照片",
+                                "繁體中文跨境履歷不宜放個人照片（歐美規範）",
+                                "請移除照片；港澳部分金融前台崗位可酌情保留專業證件照"))
+    else:
+        items.append(_ok_item("tw_no_photo", "forbidden", "photo", "無個人照片",
+                              "符合跨境英文履歷慣例（不放照片）"))
+
+    name = _profile_field(state, resume, "name")
+    items.append(_item("tw_name", "contact", "name", "姓名", "required",
+                      "履歷頂部以姓名為最大標題", "僅寫姓名，勿用大號 Resume/CV 標題", bool(name)))
+
+    phone = _profile_field(state, resume, "phone")
+    items.append(_item("tw_phone", "contact", "phone", "電話", "required",
+                      "需留手機號碼", "可含國家/區號，如 +852 9123 4567", bool(phone)))
+
+    email = _profile_field(state, resume, "email")
+    items.append(_item("tw_email", "contact", "email", "郵箱", "required",
+                      "需留專業郵箱", "使用正式郵箱地址，避免暱稱", bool(email)))
+
+    city = _profile_field(state, resume, "city")
+    items.append(_item("tw_city", "contact", "city", "城市", "recommended",
+                      "建議填寫所在城市", "例：Hong Kong / 廣州 — 不需寫詳細住址", bool(city)))
+
+    visa_type = _profile_extra(state, resume, "visa_type")
+    items.append(_item("tw_visa_type", "contact", "visa_type", "簽證類型", "required",
+                      "跨境就業履歷需標明簽證/逗留身份", "例：往來港澳通行證 / 人才簽證 / 工作簽證", bool(visa_type)))
+
+    resident_type = _profile_extra(state, resume, "resident_type")
+    items.append(_item("tw_resident_type", "contact", "resident_type", "居民類型", "required",
+                      "跨境就業履歷需標明居民/居留身份", "例：香港永久居民 / 澳門居民 / 內地居民", bool(resident_type)))
+
+    linkedin = getattr(profile, "linkedin", "") if profile else ""
+    linkedin = linkedin or _profile_extra(state, resume, "linkedin")
+    has_linkedin = bool(linkedin.strip()) or _has_pattern(text, [r"linkedin\.com"])
+    items.append(_item("tw_linkedin", "contact", "linkedin", "LinkedIn", "recommended",
+                      "建議附 LinkedIn 連結", "https://linkedin.com/in/yourname", has_linkedin))
+
+    forbidden_patterns = [
+        (r"\d{1,2}\s*岁|年齡|age\s*[:：]\s*\d{1,2}|years old", "tw_forbid_age", "age"),
+        (r"性別|gender|male|female|男|女", "tw_forbid_gender", "gender"),
+        (r"婚姻|marital|married|single|離異", "tw_forbid_marital", "marital_status"),
+        (r"籍貫|民族|ethnicity|height|身高", "tw_forbid_ethnicity", "ethnicity"),
+        (r"政治面貌|黨員|party member|身份證號", "tw_forbid_political", "political_id"),
+        (r"birthday|出生|date of birth|dob", "tw_forbid_dob", "date_of_birth"),
+    ]
+    for pat, item_id, field in forbidden_patterns:
+        if _has_pattern(text, [pat]):
+            items.append(_warn_item(item_id, "forbidden", field, field, "", ""))
+
+    has_summary = _has_professional_summary(state, resume, text)
+    items.append(_item("tw_summary", "content", "summary", "Professional Summary", "recommended",
+                      "建議用 3-4 行 Professional Summary 概括核心技能與成果",
+                      "避免空泛形容詞堆砌，突出量化成果", has_summary))
+
+    if resume and resume.summary and len(resume.summary.strip()) > (400 if page_limit <= 1 else 700):
+        items.append(_warn_item("tw_summary_long", "format", "summary", "Summary 過長",
+                                "Professional Summary 建議控制在 3-4 行",
+                                f"刪減至核心賣點，整份履歷保持 {page_limit} 頁以內"))
+
+    has_work = _has_work_experience(state, resume, text)
+    items.append(_item("tw_experience", "content", "internships", "Work Experience", "recommended",
+                      "可補充工作/實習經歷以突出實踐背景",
+                      "動詞開頭 + 量化結果，如：Led X, improved Y by 20%", has_work))
+
+    has_any_exp = _has_any_experience_track(state, resume, text)
+    items.append(_item("tw_experience_any", "content", "experience_any",
+                      "實習/工作/校內/志願經歷（至少一項）", "required",
+                      "需至少填寫一類經歷：實習、工作、校內活動或志願服務",
+                      "可添加實習/工作、項目（校內）、或其他（志願）條目", has_any_exp))
+
+    has_quant = _has_pattern(text, [r"\d+\s*%", r"\d+\s*(users|clients|projects|k|m)", r"increased|reduced|improved|boosted|by \d"])
+    items.append(_item("tw_quantified", "content", "metrics", "量化成果", "recommended",
+                      "經歷描述建議動詞開頭並含量化數據", "Action verb + task + measurable result", has_quant))
+
+    has_edu = _has_education(state, resume, text)
+    items.append(_item("tw_education", "content", "education", "Education", "required",
+                      "教育背景為核心模塊", "Degree in English, e.g. B.S. in Computer Science", has_edu))
+
+    has_skills = _has_skills_section(state, resume, text)
+    items.append(_item("tw_skills", "content", "skills", "Skills", "recommended",
+                      "Skills 放在經歷之後，緊湊列表", "Group by category, comma-separated", has_skills))
+
+    has_intl_lang = _has_pattern(text, [r"ielts|toefl|gre|gmat|fluent english|native english|bilingual|粵語|cantonese"])
+    has_cet_only = _has_pattern(text, [r"cet[-\s]?[46]|四六級|六級"]) and not has_intl_lang
+    if has_cet_only:
+        items.append(_warn_item("tw_lang_cert", "content", "language_certs", "語言能力",
+                                "跨境履歷中僅列 CET-4/6 認可度較低",
+                                "如有雅思/托福成績請補充；否則寫 Fluent English / 粵語流利"))
+    elif not has_intl_lang:
+        items.append(_item("tw_lang_cert", "content", "language_certs", "語言能力", "recommended",
+                           "建議標明英語/粵語能力", "IELTS 7.0 / TOEFL 100 / Fluent English / 粵語流利", False))
+    else:
+        items.append(_ok_item("tw_lang_cert", "content", "language_certs", "語言能力",
+                              "已標註國際認可的語言能力"))
+
+    page_label = "One page only" if page_limit <= 1 else f"Up to {page_limit} pages"
+    page_hint = (
+        f"繁體中文跨境履歷建議 {page_limit} 頁以內"
+        if page_limit <= 1
+        else f"繁體中文跨境履歷建議不超過 {page_limit} 頁 A4"
+    )
+    items.append(_item("tw_one_page", "format", "page_limit", page_label, "required", page_hint,
+                      "刪減次要內容，保持簡潔", True))
+
+    if _has_pattern(text, [r"性格開朗|吃苦耐勞|認真負責|team player personality|hardworking and honest"]):
+        items.append(_warn_item("tw_no_subjective", "format", "wording", "主觀形容詞",
+                                "避免 'hardworking, outgoing' 等主觀形容詞堆砌",
+                                "改用量化成果和行為動詞描述"))
 
     return items
 

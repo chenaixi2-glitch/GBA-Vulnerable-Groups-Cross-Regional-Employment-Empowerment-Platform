@@ -45,4 +45,9 @@ module.exports = {
     resumeManifest: () => readJson('aixi', 'resume-manifest.json'),
     profilePhotoPath: () => path.join(ROOT, 'aixi', 'profile-photo.jpg'),
   },
+  matching: {
+    fixtures: () => readJson('matching', 'fixtures.json'),
+    companies: () => readJson('matching', 'fixtures.json').companies,
+    candidates: () => readJson('matching', 'fixtures.json').candidates,
+  },
 };

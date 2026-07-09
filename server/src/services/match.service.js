@@ -6,8 +6,22 @@ function normalizeSkill(s) {
   return String(s || '').toLowerCase().trim();
 }
 
+function parseSkillsJson(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map((s) => String(s).trim()).filter(Boolean);
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.map((s) => String(s).trim()).filter(Boolean) : [];
+    } catch {
+      return raw.split(/[,，;；|]/).map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+}
+
 function extractJobSkills(job) {
-  const skills = parseGroupTypesJson(job.skills);
+  const skills = parseSkillsJson(job.skills);
   const fromDesc = String(job.description || '')
     .toLowerCase()
     .match(/[a-z\u4e00-\u9fff]{2,30}/g) || [];
@@ -168,7 +182,7 @@ function mapRowSkills(row) {
     target_group_types: parseGroupTypesJson(row.target_group_types),
     target_criteria: parseTargetCriteria(row.target_criteria),
     vulnerable_group_friendly: Boolean(row.vulnerable_group_friendly),
-    skills: parseGroupTypesJson(row.skills),
+    skills: parseSkillsJson(row.skills),
   };
 }
 
@@ -176,5 +190,6 @@ module.exports = {
   scoreJobResume,
   extractJobSkills,
   extractResumeSkills,
+  parseSkillsJson,
   mapRowSkills,
 };

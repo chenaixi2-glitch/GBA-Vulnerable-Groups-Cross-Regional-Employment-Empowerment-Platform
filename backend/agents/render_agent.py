@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import time
 from datetime import datetime, timezone
 from typing import Any
 
-from agents.content_agent import compress_resume_for_page_limit_async
+from agents.content_agent import _merge_profile_extras_from_candidate, compress_resume_for_page_limit_async
 from agents.json_contracts import RenderInstructionOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.render_instruction import RENDER_INSTRUCTION_PROMPT
@@ -23,7 +24,7 @@ from tools.resume_layout import normalize_language
 from tools.typography_ladder import fit_typography_to_page_limit
 from workflow.state import CopilotState, RenderConfig, ResumeHtml, PageMargin
 from workflow.trace import append_trace, summarize_user_message
-from log import get_logger
+from log import get_logger, elapsed_ms, log_stage_timing
 
 logger = get_logger("agent")
 
@@ -32,6 +33,7 @@ _MAX_PAGE_FIT_ATTEMPTS = 2
 
 async def _update_render_config_from_llm_async(state: CopilotState) -> RenderConfig:
     """异步解析渲染指令并更新配置。"""
+    t0 = time.perf_counter()
     prompt = RENDER_INSTRUCTION_PROMPT.format(
         current_render_config=state.render_config.model_dump_json(indent=2),
         render_instruction=state.user_message,
@@ -64,6 +66,12 @@ async def _update_render_config_from_llm_async(state: CopilotState) -> RenderCon
         version=state.render_config.version + 1,
         last_render_reason=parsed.last_render_reason or state.user_message,
     )
+    log_stage_timing(
+        logger,
+        "render_agent.config_llm",
+        elapsed_ms(t0),
+        session_id=state.session_id,
+    )
     return new_config
 
 
@@ -73,6 +81,7 @@ async def _fit_resume_to_page_limit_async(
     render_config: RenderConfig,
 ) -> tuple[Any, str, RenderConfig, int | None, int, int]:
     """Render HTML; adjust typography ladder, then compress content if still over limit."""
+    fit_t0 = time.perf_counter()
     page_limit = render_config.page_limit or resolve_page_limit(state)
     compress_attempts = 0
     typography_steps = 0
@@ -118,6 +127,16 @@ async def _fit_resume_to_page_limit_async(
             render_config.page_margin.top,
         )
 
+    log_stage_timing(
+        logger,
+        "render_agent.page_fit",
+        elapsed_ms(fit_t0),
+        session_id=state.session_id,
+        pdf_pages=page_count,
+        compress_attempts=compress_attempts,
+        typography_steps=typography_steps,
+    )
+
     return resume_content, html_str, render_config, page_count, compress_attempts, typography_steps
 
 
@@ -161,6 +180,11 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
             })
 
     resume_content = state.resume_content_json
+    if resume_content is not None:
+        resume_content = _merge_profile_extras_from_candidate(
+            resume_content.model_copy(deep=True),
+            state,
+        )
     if resume_content is None:
         return {
             "render_config": render_config,

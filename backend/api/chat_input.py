@@ -48,6 +48,7 @@ def prepare_chat_input(message: str, attachments: list[dict[str, Any]]) -> Prepa
         "以下是用户上传附件解析出的文本，请把它们视作本轮输入的一部分。"
         "若用户文字与附件内容冲突，以用户文字中的明确要求为准；"
         "若需要抽取候选人信息或岗位信息，请优先使用附件中的原始内容，不要忽略文件名提供的上下文。"
+        "本说明文字为中文仅作系统提示，不得据此将英文简历内容翻译成中文。"
     )
     merged_message = "\n\n".join([prefix, instruction, *attachment_blocks])
     return PreparedChatInput(user_message=merged_message, user_attachments=normalized_attachments)

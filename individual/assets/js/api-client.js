@@ -1543,8 +1543,11 @@ class APIClient {
     async _probeBackendHealth() {
         for (const url of this._healthUrls()) {
             try {
-                await axios.get(url, { timeout: API_CONFIG.HEALTH_TIMEOUT });
-                return true;
+                const res = await axios.get(url, { timeout: API_CONFIG.HEALTH_TIMEOUT });
+                const data = res.data;
+                if (data && typeof data === 'object' && String(data.status || '').toLowerCase() === 'ok') {
+                    return true;
+                }
             } catch (_) {
                 /* try next host variant */
             }
@@ -1753,6 +1756,36 @@ class APIClient {
     _isSessionAccessError(error) {
         const status = error && error.response && error.response.status;
         return status === 401 || status === 403;
+    }
+
+    _isBoundSessionAccessError(error) {
+        if (!this._isSessionAccessError(error)) return false;
+        const detail = String((error.response && error.response.data && error.response.data.detail) || '');
+        return detail.includes('访问该会话') || detail.includes('无权访问');
+    }
+
+    _isAuthLoginRequiredError(error) {
+        if (!error || !error.response || error.response.status !== 401) return false;
+        const detail = String((error.response.data && error.response.data.detail) || '');
+        if (detail.includes('访问该会话') || detail.includes('无权访问')) return false;
+        return detail.includes('请先登录') || detail.includes('无效的用户');
+    }
+
+    async _resumeCallWithSessionRetry(requestFn, options = {}) {
+        const { draft = null, retryOnAccessDenied = true } = options;
+        try {
+            return await requestFn();
+        } catch (error) {
+            if (!retryOnAccessDenied || !this._isBoundSessionAccessError(error)) {
+                throw error;
+            }
+            this.clearSession();
+            this.generateSessionId();
+            if (draft) {
+                await this.ensureSessionFromDraft(draft);
+            }
+            return await requestFn();
+        }
     }
 
     /**
@@ -2025,11 +2058,13 @@ class APIClient {
 
             await this.ensureBackendAvailable();
 
-            const response = await this.client.put('/resume/draft', {
-                session_id: this.sessionId,
-                draft: payload,
-            });
-            return response.data;
+            return await this._resumeCallWithSessionRetry(async () => {
+                const response = await this.client.put('/resume/draft', {
+                    session_id: this.sessionId,
+                    draft: payload,
+                });
+                return response.data;
+            }, { draft: payload });
         } catch (error) {
             console.error('Save draft error:', error);
             throw this.handleError(error);
@@ -2197,7 +2232,11 @@ class APIClient {
             sections.push('', 'CLARIFICATIONS (add or update profile facts from my answers):', lines);
         }
 
-        return this.submitProfileText(sections.join('\n'));
+        return this.chat(sections.join('\n'), [], {
+            language: this.getPageLanguage(),
+            usePageLanguage: true,
+            forcedIntent: 'profile_patch',
+        });
     }
 
     /**
@@ -2269,6 +2308,95 @@ class APIClient {
     }
 
     /**
+     * Generate customized resume with SSE progress (skeleton + per-batch module polish).
+     */
+    async generateResumeStream(
+        instruction = 'Please generate a customized resume based on my experience and target position. Polish each experience entry to align with the target job, add quantified results only when supported by my profile facts, follow industry-standard resume conventions, and never fabricate numbers or achievements. Keep all content within one A4 page.',
+        targetContext = null,
+        options = {}
+    ) {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+            await this.syncTargetJobContext(targetContext);
+            await this.syncResumeLanguageToSession();
+            await this.ensureBackendAvailable();
+
+            const lang = typeof currentResumeLanguage !== 'undefined' && currentResumeLanguage
+                ? this.normalizeResumeLanguage(currentResumeLanguage)
+                : this.getApiLanguage();
+            const body = {
+                session_id: this.sessionId,
+                instruction: this._appendTargetContextToInstruction(instruction, targetContext),
+                language: lang,
+                jd_text: (targetContext && targetContext.jd_text) || '',
+                industry: (targetContext && targetContext.industry) || '',
+                employer_type: (targetContext && targetContext.employer_type) || '',
+                experience_level: (targetContext && targetContext.experience_level) || '',
+                typography_fit_mode: (targetContext && targetContext.typography_fit_mode) || '',
+                clear_generated_resume: options.clearGeneratedResume !== false,
+            };
+
+            const base = String(API_CONFIG.BASE_URL || '').replace(/\/$/, '');
+            const headers = { 'Content-Type': 'application/json', Accept: 'text/event-stream' };
+            const token = this.getAuthToken();
+            if (token) headers.Authorization = `Bearer ${token}`;
+
+            const response = await fetch(`${base}/resume/generate-stream`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(body),
+            });
+            if (!response.ok) {
+                let detail = '';
+                try {
+                    const errJson = await response.json();
+                    detail = errJson.detail || JSON.stringify(errJson);
+                } catch (_) {
+                    detail = await response.text();
+                }
+                throw new Error(detail || `HTTP ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let finalPayload = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const chunks = buffer.split('\n\n');
+                buffer = chunks.pop() || '';
+                for (const chunk of chunks) {
+                    const line = chunk.split('\n').find((entry) => entry.startsWith('data: '));
+                    if (!line) continue;
+                    const payload = JSON.parse(line.slice(6));
+                    if (payload.type === 'error') {
+                        throw new Error(payload.detail || apiT('errors.resumeStreamFailed', 'Resume stream failed'));
+                    }
+                    if (typeof options.onProgress === 'function') {
+                        options.onProgress(payload);
+                    }
+                    if (payload.type === 'complete') {
+                        finalPayload = payload;
+                    }
+                }
+            }
+
+            if (!finalPayload) {
+                throw new Error(apiT('errors.resumeStreamIncomplete', 'Resume generation stream ended unexpectedly'));
+            }
+            return finalPayload;
+        } catch (error) {
+            console.error('Resume stream generation error:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Generate customized resume - triggers content_agent (+ render_agent unless skipRender)
      */
     async generateResume(
@@ -2276,6 +2404,15 @@ class APIClient {
         targetContext = null,
         options = {}
     ) {
+        if (options.useStream !== false && !this.useMockMode) {
+            try {
+                await this.ensureBackendAvailable();
+                return await this.generateResumeStream(instruction, targetContext, options);
+            } catch (streamErr) {
+                if (options.streamOnly) throw streamErr;
+                console.warn('Resume stream failed, falling back to chat:', streamErr.message);
+            }
+        }
         try {
             await this.syncTargetJobContext(targetContext);
             await this.syncResumeLanguageToSession();
@@ -2505,7 +2642,7 @@ class APIClient {
      * Generate resume from parsed profile only (no JD / gap optimization).
      */
     async generateResumeFromProfile(targetLanguage, draft = null) {
-        try {
+        const run = async () => {
             if (!this.sessionId) {
                 this.generateSessionId();
             }
@@ -2522,18 +2659,17 @@ class APIClient {
                 language: lang,
             });
             return response.data;
+        };
+
+        try {
+            return await this._resumeCallWithSessionRetry(run, { draft });
         } catch (error) {
             console.error('Generate resume from profile error:', error);
             const status = error.response?.status;
             if (status === 404 && draft) {
                 try {
                     await this.ensureSessionFromDraft(draft);
-                    const lang = this.normalizeResumeLanguage(targetLanguage || this.getChatLanguage());
-                    const retry = await this.client.post('/resume/generate-from-profile', {
-                        session_id: this.sessionId,
-                        language: lang,
-                    });
-                    return retry.data;
+                    return await run();
                 } catch (retryErr) {
                     console.error('Generate resume from profile retry failed:', retryErr);
                 }
@@ -2561,6 +2697,62 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('Resume translation error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * Translate a single resume module (re-translate after bulk conversion).
+     */
+    async translateResumeModule(payload) {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+            await this.ensureBackendAvailable();
+            const lang = this.normalizeResumeLanguage(
+                payload.target_language
+                || (typeof currentResumeLanguage !== 'undefined' ? currentResumeLanguage : this.getApiLanguage())
+            );
+            const response = await this.client.post('/resume/translate-module', {
+                session_id: this.sessionId,
+                module_id: payload.module_id,
+                module_type: payload.module_type,
+                title: payload.title || '',
+                content: payload.content || '',
+                school: payload.school || '',
+                major: payload.major || '',
+                degree: payload.degree || '',
+                fields: payload.fields || {},
+                target_language: lang,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Module translation error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * Polish a single experience/project module again.
+     */
+    async polishResumeModule(payload) {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+            await this.ensureBackendAvailable();
+            const response = await this.client.post('/resume/polish-module', {
+                session_id: this.sessionId,
+                module_id: payload.module_id,
+                module_type: payload.module_type,
+                title: payload.title || '',
+                content: payload.content || '',
+                fields: payload.fields || {},
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Module polish error:', error);
             throw this.handleError(error);
         }
     }

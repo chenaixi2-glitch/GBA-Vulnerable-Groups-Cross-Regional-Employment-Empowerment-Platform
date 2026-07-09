@@ -743,7 +743,7 @@ function updateResumeViewSwitcher() {
 }
 
 function setResumeView(mode, options = {}) {
-    const { scroll = false } = options;
+    const { scroll = false, scrollTargetId = null } = options;
     if (mode === 'preview' && !resumeGenerated) {
         Utils.showToast(uiT('resume.toast.generateFirst', 'Please generate a resume first'));
         return;
@@ -767,7 +767,8 @@ function setResumeView(mode, options = {}) {
     }
 
     if (scroll) {
-        const target = mode === 'edit' ? editSection : previewSection;
+        const target = (scrollTargetId && document.getElementById(scrollTargetId))
+            || (mode === 'edit' ? editSection : previewSection);
         target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
@@ -1076,7 +1077,12 @@ function updateProfileExportUi() {
 }
 
 function applyResumeGenerationResult(response, lang, options = {}) {
-    const { beforeDraftSnapshot = null, deferPreview = false } = options;
+    const {
+        beforeDraftSnapshot = null,
+        deferPreview = false,
+        polishingFactIds = [],
+        silent = false,
+    } = options;
 
     if (!deferPreview && response?.resume_html?.html) {
         displayResume(response.resume_html.html);
@@ -1104,6 +1110,7 @@ function applyResumeGenerationResult(response, lang, options = {}) {
         && ProfileEditor.syncDraftFromResumeContent) {
         const changed = ProfileEditor.syncDraftFromResumeContent(response.resume_content_json, {
             beforeSnapshot: beforeDraftSnapshot,
+            polishingFactIds,
         });
         if (changed > 0 && !deferPreview) {
             setResumeView('edit', { scroll: false });
@@ -1113,10 +1120,10 @@ function applyResumeGenerationResult(response, lang, options = {}) {
                 { count: changed }
             ));
         } else if (deferPreview) {
-            setResumeView('edit', { scroll: true });
+            setResumeView('edit', { scroll: true, scrollTargetId: 'profile-editor-body' });
         }
     } else if (deferPreview) {
-        setResumeView('edit', { scroll: true });
+        setResumeView('edit', { scroll: true, scrollTargetId: 'profile-editor-body' });
     }
 }
 
@@ -1173,7 +1180,7 @@ async function generateResumeFromProfile(options = {}) {
                 'Resume content ready in the editor — review and export when ready (preview renders on export)'
             ));
         }
-        setResumeView('edit', { scroll: !silent });
+        setResumeView('edit', { scroll: !silent, scrollTargetId: silent ? null : 'profile-editor-body' });
         return true;
     } catch (error) {
         if (!silent) Utils.hideLoading();
@@ -1333,7 +1340,9 @@ async function generateResume() {
 
         updateAgentStatus('agent-content', 'running');
         Utils.showLoading(uiT('resume.toast.generatingResume', 'Generating your customized resume...'));
+        setResumeView('edit', { scroll: true, scrollTargetId: 'profile-editor-body' });
 
+        let streamAppliedSkeleton = false;
         const resumeResponse = await apiClient.generateResume(
             'Please generate a customized resume based on my experience and target position. Polish each experience entry to align with the target job, add quantified results only when supported by my profile facts, follow industry-standard resume conventions, and never fabricate numbers or achievements. Keep all content within one A4 page.',
             targetContext,
@@ -1341,6 +1350,32 @@ async function generateResume() {
                 forcedIntent: 'content_edit',
                 skipRender: true,
                 clearGeneratedResume: true,
+                streamOnly: true,
+                onProgress: (event) => {
+                    if (!event?.resume_content_json) return;
+                    const pendingIds = event.pending_fact_ids || [];
+                    applyResumeGenerationResult(
+                        {
+                            resume_content_json: event.resume_content_json,
+                            language: event.language || currentResumeLanguage,
+                        },
+                        event.language || currentResumeLanguage,
+                        {
+                            beforeDraftSnapshot,
+                            deferPreview: true,
+                            polishingFactIds: pendingIds,
+                            silent: true,
+                        }
+                    );
+                    if (!streamAppliedSkeleton && event.phase === 'skeleton_with_placeholders') {
+                        streamAppliedSkeleton = true;
+                        Utils.hideLoading();
+                        Utils.showToast(uiT(
+                            'resume.toast.polishingModules',
+                            'Skeleton ready — experience modules are being polished in parallel'
+                        ));
+                    }
+                },
             }
         );
 
@@ -1349,8 +1384,12 @@ async function generateResume() {
 
         applyResumeGenerationResult(
             resumeResponse,
-            resumeResponse.resume_content_json?.meta?.language || currentResumeLanguage,
-            { beforeDraftSnapshot, deferPreview: true }
+            resumeResponse.language || resumeResponse.resume_content_json?.meta?.language || currentResumeLanguage,
+            {
+                beforeDraftSnapshot,
+                deferPreview: true,
+                polishingFactIds: [],
+            }
         );
         Utils.hideLoading();
 
@@ -1851,7 +1890,13 @@ function updateResumeLanguageBadge(language) {
 }
 
 async function translateResumeToLanguage(targetLanguage) {
-    await onResumeLanguageSelected(targetLanguage);
+    const lang = typeof normalizeResumeLang === 'function' ? normalizeResumeLang(targetLanguage) : targetLanguage;
+    if (!resumeGenerated) {
+        await onResumeLanguageSelected(lang);
+        return;
+    }
+    if (lang === normalizeResumeLang(currentResumeLanguage)) return;
+    await translateResume(lang);
 }
 
 async function translateResumeToEnglish() {
@@ -1891,28 +1936,40 @@ async function translateResume(targetLanguage) {
             : null;
         const response = await apiClient.translateResume(lang);
 
-        if (response.resume_html && response.resume_html.html) {
-            displayResume(response.resume_html.html);
-        }
-        const highlightCount = applyResumeGenerationResult(response, lang, { beforeDraftSnapshot });
-        if (beforeSnapshot.html && response.resume_html?.html) {
+        const deferPreview = Boolean(response.preview_deferred);
+        const highlightCount = applyResumeGenerationResult(response, lang, { beforeDraftSnapshot, deferPreview });
+        if (response.resume_content_json) {
             pushResumeUndoSnapshot(beforeSnapshot);
         }
         Utils.hideLoading();
         const missing = response.language_checklist?.missing_count || 0;
         if (highlightCount === 0) {
-            const baseMsgs = {
-                zh: uiT('resume.toast.convertedZh', 'Resume converted to Simplified Chinese (A4 single page)'),
-                'zh-TW': uiT('resume.toast.convertedZhTw', 'Resume converted to Traditional Chinese (A4 single page)'),
-                en: uiT('resume.toast.convertedEn', 'Resume converted to English (A4 single page)'),
-                pt: uiT('resume.toast.convertedPt', 'Resume converted to Portuguese (A4)'),
-            };
-            const baseMsg = baseMsgs[lang] || baseMsgs.en;
-            Utils.showToast(missing > 0
-                ? baseMsg + uiT('resume.toast.itemsToReview', ' — {count} item(s) to review in profile editor', { count: missing })
-                : baseMsg);
+            if (deferPreview) {
+                const reviewSuffix = missing > 0
+                    ? uiT('resume.toast.itemsToReview', ' — {count} item(s) to review in profile editor', { count: missing })
+                    : '';
+                Utils.showToast(uiT(
+                    'resume.toast.generatedEditBeforeExport',
+                    'Resume content ready in the editor — review and export when ready (preview renders on export)'
+                ) + reviewSuffix);
+            } else {
+                const baseMsgs = {
+                    zh: uiT('resume.toast.convertedZh', 'Resume converted to Simplified Chinese (A4 single page)'),
+                    'zh-TW': uiT('resume.toast.convertedZhTw', 'Resume converted to Traditional Chinese (A4 single page)'),
+                    en: uiT('resume.toast.convertedEn', 'Resume converted to English (A4 single page)'),
+                    pt: uiT('resume.toast.convertedPt', 'Resume converted to Portuguese (A4)'),
+                };
+                const baseMsg = baseMsgs[lang] || baseMsgs.en;
+                Utils.showToast(missing > 0
+                    ? baseMsg + uiT('resume.toast.itemsToReview', ' — {count} item(s) to review in profile editor', { count: missing })
+                    : baseMsg);
+            }
         }
-        setResumeView(highlightCount > 0 ? 'edit' : 'preview', { scroll: true });
+        if (deferPreview) {
+            setResumeView('edit', { scroll: true, scrollTargetId: 'profile-editor-body' });
+        } else {
+            setResumeView(highlightCount > 0 ? 'edit' : 'preview', { scroll: true });
+        }
     } catch (error) {
         Utils.hideLoading();
         Utils.showAiTaskErrorToast(error, 'resume.toast.translationFailed', 'Translation failed: {msg}', { msg: error.message });
@@ -1921,16 +1978,16 @@ async function translateResume(targetLanguage) {
 }
 
 /**
- * Unified resume language switch — profile-only generate/convert, no JD required.
+ * Select target resume language — refresh format checklist only; generation happens via generateResumeFromProfile().
  */
 async function onResumeLanguageSelected(language) {
     const lang = typeof normalizeResumeLang === 'function' ? normalizeResumeLang(language) : language;
-    if (resumeGenerated) {
-        if (lang === normalizeResumeLang(currentResumeLanguage)) return;
-        await translateResume(lang);
-        return;
+    if (lang === normalizeResumeLang(currentResumeLanguage)) return;
+    if (typeof applyResumeLanguageSelection === 'function') {
+        await applyResumeLanguageSelection(lang);
+    } else {
+        updateResumeLanguageBadge(lang);
     }
-    await generateResumeFromProfile({ language: lang });
 }
 
 window.onResumeLanguageSelected = onResumeLanguageSelected;

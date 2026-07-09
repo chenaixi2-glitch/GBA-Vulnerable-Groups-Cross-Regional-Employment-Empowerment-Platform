@@ -19,6 +19,9 @@ const ProfileEditor = {
     saveTimer: null,
     maxPhotoBytes: 2 * 1024 * 1024,
     savedRecords: [],
+    polishingFactIds: [],
+    translatingModuleIds: [],
+    rePolishingModuleIds: [],
 
     SECTION_ORDER: ['education', 'skill', 'internship', 'project', 'award', 'paper', 'custom'],
 
@@ -108,6 +111,9 @@ const ProfileEditor = {
         ensureSection('awards', () => {
             if (!this.hasModuleType('award')) this.addModule('award', true);
         });
+        ensureSection('experience_any', () => {
+            if (!this.hasModuleType('internship')) this.addModule('internship', true);
+        });
         ensureSection('volunteer', () => {
             if (!this.hasModuleType('custom')) this.addModule('custom', true);
         });
@@ -119,7 +125,9 @@ const ProfileEditor = {
         this.bindEvents();
         this.updatePhotoVisibility(typeof currentResumeLanguage !== 'undefined' ? currentResumeLanguage : 'zh');
         this.updateSaveUi();
-        this.loadSavedRecords();
+        if (typeof apiClient !== 'undefined' && apiClient.isLoggedIn()) {
+            this.loadSavedRecords();
+        }
     },
 
     bindEvents() {
@@ -157,6 +165,16 @@ const ProfileEditor = {
                     } else {
                         this.addModule(type);
                     }
+                    return;
+                }
+                const translateBtn = e.target.closest('[data-translate-module]');
+                if (translateBtn) {
+                    this.translateModule(translateBtn.dataset.translateModule, translateBtn.dataset.moduleKind || 'module');
+                    return;
+                }
+                const polishBtn = e.target.closest('[data-polish-module]');
+                if (polishBtn) {
+                    this.polishModule(polishBtn.dataset.polishModule);
                 }
             });
         }
@@ -170,6 +188,10 @@ const ProfileEditor = {
             supplementSection.addEventListener('input', () => this.scheduleSave());
             supplementSection.addEventListener('change', () => this.scheduleSave());
         }
+
+        document.getElementById('profile-translation-review-confirm')?.addEventListener('click', () => {
+            this.confirmTranslationReview();
+        });
 
         document.getElementById('profile-photo-upload-btn')?.addEventListener('click', () => {
             document.getElementById('profile-photo-input')?.click();
@@ -186,6 +208,16 @@ const ProfileEditor = {
             if (btn) {
                 this.restoreSavedRecord(btn.dataset.restoreProfileRecord);
             }
+        });
+
+        document.getElementById('profile-saved-records-refresh')?.addEventListener('click', () => {
+            if (typeof apiClient !== 'undefined' && apiClient.invalidateBackendProbe) {
+                apiClient.invalidateBackendProbe();
+            }
+            this.loadSavedRecords();
+        });
+        document.getElementById('btn-save-profile')?.addEventListener('click', () => {
+            this.saveToAccount();
         });
     },
 
@@ -225,14 +257,28 @@ const ProfileEditor = {
         return trimmed || defaultName;
     },
 
+    _isSavedRecordsAuthError(error) {
+        if (typeof apiClient !== 'undefined' && typeof apiClient._isAuthLoginRequiredError === 'function') {
+            return apiClient._isAuthLoginRequiredError(error);
+        }
+        const msg = String((error && error.message) || '');
+        return /401|Unauthorized|请先登录|需要登录/i.test(msg);
+    },
+
     async loadSavedRecords() {
         const section = document.getElementById('profile-saved-records-section');
+        const refreshBtn = document.getElementById('profile-saved-records-refresh');
         if (!section) return;
         if (typeof apiClient === 'undefined' || !apiClient.isLoggedIn()) {
             section.classList.add('hidden');
             this.savedRecords = [];
             this.renderSavedRecordsPanel();
             return;
+        }
+        if (refreshBtn) refreshBtn.disabled = true;
+        const list = document.getElementById('profile-saved-records-list');
+        if (list && !this.savedRecords.length) {
+            list.innerHTML = `<p class="text-xs text-gray-500">${this.escapeHtml(profileUiText('resume.savedRecordsLoading', 'Loading saved profiles…'))}</p>`;
         }
         try {
             const result = await apiClient.getProfileSaveHistory(20);
@@ -241,8 +287,16 @@ const ProfileEditor = {
             this.renderSavedRecordsPanel();
         } catch (error) {
             console.warn('Could not load saved profile records:', error.message);
+            if (this._isSavedRecordsAuthError(error)) {
+                section.classList.add('hidden');
+                this.savedRecords = [];
+                list.innerHTML = '';
+                return;
+            }
             section.classList.remove('hidden');
             this.renderSavedRecordsPanel(true);
+        } finally {
+            if (refreshBtn) refreshBtn.disabled = false;
         }
     },
 
@@ -333,10 +387,11 @@ const ProfileEditor = {
     updatePhotoVisibility(language) {
         const section = document.getElementById('profile-photo-section');
         if (!section) return;
-        const isCjk = typeof isCjkResumeLang === 'function'
-            ? isCjkResumeLang(language)
-            : (!language || !String(language).toLowerCase().startsWith('en'));
-        section.classList.toggle('hidden', !isCjk);
+        const lang = typeof normalizeResumeLang === 'function'
+            ? normalizeResumeLang(language)
+            : String(language || 'zh');
+        const showPhoto = lang === 'zh';
+        section.classList.toggle('hidden', !showPhoto);
     },
 
     renderPhotoPreview() {
@@ -418,6 +473,9 @@ const ProfileEditor = {
             if (typeof refreshLanguageChecklist === 'function') {
                 await refreshLanguageChecklist(this.getResumeLang());
             }
+            if (typeof resumeGenerated !== 'undefined' && resumeGenerated && typeof ensureResumePreviewRendered === 'function') {
+                await ensureResumePreviewRendered();
+            }
             Utils.showToast(profileUiText('resume.photo.uploaded', 'ID photo uploaded'));
         } catch (error) {
             Utils.showToast(profileUiText('resume.photo.uploadFailed', 'Photo upload failed: {msg}', { msg: error.message || profileUiText('common.retry', 'Please try again') }));
@@ -433,6 +491,9 @@ const ProfileEditor = {
         if (typeof refreshLanguageChecklist === 'function') {
             await refreshLanguageChecklist(this.getResumeLang());
         }
+        if (typeof resumeGenerated !== 'undefined' && resumeGenerated && typeof ensureResumePreviewRendered === 'function') {
+            await ensureResumePreviewRendered();
+        }
         Utils.showToast(profileUiText('resume.photo.removed', 'ID photo removed'));
     },
 
@@ -441,31 +502,16 @@ const ProfileEditor = {
     },
 
     parseEducationContent(content) {
-        const text = (content || '').trim();
-        if (!text) return { school: '', major: '', degree: '', start_date: '', end_date: '' };
-        try {
-            const parsed = JSON.parse(text);
-            if (parsed && typeof parsed === 'object') {
-                return {
-                    school: parsed.school || parsed.name || '',
-                    major: parsed.major || '',
-                    degree: parsed.degree || '',
-                    start_date: parsed.start_date || parsed.start || '',
-                    end_date: parsed.end_date || parsed.end || '',
-                };
-            }
-        } catch (_) { /* plain text */ }
-        return { school: text.split('\n')[0], major: '', degree: '', start_date: '', end_date: '' };
+        return ResumeProfileFields.parseFactContent('education', content);
+    },
+
+    parseModuleContent(content, title = '') {
+        return ResumeProfileFields.parseFactContent('custom', content, title);
     },
 
     educationToContent(entry) {
-        return JSON.stringify({
-            school: entry.school || '',
-            major: entry.major || '',
-            degree: entry.degree || '',
-            start_date: entry.start_date || '',
-            end_date: entry.end_date || '',
-        });
+        const fields = ResumeProfileFields.getEntryFields('education', entry);
+        return ResumeProfileFields.fieldsToFactContent('education', fields);
     },
 
     profileResponseToDraft(candidateProfile) {
@@ -480,17 +526,23 @@ const ProfileEditor = {
         (candidateProfile.facts || []).forEach((fact) => {
             const type = fact.type || 'custom';
             if (type === 'education') {
+                const fields = ResumeProfileFields.parseFactContent('education', fact.content || '');
                 education.push({
                     id: fact.id || this.newId('edu'),
-                    ...this.parseEducationContent(fact.content),
+                    ...fields,
+                    fields,
                     is_custom: false,
                 });
             } else {
+                const modType = type in this.getSectionConfig() ? type : 'custom';
+                const fields = ResumeProfileFields.parseFactContent(modType, fact.content || '');
+                const derived = ResumeProfileFields.deriveTitleContent(modType, fields);
                 modules.push({
                     id: fact.id || this.newId('mod'),
-                    type: type in this.getSectionConfig() ? type : 'custom',
-                    title: this.inferTitle(fact.content, type),
-                    content: fact.content || '',
+                    type: modType,
+                    title: derived.title,
+                    content: derived.content,
+                    fields,
                     is_custom: false,
                 });
             }
@@ -515,18 +567,28 @@ const ProfileEditor = {
     normalizeModules(modules) {
         const result = [];
         modules.forEach((mod) => {
-            if (mod.type === 'skill' && mod.content && mod.content.includes(',') && !mod.content.includes('\n')) {
-                mod.content.split(',').map((s) => s.trim()).filter(Boolean).forEach((skill, idx) => {
+            const fields = ResumeProfileFields.getEntryFields(mod.type, mod);
+            if (mod.type === 'skill' && fields.skill && String(fields.skill).includes(',') && !String(fields.skill).includes('\n')) {
+                String(fields.skill).split(',').map((s) => s.trim()).filter(Boolean).forEach((skill, idx) => {
+                    const splitFields = { ...fields, skill };
+                    const derived = ResumeProfileFields.deriveTitleContent('skill', splitFields);
                     result.push({
                         id: idx === 0 ? mod.id : this.newId('mod'),
                         type: 'skill',
-                        title: skill,
-                        content: skill,
+                        title: derived.title,
+                        content: derived.content,
+                        fields: splitFields,
                         is_custom: mod.is_custom || false,
                     });
                 });
             } else {
-                result.push(mod);
+                const derived = ResumeProfileFields.deriveTitleContent(mod.type, fields);
+                result.push({
+                    ...mod,
+                    title: mod.title || derived.title,
+                    content: mod.content || derived.content,
+                    fields,
+                });
             }
         });
         return result;
@@ -549,11 +611,8 @@ const ProfileEditor = {
         if (!this.draft.education) this.draft.education = [];
         this.draft.education.push({
             id: this.newId('edu'),
-            school: '',
-            major: '',
-            degree: '',
-            start_date: '',
-            end_date: '',
+            ...ResumeProfileFields.defaultFieldsForType('education'),
+            fields: ResumeProfileFields.defaultFieldsForType('education'),
             is_custom: true,
         });
         this.render({ preserveDraft: true });
@@ -570,16 +629,14 @@ const ProfileEditor = {
     addModule(type = 'custom', silent = false) {
         if (!this.draft) this.draft = { profile_basic: {}, education: [], modules: [] };
         const cfg = this.getSectionConfig()[type] || this.getSectionConfig().custom;
-        const newTitle = type === 'skill'
-            ? ''
-            : profileUiText('resume.profileEditor.newEntryTitle', 'New {section}', {
-                section: cfg.label.replace(/s$/, ''),
-            });
+        const fields = ResumeProfileFields.defaultFieldsForType(type);
+        const derived = ResumeProfileFields.deriveTitleContent(type, fields);
         this.draft.modules.push({
             id: this.newId('mod'),
             type: type in this.getSectionConfig() ? type : 'custom',
-            title: newTitle,
-            content: '',
+            title: derived.title,
+            content: derived.content,
+            fields,
             is_custom: true,
         });
         this.render({ preserveDraft: true });
@@ -603,6 +660,8 @@ const ProfileEditor = {
             'profile-political-status': 'political_status',
             'profile-linkedin': 'linkedin',
             'profile-summary': 'summary',
+            'profile-visa-type': 'visa_type',
+            'profile-resident-type': 'resident_type',
         };
         Object.entries(supplementFieldMap).forEach(([id, extraKey]) => {
             const el = document.getElementById(id);
@@ -622,24 +681,26 @@ const ProfileEditor = {
 
         const education = [];
         document.querySelectorAll('[data-education-id]').forEach((card) => {
+            const fields = ResumeProfileFields.collectFieldsFromCard(card);
             education.push({
                 id: card.dataset.educationId,
-                school: card.querySelector('[data-edu-school]')?.value.trim() || '',
-                major: card.querySelector('[data-edu-major]')?.value.trim() || '',
-                degree: card.querySelector('[data-edu-degree]')?.value.trim() || '',
-                start_date: card.querySelector('[data-edu-start]')?.value.trim() || '',
-                end_date: card.querySelector('[data-edu-end]')?.value.trim() || '',
+                ...fields,
+                fields,
                 is_custom: card.dataset.isCustom === 'true',
             });
         });
 
         const modules = [];
         document.querySelectorAll('[data-module-id]').forEach((card) => {
+            const type = card.querySelector('[data-module-type]')?.value || 'custom';
+            const fields = ResumeProfileFields.collectFieldsFromCard(card);
+            const derived = ResumeProfileFields.deriveTitleContent(type, fields);
             modules.push({
                 id: card.dataset.moduleId,
-                type: card.querySelector('[data-module-type]')?.value || 'custom',
-                title: card.querySelector('[data-module-title]')?.value.trim() || '',
-                content: card.querySelector('[data-module-content]')?.value.trim() || '',
+                type,
+                title: derived.title,
+                content: derived.content,
+                fields,
                 is_custom: card.dataset.isCustom === 'true',
             });
         });
@@ -686,9 +747,7 @@ const ProfileEditor = {
             saveBtn.classList.toggle('opacity-50', !loggedIn);
             saveBtn.classList.toggle('cursor-not-allowed', !loggedIn);
         }
-        if (loggedIn) {
-            this.loadSavedRecords();
-        } else {
+        if (!loggedIn) {
             const section = document.getElementById('profile-saved-records-section');
             if (section) section.classList.add('hidden');
         }
@@ -774,6 +833,10 @@ const ProfileEditor = {
         if (banner) banner.classList.add('hidden');
     },
 
+    confirmTranslationReview() {
+        this.clearTranslationHighlights();
+    },
+
     markTranslatedInput(inputEl, previousValue) {
         if (!inputEl) return;
         inputEl.classList.add('profile-field-translated');
@@ -817,35 +880,47 @@ const ProfileEditor = {
         const beforeEdu = beforeSnapshot.education || [];
         const afterEdu = afterDraft.education || [];
         afterEdu.forEach((entry, index) => {
-            const prev = beforeEdu[index] || beforeEdu.find((e) => e.id === entry.id) || {};
+            const prev = beforeEdu.find((e) => e.id === entry.id) || beforeEdu[index] || {};
             const card = document.querySelector(`[data-education-id="${entry.id}"]`)
                 || document.querySelectorAll('[data-education-id]')[index];
             if (!card) return;
-            const beforeSchool = prev.school || '';
-            const afterSchool = entry.school || '';
-            if (this.normalizeCompareText(afterSchool)
-                && this.normalizeCompareText(beforeSchool) !== this.normalizeCompareText(afterSchool)) {
-                this.markTranslatedInput(card.querySelector('[data-edu-school]'), beforeSchool);
-                changedCount += 1;
-            }
+            const prevFields = ResumeProfileFields.getEntryFields('education', prev);
+            const nextFields = ResumeProfileFields.getEntryFields('education', entry);
+            Object.keys(nextFields).forEach((key) => {
+                const beforeVal = prevFields[key] || '';
+                const afterVal = nextFields[key] || '';
+                const beforeNorm = this.normalizeCompareText(Array.isArray(beforeVal) ? beforeVal.join(', ') : beforeVal);
+                const afterNorm = this.normalizeCompareText(Array.isArray(afterVal) ? afterVal.join(', ') : afterVal);
+                if (!afterNorm || beforeNorm === afterNorm) return;
+                const input = card.querySelector(`[data-field-key="${key}"]`);
+                if (input) {
+                    this.markTranslatedInput(input, Array.isArray(beforeVal) ? beforeVal.join(', ') : beforeVal);
+                    changedCount += 1;
+                }
+            });
         });
 
         const beforeModules = beforeSnapshot.modules || [];
         const afterModules = afterDraft.modules || [];
-        const titleLevelTypes = new Set(['internship', 'project']);
         afterModules.forEach((mod, index) => {
-            if (!titleLevelTypes.has(mod.type)) return;
-            const prev = beforeModules[index] || beforeModules.find((m) => m.id === mod.id) || {};
+            const prev = beforeModules.find((m) => m.id === mod.id) || beforeModules[index] || {};
             const card = document.querySelector(`[data-module-id="${mod.id}"]`)
                 || document.querySelectorAll('[data-module-id]')[index];
             if (!card) return;
-            const beforeTitle = prev.title || '';
-            const afterTitle = mod.title || '';
-            if (this.normalizeCompareText(afterTitle)
-                && this.normalizeCompareText(beforeTitle) !== this.normalizeCompareText(afterTitle)) {
-                this.markTranslatedInput(card.querySelector('[data-module-title]'), beforeTitle);
-                changedCount += 1;
-            }
+            const prevFields = ResumeProfileFields.getEntryFields(mod.type, prev);
+            const nextFields = ResumeProfileFields.getEntryFields(mod.type, mod);
+            Object.keys(nextFields).forEach((key) => {
+                const beforeVal = prevFields[key] || '';
+                const afterVal = nextFields[key] || '';
+                const beforeNorm = this.normalizeCompareText(Array.isArray(beforeVal) ? beforeVal.join(', ') : beforeVal);
+                const afterNorm = this.normalizeCompareText(Array.isArray(afterVal) ? afterVal.join(', ') : afterVal);
+                if (!afterNorm || beforeNorm === afterNorm) return;
+                const input = card.querySelector(`[data-field-key="${key}"]`);
+                if (input) {
+                    this.markTranslatedInput(input, Array.isArray(beforeVal) ? beforeVal.join(', ') : beforeVal);
+                    changedCount += 1;
+                }
+            });
         });
 
         const banner = document.getElementById('profile-translation-review-banner');
@@ -855,7 +930,7 @@ const ProfileEditor = {
             if (textEl) {
                 textEl.textContent = profileUiText(
                     'resume.profileEditor.translationReviewBanner',
-                    '{count} title-level field(s) were auto-translated (name, school, company/project). Highlighted fields need your review.',
+                    '{count} field(s) were auto-translated. Highlighted fields need your review.',
                     { count: changedCount }
                 );
             }
@@ -873,24 +948,26 @@ const ProfileEditor = {
         if (profile.address) extras.address = profile.address;
         if (profile.github) extras.github = profile.github;
 
-        const education = (profile.education || []).map((entry) => ({
-            id: entry.id || this.newId('edu'),
-            school: entry.school || '',
-            major: entry.major || '',
-            degree: entry.degree || '',
-            start_date: entry.start_date || '',
-            end_date: entry.end_date || '',
-            is_custom: false,
-        }));
+        const education = (profile.education || []).map((entry) => {
+            const fields = ResumeProfileFields.getEntryFields('education', entry);
+            return {
+                id: entry.id || this.newId('edu'),
+                ...fields,
+                fields,
+                is_custom: false,
+            };
+        });
 
         const modules = [];
         const pushSection = (items, type) => {
             (items || []).forEach((item) => {
+                const fields = ResumeProfileFields.parseFactContent(type, item.content || '', item.title || '');
                 modules.push({
                     id: item.id || this.newId('mod'),
                     type,
                     title: item.title || '',
                     content: item.content || '',
+                    fields,
                     is_custom: false,
                 });
             });
@@ -915,10 +992,11 @@ const ProfileEditor = {
     },
 
     syncDraftFromResumeContent(resumeContentJson, options = {}) {
-        const { beforeSnapshot = null } = options;
+        const { beforeSnapshot = null, polishingFactIds = [] } = options;
         const mapped = this.resumeContentJsonToDraft(resumeContentJson);
         if (!mapped) return 0;
 
+        this.polishingFactIds = Array.isArray(polishingFactIds) ? polishingFactIds.slice() : [];
         this.draft = this.ensureDraftShape(mapped);
         this.render({ preserveDraft: true });
         if (typeof refreshLanguageChecklist === 'function') {
@@ -934,10 +1012,11 @@ const ProfileEditor = {
         if (!container) return;
 
         const extras = this.draft?.profile_basic?.extras || {};
-        const lang = this.getResumeLang();
-        const isCjk = typeof isCjkResumeLang === 'function'
-            ? isCjkResumeLang(lang)
-            : (lang === 'zh' || lang === 'zh-TW');
+        const lang = typeof normalizeResumeLang === 'function'
+            ? normalizeResumeLang(this.getResumeLang())
+            : this.getResumeLang();
+        const isZh = lang === 'zh';
+        const isZhTw = lang === 'zh-TW';
 
         const field = (id, labelKey, labelFallback, placeholderKey, placeholderFallback, value, fullWidth) => `
             <div class="${fullWidth ? 'sm:col-span-2' : ''}">
@@ -947,18 +1026,31 @@ const ProfileEditor = {
 
         const summaryField = `
             <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1" for="profile-summary">${profileUiText('resume.profileEditor.summary', 'Self introduction')}</label>
-                <textarea id="profile-summary" rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.summaryPlaceholder', '2–4 sentences highlighting strengths and role fit'))}">${this.escapeHtml(extras.summary || '')}</textarea>
+                <label class="block text-xs font-medium text-gray-500 mb-1" for="profile-summary">${profileUiText(
+                    isZhTw ? 'resume.profileEditor.professionalSummary' : 'resume.profileEditor.summary',
+                    isZhTw ? 'Professional Summary' : 'Self introduction'
+                )}</label>
+                <textarea id="profile-summary" rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText(
+                    isZhTw ? 'resume.profileEditor.professionalSummaryPlaceholder' : 'resume.profileEditor.summaryPlaceholder',
+                    isZhTw ? '3–4 lines summarizing core skills and results' : '2–4 sentences highlighting strengths and role fit'
+                ))}">${this.escapeHtml(extras.summary || '')}</textarea>
             </div>`;
 
         let fieldsHtml = '';
-        if (isCjk) {
+        if (isZh) {
             fieldsHtml = [
                 field('profile-address', 'resume.profileEditor.address', 'Full address', 'resume.profileEditor.addressPlaceholder', 'Province, city, district', extras.address || '', true),
                 field('profile-age', 'resume.profileEditor.age', 'Age', 'resume.profileEditor.agePlaceholder', 'e.g. 24', extras.age || '', false),
                 field('profile-gender', 'resume.profileEditor.gender', 'Gender', 'resume.profileEditor.genderPlaceholder', 'Male / Female', extras.gender || '', false),
                 field('profile-native-place', 'resume.profileEditor.nativePlace', 'Native place', 'resume.profileEditor.nativePlacePlaceholder', 'e.g. Guangzhou, Guangdong', extras.native_place || '', false),
                 field('profile-political-status', 'resume.profileEditor.politicalStatus', 'Political status', 'resume.profileEditor.politicalStatusPlaceholder', 'Party member / League member / Non-party', extras.political_status || '', false),
+                summaryField,
+            ].join('');
+        } else if (isZhTw) {
+            fieldsHtml = [
+                field('profile-visa-type', 'resume.profileEditor.visaType', 'Visa type', 'resume.profileEditor.visaTypePlaceholder', 'e.g. Employment visa / Home Return Permit', extras.visa_type || '', false),
+                field('profile-resident-type', 'resume.profileEditor.residentType', 'Resident type', 'resume.profileEditor.residentTypePlaceholder', 'e.g. HK permanent resident / Macau resident', extras.resident_type || '', false),
+                field('profile-linkedin', 'resume.profileEditor.linkedin', 'LinkedIn', 'resume.profileEditor.linkedinPlaceholder', 'https://linkedin.com/in/yourname', extras.linkedin || '', true),
                 summaryField,
             ].join('');
         } else {
@@ -976,37 +1068,204 @@ const ProfileEditor = {
             </div>`;
     },
 
+    canShowModuleActions() {
+        return typeof resumeGenerated !== 'undefined' && resumeGenerated;
+    },
+
+    isPolishableModuleType(type) {
+        return type === 'internship' || type === 'project';
+    },
+
+    renderModuleActionButtons(moduleId, moduleType, options = {}) {
+        if (!this.canShowModuleActions()) return '';
+        const { isPolishing = false, isTranslating = false, isRePolishing = false } = options;
+        const busy = isPolishing || isTranslating || isRePolishing;
+        const translateLabel = isTranslating
+            ? profileUiText('resume.profileEditor.translating', 'Translating…')
+            : profileUiText('resume.profileEditor.translateModule', 'Translate');
+        const polishLabel = (isPolishing || isRePolishing)
+            ? profileUiText('resume.profileEditor.polishing', 'Polishing…')
+            : profileUiText('resume.profileEditor.polishModule', 'Polish');
+        const showPolish = this.isPolishableModuleType(moduleType);
+        const polishBtn = showPolish ? `
+            <button type="button" data-polish-module="${moduleId}" class="text-xs px-2 py-1 rounded border border-amber-300 text-amber-800 hover:bg-amber-50 disabled:opacity-50" ${busy ? 'disabled' : ''}>
+                <i class="fas fa-magic mr-1"></i>${this.escapeHtml(polishLabel)}
+            </button>` : '';
+        return `
+            <div class="flex items-center gap-1 flex-wrap">
+                <button type="button" data-translate-module="${moduleId}" data-module-kind="module" class="text-xs px-2 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50" ${busy ? 'disabled' : ''}>
+                    <i class="fas fa-language mr-1"></i>${this.escapeHtml(translateLabel)}
+                </button>
+                ${polishBtn}
+            </div>`;
+    },
+
+    updateDraftEntryFields(moduleId, kind, fields) {
+        if (!this.draft || !fields) return;
+        if (kind === 'education') {
+            const entry = (this.draft.education || []).find((e) => e.id === moduleId);
+            if (!entry) return;
+            Object.assign(entry, fields);
+            entry.fields = { ...fields };
+            return;
+        }
+        const mod = (this.draft.modules || []).find((m) => m.id === moduleId);
+        if (!mod) return;
+        mod.fields = { ...fields };
+        const derived = ResumeProfileFields.deriveTitleContent(mod.type, fields);
+        mod.title = derived.title;
+        mod.content = derived.content;
+    },
+
+    markTranslatedFieldChanges(card, beforeFields, afterFields) {
+        if (!card) return;
+        Object.keys(afterFields || {}).forEach((key) => {
+            const beforeVal = beforeFields[key];
+            const afterVal = afterFields[key];
+            const beforeNorm = this.normalizeCompareText(Array.isArray(beforeVal) ? beforeVal.join(', ') : String(beforeVal || ''));
+            const afterNorm = this.normalizeCompareText(Array.isArray(afterVal) ? afterVal.join(', ') : String(afterVal || ''));
+            if (!afterNorm || beforeNorm === afterNorm) return;
+            const input = card.querySelector(`[data-field-key="${key}"]`);
+            if (input) {
+                this.markTranslatedInput(input, Array.isArray(beforeVal) ? beforeVal.join(', ') : String(beforeVal || ''));
+            }
+        });
+    },
+
+    async translateModule(moduleId, kind = 'module') {
+        if (typeof guardAiTaskRetry === 'function' && !guardAiTaskRetry()) return;
+        if (typeof beginAiTaskAttempt === 'function') beginAiTaskAttempt();
+        if (this.translatingModuleIds.includes(moduleId)) return;
+
+        const lang = this.getResumeLang();
+        let payload;
+        if (kind === 'education') {
+            const card = document.querySelector(`[data-education-id="${moduleId}"]`);
+            if (!card) return;
+            const fields = ResumeProfileFields.collectFieldsFromCard(card);
+            payload = {
+                module_id: moduleId,
+                module_type: 'education',
+                school: fields.school || '',
+                major: fields.major || '',
+                degree: fields.degree || '',
+                fields,
+                target_language: lang,
+            };
+        } else {
+            const card = document.querySelector(`[data-module-id="${moduleId}"]`);
+            if (!card) return;
+            const moduleType = card.querySelector('[data-module-type]')?.value || 'custom';
+            const fields = ResumeProfileFields.collectFieldsFromCard(card);
+            const derived = ResumeProfileFields.deriveTitleContent(moduleType, fields);
+            payload = {
+                module_id: moduleId,
+                module_type: moduleType,
+                title: derived.title,
+                content: derived.content,
+                fields,
+                target_language: lang,
+            };
+        }
+
+        this.translatingModuleIds.push(moduleId);
+        this.render({ preserveDraft: true });
+        try {
+            const response = await apiClient.translateResumeModule(payload);
+            const result = response.module || {};
+            const moduleType = kind === 'education' ? 'education' : (payload.module_type || 'custom');
+            const mergedFields = ResumeProfileFields.applyApiResultToFields(moduleType, payload.fields || {}, result);
+            this.updateDraftEntryFields(moduleId, kind, mergedFields);
+            this.render({ preserveDraft: true });
+            const card = kind === 'education'
+                ? document.querySelector(`[data-education-id="${moduleId}"]`)
+                : document.querySelector(`[data-module-id="${moduleId}"]`);
+            this.markTranslatedFieldChanges(card, payload.fields || {}, mergedFields);
+            this.scheduleSave(true);
+            Utils.showToast(profileUiText('resume.profileEditor.moduleTranslated', 'Module translated — please review'));
+        } catch (error) {
+            Utils.showAiTaskErrorToast(
+                error,
+                'resume.profileEditor.moduleTranslateFailed',
+                'Module translation failed: {msg}',
+                { msg: error.message }
+            );
+        } finally {
+            this.translatingModuleIds = this.translatingModuleIds.filter((id) => id !== moduleId);
+            this.render({ preserveDraft: true });
+        }
+    },
+
+    async polishModule(moduleId) {
+        if (typeof guardAiTaskRetry === 'function' && !guardAiTaskRetry()) return;
+        if (typeof beginAiTaskAttempt === 'function') beginAiTaskAttempt();
+        if (this.rePolishingModuleIds.includes(moduleId) || (this.polishingFactIds || []).includes(moduleId)) return;
+
+        const card = document.querySelector(`[data-module-id="${moduleId}"]`);
+        if (!card) return;
+        const moduleType = card.querySelector('[data-module-type]')?.value || '';
+        if (!this.isPolishableModuleType(moduleType)) return;
+
+        const fields = ResumeProfileFields.collectFieldsFromCard(card);
+        const derived = ResumeProfileFields.deriveTitleContent(moduleType, fields);
+        const payload = {
+            module_id: moduleId,
+            module_type: moduleType,
+            title: derived.title,
+            content: derived.content,
+            fields,
+        };
+
+        this.rePolishingModuleIds.push(moduleId);
+        this.render({ preserveDraft: true });
+        try {
+            const response = await apiClient.polishResumeModule(payload);
+            const result = response.module || {};
+            const currentFields = ResumeProfileFields.collectFieldsFromCard(card);
+            const mergedFields = ResumeProfileFields.applyApiResultToFields(moduleType, currentFields, result);
+            this.updateDraftEntryFields(moduleId, 'module', mergedFields);
+            this.render({ preserveDraft: true });
+            const refreshedCard = document.querySelector(`[data-module-id="${moduleId}"]`);
+            ResumeProfileFields.applyFieldsToCard(refreshedCard, mergedFields);
+            this.scheduleSave(true);
+            Utils.showToast(profileUiText('resume.profileEditor.modulePolished', 'Module polished — please review'));
+        } catch (error) {
+            Utils.showAiTaskErrorToast(
+                error,
+                'resume.profileEditor.modulePolishFailed',
+                'Module polish failed: {msg}',
+                { msg: error.message }
+            );
+        } finally {
+            this.rePolishingModuleIds = this.rePolishingModuleIds.filter((id) => id !== moduleId);
+            this.render({ preserveDraft: true });
+        }
+    },
+
     renderEducationCard(entry) {
+        const isTranslating = (this.translatingModuleIds || []).includes(entry.id);
+        const fields = ResumeProfileFields.getEntryFields('education', entry);
+        const actionButtons = this.canShowModuleActions() ? `
+            <div class="flex items-center gap-1">
+                <button type="button" data-translate-module="${entry.id}" data-module-kind="education" class="text-xs px-2 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50" ${isTranslating ? 'disabled' : ''}>
+                    <i class="fas fa-language mr-1"></i>${this.escapeHtml(isTranslating
+                        ? profileUiText('resume.profileEditor.translating', 'Translating…')
+                        : profileUiText('resume.profileEditor.translateModule', 'Translate'))}
+                </button>
+            </div>` : '';
+        const readonlyAttr = isTranslating ? 'readonly' : '';
         return `
         <div class="border border-gray-200 rounded-lg p-4 mb-2 bg-white" data-education-id="${entry.id}" data-is-custom="${entry.is_custom ? 'true' : 'false'}">
             <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-xs font-medium text-indigo-600 uppercase tracking-wide">${profileUiText('resume.profileEditor.educationEntry', 'Education entry')}</span>
-                <button type="button" data-remove-education="${entry.id}" class="text-red-500 hover:text-red-700 p-1" title="${this.escapeHtml(profileUiText('resume.profileEditor.remove', 'Remove'))}">
-                    <i class="fas fa-trash-alt text-sm"></i>
-                </button>
-            </div>
-            <div class="grid sm:grid-cols-2 gap-2">
-                <div class="sm:col-span-2">
-                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.school', 'School')}</label>
-                    <input data-edu-school type="text" value="${this.escapeHtml(entry.school)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.schoolPlaceholder', 'University / School name'))}">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.major', 'Major')}</label>
-                    <input data-edu-major type="text" value="${this.escapeHtml(entry.major)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.majorPlaceholder', 'Major / Field'))}">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.degree', 'Degree')}</label>
-                    <input data-edu-degree type="text" value="${this.escapeHtml(entry.degree)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.degreePlaceholder', 'Bachelor / Master…'))}">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.startDate', 'Start')}</label>
-                    <input data-edu-start type="text" value="${this.escapeHtml(entry.start_date)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.datePlaceholder', '2019-09'))}">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.endDate', 'End')}</label>
-                    <input data-edu-end type="text" value="${this.escapeHtml(entry.end_date)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.endDatePlaceholder', '2023-06'))}">
+                <div class="flex items-center gap-2">
+                    ${actionButtons}
+                    <button type="button" data-remove-education="${entry.id}" class="text-red-500 hover:text-red-700 p-1" title="${this.escapeHtml(profileUiText('resume.profileEditor.remove', 'Remove'))}" ${isTranslating ? 'disabled' : ''}>
+                        <i class="fas fa-trash-alt text-sm"></i>
+                    </button>
                 </div>
             </div>
+            ${ResumeProfileFields.renderFieldsGrid('education', fields, this.escapeHtml.bind(this), readonlyAttr)}
         </div>`;
     },
 
@@ -1017,31 +1276,39 @@ const ProfileEditor = {
             .map(([value, cfg]) => `<option value="${value}" ${module.type === value ? 'selected' : ''}>${cfg.label}</option>`)
             .join('');
 
-        const showTitle = module.type !== 'skill';
-        const detailsLabel = module.type === 'skill'
-            ? profileUiText('resume.profileEditor.skillLabel', 'Skill')
-            : profileUiText('resume.profileEditor.details', 'Details');
-        const detailsPlaceholder = module.type === 'skill'
-            ? profileUiText('resume.profileEditor.skillPlaceholder', 'e.g. Python, Advanced')
-            : profileUiText('resume.profileEditor.detailsPlaceholder', 'Role, achievements, technologies…');
+        const isPolishing = (this.polishingFactIds || []).includes(module.id);
+        const isTranslating = (this.translatingModuleIds || []).includes(module.id);
+        const isRePolishing = (this.rePolishingModuleIds || []).includes(module.id);
+        const moduleBusy = isPolishing || isTranslating || isRePolishing;
+        const busyLabel = isTranslating
+            ? profileUiText('resume.profileEditor.translating', 'Translating…')
+            : profileUiText('resume.profileEditor.polishing', 'Polishing…');
+        const cardClass = moduleBusy
+            ? 'border border-amber-200 rounded-lg p-4 mb-2 bg-amber-50/40'
+            : 'border border-gray-200 rounded-lg p-4 mb-2 bg-white';
+        const readonlyAttr = moduleBusy ? 'readonly' : '';
+        const actionButtons = this.renderModuleActionButtons(module.id, module.type, {
+            isPolishing,
+            isTranslating,
+            isRePolishing,
+        });
+        const fields = ResumeProfileFields.getEntryFields(module.type, module);
 
         return `
-        <div class="border border-gray-200 rounded-lg p-4 mb-2 bg-white" data-module-id="${module.id}" data-is-custom="${module.is_custom ? 'true' : 'false'}">
+        <div class="${cardClass}" data-module-id="${module.id}" data-is-custom="${module.is_custom ? 'true' : 'false'}" data-polishing="${moduleBusy ? 'true' : 'false'}">
             <div class="flex items-start justify-between gap-2 mb-2">
-                <select data-module-type class="border border-gray-300 rounded-lg p-1.5 text-xs bg-gray-50">${typeOptions}</select>
-                <button type="button" data-remove-module="${module.id}" class="text-red-500 hover:text-red-700 p-1" title="${this.escapeHtml(profileUiText('resume.profileEditor.remove', 'Remove'))}">
-                    <i class="fas fa-trash-alt text-sm"></i>
-                </button>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <select data-module-type class="border border-gray-300 rounded-lg p-1.5 text-xs bg-gray-50" ${moduleBusy ? 'disabled' : ''}>${typeOptions}</select>
+                    ${moduleBusy ? `<span class="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full animate-pulse">${this.escapeHtml(busyLabel)}</span>` : ''}
+                </div>
+                <div class="flex items-center gap-2">
+                    ${actionButtons}
+                    <button type="button" data-remove-module="${module.id}" class="text-red-500 hover:text-red-700 p-1" title="${this.escapeHtml(profileUiText('resume.profileEditor.remove', 'Remove'))}" ${moduleBusy ? 'disabled' : ''}>
+                        <i class="fas fa-trash-alt text-sm"></i>
+                    </button>
+                </div>
             </div>
-            ${showTitle ? `
-            <div class="mb-2">
-                <label class="block text-xs text-gray-500 mb-1">${profileUiText('resume.profileEditor.entryTitle', 'Title')}</label>
-                <input data-module-title type="text" value="${this.escapeHtml(module.title)}" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(profileUiText('resume.profileEditor.entryTitlePlaceholder', 'Company / Project name'))}">
-            </div>` : `<input data-module-title type="hidden" value="${this.escapeHtml(module.title)}">`}
-            <div>
-                <label class="block text-xs text-gray-500 mb-1">${detailsLabel}</label>
-                <textarea data-module-content rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="${this.escapeHtml(detailsPlaceholder)}">${this.escapeHtml(module.content)}</textarea>
-            </div>
+            ${ResumeProfileFields.renderFieldsGrid(module.type, fields, this.escapeHtml.bind(this), readonlyAttr)}
         </div>`;
     },
 
@@ -1119,8 +1386,14 @@ const ProfileEditor = {
         if (!draft) return true;
         const basic = draft.profile_basic || {};
         const hasBasic = Boolean(basic.name || basic.email || basic.phone || basic.city);
-        const hasEducation = (draft.education || []).some((entry) => entry.school || entry.major || entry.degree);
-        const hasModules = (draft.modules || []).some((mod) => mod.content || mod.title);
+        const hasEducation = (draft.education || []).some((entry) => {
+            const fields = ResumeProfileFields.getEntryFields('education', entry);
+            return fields.school || fields.major || fields.degree;
+        });
+        const hasModules = (draft.modules || []).some((mod) => {
+            const fields = ResumeProfileFields.getEntryFields(mod.type, mod);
+            return Object.values(fields).some((v) => (Array.isArray(v) ? v.length : String(v || '').trim()));
+        });
         return !hasBasic && !hasEducation && !hasModules;
     },
 
@@ -1190,6 +1463,9 @@ const ProfileEditor = {
         this.render({ preserveDraft: true });
         this.show(false);
         this.updateSaveUi();
+        if (typeof apiClient !== 'undefined' && apiClient.isLoggedIn()) {
+            this.loadSavedRecords();
+        }
         document.getElementById('profile-restored-hint')?.classList.add('hidden');
 
         if (typeof updateProfileContinueUi === 'function') {

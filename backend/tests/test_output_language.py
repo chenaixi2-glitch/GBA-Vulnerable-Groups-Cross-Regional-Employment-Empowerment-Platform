@@ -121,6 +121,7 @@ def test_gap_prompt_language_kwargs_includes_mandatory_block():
     prompt = GAP_ANALYSIS_PROMPT.format(
         job_json="{}",
         profile_json="{}",
+        experience_match_json="[]",
         **kwargs,
     )
     assert "MANDATORY OUTPUT LANGUAGE" in prompt

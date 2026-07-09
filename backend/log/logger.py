@@ -47,6 +47,7 @@ def setup_logging(level: int = logging.DEBUG) -> None:
         "agent": logging.DEBUG,
         "api": logging.DEBUG,
         "storage": logging.DEBUG,
+        "rag": logging.DEBUG,
     }
     for name, lvl in _categories.items():
         fh = logging.FileHandler(_LOG_DIR / f"{name}.log", encoding="utf-8")

@@ -6,6 +6,7 @@ MVP 阶段一：
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from langgraph.graph import StateGraph, END
@@ -22,9 +23,40 @@ from agents.interview_agent import interview_node_async
 from agents.question_agent import question_node_async
 from agents.answer_evaluation_agent import answer_evaluation_node_async
 from agents.learning_path_agent import learning_path_node_async
-from log import get_logger
+from log import get_logger, elapsed_ms, log_stage_timing, inject_trace_duration
 
 logger = get_logger("agent")
+
+
+def _wrap_timed_node(node_name: str, node_fn: Any) -> Any:
+    """Wrap an async graph node to log elapsed time and attach it to workflow trace."""
+
+    async def _timed(state: CopilotState) -> dict[str, Any]:
+        t0 = time.perf_counter()
+        try:
+            result = await node_fn(state)
+        except Exception:
+            log_stage_timing(
+                logger,
+                node_name,
+                elapsed_ms(t0),
+                session_id=state.session_id,
+                status="failed",
+            )
+            raise
+        ms = elapsed_ms(t0)
+        log_stage_timing(
+            logger,
+            node_name,
+            ms,
+            session_id=state.session_id,
+            status="success",
+        )
+        if isinstance(result, dict):
+            inject_trace_duration(result, ms, node=node_name)
+        return result
+
+    return _timed
 
 
 def _route_after_planner(state: CopilotState) -> str:
@@ -153,16 +185,16 @@ def build_graph() -> StateGraph:
     graph = StateGraph(CopilotState)
 
     # 添加节点
-    graph.add_node("planner", planner_node_async)
-    graph.add_node("jd_agent", jd_node_async)
-    graph.add_node("profile_agent", profile_node_async)
-    graph.add_node("gap_agent", gap_node_async)
-    graph.add_node("content_agent", content_node_async)
-    graph.add_node("render_agent", render_node_async)
-    graph.add_node("interview_agent", interview_node_async)
-    graph.add_node("question_agent", question_node_async)
-    graph.add_node("answer_evaluation_agent", answer_evaluation_node_async)
-    graph.add_node("learning_path_agent", learning_path_node_async)
+    graph.add_node("planner", _wrap_timed_node("planner", planner_node_async))
+    graph.add_node("jd_agent", _wrap_timed_node("jd_agent", jd_node_async))
+    graph.add_node("profile_agent", _wrap_timed_node("profile_agent", profile_node_async))
+    graph.add_node("gap_agent", _wrap_timed_node("gap_agent", gap_node_async))
+    graph.add_node("content_agent", _wrap_timed_node("content_agent", content_node_async))
+    graph.add_node("render_agent", _wrap_timed_node("render_agent", render_node_async))
+    graph.add_node("interview_agent", _wrap_timed_node("interview_agent", interview_node_async))
+    graph.add_node("question_agent", _wrap_timed_node("question_agent", question_node_async))
+    graph.add_node("answer_evaluation_agent", _wrap_timed_node("answer_evaluation_agent", answer_evaluation_node_async))
+    graph.add_node("learning_path_agent", _wrap_timed_node("learning_path_agent", learning_path_node_async))
     graph.add_node("respond", _respond)
 
     # 入口

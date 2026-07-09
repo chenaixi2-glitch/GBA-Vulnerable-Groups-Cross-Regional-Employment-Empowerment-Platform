@@ -36,7 +36,7 @@ def parse_content_bytes(data: bytes, filename: str = "") -> str:
     """解析内存中的文件内容。"""
     suffix = Path(filename).suffix.lower() if filename else ""
     if suffix == ".pdf":
-        return _parse_pdf_bytes(data)
+        return _parse_pdf_bytes(data, filename=filename)
     if suffix == ".docx":
         return _parse_docx_bytes(data)
     if suffix in (".md", ".txt", ""):
@@ -51,26 +51,26 @@ def supported_upload_suffixes() -> set[str]:
 
 def _parse_pdf(path: Path) -> str:
     try:
-        import pdfplumber
-        text_parts = []
-        with pdfplumber.open(path) as pdf:
-            for page in pdf.pages:
-                text = page.extract_text()
-                if text:
-                    text_parts.append(text)
-        result = "\n\n".join(text_parts)
-        logger.info("Parsed PDF: %s (%d chars)", path.name, len(result))
-        return result
-    except ImportError:
-        logger.error("pdfplumber not installed")
-        raise
+        data = path.read_bytes()
+        return _parse_pdf_bytes(data, filename=path.name)
     except Exception as e:
         logger.error("Failed to parse PDF %s: %s", path, e)
         raise
 
 
-def _parse_pdf_bytes(data: bytes) -> str:
+def _parse_pdf_bytes(data: bytes, *, filename: str = "") -> str:
+    from tools.ocr_parser import parse_pdf_bytes_with_ocr
+
+    try:
+        return parse_pdf_bytes_with_ocr(data, filename=filename)
+    except Exception as ocr_exc:
+        logger.warning("DeepSeek-OCR failed for %s, falling back to pdfplumber: %s", filename or "pdf", ocr_exc)
+        return _parse_pdf_bytes_fallback(data)
+
+
+def _parse_pdf_bytes_fallback(data: bytes) -> str:
     import pdfplumber
+
     text_parts = []
     with pdfplumber.open(io.BytesIO(data)) as pdf:
         for page in pdf.pages:
