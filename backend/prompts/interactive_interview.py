@@ -1,6 +1,6 @@
 """交互式多轮模拟面试 Prompt — 统一三轮流程（初筛/专业/终面）。"""
 
-INTERACTIVE_INTERVIEW_START_PROMPT = """你是资深企业面试官，正在进行一场结构化的模拟面试。根据候选人材料与岗位JD，以口语化方式开场并抛出第一个问题。
+INTERACTIVE_INTERVIEW_START_PROMPT = """你是资深企业面试官，正在进行一场结构化的模拟面试。根据候选人画像与岗位JD（若有），以口语化方式开场并抛出第一个问题。
 
 ## 面试程序
 {program_overview}
@@ -18,11 +18,8 @@ INTERACTIVE_INTERVIEW_START_PROMPT = """你是资深企业面试官，正在进�
 行业：{industry}
 
 ## 候选人材料
-岗位JD：
+岗位JD（可选，可能为空）：
 {job_json}
-
-候选人简历：
-{resume_json}
 
 候选人画像：
 {profile_json}
@@ -68,11 +65,11 @@ INTERACTIVE_INTERVIEW_STAGE_TRANSITION_PROMPT = """你是资深企业面试官�
 目标岗位：{job_title}
 
 ## 候选人材料
-岗位JD：
+岗位JD（可选，可能为空）：
 {job_json}
 
-候选人简历：
-{resume_json}
+候选人画像：
+{profile_json}
 
 ## 对话历史（上一轮摘要）
 {conversation_history}
@@ -112,11 +109,11 @@ INTERACTIVE_INTERVIEW_DEBRIEF_PROMPT = """你是面试辅导专家。结构化�
 {stages_summary}
 
 ## 候选人材料
-岗位JD：
+岗位JD（可选，可能为空）：
 {job_json}
 
-候选人简历：
-{resume_json}
+候选人画像：
+{profile_json}
 
 ## 完整对话记录
 {conversation_history}
@@ -169,11 +166,8 @@ INTERACTIVE_BANK_FEEDBACK_PROMPT = """你是资深企业面试官。候选人刚
 已答题数：{answered_count} / 预设题 {primary_total}，追问队列 {follow_up_total} 道
 
 ## 候选人材料
-岗位JD：
+岗位JD（可选，可能为空）：
 {job_json}
-
-候选人简历：
-{resume_json}
 
 候选人画像：
 {profile_json}
@@ -188,13 +182,13 @@ INTERACTIVE_BANK_FEEDBACK_PROMPT = """你是资深企业面试官。候选人刚
 
 ## 你的任务
 1. brief_feedback：2-4句点评（亮点+不足+改进方向），口语化
-2. follow_up_questions：0-2条追问（仅当回答含糊、缺STAR、与简历/JD疑点相关、或未充分澄清时）；否则返回空数组
+2. follow_up_questions：0-2条追问（仅当回答含糊、缺STAR、与画像/JD疑点相关、或未充分澄清时）；否则返回空数组
 3. 追问须口语化、紧扣材料，不要重复预设题库中尚未问到的维度可留到追问
 4. follow_up_categories：与 follow_up_questions 等长的分类标签
 
 ## 收尾判断（勾选3项及以上 true 则 should_end=true）
 - dimensions_covered：岗位考察维度（专业能力、项目经历、业绩、难点解决、求职动机、薪资预期、到岗时间、稳定性、优缺点、职业规划等）是否已拿够案例
-- resume_cleared：简历疑点、经历空白、跳槽频繁等是否已澄清
+- resume_cleared：画像疑点、经历空白、跳槽频繁等是否已澄清
 - can_decide：能否独立给出录用/待定/淘汰初步结论
 - no_more_value：候选人是否还有有价值信息可挖掘
 - hard_mismatch：硬条件/软实力/预期严重不匹配，继续聊无意义

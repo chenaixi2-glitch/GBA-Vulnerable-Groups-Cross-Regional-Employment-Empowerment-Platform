@@ -1,0 +1,835 @@
+{
+  "generated_at": "2026-07-13T14:22:53.940132+00:00",
+  "mode": "rule_only",
+  "total_cases": 20,
+  "intent_accuracy": 1.0,
+  "plan_accuracy": 1.0,
+  "intent_report": {
+    "labels": [
+      "ask_question",
+      "content_edit",
+      "evaluate_answer",
+      "export",
+      "gap_analysis",
+      "language_convert",
+      "learning_path",
+      "profile_patch",
+      "render_edit",
+      "start_interview",
+      "upload_jd",
+      "upload_profile"
+    ],
+    "total": 20,
+    "correct": 20,
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "weighted_f1": 1.0,
+    "per_label": {
+      "ask_question": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      },
+      "content_edit": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "evaluate_answer": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "export": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "gap_analysis": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      },
+      "language_convert": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "learning_path": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "profile_patch": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "render_edit": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      },
+      "start_interview": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "upload_jd": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "upload_profile": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      }
+    },
+    "confusion_matrix": {
+      "ask_question": {
+        "ask_question": 2,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "content_edit": {
+        "ask_question": 0,
+        "content_edit": 3,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "evaluate_answer": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 1,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "export": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 1,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "gap_analysis": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 2,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "language_convert": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 1,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "learning_path": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 3,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "profile_patch": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 1,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "render_edit": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 2,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "start_interview": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 1,
+        "upload_jd": 0,
+        "upload_profile": 0
+      },
+      "upload_jd": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 1,
+        "upload_profile": 0
+      },
+      "upload_profile": {
+        "ask_question": 0,
+        "content_edit": 0,
+        "evaluate_answer": 0,
+        "export": 0,
+        "gap_analysis": 0,
+        "language_convert": 0,
+        "learning_path": 0,
+        "profile_patch": 0,
+        "render_edit": 0,
+        "start_interview": 0,
+        "upload_jd": 0,
+        "upload_profile": 2
+      }
+    },
+    "misclassified": []
+  },
+  "plan_report": {
+    "labels": [
+      "(empty)",
+      "answer_evaluation_agent",
+      "content_agent",
+      "content_agent -> render_agent",
+      "gap_agent",
+      "interview_agent",
+      "jd_agent",
+      "learning_path_agent",
+      "profile_agent",
+      "question_agent",
+      "render_agent"
+    ],
+    "total": 20,
+    "correct": 20,
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "weighted_f1": 1.0,
+    "per_label": {
+      "(empty)": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "answer_evaluation_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "content_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "content_agent -> render_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "gap_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      },
+      "interview_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "jd_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1
+      },
+      "learning_path_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "profile_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "question_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      },
+      "render_agent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      }
+    },
+    "confusion_matrix": {
+      "(empty)": {
+        "(empty)": 1,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "answer_evaluation_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 1,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "content_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 1,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "content_agent -> render_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 3,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "gap_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 2,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "interview_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 1,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "jd_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 1,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "learning_path_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 3,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "profile_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 3,
+        "question_agent": 0,
+        "render_agent": 0
+      },
+      "question_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 2,
+        "render_agent": 0
+      },
+      "render_agent": {
+        "(empty)": 0,
+        "answer_evaluation_agent": 0,
+        "content_agent": 0,
+        "content_agent -> render_agent": 0,
+        "gap_agent": 0,
+        "interview_agent": 0,
+        "jd_agent": 0,
+        "learning_path_agent": 0,
+        "profile_agent": 0,
+        "question_agent": 0,
+        "render_agent": 2
+      }
+    },
+    "misclassified": []
+  },
+  "cases": [
+    {
+      "case_id": "learning_path_override_gap",
+      "user_message": "What learning resources should I study to close my skill gaps? Recommend courses and estimated study hours.",
+      "expected_intent": "learning_path",
+      "predicted_intent": "learning_path",
+      "expected_plan": [
+        "learning_path_agent"
+      ],
+      "predicted_plan": [
+        "learning_path_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": "Learning resource keywords override gap_analysis"
+    },
+    {
+      "case_id": "pure_gap_analysis",
+      "user_message": "Analyze my skill gaps for resume optimization.",
+      "expected_intent": "gap_analysis",
+      "predicted_intent": "gap_analysis",
+      "expected_plan": [
+        "gap_agent"
+      ],
+      "predicted_plan": [
+        "gap_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "timeline_learning_path",
+      "user_message": "Generate my learning timeline. I can study 2 hours daily.",
+      "expected_intent": "learning_path",
+      "predicted_intent": "learning_path",
+      "expected_plan": [
+        "learning_path_agent"
+      ],
+      "predicted_plan": [
+        "learning_path_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "gap_to_upload_profile_long_material",
+      "user_message": "Here is my candidate profile for gap analysis. Current role: Customer Service Specialist. Current skills: Customer Service, English, Cantonese, CRM. Career goal: Customer Service Manager.",
+      "expected_intent": "upload_profile",
+      "predicted_intent": "upload_profile",
+      "expected_plan": [
+        "profile_agent"
+      ],
+      "predicted_plan": [
+        "profile_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "short_gap_without_profile",
+      "user_message": "Analyze my skill gaps for resume optimization.",
+      "expected_intent": "gap_analysis",
+      "predicted_intent": "gap_analysis",
+      "expected_plan": [
+        "gap_agent"
+      ],
+      "predicted_plan": [
+        "gap_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "resume_edit_clamp_gap",
+      "user_message": "Analyze skill gaps in my resume wording.",
+      "expected_intent": "content_edit",
+      "predicted_intent": "content_edit",
+      "expected_plan": [
+        "content_agent",
+        "render_agent"
+      ],
+      "predicted_plan": [
+        "content_agent",
+        "render_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "resume_edit_section_reorder",
+      "user_message": "把项目经历放到实习经历前面",
+      "expected_intent": "render_edit",
+      "predicted_intent": "render_edit",
+      "expected_plan": [
+        "render_agent"
+      ],
+      "predicted_plan": [
+        "render_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "resume_edit_language_convert",
+      "user_message": "请把简历转成英文",
+      "expected_intent": "language_convert",
+      "predicted_intent": "language_convert",
+      "expected_plan": [
+        "content_agent",
+        "render_agent"
+      ],
+      "predicted_plan": [
+        "content_agent",
+        "render_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "resume_edit_ask_question",
+      "user_message": "简历里有哪些项目？",
+      "expected_intent": "ask_question",
+      "predicted_intent": "ask_question",
+      "expected_plan": [
+        "question_agent"
+      ],
+      "predicted_plan": [
+        "question_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "content_edit_full_chain",
+      "user_message": "Make my summary more concise.",
+      "expected_intent": "content_edit",
+      "predicted_intent": "content_edit",
+      "expected_plan": [
+        "content_agent",
+        "render_agent"
+      ],
+      "predicted_plan": [
+        "content_agent",
+        "render_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "content_edit_skip_render",
+      "user_message": "Update skills section only.",
+      "expected_intent": "content_edit",
+      "predicted_intent": "content_edit",
+      "expected_plan": [
+        "content_agent"
+      ],
+      "predicted_plan": [
+        "content_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "upload_jd_only",
+      "user_message": "Senior Frontend Developer with React experience...",
+      "expected_intent": "upload_jd",
+      "predicted_intent": "upload_jd",
+      "expected_plan": [
+        "jd_agent"
+      ],
+      "predicted_plan": [
+        "jd_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "upload_profile",
+      "user_message": "Here is my resume text for parsing.",
+      "expected_intent": "upload_profile",
+      "predicted_intent": "upload_profile",
+      "expected_plan": [
+        "profile_agent"
+      ],
+      "predicted_plan": [
+        "profile_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "start_interview",
+      "user_message": "Generate interview questions for this role.",
+      "expected_intent": "start_interview",
+      "predicted_intent": "start_interview",
+      "expected_plan": [
+        "interview_agent"
+      ],
+      "predicted_plan": [
+        "interview_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "evaluate_answer",
+      "user_message": "Please evaluate my answer to the behavioral question.",
+      "expected_intent": "evaluate_answer",
+      "predicted_intent": "evaluate_answer",
+      "expected_plan": [
+        "answer_evaluation_agent"
+      ],
+      "predicted_plan": [
+        "answer_evaluation_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "ask_question_default",
+      "user_message": "What skills does this job require?",
+      "expected_intent": "ask_question",
+      "predicted_intent": "ask_question",
+      "expected_plan": [
+        "question_agent"
+      ],
+      "predicted_plan": [
+        "question_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "export_no_agent",
+      "user_message": "Export my resume as PDF.",
+      "expected_intent": "export",
+      "predicted_intent": "export",
+      "expected_plan": [],
+      "predicted_plan": [],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "render_edit_only",
+      "user_message": "Increase font size and reduce margins.",
+      "expected_intent": "render_edit",
+      "predicted_intent": "render_edit",
+      "expected_plan": [
+        "render_agent"
+      ],
+      "predicted_plan": [
+        "render_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "learning_path_chinese",
+      "user_message": "请推荐学习资源并给出预估学时，帮我制定学习路线。",
+      "expected_intent": "learning_path",
+      "predicted_intent": "learning_path",
+      "expected_plan": [
+        "learning_path_agent"
+      ],
+      "predicted_plan": [
+        "learning_path_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    },
+    {
+      "case_id": "profile_patch",
+      "user_message": "I also have AWS certification now.",
+      "expected_intent": "profile_patch",
+      "predicted_intent": "profile_patch",
+      "expected_plan": [
+        "profile_agent"
+      ],
+      "predicted_plan": [
+        "profile_agent"
+      ],
+      "intent_correct": true,
+      "plan_correct": true,
+      "mode": "rule_only",
+      "notes": ""
+    }
+  ]
+}

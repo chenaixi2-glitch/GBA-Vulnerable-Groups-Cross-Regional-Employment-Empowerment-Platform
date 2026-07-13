@@ -134,7 +134,7 @@
         'INTERVIEW_POLL_FEEDBACK': 'Generating feedback…',
         'INTERVIEW_POLL_SYNCED': 'Status synced.',
         'INTERVIEW_DEBRIEF_READY': 'Debrief report generated.',
-        'INTERVIEW_ERR_NO_PREREQUISITES': 'Missing job, profile, or resume content — cannot start mock interview.',
+        'INTERVIEW_ERR_NO_PREREQUISITES': 'Missing candidate profile — cannot start mock interview.',
         'INTERVIEW_ERR_NO_BANK': 'Could not generate question bank. Please complete job and resume steps.',
         'INTERVIEW_ERR_ALREADY_ACTIVE': 'A mock interview is already in progress.',
         'INTERVIEW_ERR_NOT_ACTIVE': 'No mock interview in progress.',

@@ -1,6 +1,6 @@
 """Interview QA Prompt — 按结构化面试阶段分轮生成。"""
 
-INTERVIEW_GENERATION_PROMPT = """你是资深大厂面试官，专注企业精准面试问答定制生成。严格基于【岗位JD、候选人简历、候选人画像】按结构化面试程序分阶段生成高质量 QA，禁止通用模板、禁止空洞话术。
+INTERVIEW_GENERATION_PROMPT = """你是资深大厂面试官，专注企业精准面试问答定制生成。严格基于【岗位JD（可选）、候选人画像】按结构化面试程序分阶段生成高质量 QA，禁止通用模板、禁止空洞话术。
 
 ## 结构化面试程序（必须严格遵循）
 {stages_generation_spec}
@@ -11,15 +11,12 @@ INTERVIEW_GENERATION_PROMPT = """你是资深大厂面试官，专注企业精�
 3. 各阶段题量必须严格等于规格中的「题量」字段，全程序共 {total_questions} 条；
 4. category 只能使用该阶段「可用分类标签」中的值；
 5. 专业/技术面遵循万能公式：做过什么 → 怎么做的 → 遇到什么问题 → 怎么解决 → 数据结果 → 复盘优化；
-6. 所有问题紧扣候选人简历与岗位 JD，禁止无关通用题；
+6. 所有问题紧扣候选人画像与岗位 JD（若有），禁止无关通用题；
 7. 每条 answer 专属定制：观点 + 案例/场景 + 落地成果 + 岗位适配，可直接用于面试演练。
 
 ## 输入信息
-岗位JD：
+岗位JD（可选，可能为空）：
 {job_json}
-
-候选人简历：
-{resume_json}
 
 候选人画像：
 {profile_json}
@@ -44,14 +41,14 @@ INTERVIEW_GENERATION_PROMPT = """你是资深大厂面试官，专注企业精�
             "category": "简历深挖与个人经历",
             "question": "精准、口语化的面试真题",
             "answer": "定制化完整应答文案",
-            "source_refs": ["简历或JD片段引用"],
+            "source_refs": ["画像或JD片段引用"],
             "version": 1
         }}
     ]
 }}
 """
 
-STANDALONE_INTERVIEW_GENERATION_PROMPT = """你是资深面试官。用户希望练习面试，但当前会话可能尚未上传完整简历或岗位 JD。
+STANDALONE_INTERVIEW_GENERATION_PROMPT = """你是资深面试官。用户希望练习面试，但当前会话可能尚未上传候选人画像或岗位 JD。
 请根据用户消息与已有上下文，按两阶段结构生成 8-12 条高质量面试问答。
 
 ## 阶段结构
@@ -68,11 +65,8 @@ STANDALONE_INTERVIEW_GENERATION_PROMPT = """你是资深面试官。用户希望
 {user_message}
 
 ## 已有上下文（可能为空）
-岗位 JD：
+岗位 JD（可选）：
 {job_json}
-
-候选人简历：
-{resume_json}
 
 候选人画像：
 {profile_json}

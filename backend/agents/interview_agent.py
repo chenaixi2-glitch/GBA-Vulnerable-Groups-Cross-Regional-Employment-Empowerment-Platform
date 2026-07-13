@@ -150,12 +150,8 @@ def _build_interview_qa(parsed: InterviewGenerationOutput) -> list[InterviewQA]:
     return interview_qa
 
 
-def _has_full_context(state: CopilotState) -> bool:
-    return (
-        state.job is not None
-        and state.candidate_profile is not None
-        and state.resume_content_json is not None
-    )
+def _has_interview_profile(state: CopilotState) -> bool:
+    return state.candidate_profile is not None
 
 
 def parse_custom_questions(raw: str | list[str]) -> list[str]:
@@ -237,7 +233,7 @@ async def custom_interview_answers_async(
         len(questions),
     )
 
-    if not _has_full_context(state):
+    if not _has_interview_profile(state):
         return {
             "interview_qa": [],
             "workflow_trace": append_trace(
@@ -245,7 +241,7 @@ async def custom_interview_answers_async(
                 node="custom_interview_agent",
                 status="failed",
                 input_summary=f"用户上传 {len(questions)} 道自定义面试题。",
-                output_summary="请先完成候选人画像、岗位 JD 与简历内容后再生成参考答案。",
+                output_summary="请先上传并解析候选人画像后再生成参考答案。",
             ),
         }
 
@@ -268,7 +264,6 @@ async def custom_interview_answers_async(
         questions_list=questions_list,
         job_json=build_enriched_job_json(state),
         profile_json=state.candidate_profile.model_dump_json(indent=2),
-        resume_json=state.resume_content_json.model_dump_json(indent=2),
         **lang_kwargs,
     )
 
@@ -340,22 +335,27 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
     logger.info("Interview Agent started for session %s", state.session_id)
 
     llm = get_llm()
-    standalone = not _has_full_context(state)
     user_message = state.user_message or ""
+    profile_json = (
+        state.candidate_profile.model_dump_json(indent=2)
+        if state.candidate_profile
+        else "{}"
+    )
 
-    if standalone:
-        logger.info("Interview Agent using standalone mode (partial session context)")
+    if not _has_interview_profile(state):
+        logger.warning("Interview Agent missing candidate profile")
         lang_kwargs = interview_question_prompt_language_kwargs(state)
         prompt = STANDALONE_INTERVIEW_GENERATION_PROMPT.format(
             user_message=user_message,
             job_json=build_enriched_job_json(state),
-            profile_json=state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}",
-            resume_json=state.resume_content_json.model_dump_json(indent=2) if state.resume_content_json else "{}",
+            profile_json=profile_json,
             **lang_kwargs,
         )
-        input_summary = "基于用户消息与已有部分上下文分阶段生成面试题（独立模式）。"
+        input_summary = "基于用户消息生成面试题（无候选人画像）。"
         program = None
+        standalone = True
     else:
+        standalone = False
         program_version, specialized_focus = _parse_program_from_message(user_message)
         job_title = _extract_job_title(state, user_message)
         jd_text = (state.meta.target_jd_text or "") if state.meta else ""
@@ -370,8 +370,7 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
             stages_generation_spec=format_stages_generation_spec(program),
             total_questions=program.max_rounds,
             job_json=build_enriched_job_json(state),
-            profile_json=state.candidate_profile.model_dump_json(indent=2),
-            resume_json=state.resume_content_json.model_dump_json(indent=2),
+            profile_json=profile_json,
             **lang_kwargs,
         )
         input_summary = (
@@ -416,7 +415,7 @@ async def interview_node_async(state: CopilotState) -> dict[str, Any]:
                 node="interview_agent",
                 status="failed",
                 input_summary=input_summary,
-                output_summary="未能生成有效面试题，请补充岗位或简历信息后重试。",
+                output_summary="未能生成有效面试题，请补充候选人画像或岗位信息后重试。",
             ),
         }
 

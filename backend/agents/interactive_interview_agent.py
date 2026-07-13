@@ -74,23 +74,14 @@ def _question_id() -> str:
     return f"iq_{uuid.uuid4().hex[:12]}"
 
 
-def _context_json(state: CopilotState) -> tuple[str, str, str]:
+def _context_json(state: CopilotState) -> tuple[str, str]:
     job_json = build_enriched_job_json(state)
-    resume_json = state.resume_content_json.model_dump_json(indent=2) if state.resume_content_json else "{}"
     profile_json = state.candidate_profile.model_dump_json(indent=2) if state.candidate_profile else "{}"
-    return job_json, resume_json, profile_json
-
-
-def _has_job_context(state: CopilotState) -> bool:
-    return state.job is not None or bool((state.meta.target_jd_text or "").strip())
+    return job_json, profile_json
 
 
 def _prerequisites_ok(state: CopilotState) -> bool:
-    return (
-        _has_job_context(state)
-        and state.candidate_profile is not None
-        and state.resume_content_json is not None
-    )
+    return state.candidate_profile is not None
 
 
 def _program_from_state(state: CopilotState, session: InteractiveInterviewSession) -> InterviewProgramConfig:
@@ -322,7 +313,7 @@ def _build_interview_message(
     specialized_focus: str,
 ) -> str:
     return " ".join(filter(None, [
-        "Please generate interview questions based on my job description, candidate profile, and resume content.",
+        "Please generate interview questions based on my candidate profile and optional job description.",
         f"Target role: {job_title}.",
         f"Industry: {industry}." if industry else "",
         f"Interview tone: {tone}.",
@@ -485,8 +476,7 @@ async def process_next_pending_feedback(state: CopilotState) -> bool:
 
     pending.status = "processing"
     program = _program_from_state(state, session)
-    job_json, resume_json, profile_json = _context_json(state)
-
+    job_json, profile_json = _context_json(state)
     phase_label = interview_phase_label(state, session.phase)
 
     q_lang_kwargs = interview_turn_prompt_language_kwargs(state)
@@ -499,7 +489,6 @@ async def process_next_pending_feedback(state: CopilotState) -> bool:
         primary_total=len(session.primary_questions),
         follow_up_total=len(session.follow_up_questions),
         job_json=job_json,
-        resume_json=resume_json,
         profile_json=profile_json,
         conversation_history=_format_qa_history(session),
         current_question=pending.question,
@@ -667,7 +656,7 @@ async def generate_interactive_debrief(state: CopilotState) -> InteractiveInterv
         session.ended_at = _now_iso()
 
     program = _program_from_state(state, session)
-    job_json, resume_json, _ = _context_json(state)
+    job_json, profile_json = _context_json(state)
     history = _format_qa_history(session)
 
     feedback_lang_kwargs = interview_feedback_prompt_language_kwargs(state)
@@ -678,7 +667,7 @@ async def generate_interactive_debrief(state: CopilotState) -> InteractiveInterv
         stages_summary=_stages_summary(session),
         round_count=session.round_count,
         job_json=job_json,
-        resume_json=resume_json,
+        profile_json=profile_json,
         conversation_history=history,
         **feedback_lang_kwargs,
     )

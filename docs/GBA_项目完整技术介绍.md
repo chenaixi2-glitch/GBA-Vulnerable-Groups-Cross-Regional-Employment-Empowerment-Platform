@@ -88,9 +88,9 @@ GBA（Guangdong-Hong Kong-Macao Greater Bay Area）跨境就业赋能平台，�
 
 | 层级 | 技术 | 说明 |
 |------|------|------|
-| 前端 | HTML / CSS / JavaScript | 无框架 SPA，i18n 四语 |
+| 前端 | HTML / CSS / JavaScript | **非 React/Vue**，多页静态站点 + i18n 四语 |
 | 认证 | Node.js + Express + JWT | 与 Python 后端共用 JWT Secret |
-| AI 编排 | **LangGraph** | Agent 有向图、条件路由 |
+| AI 编排 | **LangGraph** + **Plan-and-Execute** | 意图驱动静态计划 + DAG 执行（非 ReAct） |
 | LLM 调用 | **LangChain** + OpenAI 兼容 API | SiliconFlow DeepSeek-R1 |
 | 结构化输出 | Pydantic JSON Schema | 非 OpenAI Function Calling |
 | Embedding | DashScope API **或** HuggingFace + **PyTorch** | 可配置切换 |
@@ -284,6 +284,140 @@ LLM 输出后，经确定性规则校正：
 - Agent 输出需严格符合简历 JSON、缺口报告等复杂结构，JSON Schema 比 tool call 更可控
 - 平台内部工具以 Python 函数形式组织在 `backend/tools/`（22 个模块），延迟低、类型安全
 - MCP 面向外部 Agent 或 IDE 集成，与 LangGraph 并行存在
+
+### 4.5 编排范式：Plan-and-Execute（非 ReAct）
+
+本项目采用 **「意图驱动的静态 Plan-and-Execute」**，而非 ReAct（Reason + Act）循环。
+
+| 维度 | ReAct | 本项目 |
+|------|-------|--------|
+| 核心循环 | Think → Act → Observe → 再 Think（多轮） | Plan → Execute → Respond（单次） |
+| 工具选择 | LLM 每步动态选 tool | Agent 内直接调 Python 函数 |
+| 调用方式 | OpenAI Function Calling 循环 | JSON Schema 结构化输出 + 代码直调 |
+| 是否重规划 | 根据 observation 反复调整 | 单次 `execution_plan`，跑完即结束 |
+| 图结构 | 通常有回环 | DAG，`respond → END`，无回边 |
+
+**Plan 阶段**（`planner.py`）：LLM 意图分类 + 规则引擎 `resolve_intent()` → 查表 `_INTENT_PLAN` 得到固定 Agent 链路。
+
+**Execute 阶段**（`workflow/graph.py`）：LangGraph 按 `execution_plan[0]` 条件路由，节点执行后 merge 进 `CopilotState`，最终 `respond → END`。
+
+```
+用户消息 → Planner（intent + execution_plan）
+              ↓
+    content_agent → render_agent → respond → END   （示例：content_edit）
+```
+
+与「经典 Plan-and-Execute」的差异：计划来自 **意图 → 预定义映射表**（非 LLM 动态生成多步计划），且 **无 replan**（执行失败 fail-fast，不在同一请求内回到 Planner）。
+
+**图外独立模块**：`interactive_interview_agent.py` 为有限状态机 + 固定题库驱动，同样不是 ReAct。
+
+### 4.6 Agent 间依赖、消息传递与防死循环
+
+#### 主 Agent 与子 Agent 职责
+
+| 角色 | 命名 | 职责 |
+|------|------|------|
+| **主控（编排器）** | `Planner` | 意图识别、生成 `execution_plan`、路由 |
+| **子 Agent** | `jd_agent` | JD 解析/生成、缓存 |
+| | `profile_agent` | 简历材料抽取、增量 patch |
+| | `gap_agent` | 岗位-能力缺口分析 |
+| | `content_agent` | 简历 JSON 生成/编辑/翻译 |
+| | `render_agent` | 排版 + HTML 渲染 + PDF 页数适配 |
+| | `interview_agent` | 结构化面试题集 |
+| | `question_agent` | 自由问答 + RAG + 岗位 API |
+| | `answer_evaluation_agent` | 答案评估 + LLM-as-Judge |
+| | `learning_path_agent` | 缺口 → 资源 → 时间线 |
+| | `respond` | 汇总 trace，生成用户可见回复 |
+| **图外** | `interactive_interview_agent` | 多轮模拟面试（不经 LangGraph） |
+
+#### Agent 间依赖
+
+- **共享模块**：`gap_analysis_core.py` 被 `gap_agent` 与 `learning_path_agent` 复用
+- **回调链**：`render_agent` 页数超限时回调 `content_agent` 压缩内容
+- **无循环依赖**：所有路径最终 `respond → END`，无回边到 Planner
+
+#### 消息传递
+
+全局状态 **`CopilotState`**（`workflow/state.py`，430+ 行 Pydantic）：
+
+1. LangGraph **状态 merge**：各节点返回局部 `dict`，框架合并
+2. **条件路由**：读 `execution_plan[0]` 决定下一节点
+3. **workflow_trace**：运行时 trace，不持久化
+4. **Redis**：每 chat 读写完整 state（排除 runtime 字段）
+5. **入口**：`POST /api/chat` → 注入 `memory_context` → `graph.ainvoke()` → 写回 Redis
+
+#### 防死循环 / 防无限运行
+
+| 机制 | 位置 | 说明 |
+|------|------|------|
+| DAG 无环 | `workflow/graph.py` | 无回边到 Planner |
+| 固定执行计划 | `planner.py` | 单次请求只跑 plan 一次 |
+| Session 并发锁 | `services/llm_queue.py` | 同 session 409 `SESSION_BUSY` |
+| LLM 全局并发上限 | `config.yaml` | `max_concurrent: 2` |
+| JSON 修复上限 | `models/llm.py` | 最多 2 次 repair 后 fail-fast |
+| 对话轮次上限 | `dialogue_memory.py` | 最近 6 轮，超 10 轮 LLM 压缩 |
+| 面试轮次上限 | `tools/interview_program.py` | quick≈13 / full≈17 轮 |
+| Render 页数适配 | `render_agent.py` | 最多 2 次压缩 |
+
+### 4.7 Prompt 分层设计
+
+```
+backend/prompts/              ← 按任务域拆分（19 个模块）
+backend/agents/*.py           ← Agent 组装 prompt + 注入上下文
+backend/tools/output_language*.py  ← 语言指令层
+backend/agents/json_contracts.py   ← 输出 JSON Schema 契约
+```
+
+以 **Question Agent** 为例，典型 **六层结构**：
+
+| 层级 | 内容 | 来源 |
+|------|------|------|
+| System | 角色与回答规范 | `_QUESTION_SYSTEM_PROMPT` |
+| 语言 | 输出语言约束 | `output_language_instruction()` |
+| 记忆 | 对话/跨会话摘要 | `memory_context` / `dialogue_memory` |
+| 检索 | RAG chunks | `rag_service.retrieve()` |
+| 业务 | 岗位匹配结果 | `fetch_matched_jobs()` |
+| 用户 | 当前问题 | `user_message` |
+
+**Planner 额外注入**：`memory_context` 供指代消解（如「把它改短」指哪段）。
+
+**Intent 双层分类**：全局 12 类 + 简历编辑页 5 类子意图 + 规则引擎 `resolve_intent()` override。
+
+### 4.8 上下文记忆机制
+
+| 类型 | 存储 | 配置 / 说明 |
+|------|------|-------------|
+| 会话热状态 | Redis | 每 chat 读写 |
+| 短期对话轮次 | `meta.dialogue_turns` | 最近 6 轮，每轮 max 800 字 |
+| 压缩摘要 | `meta.dialogue_summary` | 超 10 轮 LLM 压缩 |
+| 跨会话摘要 | Chroma `user_memory` | embedding 存储 |
+| RAG 会话索引 | Chroma `session_chunks` | 按 session 全量替换 |
+| Runtime 注入 | `state.memory_context` | chat 前组装，不持久化 |
+
+Chat 后后台任务（`api/chat.py` `_post_chat_background`）：压缩对话 → 更新 Redis → 持久化跨会话摘要 → RAG 索引。
+
+```yaml
+# backend/config.yaml
+dialogue_memory:
+  raw_turn_limit: 6
+  compress_threshold: 10
+  max_turn_chars: 800
+  cross_session_enabled: true
+```
+
+### 4.9 典型工具调用场景
+
+| 场景 | 工具模块 | 调用方 |
+|------|----------|--------|
+| 上传 PDF/DOCX | `file_parser.py` | `api/chat_input.py` |
+| JD 解析缓存 | `jd_cache.py` | `jd_agent` |
+| 画像/JD 上下文拼装 | `resume_profile_context.py`、`target_job_context.py` | 多数 Agent |
+| 多语言校验修复 | `output_language_guard.py` | 几乎所有生成型 Agent |
+| 简历 HTML/PDF | `template_renderer.py`、`resume_export.py` | `render_agent` |
+| 岗位匹配 | `node_jobs_client.py` | `question_agent` |
+| 面试程序 | `interview_program.py` | `interview_agent` |
+
+**最高频**：`output_language_guard.py` → `target_job_context.py` / `resume_profile_context.py` → `file_parser.py` → `template_renderer.py` → `node_jobs_client.py`。
 
 ---
 
@@ -632,29 +766,166 @@ llm_queue:
 
 ## 10. 评测体系（自动 + 人工）
 
-本项目建立了 **「自动 RAG 指标 + 人工盲评 + Golden Set 回归 + E2E Selenium」** 四层评测体系，用于验证简历优化质量与系统稳定性。
+本项目建立了 **六层评测体系**，覆盖简历 RAG 质量、Planner 路由、Agent 链路、检索指标、跨 Agent 一致性与生产 bad case 复核，用于毕设量化论证与 CI 回归。
 
 ### 10.1 评测体系总览
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     评测体系                                 │
-├──────────────┬──────────────┬──────────────┬────────────────┤
-│ 自动 RAG 指标 │  人工盲评     │ Golden Set   │  Selenium E2E  │
-│ (离线批量)   │ (问卷+统计)   │ (CI 回归)    │  (端到端)       │
-├──────────────┼──────────────┼──────────────┼────────────────┤
-│ runner.py    │ human_eval.py│ pytest       │ test_*_selenium│
-│ metrics.py   │ 盲法 A/B     │ golden_cases │ 真实浏览器流程  │
-└──────────────┴──────────────┴──────────────┴────────────────┘
-         │              │              │
-         └──────────────┴──────────────┘
-                        ▼
-           evaluation-results/resume-rag/
-             latest/report.json
-             human/latest/summary.md
+┌──────────────────────────────────────────────────────────────────────────┐
+│                           评测体系（六层）                                 │
+├─────────────┬─────────────┬─────────────┬─────────────┬──────────────────┤
+│ 简历 RAG    │ Planner路由 │ RAG检索     │ 链路一致性   │ Bad Case 复核    │
+│ before/after│ F1+混淆矩阵 │ Recall@K/MRR│ gap→content │ LangSmith+CSV    │
+├─────────────┼─────────────┼─────────────┼─────────────┼──────────────────┤
+│ resume_rag/ │ planner_    │ rag_        │ chain_      │ monitoring/      │
+│ runner.py   │ routing/    │ retrieval/  │ consistency/│ bad_case_sampler │
+├─────────────┴─────────────┴─────────────┴─────────────┴──────────────────┤
+│  人工盲评（resume-rag/human/）  │  Golden Set CI（evaluation-tests.yml）   │
+│  Selenium E2E                   │  答案评估 Golden Set                      │
+└──────────────────────────────────────────────────────────────────────────┘
+                              ▼
+                 evaluation-results/（latest/ + runs/）
 ```
 
-### 10.2 自动 RAG 指标
+**索引文档**：[`evaluation-results/README.md`](../evaluation-results/README.md)
+
+| 评测层 | 代码路径 | 结果目录 | CI |
+|--------|----------|----------|-----|
+| 简历优化 RAG | `evaluation/resume_rag/` | `evaluation-results/resume-rag/` | pytest |
+| Planner 意图 + Agent 链路 | `evaluation/planner_routing/` | `evaluation-results/planner-routing/` | pytest |
+| RAG 检索质量 | `evaluation/rag_retrieval/` | `evaluation-results/rag-retrieval/` | pytest |
+| 跨 Agent 链路一致性 | `evaluation/chain_consistency/` | `evaluation-results/chain-consistency/` | pytest |
+| Bad case 采样 | `evaluation/monitoring/` | `evaluation-results/monitoring/` | pytest |
+| 人工盲评 | `evaluation/resume_rag/human_eval.py` | `evaluation-results/resume-rag/human/` | 手动 |
+| 答案评估 Golden | `test-data/golden/` | — | pytest + GitHub Actions |
+
+### 10.2 Planner 意图路由与 Agent 链路评测
+
+**代码**：`backend/evaluation/planner_routing/`  
+**Golden Set**：`fixtures/golden_cases.json`（20 条）  
+**结果**：`evaluation-results/planner-routing/latest/`
+
+#### 评测目标
+
+| 指标 | 含义 | 对应论证点 |
+|------|------|------------|
+| Intent accuracy | 意图识别准确率 | 端到端 Agent 路由准确率 |
+| Macro F1 / Weighted F1 | 多类 F1 | 分类器整体质量 |
+| 混淆矩阵 | 实际 vs 预测 | 误分类模式分析 |
+| Agent chain accuracy | `execution_plan` 一致率 | **Tool 等价物**（虽无 function calling，等价于「是否调用正确下游节点」） |
+
+#### 两阶段评测
+
+| 模式 | 说明 | 依赖 |
+|------|------|------|
+| **rule_only**（默认 CI） | 评测 `resolve_intent()` + `_build_execution_plan()` 确定性层 | 无 API Key |
+| **e2e_llm**（可扩展） | 调用完整 Planner LLM 分类 | 需 `SILICONFLOW_API_KEY` |
+
+#### 运行方式
+
+```bash
+cd backend
+python -m evaluation.planner_routing.runner
+pytest tests/test_planner_routing_eval.py -v
+```
+
+#### 最新结果摘要（rule-only 层）
+
+| 指标 | 结果 |
+|------|------|
+| Intent accuracy | **100%**（20/20） |
+| Agent chain accuracy | **100%** |
+| Macro F1 | **1.0000** |
+
+### 10.3 RAG 检索质量评测（Recall@K / MRR）
+
+**代码**：`backend/evaluation/rag_retrieval/`  
+**Golden Set**：`fixtures/golden_queries.json`（query + 期望 relevant chunk_id）  
+**结果**：`evaluation-results/rag-retrieval/latest/`
+
+#### 指标定义
+
+| 指标 | 含义 |
+|------|------|
+| **Recall@K** | top-K 结果中命中 relevant chunk 的比例 |
+| **MRR** | 第一个 relevant chunk 排名的倒数均值 |
+| **NDCG@K** | 归一化折损累积增益 |
+| **Hit rate** | 任一 relevant 出现在 top-K 的 query 比例 |
+
+#### 运行模式
+
+```bash
+cd backend
+python -m evaluation.rag_retrieval.runner --lexical     # CI，词汇重叠 fallback
+python -m evaluation.rag_retrieval.runner --embeddings # 生产级 Qwen Embedding + Rerank
+pytest tests/test_rag_retrieval_metrics.py -v
+```
+
+#### 最新结果摘要（lexical 模式）
+
+| 指标 | 结果 |
+|------|------|
+| MRR | **0.8889** |
+| Hit rate @ top-10 | **100%** |
+
+### 10.4 跨 Agent 链路一致性评测
+
+**代码**：`backend/evaluation/chain_consistency/`  
+**Golden Set**：`fixtures/golden_chains.json`（含故意失败负例）  
+**结果**：`evaluation-results/chain-consistency/latest/`
+
+验证 **gap → content → render** 等链路的字段传递 invariant：
+
+| 检查项 | 含义 |
+|--------|------|
+| `profile_to_content` | CandidateProfile 姓名/邮箱/电话 → ResumeContent.profile |
+| `job_to_content` | Job.title → ResumeContent.meta.target_role |
+| `gap_to_content` | 高优 missing_skill 缺口在简历文本中体现 |
+| `content_to_render` | render 成功后 HTML 非空（>100 字符） |
+| `gaps_preserved` | gap_agent 成功后 gaps 列表非空 |
+
+```bash
+cd backend
+python -m evaluation.chain_consistency.runner
+pytest tests/test_chain_consistency_eval.py -v
+```
+
+Golden Set 含 3 条**故意失败**负例（profile 不一致、HTML 空、缺口未覆盖），用于回归检测；当前通过率 **40%（2/5，含负例设计）**。
+
+### 10.5 生产监控与 Bad Case 人工复核
+
+**代码**：`backend/evaluation/monitoring/`  
+**配置**：`backend/config.yaml` → `monitoring` 段  
+**结果**：`evaluation-results/monitoring/latest/bad_cases_review.csv`
+
+#### 闭环流程
+
+```
+线上 /api/chat → LangSmith trace（run_name: API-Chat-Request）
+       ↓
+bad_case_sampler 规则采样
+  · failed_agent_node（workflow_trace status=failed）
+  · empty_assistant_reply
+  · routing_mismatch（实际 plan ≠ 期望 plan）
+  · low_answer_score（< 60）
+       ↓
+bad_cases_review.csv 人工标注
+  · review_status: pending / reviewed / confirmed_bug / false_positive
+  · root_cause / fix_priority
+       ↓
+回归 Golden Set / 修复 Planner 规则
+```
+
+#### 运行方式
+
+```bash
+cd backend
+python -m evaluation.monitoring.runner                    # 离线 fixture
+python -m evaluation.monitoring.langsmith_export          # 需 LANGCHAIN_API_KEY
+pytest tests/test_bad_case_sampler.py -v
+```
+
+### 10.6 简历优化 RAG 指标（before/after）
 
 **代码**：`backend/evaluation/resume_rag/metrics.py`、`runner.py`  
 **Golden Cases**：`backend/evaluation/resume_rag/fixtures/golden_cases.json`  
@@ -702,7 +973,7 @@ pytest tests/test_resume_rag_metrics.py -v
 
 2/2 cases improved，平均 match_score Δ **+35**。
 
-### 10.3 人工评测（Human Evaluation）
+### 10.7 人工评测（Human Evaluation）
 
 **材料目录**：`evaluation-results/resume-rag/human/`  
 **汇总脚本**：`backend/evaluation/resume_rag/human_eval.py`
@@ -713,16 +984,6 @@ pytest tests/test_resume_rag_metrics.py -v
 - **成对比较（Pairwise）+ 李克特量表（Likert）** 双轨采集
 - 样本来自 Golden Cases 的 before/after 简历 PDF
 
-#### 文件清单
-
-| 文件 | 用途 |
-|------|------|
-| `survey_questionnaire.md` | 完整问卷题本 |
-| `blinding_map.csv` | A/B 映射（仅研究者持有，勿泄露） |
-| `pairwise_responses_template.csv` | 成对偏好记录 |
-| `likert_responses_template.csv` | 五维 Likert 评分 |
-| `rater_info_template.csv` | 评估者背景信息 |
-
 #### 评估维度（Likert 1–5）
 
 | 维度 | 含义 |
@@ -732,16 +993,6 @@ pytest tests/test_resume_rag_metrics.py -v
 | `professionalism` | 专业度与表达质量 |
 | `highlights` | 亮点是否突出 |
 | `overall_recommend` | 总体推荐程度 |
-
-#### 工作流程
-
-```
-1. 从 golden_cases 导出 before/after 为统一格式 PDF
-2. 按 blinding_map.csv 随机分配 A/B 标签
-3. 发放问卷（survey_questionnaire.md）
-4. 收集 CSV → pairwise_responses.csv / likert_responses.csv
-5. 运行 human_eval.py 汇总，与 RAG report.json 对齐分析
-```
 
 #### 汇总命令
 
@@ -754,15 +1005,6 @@ python -m evaluation.resume_rag.human_eval \
   --rag-report ../evaluation-results/resume-rag/latest/report.json
 ```
 
-#### 主指标
-
-| 指标 | 含义 |
-|------|------|
-| `optimized_win_rate` | 盲评中优化版被偏好的比例 |
-| `likert_delta_*` | 五维及 overall 的 after−before 均值 |
-| `rag_correlation` | 人工 overall Δ 与 `match_score` Δ 的 Spearman 相关 |
-| Binomial p-value | 相对 50% 随机猜测的显著性 |
-
 #### 最新人工评测结果摘要
 
 | 指标 | 结果 |
@@ -774,26 +1016,47 @@ python -m evaluation.resume_rag.human_eval \
 | highlights Δ | +2.50 |
 | overall_recommend Δ | +2.25 |
 
-### 10.4 其他评测层
+### 10.8 工具调用准确性：评估策略与论证充分性
+
+本项目 **不使用 OpenAI Function Calling**，工具调用准确性通过以下 **等价评估** 论证：
+
+| 评估维度 | 机制 | 是否足以支撑 |
+|----------|------|--------------|
+| 结构化输出契约 | Pydantic JSON Schema + 2 次 repair | ✅ 生成型 Agent |
+| 意图路由 | Golden Set + F1 + 混淆矩阵 | ✅ rule 层；LLM 层可扩展 E2E |
+| Agent 链路（Tool 等价） | `execution_plan` 链准确率 | ✅ 20 条 Golden + CI |
+| RAG 检索 | Recall@K / MRR / NDCG | ✅ lexical CI；embedding 定期跑 |
+| 链路一致性 | gap→content→render invariant | ✅ 含负例回归 |
+| 答案质量 | Golden Set + LLM-as-Judge 三维 rubric | ✅ |
+| 生产 bad case | LangSmith + 人工 CSV 复核 | ✅ 闭环已建立 |
+
+**可进一步加强的论证**（答辩可选）：
+
+1. Planner **LLM E2E 层** F1（需 API，扩至 50+ 真实用户语料）
+2. embedding 模式 RAG 检索指标定期归档与趋势对比
+3. 真实 graph 执行后的 state 快照纳入 chain consistency Golden Set
+4. bad case 人工标注统计（confirmed_bug 比例、修复闭环率）
+
+### 10.9 其他评测层
 
 | 层级 | 路径 | 说明 |
 |------|------|------|
-| 答案评估 Golden Set | `test-data/golden/answer_evaluation_golden.json` | 面试答案评估回归 |
-| CI 工作流 | `.github/workflows/evaluation-tests.yml` | 自动跑 golden tests |
+| 答案评估 Golden Set | `test-data/golden/answer_evaluation_golden.json` | 关键词覆盖率 + embedding 相似度 |
+| CI 工作流 | `.github/workflows/evaluation-tests.yml` | 五类 pytest 自动回归 |
 | Selenium E2E | `backend/tests/selenium/` | 真实浏览器全流程 |
-| LLM-as-Judge | `answer_evaluation_agent.py` | relevance / groundedness / actionability 三维 rubric |
+| LLM-as-Judge | `answer_evaluation_agent.py` | relevance / groundedness / actionability |
 
-### 10.5 自动 vs 人工：互补关系
+### 10.10 自动 vs 人工：互补关系
 
-| 维度 | 自动 RAG 指标 | 人工盲评 |
-|------|---------------|----------|
+| 维度 | 自动指标 | 人工盲评 |
+|------|----------|----------|
 | 成本 | 低，可 CI 批量跑 | 高，需招募评估者 |
 | 客观性 | 高，可复现 | 受评估者背景影响 |
-| 覆盖 | 关键词、向量、规则 | 整体感知、推荐意愿 |
+| 覆盖 | 关键词、向量、路由、链路 | 整体感知、推荐意愿 |
 | 样本量 | 易扩展 | 受时间限制 |
-| 论文价值 | 量化基线 | 用户Study 证据 |
+| 论文价值 | 量化基线 | 用户 Study 证据 |
 
-**推荐做法**：论文/答辩中同时引用 `evaluation-results/resume-rag/latest/summary.md`（自动）与 `human/latest/summary.md`（人工），并报告 Spearman 相关系数验证两者一致性。
+**推荐做法**：答辩中同时引用各 `evaluation-results/*/latest/summary.md`，并报告人工 overall Δ 与 `match_score` Δ 的 Spearman 相关系数。
 
 ---
 
@@ -801,11 +1064,27 @@ python -m evaluation.resume_rag.human_eval \
 
 | 能力 | 实现 |
 |------|------|
-| LangSmith Tracing | `config.yaml` → `langsmith.tracing_v2: true` |
+| LangSmith Tracing | `config.yaml` → `langsmith.tracing_v2: true`；`chat.py` 设置 `run_name: API-Chat-Request: {session_id}` |
 | Workflow Trace | `workflow/trace.py`，用户可见 Agent 执行摘要 |
+| Bad Case 采样 | `evaluation/monitoring/bad_case_sampler.py`；规则见 `config.yaml` → `monitoring` |
+| LangSmith 导出 | `evaluation/monitoring/langsmith_export.py`；导出 CSV 供人工复核 |
 | 日志 | `backend/log/`（agent / api / error 分文件） |
 | 健康检查 | `GET /health`（含 MCP 索引） |
 | Session 锁 | Redis `llm_queue` 防并发 OOM |
+
+```yaml
+# backend/config.yaml — monitoring 段
+monitoring:
+  bad_case:
+    min_answer_score: 60
+    flag_failed_nodes: true
+    flag_empty_reply: true
+    flag_routing_mismatch: true
+  langsmith:
+    project: "ai-career-copilot"
+    export_limit: 50
+    lookback_hours: 168
+```
 
 ---
 
@@ -819,7 +1098,12 @@ python -m evaluation.resume_rag.human_eval \
 | Python 部署指南 | `backend/DEPLOYMENT.md` | RDS / Redis / 2GB 内存约束 |
 | 后端测试指南 | `backend/TESTING_GUIDE.md` | API 测试、环境配置 |
 | 测试资源汇总 | `TESTING_SUMMARY.md` | 全项目测试索引 |
-| RAG 自动评测 | `evaluation-results/resume-rag/README.md` | 指标说明与运行方式 |
+| RAG 自动评测 | `evaluation-results/resume-rag/README.md` | 简历优化 before/after 指标 |
+| **评测结果索引** | `evaluation-results/README.md` | Planner F1、RAG Recall@K、链路一致性、Bad case |
+| Planner 路由评测 | `evaluation-results/planner-routing/README.md` | 意图 F1 + Agent 链路 Golden Set |
+| RAG 检索评测 | `evaluation-results/rag-retrieval/README.md` | Recall@K / MRR / NDCG |
+| 链路一致性评测 | `evaluation-results/chain-consistency/README.md` | gap→content→render 字段传递 |
+| Bad case 复核 | `evaluation-results/monitoring/README.md` | LangSmith + 人工 CSV 闭环 |
 | 人工评测 | `evaluation-results/resume-rag/human/README.md` | 盲评流程与汇总 |
 | 岗位功能配置 | `docs/MY_JOBS_SETUP.md` | Node 岗位模块 |
 | i18n 覆盖率 | `docs/i18n-coverage-report.md` | 四语国际化 |
@@ -859,8 +1143,13 @@ rag:
 
 dialogue_memory:
   cross_session_enabled: true
+
+monitoring:
+  bad_case:
+    min_answer_score: 60
+    flag_failed_nodes: true
 ```
 
 ---
 
-*文档版本：2026-07-08 · 随代码库演进请同步更新 embedding provider 与评测结果路径。*
+*文档版本：2026-07-13 · 已补充 Plan-and-Execute 编排范式、六层评测体系与 bad case 复核闭环。*

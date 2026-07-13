@@ -2963,7 +2963,7 @@ class APIClient {
     }
 
     /**
-     * Start interview session - triggers interview_agent (requires job, profile, resume in session)
+     * Start interview session - triggers interview_agent (requires candidate profile in session)
      */
     async startInterviewSession(jobTitle, industry = '', tone = 'professional', targetContext = null, programVersion = 'quick', specializedFocus = '', questionLanguage = null) {
         try {
@@ -2971,7 +2971,7 @@ class APIClient {
             await this.syncTargetJobContext(ctx);
             const qLang = this.resolvePageLanguage(questionLanguage);
             const message = [
-                'Please generate interview questions based on my job description, candidate profile, and resume content.',
+                'Please generate interview questions based on my candidate profile and optional job description.',
                 `Target role: ${jobTitle || ctx?.jd_text?.split('\n')[0] || 'target position'}.`,
                 (ctx?.industryLabel || industry) ? `Industry: ${ctx?.industryLabel || industry}.` : '',
                 ctx?.employerTypeLabel ? `Employer type: ${ctx.employerTypeLabel}.` : '',
@@ -3660,7 +3660,6 @@ const Utils = {
             '#btn-upload-resume',
             '[data-resume-translate]',
             'button[onclick*="optimizeResume"]',
-            'button[onclick*="generateInterviewResume"]',
         ].join(',');
     },
 

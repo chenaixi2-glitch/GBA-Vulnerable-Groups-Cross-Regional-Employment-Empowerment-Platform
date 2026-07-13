@@ -1,6 +1,6 @@
 /**
  * GBA Platform - Interview Preparation
- * Prerequisites for interview_agent: job, candidate_profile, resume_content_json
+ * Prerequisites for interview_agent: candidate_profile (JD optional)
  */
 
 let interviewSession = {
@@ -152,8 +152,6 @@ let interviewMode = 'question_bank'; // question_bank | custom | interactive
 
 let interviewPrerequisites = {
     profileReady: false,
-    jobReady: false,
-    resumeReady: false,
 };
 
 let interviewSetup = null;
@@ -323,13 +321,10 @@ function initializeInterviewPrep() {
             updatePrerequisiteStatus();
         },
         onJobReady: () => {
-            interviewPrerequisites.jobReady = true;
             updatePrerequisiteStatus();
-            document.getElementById('interview-resume-section')?.classList.remove('hidden');
         },
         onPrerequisitesChange: () => {
             if (interviewSetup?.profileReady) interviewPrerequisites.profileReady = true;
-            if (interviewSetup?.jobReady) interviewPrerequisites.jobReady = true;
             updatePrerequisiteStatus();
         },
         onProfileSaved: () => bootstrapSavedProfileForInterview(),
@@ -343,27 +338,18 @@ function initializeInterviewPrep() {
 }
 
 function setupInputValidation() {
-    const jobTitleInput = document.getElementById('job-title');
-    const startButton = document.getElementById('btn-load-questions');
-
-    jobTitleInput.addEventListener('input', updateStartButtonState);
+    // Start button state is driven by profileReady only (see updateStartButtonState).
 }
 
 function updateStartButtonState() {
-    const jobTitleInput = document.getElementById('job-title');
     const startButton = document.getElementById('btn-load-questions');
-    const hasValue = jobTitleInput.value.trim().length > 0;
-    const ready = interviewPrerequisites.profileReady
-        && interviewPrerequisites.jobReady
-        && interviewPrerequisites.resumeReady;
+    const ready = interviewPrerequisites.profileReady;
 
-    startButton.disabled = !(hasValue && ready);
+    startButton.disabled = !ready;
 }
 
 function updatePrerequisiteStatus() {
     setPrerequisiteItem('prereq-profile', interviewPrerequisites.profileReady);
-    setPrerequisiteItem('prereq-job', interviewPrerequisites.jobReady);
-    setPrerequisiteItem('prereq-resume', interviewPrerequisites.resumeReady);
     updateStartButtonState();
 }
 
@@ -448,46 +434,6 @@ async function submitInterviewJobDescription() {
         await interviewSetup?.submitJd();
     } catch (error) {
         console.error('JD submission error:', error);
-    }
-}
-
-async function generateInterviewResume() {
-    if (!ensureInterviewProfileApplied()) return;
-    if (typeof Utils !== 'undefined' && Utils.isAiTaskRetryBlocked && Utils.isAiTaskRetryBlocked()) {
-        Utils.showAiTaskRetryBlockedHint();
-        return;
-    }
-    try {
-        if (typeof Utils !== 'undefined' && Utils.stopAiTaskRetryWait) Utils.stopAiTaskRetryWait();
-        Utils.showLoading(uiT('interview.loadingGeneratingResume', 'Generating tailored resume content...'));
-        const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext({
-            fields: {
-                jdText: ['interview-jd-text'],
-                industry: ['job-industry'],
-                employerType: ['interview-employer-type'],
-                experienceLevel: ['interview-experience-level'],
-            },
-        }) : null;
-
-        const response = await apiClient.generateResume(
-            'Please generate a customized resume based on my experience and target position',
-            targetContext
-        );
-
-        if (response.resume_content_json) {
-            interviewPrerequisites.resumeReady = true;
-            updatePrerequisiteStatus();
-            Utils.hideLoading();
-            Utils.showToast(uiT('interview.toast.resumeReady', 'Resume content ready for interview generation'));
-        } else {
-            throw new Error(uiT('interview.toast.resumeNotGenerated', 'Resume content was not generated'));
-        }
-
-        console.log('Resume generation response:', response);
-    } catch (error) {
-        Utils.hideLoading();
-        Utils.showAiTaskErrorToast(error, 'interview.toast.resumeFailed', 'Failed to generate resume: {msg}', { msg: error.message });
-        console.error('Resume generation error:', error);
     }
 }
 
@@ -677,13 +623,8 @@ async function loadInterviewQuestions() {
     const jobTitle = document.getElementById('job-title').value.trim();
     const industry = document.getElementById('job-industry').value;
 
-    if (!jobTitle) {
-        Utils.showToast(uiT('interview.toast.jobTitleRequired', 'Please enter a job title'));
-        return;
-    }
-
-    if (!interviewPrerequisites.profileReady || !interviewPrerequisites.jobReady || !interviewPrerequisites.resumeReady) {
-        Utils.showToast(uiT('interview.toast.completePrereq', 'Please complete all prerequisite steps first'));
+    if (!interviewPrerequisites.profileReady) {
+        Utils.showToast(uiT('interview.toast.completePrereq', 'Please upload and parse your profile first'));
         return;
     }
 
@@ -724,7 +665,7 @@ async function loadInterviewQuestions() {
                 || (programVersion === 'specialized' && getInterviewProgramPreviews().specialized[specializedFocus]?.label)
                 || programVersion;
         } else {
-            throw new Error(uiT('interview.toast.noQuestionsGenerated', 'No questions generated. Ensure profile, job description, and resume are complete.'));
+            throw new Error(uiT('interview.toast.noQuestionsGenerated', 'No questions generated. Ensure your profile is complete.'));
         }
 
         interviewSession.jobTitle = jobTitle;
@@ -795,18 +736,13 @@ async function loadCustomInterviewQuestions() {
     const questionsText = document.getElementById('custom-questions-text')?.value.trim() || '';
     const questions = parseCustomQuestionsText(questionsText);
 
-    if (!jobTitle) {
-        Utils.showToast(uiT('interview.toast.jobTitleRequired', 'Please enter a job title'));
-        return;
-    }
-
     if (!questions.length) {
         Utils.showToast(uiT('interview.toast.customQuestionsRequired', 'Please enter or upload at least one interview question'));
         return;
     }
 
-    if (!interviewPrerequisites.profileReady || !interviewPrerequisites.jobReady || !interviewPrerequisites.resumeReady) {
-        Utils.showToast(uiT('interview.toast.completePrereq', 'Please complete all prerequisite steps first'));
+    if (!interviewPrerequisites.profileReady) {
+        Utils.showToast(uiT('interview.toast.completePrereq', 'Please upload and parse your profile first'));
         return;
     }
 
@@ -880,13 +816,8 @@ async function startInteractiveInterview() {
         return;
     }
 
-    if (!jobTitle) {
-        Utils.showToast(uiT('interview.toast.jobTitleRequired', 'Please enter a job title'));
-        return;
-    }
-
-    if (!interviewPrerequisites.profileReady || !interviewPrerequisites.jobReady || !interviewPrerequisites.resumeReady) {
-        Utils.showToast(uiT('interview.toast.completePrereq', 'Please complete all prerequisite steps first'));
+    if (!interviewPrerequisites.profileReady) {
+        Utils.showToast(uiT('interview.toast.completePrereq', 'Please upload and parse your profile first'));
         return;
     }
 
@@ -2139,13 +2070,10 @@ function restartSession() {
         interviewLanguageUserSelected = { question: false, feedback: false };
         interviewPrerequisites = {
             profileReady: false,
-            jobReady: false,
-            resumeReady: false,
         };
         interviewSetup?.clearFile();
         if (interviewSetup) {
             interviewSetup.profileReady = false;
-            interviewSetup.jobReady = false;
         }
         updateQuestionLanguageStatus();
 
@@ -2160,7 +2088,6 @@ function restartSession() {
         document.getElementById('interactive-input-section').classList.remove('hidden');
         document.getElementById('empty-state').classList.remove('hidden');
         document.getElementById('interview-jd-section').classList.add('hidden');
-        document.getElementById('interview-resume-section').classList.add('hidden');
 
         document.getElementById('job-title').value = '';
         document.getElementById('company-name').value = '';

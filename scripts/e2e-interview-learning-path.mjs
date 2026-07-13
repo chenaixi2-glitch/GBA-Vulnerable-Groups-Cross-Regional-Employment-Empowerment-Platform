@@ -85,16 +85,6 @@ async function runInterviewUiFlow(page) {
   await page.click('button:has-text("Submit Profile")');
 
   await waitForLoadingHidden(page);
-  await page.waitForSelector('#interview-jd-section:not(.hidden)', { timeout: 300000 });
-
-  await page.fill('#interview-jd-text', JD_TEXT);
-  await page.fill('#job-title', 'Customer Service Specialist');
-  await page.click('button:has-text("Submit Job Description")');
-  await waitForLoadingHidden(page);
-  await page.waitForSelector('#interview-resume-section:not(.hidden)', { timeout: 300000 });
-
-  await page.click('button:has-text("Generate Resume Content")');
-  await waitForLoadingHidden(page);
 
   await page.waitForFunction(() => {
     const btn = document.getElementById('btn-load-questions');

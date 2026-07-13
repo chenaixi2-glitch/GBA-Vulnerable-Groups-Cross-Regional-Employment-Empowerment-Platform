@@ -1,0 +1,103 @@
+[
+  {
+    "id": "gap_content_render_happy",
+    "chain": "gap_content_render",
+    "state": {
+      "session_id": "chain_01",
+      "job": {"title": "Frontend Developer", "hard_skills": ["React", "TypeScript"]},
+      "candidate_profile": {
+        "profile_basic": {"name": "Alex Chen", "email": "alex@example.com", "phone": "13800000000"},
+        "facts": [{"id": "f1", "type": "project", "content": "Built React dashboard"}]
+      },
+      "gaps": [
+        {"id": "g1", "type": "missing_skill", "severity": "high", "description": "Missing TypeScript experience required by JD"}
+      ],
+      "resume_content_json": {
+        "summary": "Frontend developer skilled in React and TypeScript.",
+        "profile": {"name": "Alex Chen", "email": "alex@example.com", "phone": "13800000000"},
+        "skills": [{"id": "s1", "title": "Frontend", "content": "React, TypeScript"}],
+        "internships": [], "projects": [], "awards": [], "papers": [],
+        "meta": {"target_role": "Frontend Developer", "language": "en"}
+      },
+      "resume_html": {"html": "<html><body><h1>Alex Chen</h1><p>Frontend developer skilled in React and TypeScript.</p></body></html>"},
+      "workflow_trace": [
+        {"node": "gap_agent", "status": "success", "output_summary": "gap analysis done"},
+        {"node": "content_agent", "status": "success", "output_summary": "content updated"},
+        {"node": "render_agent", "status": "success", "output_summary": "html rendered"}
+      ]
+    }
+  },
+  {
+    "id": "profile_mismatch_fail",
+    "chain": "profile_content_render",
+    "state": {
+      "session_id": "chain_02",
+      "candidate_profile": {
+        "profile_basic": {"name": "Alex Chen", "email": "alex@example.com"}
+      },
+      "resume_content_json": {
+        "summary": "Developer",
+        "profile": {"name": "Wrong Name", "email": "wrong@example.com"},
+        "skills": [], "internships": [], "projects": [], "awards": [], "papers": [],
+        "meta": {"language": "en"}
+      },
+      "resume_html": {"html": "<html><body>Developer</body></html>"},
+      "workflow_trace": [{"node": "render_agent", "status": "success"}]
+    }
+  },
+  {
+    "id": "render_empty_fail",
+    "chain": "content_render",
+    "state": {
+      "session_id": "chain_03",
+      "resume_content_json": {
+        "summary": "Test summary",
+        "profile": {"name": "Test"},
+        "skills": [], "internships": [], "projects": [], "awards": [], "papers": [],
+        "meta": {"language": "en"}
+      },
+      "resume_html": {"html": ""},
+      "workflow_trace": [{"node": "render_agent", "status": "success"}]
+    }
+  },
+  {
+    "id": "gap_unaddressed_fail",
+    "chain": "gap_content_render",
+    "state": {
+      "session_id": "chain_04",
+      "gaps": [
+        {"id": "g1", "type": "missing_skill", "severity": "high", "description": "Missing Kubernetes container orchestration experience"}
+      ],
+      "resume_content_json": {
+        "summary": "General software engineer.",
+        "profile": {"name": "Test User"},
+        "skills": [{"id": "s1", "title": "Backend", "content": "Python only"}],
+        "internships": [], "projects": [], "awards": [], "papers": [],
+        "meta": {"language": "en"}
+      },
+      "resume_html": {"html": "<html><body>General software engineer.</body></html>"},
+      "workflow_trace": [
+        {"node": "gap_agent", "status": "success"},
+        {"node": "content_agent", "status": "success"},
+        {"node": "render_agent", "status": "success"}
+      ]
+    }
+  },
+  {
+    "id": "job_title_aligned_pass",
+    "chain": "profile_content_render",
+    "state": {
+      "session_id": "chain_05",
+      "job": {"title": "Data Analyst"},
+      "candidate_profile": {"profile_basic": {"name": "Maria Santos"}},
+      "resume_content_json": {
+        "summary": "Data analyst with SQL skills.",
+        "profile": {"name": "Maria Santos"},
+        "skills": [], "internships": [], "projects": [], "awards": [], "papers": [],
+        "meta": {"target_role": "Data Analyst", "language": "en"}
+      },
+      "resume_html": {"html": "<html><body><h1>Maria Santos</h1><p>Data analyst with SQL skills and experience in cross-border analytics projects.</p></body></html>"},
+      "workflow_trace": [{"node": "content_agent", "status": "success"}]
+    }
+  }
+]

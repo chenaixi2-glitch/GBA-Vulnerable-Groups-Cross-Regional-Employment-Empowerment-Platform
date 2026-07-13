@@ -244,20 +244,12 @@
                     </div>
 
                     <h3 class="font-bold text-gray-900 mb-2" data-i18n="interview.prerequisitesTitle">Interview Prerequisites</h3>
-                    <p class="text-xs text-gray-500 mb-4" data-i18n="interview.prerequisitesHint">Complete all steps before starting the interview session</p>
+                    <p class="text-xs text-gray-500 mb-4" data-i18n="interview.prerequisitesHint">Upload and parse your profile to start (job description optional)</p>
 
                     <div class="space-y-2 mb-4 text-sm">
                         <div id="prereq-profile" class="flex items-center gap-2">
                             <i class="prereq-icon fas fa-circle text-gray-300"></i>
                             <span data-i18n="interview.prereqProfile">Candidate profile</span>
-                        </div>
-                        <div id="prereq-job" class="flex items-center gap-2">
-                            <i class="prereq-icon fas fa-circle text-gray-300"></i>
-                            <span data-i18n="interview.prereqJob">Job description</span>
-                        </div>
-                        <div id="prereq-resume" class="flex items-center gap-2">
-                            <i class="prereq-icon fas fa-circle text-gray-300"></i>
-                            <span data-i18n="interview.prereqResume">Resume content</span>
                         </div>
                     </div>
 
@@ -299,7 +291,7 @@
                         </div>
 
                         <div id="interview-jd-section" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.step2Label">Step 2: Target Job Description</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.step2Label">Step 2: Target Job Description (Optional)</label>
                             <textarea id="interview-jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-2 text-sm" data-i18n-placeholder="interview.jdPlaceholder" placeholder="Paste the full job description..."></textarea>
                             <div class="mt-2 grid grid-cols-1 gap-2">
                                 <select id="interview-employer-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
@@ -322,14 +314,6 @@
                             </div>
                             <button type="button" onclick="submitInterviewJobDescription()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700" data-i18n="interview.submitJd">
                                 Submit Job Description
-                            </button>
-                        </div>
-
-                        <div id="interview-resume-section" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.step3Label">Step 3: Generate Resume Content</label>
-                            <p class="text-xs text-gray-500 mb-2" data-i18n="interview.step3Hint">Required by interview_agent to tailor questions to your resume</p>
-                            <button type="button" onclick="generateInterviewResume()" class="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700" data-i18n="interview.generateResume">
-                                Generate Resume Content
                             </button>
                         </div>
                     </div>
@@ -404,11 +388,11 @@
                         </div>
                     </div>
                     
-                    <button id="btn-load-questions" onclick="loadInterviewQuestions()" class="mt-4 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Complete all prerequisite steps first">
+                    <button id="btn-load-questions" onclick="loadInterviewQuestions()" class="mt-4 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Parse your profile first">
                         <i class="fas fa-play mr-2"></i>
                         <span data-i18n="interview.startSession">Start Interview Session</span>
                     </button>
-                    <p class="text-xs text-gray-500 mt-2 text-center" data-i18n="interview.completePrereqHint">Complete profile, JD, and resume steps first</p>
+                    <p class="text-xs text-gray-500 mt-2 text-center" data-i18n="interview.completePrereqHint">Upload and parse your profile first</p>
                 </div>
 
                 <!-- Session Progress -->
@@ -438,53 +422,60 @@
 
             <!-- Right Panel: Interview Interface -->
             <div class="space-y-6">
-                <!-- Mode Selection -->
-                <div class="bg-white rounded-xl p-4 border shadow-sm">
-                    <h3 class="font-bold text-gray-900 mb-3" data-i18n="interview.practiceMode">Practice Mode</h3>
-                    <div class="flex gap-3">
-                        <button type="button" class="mode-tab active" data-mode="question_bank" onclick="selectInterviewMode('question_bank')">
-                            <i class="fas fa-list-ul mr-1"></i>
-                            <span data-i18n="interview.modeQuestionBank">Question Bank</span>
-                        </button>
-                        <button type="button" class="mode-tab" data-mode="custom" onclick="selectInterviewMode('custom')">
-                            <i class="fas fa-file-upload mr-1"></i>
-                            <span data-i18n="interview.modeCustom">Custom Questions</span>
-                        </button>
-                        <button type="button" class="mode-tab" data-mode="interactive" onclick="selectInterviewMode('interactive')">
-                            <i class="fas fa-comments mr-1"></i>
-                            <span data-i18n="interview.modeInteractive">Interactive Mock</span>
-                        </button>
+                <!-- Empty State: mode selection & program config -->
+                <div id="empty-state" class="bg-white rounded-xl p-8 md:p-12 border shadow-sm text-center">
+                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-comments text-3xl text-purple-600"></i>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2" data-i18n="interview.modeHint">
-                        Question Bank generates staged Q&amp;A; Custom Questions uploads your own list and generates reference answers; Interactive Mock runs live dialogue.
-                    </p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2" data-i18n="interview.readyToPractice">Ready to Practice?</h3>
+                    <p class="text-gray-600 mb-6" data-i18n="interview.readyToPracticeDesc">Configure your target position, choose a practice mode, and start an AI-powered interview session</p>
 
-                    <!-- Program Version (question bank & interactive) -->
-                    <div id="program-version-section" class="mt-4 pt-4 border-t border-gray-100">
-                        <h4 class="text-sm font-semibold text-gray-800 mb-2" data-i18n="interview.programTitle">Interview Program</h4>
-                        <div class="grid sm:grid-cols-3 gap-2 mb-3">
-                            <button type="button" class="program-version-option selected text-left p-3 border-2 border-purple-500 rounded-lg bg-purple-50" data-version="quick" onclick="selectProgramVersion('quick')">
-                                <div class="font-medium text-sm text-purple-900" data-i18n="interview.programQuickTitle">Quick · ~30 min</div>
-                                <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programQuickDesc">Screening + final combined + full professional round (recommended for daily practice)</div>
+                    <div class="max-w-2xl mx-auto text-left">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button type="button" class="mode-tab active" data-mode="question_bank" onclick="selectInterviewMode('question_bank')">
+                                <i class="fas fa-list-ul mr-1"></i>
+                                <span data-i18n="interview.modeQuestionBank">Question Bank</span>
                             </button>
-                            <button type="button" class="program-version-option text-left p-3 border-2 border-gray-200 rounded-lg hover:border-purple-300" data-version="full" onclick="selectProgramVersion('full')">
-                                <div class="font-medium text-sm text-gray-900" data-i18n="interview.programFullTitle">Full · ~60 min</div>
-                                <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programFullDesc">Three-round flow: screening → professional/technical → director/HR final</div>
+                            <button type="button" class="mode-tab" data-mode="custom" onclick="selectInterviewMode('custom')">
+                                <i class="fas fa-file-upload mr-1"></i>
+                                <span data-i18n="interview.modeCustom">Custom Questions</span>
                             </button>
-                            <button type="button" class="program-version-option text-left p-3 border-2 border-gray-200 rounded-lg hover:border-purple-300" data-version="specialized" onclick="selectProgramVersion('specialized')">
-                                <div class="font-medium text-sm text-gray-900" data-i18n="interview.programSpecialTitle">Specialized</div>
-                                <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programSpecialDesc">Technical only / final negotiation / resume deep dive</div>
+                            <button type="button" class="mode-tab" data-mode="interactive" onclick="selectInterviewMode('interactive')">
+                                <i class="fas fa-comments mr-1"></i>
+                                <span data-i18n="interview.modeInteractive">Interactive Mock</span>
                             </button>
                         </div>
-                        <div id="specialized-focus-section" class="hidden">
-                            <label class="block text-xs font-medium text-gray-700 mb-1" data-i18n="interview.specializedFocus">Specialized practice focus</label>
-                            <select id="specialized-focus" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="updateSpecializedFocus()">
-                                <option value="technical" data-i18n="interview.specialTechnical">Technical / professional questions only</option>
-                                <option value="final_negotiation" data-i18n="interview.specialNegotiation">Final negotiation only</option>
-                                <option value="resume_deep_dive" data-i18n="interview.specialDeepDive">Resume deep dive only</option>
-                            </select>
+                        <p class="text-xs text-gray-500 mt-2 text-center sm:text-left" data-i18n="interview.modeHint">
+                            Question Bank generates staged Q&amp;A; Custom Questions uploads your own list and generates reference answers; Interactive Mock runs live dialogue.
+                        </p>
+
+                        <!-- Program Version (question bank & interactive) -->
+                        <div id="program-version-section" class="mt-6 pt-6 border-t border-gray-100">
+                            <h4 class="text-sm font-semibold text-gray-800 mb-2" data-i18n="interview.programTitle">Interview Program</h4>
+                            <div class="grid sm:grid-cols-3 gap-2 mb-3">
+                                <button type="button" class="program-version-option selected text-left p-3 border-2 border-purple-500 rounded-lg bg-purple-50" data-version="quick" onclick="selectProgramVersion('quick')">
+                                    <div class="font-medium text-sm text-purple-900" data-i18n="interview.programQuickTitle">Quick · ~30 min</div>
+                                    <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programQuickDesc">Screening + final combined + full professional round (recommended for daily practice)</div>
+                                </button>
+                                <button type="button" class="program-version-option text-left p-3 border-2 border-gray-200 rounded-lg hover:border-purple-300" data-version="full" onclick="selectProgramVersion('full')">
+                                    <div class="font-medium text-sm text-gray-900" data-i18n="interview.programFullTitle">Full · ~60 min</div>
+                                    <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programFullDesc">Three-round flow: screening → professional/technical → director/HR final</div>
+                                </button>
+                                <button type="button" class="program-version-option text-left p-3 border-2 border-gray-200 rounded-lg hover:border-purple-300" data-version="specialized" onclick="selectProgramVersion('specialized')">
+                                    <div class="font-medium text-sm text-gray-900" data-i18n="interview.programSpecialTitle">Specialized</div>
+                                    <div class="text-xs text-gray-600 mt-1" data-i18n="interview.programSpecialDesc">Technical only / final negotiation / resume deep dive</div>
+                                </button>
+                            </div>
+                            <div id="specialized-focus-section" class="hidden">
+                                <label class="block text-xs font-medium text-gray-700 mb-1" data-i18n="interview.specializedFocus">Specialized practice focus</label>
+                                <select id="specialized-focus" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="updateSpecializedFocus()">
+                                    <option value="technical" data-i18n="interview.specialTechnical">Technical / professional questions only</option>
+                                    <option value="final_negotiation" data-i18n="interview.specialNegotiation">Final negotiation only</option>
+                                    <option value="resume_deep_dive" data-i18n="interview.specialDeepDive">Resume deep dive only</option>
+                                </select>
+                            </div>
+                            <div id="program-stages-preview" class="mt-3 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 space-y-1"></div>
                         </div>
-                        <div id="program-stages-preview" class="mt-3 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 space-y-1"></div>
                     </div>
                 </div>
 
@@ -753,33 +744,6 @@
                                 <i class="fas fa-redo mr-2"></i>
                                 <span data-i18n="interview.newSession">New Session</span>
                             </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Empty State -->
-                <div id="empty-state" class="bg-white rounded-xl p-12 border shadow-sm text-center">
-                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-comments text-3xl text-purple-600"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Ready to Practice?</h3>
-                    <p class="text-gray-600 mb-6">Configure your target position and start an AI-powered interview session</p>
-                    
-                    <div class="grid md:grid-cols-3 gap-4 text-sm">
-                        <div class="p-4 bg-purple-50 rounded-lg">
-                            <i class="fas fa-brain text-purple-600 text-2xl mb-2"></i>
-                            <div class="font-medium mb-1">AI-Powered Questions</div>
-                            <div class="text-gray-600 text-xs">Personalized to your role</div>
-                        </div>
-                        <div class="p-4 bg-blue-50 rounded-lg">
-                            <i class="fas fa-comments text-blue-600 text-2xl mb-2"></i>
-                            <div class="font-medium mb-1">Interactive Mock</div>
-                            <div class="text-gray-600 text-xs">Multi-turn follow-up dialogue</div>
-                        </div>
-                        <div class="p-4 bg-amber-50 rounded-lg">
-                            <i class="fas fa-file-upload text-amber-600 text-2xl mb-2"></i>
-                            <div class="font-medium mb-1">Custom Questions</div>
-                            <div class="text-gray-600 text-xs">Upload your own & get reference answers</div>
                         </div>
                     </div>
                 </div>

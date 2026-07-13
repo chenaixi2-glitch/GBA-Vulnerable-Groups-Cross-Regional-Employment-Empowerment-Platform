@@ -12,6 +12,7 @@
 | [后端测试指南](backend/TESTING_GUIDE.md) | API 与集成测试 |
 | [测试资源汇总](TESTING_SUMMARY.md) | 全项目测试索引 |
 | [RAG 自动评测](evaluation-results/resume-rag/README.md) | 简历优化指标 |
+| [评测结果索引](evaluation-results/README.md) | Planner F1、RAG Recall@K、链路一致性、Bad case 复核 |
 | [人工评测](evaluation-results/resume-rag/human/README.md) | 盲评流程与结果 |
 
 ## 快速启动

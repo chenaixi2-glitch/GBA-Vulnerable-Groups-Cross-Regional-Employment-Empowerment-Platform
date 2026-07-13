@@ -1,16 +1,17 @@
-name: Answer Evaluation Golden Set
+name: Evaluation Suite
 
 on:
   push:
     paths:
       - 'backend/**'
+      - 'evaluation-results/**'
       - '.github/workflows/evaluation-tests.yml'
   pull_request:
     paths:
       - 'backend/**'
 
 jobs:
-  golden-set:
+  evaluation:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -28,12 +29,32 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run golden-set keyword and schema tests
+      - name: Planner routing (F1 + agent chain)
+        env:
+          PYTHONPATH: .
+        run: pytest tests/test_planner_routing_eval.py -v --tb=short
+
+      - name: RAG retrieval metrics (lexical)
+        env:
+          PYTHONPATH: .
+        run: pytest tests/test_rag_retrieval_metrics.py -v --tb=short
+
+      - name: Chain consistency
+        env:
+          PYTHONPATH: .
+        run: pytest tests/test_chain_consistency_eval.py -v --tb=short
+
+      - name: Bad-case sampler
+        env:
+          PYTHONPATH: .
+        run: pytest tests/test_bad_case_sampler.py -v --tb=short
+
+      - name: Answer evaluation golden set (keyword/schema)
         env:
           PYTHONPATH: .
         run: pytest tests/test_answer_evaluation_golden.py -v --tb=short -k "not embedding"
 
-      - name: Run embedding similarity tests (optional)
+      - name: Answer evaluation embedding (optional)
         if: env.DASHSCOPE_API_KEY != ''
         env:
           PYTHONPATH: .

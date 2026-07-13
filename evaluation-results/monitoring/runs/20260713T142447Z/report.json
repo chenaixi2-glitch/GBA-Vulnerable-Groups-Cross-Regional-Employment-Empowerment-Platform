@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-07-13T14:24:47.386948+00:00",
+  "total_sessions": 4,
+  "flagged_count": 4,
+  "by_reason": {
+    "failed_agent_node": 1,
+    "empty_assistant_reply": 1,
+    "routing_mismatch": 1,
+    "low_answer_score": 1
+  },
+  "cases": [
+    {
+      "case_id": "sess_failed_01_failed_node",
+      "session_id": "sess_failed_01",
+      "intent": "gap_analysis",
+      "execution_plan": [
+        "gap_agent"
+      ],
+      "reason": "failed_agent_node",
+      "severity": "high",
+      "reply_preview": "",
+      "failed_nodes": [
+        "gap_agent"
+      ],
+      "trace_summary": "planner[success] → gap_agent[failed]",
+      "langsmith_run_name": "",
+      "review_status": "pending"
+    },
+    {
+      "case_id": "sess_failed_01_empty_reply",
+      "session_id": "sess_failed_01",
+      "intent": "gap_analysis",
+      "execution_plan": [
+        "gap_agent"
+      ],
+      "reason": "empty_assistant_reply",
+      "severity": "medium",
+      "reply_preview": "",
+      "failed_nodes": [],
+      "trace_summary": "planner[success] → gap_agent[failed]",
+      "langsmith_run_name": "",
+      "review_status": "pending"
+    },
+    {
+      "case_id": "sess_route_01_routing_mismatch",
+      "session_id": "sess_route_01",
+      "intent": "gap_analysis",
+      "execution_plan": [
+        "gap_agent"
+      ],
+      "reason": "routing_mismatch: expected ['learning_path_agent'], got ['gap_agent']",
+      "severity": "medium",
+      "reply_preview": "",
+      "failed_nodes": [],
+      "trace_summary": "planner[success] → gap_agent[success]",
+      "langsmith_run_name": "",
+      "review_status": "pending"
+    },
+    {
+      "case_id": "sess_eval_01_low_eval_score",
+      "session_id": "sess_eval_01",
+      "intent": "evaluate_answer",
+      "execution_plan": [
+        "answer_evaluation_agent"
+      ],
+      "reason": "low_answer_score: 45 < 60",
+      "severity": "low",
+      "reply_preview": "Your answer needs improvement.",
+      "failed_nodes": [],
+      "trace_summary": "answer_evaluation_agent[success]",
+      "langsmith_run_name": "",
+      "review_status": "pending"
+    }
+  ]
+}

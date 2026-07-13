@@ -1,0 +1,170 @@
+[
+  {
+    "id": "learning_path_override_gap",
+    "user_message": "What learning resources should I study to close my skill gaps? Recommend courses and estimated study hours.",
+    "raw_llm_intent": "gap_analysis",
+    "expected_intent": "learning_path",
+    "expected_execution_plan": ["learning_path_agent"],
+    "mode": "rule_only",
+    "notes": "Learning resource keywords override gap_analysis"
+  },
+  {
+    "id": "pure_gap_analysis",
+    "user_message": "Analyze my skill gaps for resume optimization.",
+    "raw_llm_intent": "gap_analysis",
+    "expected_intent": "gap_analysis",
+    "expected_execution_plan": ["gap_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "timeline_learning_path",
+    "user_message": "Generate my learning timeline. I can study 2 hours daily.",
+    "raw_llm_intent": "gap_analysis",
+    "expected_intent": "learning_path",
+    "expected_execution_plan": ["learning_path_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "gap_to_upload_profile_long_material",
+    "user_message": "Here is my candidate profile for gap analysis. Current role: Customer Service Specialist. Current skills: Customer Service, English, Cantonese, CRM. Career goal: Customer Service Manager.",
+    "raw_llm_intent": "gap_analysis",
+    "state": {},
+    "expected_intent": "upload_profile",
+    "expected_execution_plan": ["profile_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "short_gap_without_profile",
+    "user_message": "Analyze my skill gaps for resume optimization.",
+    "raw_llm_intent": "gap_analysis",
+    "state": {},
+    "expected_intent": "gap_analysis",
+    "expected_execution_plan": ["gap_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "resume_edit_clamp_gap",
+    "user_message": "Analyze skill gaps in my resume wording.",
+    "raw_llm_intent": "gap_analysis",
+    "state": {"context_scope": "resume_edit"},
+    "expected_intent": "content_edit",
+    "expected_execution_plan": ["content_agent", "render_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "resume_edit_section_reorder",
+    "user_message": "把项目经历放到实习经历前面",
+    "raw_llm_intent": "content_edit",
+    "state": {"context_scope": "resume_edit"},
+    "expected_intent": "render_edit",
+    "expected_execution_plan": ["render_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "resume_edit_language_convert",
+    "user_message": "请把简历转成英文",
+    "raw_llm_intent": "content_edit",
+    "state": {"context_scope": "resume_edit"},
+    "expected_intent": "language_convert",
+    "expected_execution_plan": ["content_agent", "render_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "resume_edit_ask_question",
+    "user_message": "简历里有哪些项目？",
+    "raw_llm_intent": "content_edit",
+    "state": {"context_scope": "resume_edit"},
+    "expected_intent": "ask_question",
+    "expected_execution_plan": ["question_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "content_edit_full_chain",
+    "user_message": "Make my summary more concise.",
+    "raw_llm_intent": "content_edit",
+    "expected_intent": "content_edit",
+    "expected_execution_plan": ["content_agent", "render_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "content_edit_skip_render",
+    "user_message": "Update skills section only.",
+    "raw_llm_intent": "content_edit",
+    "state": {"skip_render": true},
+    "expected_intent": "content_edit",
+    "expected_execution_plan": ["content_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "upload_jd_only",
+    "user_message": "Senior Frontend Developer with React experience...",
+    "raw_llm_intent": "upload_jd",
+    "expected_intent": "upload_jd",
+    "expected_execution_plan": ["jd_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "upload_profile",
+    "user_message": "Here is my resume text for parsing.",
+    "raw_llm_intent": "upload_profile",
+    "expected_intent": "upload_profile",
+    "expected_execution_plan": ["profile_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "start_interview",
+    "user_message": "Generate interview questions for this role.",
+    "raw_llm_intent": "start_interview",
+    "expected_intent": "start_interview",
+    "expected_execution_plan": ["interview_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "evaluate_answer",
+    "user_message": "Please evaluate my answer to the behavioral question.",
+    "raw_llm_intent": "evaluate_answer",
+    "expected_intent": "evaluate_answer",
+    "expected_execution_plan": ["answer_evaluation_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "ask_question_default",
+    "user_message": "What skills does this job require?",
+    "raw_llm_intent": "ask_question",
+    "expected_intent": "ask_question",
+    "expected_execution_plan": ["question_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "export_no_agent",
+    "user_message": "Export my resume as PDF.",
+    "raw_llm_intent": "export",
+    "expected_intent": "export",
+    "expected_execution_plan": [],
+    "mode": "rule_only"
+  },
+  {
+    "id": "render_edit_only",
+    "user_message": "Increase font size and reduce margins.",
+    "raw_llm_intent": "render_edit",
+    "expected_intent": "render_edit",
+    "expected_execution_plan": ["render_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "learning_path_chinese",
+    "user_message": "请推荐学习资源并给出预估学时，帮我制定学习路线。",
+    "raw_llm_intent": "gap_analysis",
+    "expected_intent": "learning_path",
+    "expected_execution_plan": ["learning_path_agent"],
+    "mode": "rule_only"
+  },
+  {
+    "id": "profile_patch",
+    "user_message": "I also have AWS certification now.",
+    "raw_llm_intent": "profile_patch",
+    "expected_intent": "profile_patch",
+    "expected_execution_plan": ["profile_agent"],
+    "mode": "rule_only"
+  }
+]

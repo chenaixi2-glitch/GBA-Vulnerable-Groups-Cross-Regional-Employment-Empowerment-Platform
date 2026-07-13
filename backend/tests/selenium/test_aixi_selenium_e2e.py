@@ -307,31 +307,6 @@ def _setup_interview_prerequisites(driver, resume_path: Path, findings: Findings
 
     wait_loading_hidden(driver)
     WebDriverWait(driver, LLM_TIMEOUT).until(
-        lambda d: "hidden" not in (d.find_element(By.ID, "interview-jd-section").get_attribute("class") or "")
-    )
-
-    jd = load_target_jd()
-    driver.find_element(By.ID, "interview-jd-text").clear()
-    driver.find_element(By.ID, "interview-jd-text").send_keys(jd)
-    Select(driver.find_element(By.ID, "interview-employer-type")).select_by_value("private")
-    Select(driver.find_element(By.ID, "interview-experience-level")).select_by_value("entry")
-
-    driver.find_element(
-        By.XPATH,
-        "//button[contains(@onclick, 'submitInterviewJobDescription')]",
-    ).click()
-    wait_loading_hidden(driver)
-
-    WebDriverWait(driver, LLM_TIMEOUT).until(
-        lambda d: "hidden" not in (d.find_element(By.ID, "interview-resume-section").get_attribute("class") or "")
-    )
-    driver.find_element(
-        By.XPATH,
-        "//button[contains(@onclick, 'generateInterviewResume')]",
-    ).click()
-    wait_loading_hidden(driver)
-
-    WebDriverWait(driver, LLM_TIMEOUT).until(
         lambda d: not d.find_element(By.ID, "btn-load-questions").get_attribute("disabled")
     )
 

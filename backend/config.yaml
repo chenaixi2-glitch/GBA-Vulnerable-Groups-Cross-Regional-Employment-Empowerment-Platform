@@ -129,4 +129,15 @@ testing:
   integration:
     run_real_llm_tests: true
 
+monitoring:
+  bad_case:
+    min_answer_score: 60
+    flag_failed_nodes: true
+    flag_empty_reply: true
+    flag_routing_mismatch: true
+  langsmith:
+    project: "ai-career-copilot"
+    export_limit: 50
+    lookback_hours: 168
+
 

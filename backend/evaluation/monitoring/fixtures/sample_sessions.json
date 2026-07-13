@@ -1,0 +1,59 @@
+[
+  {
+    "id": "session_failed_gap",
+    "state": {
+      "session_id": "sess_failed_01",
+      "current_intent": "gap_analysis",
+      "execution_plan": ["gap_agent"],
+      "reply_message": "",
+      "workflow_trace": [
+        {"node": "planner", "status": "success", "output_summary": "intent gap_analysis"},
+        {"node": "gap_agent", "status": "failed", "output_summary": "模型输出格式异常", "error": "JSON parse error"}
+      ]
+    }
+  },
+  {
+    "id": "session_routing_mismatch",
+    "expected_execution_plan": ["learning_path_agent"],
+    "state": {
+      "session_id": "sess_route_01",
+      "current_intent": "gap_analysis",
+      "execution_plan": ["gap_agent"],
+      "reply_message": "缺口分析已完成。",
+      "workflow_trace": [
+        {"node": "planner", "status": "success"},
+        {"node": "gap_agent", "status": "success"}
+      ]
+    }
+  },
+  {
+    "id": "session_low_eval_score",
+    "state": {
+      "session_id": "sess_eval_01",
+      "current_intent": "evaluate_answer",
+      "execution_plan": ["answer_evaluation_agent"],
+      "reply_message": "Your answer needs improvement.",
+      "last_answer_evaluation": {
+        "score": 45,
+        "strengths": ["Attempted to answer"],
+        "improvements": ["Missing concrete examples"]
+      },
+      "workflow_trace": [
+        {"node": "answer_evaluation_agent", "status": "success"}
+      ]
+    }
+  },
+  {
+    "id": "session_happy",
+    "state": {
+      "session_id": "sess_ok_01",
+      "current_intent": "ask_question",
+      "execution_plan": ["question_agent"],
+      "reply_message": "The job requires Python and SQL skills.",
+      "workflow_trace": [
+        {"node": "planner", "status": "success"},
+        {"node": "question_agent", "status": "success"}
+      ]
+    }
+  }
+]

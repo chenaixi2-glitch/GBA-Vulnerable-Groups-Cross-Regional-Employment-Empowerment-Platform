@@ -1,0 +1,95 @@
+[
+  {
+    "id": "query_job_title",
+    "query": "What is my target job title?",
+    "state": {
+      "session_id": "rag_eval_01",
+      "job": {
+        "title": "Senior Frontend Developer",
+        "hard_skills": ["JavaScript", "React"],
+        "responsibilities": ["Build responsive web applications", "Collaborate with backend team"]
+      }
+    },
+    "relevant_chunk_ids": ["job:title"],
+    "mode": "lexical_fallback"
+  },
+  {
+    "id": "query_job_skills",
+    "query": "Which technical skills does the job require?",
+    "state": {
+      "session_id": "rag_eval_02",
+      "job": {
+        "title": "Data Analyst",
+        "hard_skills": ["Python", "SQL", "Tableau"],
+        "tech_stack": ["Python", "Pandas"],
+        "keywords": ["data visualization"]
+      }
+    },
+    "relevant_chunk_ids": ["job:skills"],
+    "mode": "lexical_fallback"
+  },
+  {
+    "id": "query_profile_skill",
+    "query": "What Python projects do I have?",
+    "state": {
+      "session_id": "rag_eval_03",
+      "candidate_profile": {
+        "facts": [
+          {"id": "fact_proj_1", "type": "project", "content": "Built a Python data pipeline for sales analytics"}
+        ]
+      }
+    },
+    "relevant_chunk_ids": ["profile:fact_proj_1"],
+    "mode": "lexical_fallback"
+  },
+  {
+    "id": "query_resume_summary",
+    "query": "Summarize my current resume profile section.",
+    "state": {
+      "session_id": "rag_eval_04",
+      "resume_content_json": {
+        "summary": "Full-stack developer with 3 years of experience in web applications.",
+        "profile": {"name": "Alex Chen", "email": "alex@example.com"},
+        "skills": [],
+        "internships": [],
+        "projects": [],
+        "awards": [],
+        "papers": [],
+        "meta": {"language": "en"}
+      }
+    },
+    "relevant_chunk_ids": ["resume:summary"],
+    "mode": "lexical_fallback"
+  },
+  {
+    "id": "query_gap_analysis",
+    "query": "What skill gaps were identified?",
+    "state": {
+      "session_id": "rag_eval_05",
+      "gaps": [
+        {
+          "id": "gap_1",
+          "type": "missing_skill",
+          "severity": "high",
+          "description": "Missing Kubernetes experience required by the JD"
+        }
+      ]
+    },
+    "relevant_chunk_ids": ["gaps:summary"],
+    "mode": "lexical_fallback"
+  },
+  {
+    "id": "query_multi_relevant",
+    "query": "Tell me about the job responsibilities and required skills.",
+    "state": {
+      "session_id": "rag_eval_06",
+      "job": {
+        "title": "Product Manager",
+        "hard_skills": ["Agile", "Roadmapping"],
+        "responsibilities": ["Define product roadmap", "Coordinate cross-functional teams"]
+      }
+    },
+    "relevant_chunk_ids": ["job:responsibilities", "job:skills"],
+    "mode": "lexical_fallback"
+  }
+]
