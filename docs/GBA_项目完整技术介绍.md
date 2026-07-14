@@ -1,6 +1,6 @@
 # GBA 跨境就业赋能平台 — 项目完整技术介绍
 
-> 本文档为后期项目完整介绍，涵盖 AI 核心模块（意图识别、Agent 编排、工具调用、MCP）、向量库与 RAG、Embedding / PyTorch 部署选项、Docker 容器化，以及自动评测与人工评测体系。  
+> 本文档为后期项目完整介绍，涵盖 AI 核心模块（意图识别、**Plan-and-Execute 编排**、工具调用、MCP）、向量库与 RAG、Embedding / PyTorch 部署选项、Docker 容器化，以及**六层自动评测 + 人工评测 + Bad case 复核**体系。  
 > 与 [需求与技术方案](../GBA_Cross-Border_Employment_Empowerment_Platform_Requirements_and_Technical_Solution_Document.md)、[部署指南](../backend/DEPLOYMENT.md)、[测试指南](../backend/TESTING_GUIDE.md) 并列使用。  
 > **English version:** [GBA_Platform_Technical_Overview.md](GBA_Platform_Technical_Overview.md)
 
@@ -715,6 +715,8 @@ FastMCP → node_jobs_client / file_parser
 ---
 
 ## 9. LangGraph 工作流编排
+
+编排范式详见 [§4.5 Plan-and-Execute（非 ReAct）](#45-编排范式plan-and-execute非-react)。
 
 ### 9.1 图结构
 
