@@ -11,10 +11,16 @@ from agents.json_contracts import ProfileExtractionOutput, ProfilePatchOutput, P
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.profile_extraction import PROFILE_EXTRACTION_PROMPT
 from prompts.profile_clarification_patch import PROFILE_CLARIFICATION_PATCH_PROMPT
+from tools.output_language import (
+    apply_interview_feedback_language,
+    apply_interview_question_language,
+    apply_resume_target_language,
+)
 from tools.profile_fact_split import (
     expand_profile_facts,
     material_language_instruction,
     reroute_profile_extras,
+    resume_target_language_from_material,
 )
 from tools.resume_profile_context import build_profile_json
 from workflow.state import (
@@ -200,6 +206,7 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
     material_id = f"mat_{uuid.uuid4().hex[:12]}"
 
     replace_mode = state.profile_replace_mode or bool(state.user_attachments)
+    material_lang = resume_target_language_from_material(material_text)
 
     # 已有画像（新上传时覆盖，不合并）
     existing = None if replace_mode else state.candidate_profile
@@ -276,6 +283,7 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
         type="message",
         content=material_text,
         uploaded_at=now,
+        language=material_lang,
     )
 
     materials = [new_material] if replace_mode else list(existing.materials) if existing else []
@@ -304,13 +312,20 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
 
     existing_facts = _filter_removed_facts(existing_facts, material_text)
 
+    profile_language = material_lang if replace_mode else (
+        (existing.language if existing and existing.language else "") or material_lang
+    )
     profile = CandidateProfile(
         profile_basic=new_basic,
         materials=materials,
         facts=existing_facts,
+        language=profile_language,
     )
 
-    logger.info("Profile updated: %s, %d facts", new_basic.name, len(existing_facts))
+    logger.info(
+        "Profile updated: %s, %d facts, language=%s",
+        new_basic.name, len(existing_facts), profile_language,
+    )
 
     meta = state.meta.model_copy(update={
         "dirty_flags": state.meta.dirty_flags.model_copy(update={
@@ -320,21 +335,36 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
         })
     })
 
-    return {
+    result: dict[str, Any] = {
         "candidate_profile": profile,
         "meta": meta,
         "workflow_trace": append_trace(
             state,
             node="profile_agent",
             input_summary=f"解析候选人材料：{summarize_user_message(material_text)}",
-            output_summary=f"已更新候选人画像：{new_basic.name or '未命名候选人'}，共 {len(existing_facts)} 条事实记录。",
+            output_summary=(
+                f"已更新候选人画像：{new_basic.name or '未命名候选人'}，"
+                f"共 {len(existing_facts)} 条事实记录，语言={profile_language or '-'}。"
+            ),
             artifacts={
                 "candidate_name": new_basic.name,
                 "material_count": len(materials),
                 "fact_count": len(existing_facts),
+                "language": profile_language,
             },
         ),
     }
+
+    # Align resume + interview AI output with the uploaded resume language.
+    if replace_mode or not (state.render_config and state.render_config.language):
+        apply_resume_target_language(state, profile_language)
+        apply_interview_question_language(state, profile_language)
+        apply_interview_feedback_language(state, profile_language)
+        result["render_config"] = state.render_config
+        result["meta"] = state.meta
+        logger.info("Resume/interview language from upload: %s", profile_language)
+
+    return result
 
 
 def profile_node(state: CopilotState) -> dict[str, Any]:

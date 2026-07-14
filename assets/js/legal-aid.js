@@ -64,7 +64,7 @@
 
   function formatDate(d) {
     if (!d) return '—';
-    return new Date(d).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
   function renderResponsesBlock(r, meta, opts, mode) {
@@ -169,7 +169,13 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">${laT('legal.filesLabel', 'Attachments (optional, max 3, ≤200KB each)')}</label>
-          <input id="la-files" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt" class="w-full text-sm" />
+          <div class="flex flex-wrap items-center gap-3">
+            <input id="la-files" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt" class="sr-only" />
+            <button type="button" id="la-files-btn" class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+              ${laT('legal.chooseFiles', 'Choose files')}
+            </button>
+            <span id="la-files-status" class="text-sm text-gray-500">${laT('legal.noFileChosen', 'No file chosen')}</span>
+          </div>
           <ul id="la-file-list" class="mt-2 text-xs text-gray-500 space-y-1"></ul>
         </div>
         <label class="flex items-start gap-2 text-sm">
@@ -182,18 +188,37 @@
       </form>`;
 
     pendingFiles = [];
+    const fileInput = panel.querySelector('#la-files');
+    const fileBtn = panel.querySelector('#la-files-btn');
+    const fileStatus = panel.querySelector('#la-files-status');
+    const fileList = panel.querySelector('#la-file-list');
+
+    function syncFileStatus() {
+      if (!pendingFiles.length) {
+        fileStatus.textContent = laT('legal.noFileChosen', 'No file chosen');
+        fileList.innerHTML = '';
+        return;
+      }
+      fileStatus.textContent = pendingFiles.length === 1
+        ? pendingFiles[0].name
+        : laT('legal.filesSelected', '{count} files selected', { count: pendingFiles.length });
+      fileList.innerHTML = pendingFiles
+        .map((f) => `<li><i class="fas fa-file mr-1"></i>${f.name} (${Math.round(f.size / 1024)}KB)</li>`)
+        .join('');
+    }
+
     loadMeta(api).then((meta) => {
       const sel = panel.querySelector('#la-category');
+      sel.innerHTML = '<option value="">' + laT('legal.categoryPlaceholder', 'Select a category') + '</option>';
       Object.entries(meta.categories || {}).forEach(([k, v]) => {
         sel.innerHTML += `<option value="${k}">${v}</option>`;
       });
     });
 
-    panel.querySelector('#la-files').addEventListener('change', (e) => {
+    fileBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
       pendingFiles = Array.from(e.target.files || []).slice(0, 3);
-      panel.querySelector('#la-file-list').innerHTML = pendingFiles
-        .map((f) => `<li><i class="fas fa-file mr-1"></i>${f.name} (${Math.round(f.size / 1024)}KB)</li>`)
-        .join('');
+      syncFileStatus();
     });
 
     panel.querySelector('#la-submit-form').addEventListener('submit', async (e) => {
@@ -212,7 +237,8 @@
         toast(mapMsg(res.message) || laT('legal.submitSuccess', 'Submitted successfully'), 'success');
         e.target.reset();
         pendingFiles = [];
-        panel.querySelector('#la-file-list').innerHTML = '';
+        fileInput.value = '';
+        syncFileStatus();
         const root = panel.closest('[data-legal-aid-root]');
         if (root) switchTab(root, 'mine', opts);
       } catch (err) {

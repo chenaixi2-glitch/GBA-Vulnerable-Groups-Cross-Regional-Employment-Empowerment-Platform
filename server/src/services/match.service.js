@@ -78,8 +78,8 @@ function extractResumeSkills(resume) {
 }
 
 function skillOverlapScore(jobSkills, resumeSkills) {
-  if (!jobSkills.length) return { score: 30, matched: [], reasons: ['岗位未标注具体技能要求'] };
-  if (!resumeSkills.length) return { score: 15, matched: [], reasons: ['简历中暂无技能信息'] };
+  if (!jobSkills.length) return { score: 30, matched: [], reasons: ['Job posting has no specific skill requirements'] };
+  if (!resumeSkills.length) return { score: 15, matched: [], reasons: ['No skill information found in resume'] };
 
   const matched = jobSkills.filter((js) =>
     resumeSkills.some((rs) => rs.includes(js) || js.includes(rs))
@@ -88,8 +88,8 @@ function skillOverlapScore(jobSkills, resumeSkills) {
   const ratio = matched.length / jobSkills.length;
   const score = Math.round(Math.min(50, ratio * 50));
   const reasons = matched.length
-    ? [`技能匹配：${matched.slice(0, 5).join('、')}`]
-    : ['技能与岗位要求重叠较少'];
+    ? [`Skills matched: ${matched.slice(0, 5).join(', ')}`]
+    : ['Limited skill overlap with job requirements'];
   return { score, matched, reasons };
 }
 
@@ -102,15 +102,15 @@ function educationScore(job, resume) {
   const facts = content.facts || [];
   const eduFacts = facts.filter((f) => f.type === 'education');
   const resumeEdu = eduFacts.map((f) => normalizeSkill(f.content)).join(' ');
-  if (!resumeEdu) return { score: 5, reason: '学历信息未填写' };
+  if (!resumeEdu) return { score: 5, reason: 'Education information not filled in' };
 
   const levels = ['phd', 'doctor', '博士', 'master', '硕士', 'bachelor', '本科', 'diploma', '专科', 'high school'];
   const jobLevel = levels.findIndex((l) => jobEdu.includes(l));
   const resumeLevel = levels.findIndex((l) => resumeEdu.includes(l));
   if (jobLevel >= 0 && resumeLevel >= 0 && resumeLevel <= jobLevel) {
-    return { score: 15, reason: '学历满足岗位要求' };
+    return { score: 15, reason: 'Education meets job requirements' };
   }
-  if (resumeEdu && jobEdu) return { score: 8, reason: '学历部分匹配' };
+  if (resumeEdu && jobEdu) return { score: 8, reason: 'Education partially matches' };
   return { score: 5, reason: null };
 }
 
@@ -123,13 +123,13 @@ function experienceScore(job, resume) {
   const facts = (content.facts || []).filter((f) =>
     ['internship', 'project', 'work'].includes(f.type)
   );
-  if (!facts.length) return { score: 5, reason: '工作经历信息较少' };
+  if (!facts.length) return { score: 5, reason: 'Limited work experience listed' };
   const years = facts.length;
-  if (jobExp.includes('10+') && years >= 3) return { score: 20, reason: '工作经验丰富' };
-  if (jobExp.includes('5') && years >= 2) return { score: 18, reason: '工作经验符合要求' };
-  if (jobExp.includes('3') && years >= 1) return { score: 16, reason: '具备相关工作经验' };
-  if (jobExp.includes('1') || jobExp.includes('less')) return { score: 15, reason: '具备基础工作经验' };
-  return { score: 12, reason: '有相关实习或项目经历' };
+  if (jobExp.includes('10+') && years >= 3) return { score: 20, reason: 'Strong work experience' };
+  if (jobExp.includes('5') && years >= 2) return { score: 18, reason: 'Work experience meets requirements' };
+  if (jobExp.includes('3') && years >= 1) return { score: 16, reason: 'Has relevant work experience' };
+  if (jobExp.includes('1') || jobExp.includes('less')) return { score: 15, reason: 'Has basic work experience' };
+  return { score: 12, reason: 'Has relevant internship or project experience' };
 }
 
 function descriptionOverlapScore(job, resume) {
@@ -142,12 +142,12 @@ function descriptionOverlapScore(job, resume) {
   const keywords = desc.split(/\s+/).filter((w) => w.length > 3).slice(0, 40);
   const hits = keywords.filter((k) => resumeText.includes(k));
   const score = Math.min(15, Math.round((hits.length / Math.max(keywords.length, 1)) * 15));
-  const reasons = hits.length ? [`岗位关键词匹配 ${hits.length} 项`] : [];
+  const reasons = hits.length ? [`Matched ${hits.length} job keyword(s)`] : [];
   return { score, reasons };
 }
 
 /**
- * 计算岗位与用户简历的匹配分（0-100）
+ * Score how well a job matches a user resume (0-100).
  */
 function scoreJobResume(job, resume) {
   const jobSkills = extractJobSkills(job);
@@ -169,10 +169,10 @@ function scoreJobResume(job, resume) {
   const score = Math.min(100, Math.max(0, Math.round(raw)));
 
   if (!resume) {
-    return { score: Math.min(score, 40), reasons: ['请先完善简历以获得更准确的匹配分', ...reasons] };
+    return { score: Math.min(score, 40), reasons: ['Please complete your resume for a more accurate match score', ...reasons] };
   }
 
-  return { score, reasons: reasons.length ? reasons : ['综合评估与岗位有一定契合度'] };
+  return { score, reasons: reasons.length ? reasons : ['Overall fit with this role looks reasonable'] };
 }
 
 function mapRowSkills(row) {

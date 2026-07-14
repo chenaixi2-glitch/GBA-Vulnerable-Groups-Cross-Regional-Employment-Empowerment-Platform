@@ -6,8 +6,9 @@
 let learningPathData = null;
 let timelineEditMode = false;
 let learningPathSetup = null;
-let learningPathLanguage = '';
-let learningPathLanguageUserSelected = false;
+/** Content language picker omitted — AI output fixed to English. */
+let learningPathLanguage = 'en';
+let learningPathLanguageUserSelected = true;
 
 function uiT(key, fallback, vars) {
     if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);
@@ -46,26 +47,20 @@ function learningPathLangDisplayLabel(code) {
 }
 
 function getDefaultLearningPathLang() {
-    if (typeof apiClient !== 'undefined' && apiClient.getPageLanguage) {
-        return apiClient.getPageLanguage();
-    }
-    if (typeof window.GBAI18n !== 'undefined' && GBAI18n.uiLangToApiLang) {
-        return normalizeLearningPathLang(GBAI18n.uiLangToApiLang(GBAI18n.getLang()));
-    }
-    return 'zh';
+    // Content language pickers omitted — AI output fixed to English.
+    return 'en';
 }
 
 function initLearningPathLanguages() {
-    const defaultLang = getDefaultLearningPathLang();
-    learningPathLanguage = defaultLang;
+    learningPathLanguage = 'en';
+    learningPathLanguageUserSelected = true;
     syncLearningPathLanguageButtons();
     updateLearningPathLanguageStatus();
     window.addEventListener('gba:language-changed', () => {
-        if (!learningPathLanguageUserSelected) {
-            learningPathLanguage = getDefaultLearningPathLang();
-            syncLearningPathLanguageButtons();
-            updateLearningPathLanguageStatus();
-        }
+        // Keep learning-path content language fixed to English when UI locale changes.
+        learningPathLanguage = 'en';
+        syncLearningPathLanguageButtons();
+        updateLearningPathLanguageStatus();
     });
 }
 
@@ -97,7 +92,7 @@ function syncLearningPathLanguageButtons() {
 }
 
 function getSelectedLearningPathLanguage() {
-    return normalizeLearningPathLang(learningPathLanguage || getDefaultLearningPathLang());
+    return 'en';
 }
 
 async function selectLearningPathLanguage(language) {
@@ -112,12 +107,14 @@ function initializeLearningPath() {
 
     learningPathSetup = new CandidateJdSetup({
         parsedTextRows: 14,
+        requireJdText: true,
         ids: {
             fileInput: 'learning-resume-file',
             profileText: 'profile-text',
             fileName: 'learning-file-name',
             fileInfo: 'learning-file-info',
             jdText: 'jd-text',
+            jobTitle: 'target-job',
             jdSection: 'learning-jd-section',
             profileReviewSection: 'learning-profile-review',
             profileSaveStatus: 'learning-profile-save-status',
@@ -139,7 +136,7 @@ function initializeLearningPath() {
             profileRequired: ['learningPath.toast.profileRequired', 'Please upload a resume or paste profile text'],
             profileSuccess: ['learningPath.toast.profileSubmitted', 'Profile submitted successfully'],
             profileFailed: ['learningPath.toast.profileFailed', 'Failed to submit profile: {msg}'],
-            jdRequired: ['learningPath.toast.jdRequired', 'Please paste a job description or complete target job fields'],
+            jdRequired: ['learningPath.toast.targetJobRequired', 'Please enter at least a target job title (full JD is optional)'],
             jdSuccess: ['learningPath.toast.jdSubmitted', 'Job description submitted successfully'],
             jdFailed: ['learningPath.toast.jdFailed', 'Failed to submit JD: {msg}'],
         },
@@ -162,17 +159,7 @@ function initializeLearningPath() {
 }
 
 function buildLearningProfileFallback() {
-    const inputs = getFormInputs();
-    const skills = inputs.currentSkillsText
-        ? inputs.currentSkillsText.split(',').map(s => s.trim()).filter(Boolean)
-        : [];
-    const skillsLine = skills.length ? skills.join(', ') : 'Not specified';
-    return [
-        'Here is my candidate profile.',
-        inputs.currentRole ? `Current role: ${inputs.currentRole}.` : '',
-        `Current skills: ${skillsLine}.`,
-        inputs.targetJob ? `Career goal: ${inputs.targetJob}.` : '',
-    ].filter(Boolean).join(' ');
+    return 'Here is my candidate profile.';
 }
 
 function updateLearningAnalyzeButton() {
@@ -219,29 +206,21 @@ function clearLearningResumeFile() {
 }
 
 async function submitLearningProfile() {
-    const inputs = getFormInputs();
-    if (!inputs.targetJob) {
-        Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter your target job title'));
-        return;
-    }
-    const skills = inputs.currentSkillsText
-        ? inputs.currentSkillsText.split(',').map(s => s.trim()).filter(s => s)
-        : [];
-    if (!learningPathSetup?.getProfileText() && !learningPathSetup?.selectedFile
-        && skills.length === 0 && !inputs.currentRole) {
-        Utils.showToast(uiT('learningPath.toast.skillsRequired', 'Please provide current skills, role, or profile details'));
-        return;
-    }
     await learningPathSetup.submitProfile();
 }
 
 async function submitLearningJd() {
     const inputs = getFormInputs();
-    if (!inputs.targetJob) {
-        Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter your target job title'));
+    const jdName = inputs.targetJob || (inputs.jdText ? inputs.jdText.split('\n')[0].trim() : '');
+    if (!jdName) {
+        Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter at least a target job title (full JD is optional)'));
+        document.getElementById('target-job')?.focus();
         return;
     }
-    await learningPathSetup.submitJd({ targetJobTitle: inputs.targetJob });
+    await learningPathSetup.submitJd({
+        targetJobTitle: inputs.targetJob || jdName,
+        jdText: inputs.jdText || jdName,
+    });
 }
 
 function updateSaveLoginHint() {
@@ -251,6 +230,8 @@ function updateSaveLoginHint() {
 }
 
 function getFormInputs() {
+    const targetJob = document.getElementById('target-job')?.value.trim() || '';
+    const profileText = document.getElementById('profile-text')?.value.trim() || '';
     if (typeof collectTargetJobContext === 'function') {
         const ctx = collectTargetJobContext({
             fields: {
@@ -261,31 +242,33 @@ function getFormInputs() {
             },
         });
         return {
-            targetJob: document.getElementById('target-job').value.trim(),
-            currentRole: document.getElementById('current-role').value.trim(),
+            targetJob,
+            currentRole: '',
             industry: ctx.industry,
             industryLabel: ctx.industryLabel,
             employerType: ctx.employer_type,
             experienceLevel: ctx.experience_level,
-            currentSkillsText: document.getElementById('current-skills').value.trim(),
-            profileText: document.getElementById('profile-text')?.value.trim() || '',
+            currentSkillsText: '',
+            profileText,
             jdText: ctx.jd_text,
             targetContext: ctx,
         };
     }
     return {
-        targetJob: document.getElementById('target-job').value.trim(),
-        currentRole: document.getElementById('current-role').value.trim(),
-        industry: document.getElementById('industry-focus').value,
-        currentSkillsText: document.getElementById('current-skills').value.trim(),
-        profileText: document.getElementById('profile-text')?.value.trim() || '',
+        targetJob,
+        currentRole: '',
+        industry: document.getElementById('industry-focus')?.value || '',
+        currentSkillsText: '',
+        profileText,
         jdText: document.getElementById('jd-text')?.value.trim() || '',
     };
 }
 
-function validateFormInputs({ targetJob }) {
-    if (!targetJob) {
-        Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter your target job title'));
+function validateFormInputs({ targetJob, jdText }) {
+    const jdName = (targetJob || '').trim() || ((jdText || '').trim().split('\n')[0] || '').trim();
+    if (!jdName) {
+        Utils.showToast(uiT('learningPath.toast.targetJobRequired', 'Please enter at least a target job title (full JD is optional)'));
+        document.getElementById('target-job')?.focus();
         return false;
     }
     if (!learningPathSetup?.isReady()) {
@@ -322,7 +305,7 @@ async function generateLearningPathAnalysis() {
             uiT('learningPath.loadingDesc', 'AI is analyzing skill gaps and curating resources...');
 
         const response = await apiClient.generateLearningPathAnalysis({
-            targetJob: inputs.targetJob,
+            targetJob: inputs.targetJob || (inputs.jdText ? inputs.jdText.split('\n')[0].trim() : ''),
             currentRole: inputs.currentRole,
             industry: inputs.industryLabel || inputs.industry,
             employerType: inputs.employerType || '',

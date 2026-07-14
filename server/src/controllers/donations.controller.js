@@ -13,38 +13,38 @@ const { formatGroupTypesLabel } = require('../constants/groupTypes');
 const LEGAL_SERVICES = [
   {
     id: 'labor_rights',
-    title: '劳动权益咨询',
-    description: '为弱势群体提供劳动合同、工资福利、工伤认定等基础劳动法律咨询与维权指引。',
+    title: 'Labor rights consultation',
+    description: 'Basic labor law advice on contracts, pay, benefits, workplace injury recognition and rights guidance for vulnerable groups.',
     icon: 'balance-scale',
   },
   {
     id: 'cross_border',
-    title: '跨境就业法律指导',
-    description: '粤港澳大湾区跨境就业签证、工作许可、社保衔接等合规问题专项解答。',
+    title: 'Cross-border employment guidance',
+    description: 'Visa, work permits and social insurance continuity for Greater Bay Area cross-border employment.',
     icon: 'globe-asia',
   },
   {
     id: 'anti_discrimination',
-    title: '反就业歧视法律援助',
-    description: '针对年龄、残疾、性别等就业歧视情形，提供投诉渠道与法律支持对接。',
+    title: 'Anti-discrimination legal aid',
+    description: 'Complaint channels and legal support for age, disability, gender and other employment discrimination.',
     icon: 'shield-alt',
   },
   {
     id: 'disability_employment',
-    title: '残疾人士就业权益',
-    description: '合理便利申请、无障碍就业环境、残疾证相关权益等专项服务。',
+    title: 'Disability employment rights',
+    description: 'Reasonable accommodation, accessible workplaces and disability certificate related rights.',
     icon: 'wheelchair',
   },
   {
     id: 'career_return',
-    title: '职场回归女性支持',
-    description: '职业空窗期再就业相关的法律权益保护与协商指导。',
+    title: 'Career-returning women support',
+    description: 'Legal rights and negotiation guidance for re-employment after career gaps.',
     icon: 'female',
   },
 ];
 
 /**
- * GET /api/donations/stats — 公开：法律服务基金统计
+ * GET /api/donations/stats — public: legal aid fund stats
  */
 async function getStats(req, res) {
   const stats = await DonationModel.getStats(LEGAL_SERVICE_PURPOSE);
@@ -53,35 +53,35 @@ async function getStats(req, res) {
     data: {
       ...stats,
       purpose: LEGAL_SERVICE_PURPOSE,
-      purpose_label: '弱势群体法律服务',
+      purpose_label: 'Vulnerable-group legal services',
       fund_usage: '100%',
-      fund_usage_note: '捐款箱募集到的资金将全额用于弱势群体法律服务',
+      fund_usage_note: 'All funds raised by the donation box go to vulnerable-group legal services',
     },
   });
 }
 
 /**
- * GET /api/donations/legal-services — 公开：法律服务介绍
+ * GET /api/donations/legal-services — public: legal services intro
  */
 function getLegalServices(req, res) {
   res.json({
     success: true,
     data: {
-      title: '弱势群体法律服务',
-      subtitle: '由平台捐款箱全额资助。用户可上传法律诉求申请，律师/志愿者接单或平台协助联系',
+      title: 'Vulnerable-group legal services',
+      subtitle: 'Fully funded by the platform donation box. Users can submit legal requests; lawyers, volunteers or the platform can assist.',
       services: LEGAL_SERVICES,
       contact: {
         hotline: '400-888-GBA1',
         email: 'legal-aid@gba-platform.org',
-        hours: '周一至周五 9:00–18:00',
+        hours: 'Mon–Fri 9:00–18:00',
       },
-      fund_promise: '捐款箱募集到的资金将全额用于该服务，不收取任何管理费用。',
+      fund_promise: '100% of donations fund this service — no administrative fees.',
     },
   });
 }
 
 /**
- * GET /api/donations/access — 当前用户平台访问权限
+ * GET /api/donations/access — current user platform access
  */
 async function getAccess(req, res) {
   const access = await getPlatformAccess(req.user.id);
@@ -96,7 +96,7 @@ async function getAccess(req, res) {
 }
 
 /**
- * GET /api/donations/me — 我的捐款记录
+ * GET /api/donations/me — my donation history
  */
 async function listMine(req, res) {
   const donations = await DonationModel.listByUser(req.user.id);
@@ -104,22 +104,22 @@ async function listMine(req, res) {
 }
 
 /**
- * POST /api/donations — 向捐款箱捐款（模拟支付，记录即生效）
+ * POST /api/donations — donate to the box (simulated payment)
  */
 async function createDonation(req, res) {
   const user = await UserModel.findById(req.user.id);
-  if (!user) throw ApiError.notFound('用户不存在');
+  if (!user) throw ApiError.notFound('User not found.');
 
   if (isVulnerableIndividual(user)) {
-    throw ApiError.badRequest('您属于弱势群体，平台各项功能免费使用，无需捐款');
+    throw ApiError.badRequest('You belong to a vulnerable group — platform features are free; no donation required.');
   }
 
   const amount = Number(req.body.amount);
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw ApiError.badRequest('请输入有效的捐款金额（大于 0，不限上限）');
+    throw ApiError.badRequest('Please enter a valid donation amount (greater than 0).');
   }
   if (amount > 99999999) {
-    throw ApiError.badRequest('单次捐款金额超出上限');
+    throw ApiError.badRequest('Donation amount exceeds the maximum limit.');
   }
 
   const message = req.body.message ? String(req.body.message).trim().slice(0, 500) : null;
@@ -136,7 +136,7 @@ async function createDonation(req, res) {
 
   res.status(201).json({
     success: true,
-    message: '感谢您的爱心捐款！资金将全额用于弱势群体法律服务。',
+    message: 'Thank you for your donation! All funds go to legal aid for vulnerable groups.',
     data: {
       donation,
       access,

@@ -27,26 +27,28 @@ _QUESTION_TEMPLATES: dict[str, tuple[str, str]] = {
     "zh": (
         "您在「{label}」这段经历中，是否有可量化的成果数据？"
         "例如：服务用户/客户数量、性能提升比例、团队人数、项目周期、营收或成本节省等。"
-        "如有请填写真实数据；若无相关数据请留空。",
-        "补充量化数据可使该段经历更贴合目标岗位，且仅会使用您提供的真实数字。",
+        "填写真实数据为可选项；若不填写，可在上方选择「按行业标准补充」或「生成无量化指标版本」。",
+        "真实数据优先；未填写时将按您选择的补充方式处理，不会在未授权时编造数字。",
     ),
     "zh-TW": (
         "您在「{label}」這段經歷中，是否有可量化的成果數據？"
         "例如：服務用戶/客戶數量、性能提升比例、團隊人數、項目週期、營收或成本節省等。"
-        "如有請填寫真實數據；若無相關數據請留空。",
-        "補充量化數據可使該段經歷更貼合目標崗位，且僅會使用您提供的真實數字。",
+        "填寫真實數據為可選項；若不填寫，可在上方選擇「按行業標準補充」或「生成無量化指標版本」。",
+        "真實數據優先；未填寫時將按您選擇的補充方式處理，不會在未授權時編造數字。",
     ),
     "en": (
         'For your experience "{label}", do you have any quantifiable results '
         "(e.g., users/clients served, performance improvement %, team size, project duration, revenue or cost savings)? "
-        "Provide real numbers only; leave blank if none.",
-        "Quantified results help tailor this experience to the target role; only facts you provide will be used.",
+        "Entering real numbers is optional; if left blank, use the choice above to either apply industry-standard estimates "
+        "or generate a non-quantified version.",
+        "Real metrics take priority; if left blank, your selected supplementation mode applies — no inventing numbers without consent.",
     ),
     "pt": (
         'Na experiência "{label}", tem resultados quantificáveis '
         "(ex.: utilizadores/clientes, % de melhoria, tamanho da equipa, duração, receita ou poupança)? "
-        "Indique apenas números reais; deixe em branco se não tiver.",
-        "Dados quantificados ajudam a alinhar a experiência à vaga; só serão usados os valores que indicar.",
+        "Preencher números reais é opcional; se deixar em branco, use a escolha acima para métricas típicas do setor "
+        "ou uma versão sem quantificação.",
+        "Números reais têm prioridade; se deixar em branco, aplica-se o modo que escolher — sem inventar valores sem autorização.",
     ),
 }
 

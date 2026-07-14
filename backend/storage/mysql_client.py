@@ -34,6 +34,7 @@ async def get_mysql_pool() -> aiomysql.Pool:
         )
         logger.info("MySQL async pool initialized: %s:%s/%s", cfg["host"], cfg["port"], cfg["database"])
         await ensure_saved_profile_records_table(_pool)
+        await ensure_candidate_profiles_language_column(_pool)
     return _pool
 
 
@@ -48,6 +49,7 @@ async def ensure_saved_profile_records_table(pool: aiomysql.Pool) -> None:
             user_id         BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
             record_name     VARCHAR(256)     NOT NULL DEFAULT '',
             candidate_name  VARCHAR(128)     NOT NULL DEFAULT '',
+            language        VARCHAR(16)      NOT NULL DEFAULT '' COMMENT '上传简历语言：zh / zh-TW / en / pt',
             data            JSON             NOT NULL,
             saved_at        DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_spr_user (user_id),
@@ -56,14 +58,46 @@ async def ensure_saved_profile_records_table(pool: aiomysql.Pool) -> None:
             FOREIGN KEY (session_id) REFERENCES `{db_name}`.`sessions`(session_id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """
+    alter_sql = f"""
+        ALTER TABLE `{db_name}`.`saved_profile_records`
+        ADD COLUMN language VARCHAR(16) NOT NULL DEFAULT ''
+            COMMENT '上传简历语言：zh / zh-TW / en / pt' AFTER candidate_name
+    """
     try:
         async with pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(sql)
+                try:
+                    await cur.execute(alter_sql)
+                except Exception as alter_exc:
+                    # 1060 = Duplicate column name
+                    if not (getattr(alter_exc, "args", None) and alter_exc.args[0] == 1060):
+                        logger.debug("saved_profile_records.language alter: %s", alter_exc)
             await conn.commit()
         logger.info("saved_profile_records table ready")
     except Exception as exc:
         logger.warning("saved_profile_records migration skipped: %s", exc)
+
+
+async def ensure_candidate_profiles_language_column(pool: aiomysql.Pool) -> None:
+    """幂等为 candidate_profiles 补充 language 列。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    alter_sql = f"""
+        ALTER TABLE `{db_name}`.`candidate_profiles`
+        ADD COLUMN language VARCHAR(16) NOT NULL DEFAULT ''
+            COMMENT '上传简历语言：zh / zh-TW / en / pt' AFTER version
+    """
+    try:
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(alter_sql)
+            await conn.commit()
+        logger.info("candidate_profiles.language column ready")
+    except Exception as exc:
+        if getattr(exc, "args", None) and exc.args[0] == 1060:
+            return
+        logger.warning("candidate_profiles.language migration skipped: %s", exc)
 
 
 class MySQLStore:
@@ -164,7 +198,16 @@ class MySQLStore:
         return await self._get_by_session("jobs", session_id)
 
     async def save_candidate_profile(self, row_id: str, session_id: str, data: dict) -> None:
-        await self._upsert_json("candidate_profiles", row_id, session_id, data)
+        language = ""
+        if isinstance(data, dict):
+            language = str(data.get("language") or "").strip()
+        await self._upsert_json(
+            "candidate_profiles",
+            row_id,
+            session_id,
+            data,
+            extra_cols={"language": language},
+        )
 
     async def get_candidate_profile(self, session_id: str) -> dict | None:
         return await self._get_by_session("candidate_profiles", session_id)
@@ -480,42 +523,54 @@ class MySQLStore:
         candidate_name: str,
         data: dict,
         *,
+        language: str = "",
         overwrite: bool = False,
     ) -> None:
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        lang = (language or "").strip()
+        if not lang and isinstance(data, dict):
+            lang = str(data.get("language") or "").strip()
+            if not lang:
+                profile = data.get("candidate_profile") or {}
+                if isinstance(profile, dict):
+                    lang = str(profile.get("language") or "").strip()
         json_str = json.dumps(data, ensure_ascii=False, default=str)
         if overwrite:
             sql = """
                 INSERT INTO saved_profile_records
-                    (id, session_id, user_id, record_name, candidate_name, data, saved_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    (id, session_id, user_id, record_name, candidate_name, language, data, saved_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     session_id = VALUES(session_id),
                     record_name = VALUES(record_name),
                     candidate_name = VALUES(candidate_name),
+                    language = VALUES(language),
                     data = VALUES(data),
                     saved_at = VALUES(saved_at)
             """
         else:
             sql = """
                 INSERT INTO saved_profile_records
-                    (id, session_id, user_id, record_name, candidate_name, data, saved_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    (id, session_id, user_id, record_name, candidate_name, language, data, saved_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
         async with self._pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(sql, (
                     row_id, session_id, int(user_id),
-                    record_name or "", candidate_name or "", json_str, now,
+                    record_name or "", candidate_name or "", lang, json_str, now,
                 ))
             await conn.commit()
-        logger.debug("Saved profile record id=%s user=%s session=%s", row_id, user_id, session_id)
+        logger.debug(
+            "Saved profile record id=%s user=%s session=%s language=%s",
+            row_id, user_id, session_id, lang,
+        )
 
     async def list_profile_records_by_user(
         self, user_id: int | str, limit: int = 20,
     ) -> list[dict[str, Any]]:
         sql = """
-            SELECT id, session_id, record_name, candidate_name, saved_at
+            SELECT id, session_id, record_name, candidate_name, language, saved_at
             FROM saved_profile_records
             WHERE user_id = %s
             ORDER BY saved_at DESC
@@ -531,7 +586,7 @@ class MySQLStore:
         self, row_id: str, user_id: int | str,
     ) -> dict[str, Any] | None:
         sql = """
-            SELECT id, session_id, record_name, candidate_name, data, saved_at
+            SELECT id, session_id, record_name, candidate_name, language, data, saved_at
             FROM saved_profile_records
             WHERE id = %s AND user_id = %s
             LIMIT 1

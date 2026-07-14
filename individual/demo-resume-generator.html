@@ -324,22 +324,23 @@
                     </button>
                 </section>
 
-                <!-- Step 2: Job Description -->
+                <!-- Step 2: Job Description (required) -->
                 <section id="jd-section" class="bg-white rounded-xl p-6 border shadow-sm hidden">
                     <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i class="fas fa-briefcase text-green-600"></i>
-                        <span data-i18n="resume.step2Title">Step 2: JD-based polish (optional)</span>
+                        <span data-i18n="resume.step2Title">Step 2: Target job description</span>
                     </h2>
-                    <p class="text-xs text-gray-500 mb-3" data-i18n="resume.step2OptionalDesc">Optional — tailor your resume to a target job. In Step 1, generate content, review in the editor, then export PDF/HTML.</p>
+                    <p class="text-xs text-gray-500 mb-3" data-i18n="resume.step2OptionalDesc">Required — enter a target job (title or full JD), then generate a tailored resume. Review and export after generation.</p>
 
-                    <div id="jd-export-shortcut-hint" class="hidden mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-900">
+                    <!-- Ignored: former skip-JD export shortcut (keep markup) -->
+                    <div id="jd-export-shortcut-hint" class="hidden mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-900" aria-hidden="true">
                         <i class="fas fa-file-export text-purple-600 mr-1"></i>
-                        <span id="jd-export-shortcut-text" data-i18n="resume.jdExportShortcutProfile">Step 2 is optional. Skip JD tailoring: generate resume content on the right, review, then click «Generate preview &amp; export PDF/HTML».</span>
+                        <span id="jd-export-shortcut-text" data-i18n="resume.jdExportShortcutProfile">Enter a target job title or JD below, then click «Generate JD-tailored resume».</span>
                     </div>
                     
-                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="resume.jdLabel">Paste the job description you're targeting</label>
-                    <p class="text-xs text-gray-500 mb-2" data-i18n="resume.jdOptionalHint">Optional — enter a job title or draft in the box above, then select Industry, Employer Type + Experience Level and click Generate, or leave blank to auto-generate from selections only.</p>
-                    <textarea id="jd-text" rows="10" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" data-i18n-placeholder="resume.jdPlaceholder" placeholder="Copy and paste the full job description here, or generate one below..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="resume.jdLabel">Target job description <span class="text-red-500">*</span></label>
+                    <p class="text-xs text-gray-500 mb-2" data-i18n="resume.jdOptionalHint">Required — enter at least a job title. You may paste a full JD, or add Industry / Employer Type / Experience Level and click Generate to expand a draft.</p>
+                    <textarea id="jd-text" rows="10" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" data-i18n-placeholder="resume.jdPlaceholder" placeholder="Enter a job title or paste the full job description..." required></textarea>
                     
                     <div id="jd-generated-hint" class="hidden mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                         <i class="fas fa-lightbulb mr-1"></i>
@@ -406,7 +407,7 @@
                     </button>
                     <p class="mt-2 text-xs text-gray-500">
                         <i class="fas fa-info-circle mr-1"></i>
-                        <span data-i18n="resume.generateJdHint">Runs gap analysis and optimization against the job description — separate from preview/export in Step 1.</span>
+                        <span data-i18n="resume.generateJdHint">Runs gap analysis and optimization against the job description. After generation, review in the editor and export.</span>
                     </p>
                 </section>
             </div>
@@ -529,7 +530,7 @@
                                 <i class="fas fa-eye text-purple-600"></i>
                                 <span data-i18n="resume.previewTitle">Generated Resume Preview</span>
                             </h3>
-                            <span id="resume-language-badge" class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-active-lang="zh">Simplified Chinese</span>
+                            <span id="resume-language-badge" class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" data-active-lang="en">English</span>
                             <span id="resume-a4-badge" class="hidden px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                 <i class="fas fa-file-alt mr-1"></i><span data-i18n="resume.a4Badge">A4 Single Page</span>
                             </span>
@@ -540,16 +541,17 @@
                             <button type="button" onclick="previewResumeFormat('html')" class="px-2 py-1.5 border border-purple-300 text-purple-800 rounded-lg hover:bg-purple-50 transition-colors text-xs" data-i18n="resume.previewHtml">HTML preview</button>
                             <button type="button" onclick="previewResumeFormat('docx')" class="px-2 py-1.5 border border-blue-300 text-blue-800 rounded-lg hover:bg-blue-50 transition-colors text-xs" data-i18n="resume.previewDocx">DOCX preview</button>
                             <button type="button" onclick="previewResumeFormat('markdown')" class="px-2 py-1.5 border border-teal-300 text-teal-800 rounded-lg hover:bg-teal-50 transition-colors text-xs" data-i18n="resume.previewMarkdown">Markdown preview</button>
-                            <button type="button" data-resume-translate="zh" onclick="translateResumeToChinese()" class="px-3 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm">
+                            <!-- Omitted: resume translate language buttons (keep markup; output fixed to English) -->
+                            <button type="button" data-resume-translate="zh" onclick="translateResumeToChinese()" class="hidden px-3 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm" aria-hidden="true" tabindex="-1">
                                 <i class="fas fa-language mr-1"></i><span class="resume-lang-label">Simplified Chinese</span>
                             </button>
-                            <button type="button" data-resume-translate="zh-TW" onclick="translateResumeToTraditionalChinese()" class="px-3 py-2 border border-rose-300 text-rose-700 rounded-lg hover:bg-rose-50 transition-colors text-sm">
+                            <button type="button" data-resume-translate="zh-TW" onclick="translateResumeToTraditionalChinese()" class="hidden px-3 py-2 border border-rose-300 text-rose-700 rounded-lg hover:bg-rose-50 transition-colors text-sm" aria-hidden="true" tabindex="-1">
                                 <i class="fas fa-language mr-1"></i><span class="resume-lang-label">Traditional Chinese</span>
                             </button>
-                            <button id="btn-translate-en" data-resume-translate="en" onclick="translateResumeToEnglish()" class="px-3 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm disabled:opacity-40" disabled>
+                            <button id="btn-translate-en" data-resume-translate="en" onclick="translateResumeToEnglish()" class="hidden px-3 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm disabled:opacity-40" disabled aria-hidden="true" tabindex="-1">
                                 <i class="fas fa-language mr-1"></i><span class="resume-lang-label">English</span>
                             </button>
-                            <button type="button" data-resume-translate="pt" onclick="translateResumeToPortuguese()" class="px-3 py-2 border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors text-sm">
+                            <button type="button" data-resume-translate="pt" onclick="translateResumeToPortuguese()" class="hidden px-3 py-2 border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors text-sm" aria-hidden="true" tabindex="-1">
                                 <i class="fas fa-language mr-1"></i><span class="resume-lang-label">Portuguese</span>
                             </button>
                             <button onclick="optimizeResume()" class="px-3 py-2 border border-amber-400 text-amber-800 rounded-lg hover:bg-amber-50 transition-colors text-sm">
@@ -698,9 +700,11 @@
                     </div>
 
                     <div id="resume-language-section" class="mb-6 p-4 border border-blue-100 bg-blue-50/40 rounded-lg">
+                        <!-- Omitted: resume content language picker (keep markup; output fixed to English) -->
+                        <div id="resume-language-picker" class="hidden" aria-hidden="true">
                         <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="resume.languageLabel">Resume Language</label>
                         <p class="text-xs text-gray-500 mb-2" data-i18n="resume.selectHint">After selection, we check missing items for that resume format.</p>
-                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.languageActionHint">Choose a resume language, then click «Generate resume content» to review in the editor — no job description required.</p>
+                        <p class="text-xs text-gray-500 mb-3" data-i18n="resume.languageActionHint">Complete Step 2 to generate a JD-tailored resume, then review and export in the editor.</p>
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" data-resume-lang="zh" onclick="onResumeLanguageSelected('zh')"
                                 class="px-3 py-2.5 border border-red-300 rounded-lg text-sm font-medium text-red-800 hover:bg-red-50 ring-2 ring-blue-500 bg-blue-50">
@@ -719,6 +723,7 @@
                                 <i class="fas fa-globe-europe mr-1"></i><span class="resume-lang-label">Portuguese</span>
                             </button>
                         </div>
+                        </div>
                         <div class="mt-3">
                             <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="resume.typographyFitLabel">Page layout fit</label>
                             <select class="typography-fit-mode-select w-full border border-gray-300 rounded-lg p-2 text-sm" aria-labelledby="resume-language-section">
@@ -728,13 +733,15 @@
                             </select>
                             <p class="mt-1 text-xs text-gray-500" data-i18n="resume.typographyFitHint">Adjusts font size and margins before export to fit the page limit for your experience level.</p>
                         </div>
+                        <!-- Ignored: profile-only generate (keep markup; Step 2 JD tailor is required) -->
                         <button type="button" id="btn-generate-profile-resume" onclick="generateResumeFromProfile()"
-                            class="mt-3 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                            class="hidden mt-3 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                            aria-hidden="true" tabindex="-1">
                             <i class="fas fa-file-lines mr-2"></i>
                             <span data-i18n="resume.generateProfilePreview">Generate resume content</span>
                         </button>
                         <div id="profile-export-actions" class="hidden mt-3">
-                            <p class="text-xs text-gray-600 mb-2" data-i18n="resume.profileExportHint">After review, preview or export in any format:</p>
+                            <p class="text-xs text-gray-600 mb-2" data-i18n="resume.profileExportHint">After Step 2 generation and review, preview or export:</p>
                             <p class="text-xs text-gray-500 mb-1" data-i18n="resume.previewActionsLabel">Preview:</p>
                             <div class="flex flex-wrap gap-2 mb-2">
                                 <button type="button" onclick="previewResumeFormat('pdf')" class="px-3 py-1.5 text-xs border border-gray-400 text-gray-800 rounded-lg hover:bg-gray-50" data-i18n="resume.previewPdf">PDF</button>
@@ -831,7 +838,7 @@
                     <div id="profile-continue-section" class="hidden mt-6 pt-4 border-t border-gray-200">
                         <button type="button" id="btn-profile-continue" onclick="proceedToJdStep()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors">
                             <i class="fas fa-arrow-right mr-2"></i>
-                            <span data-i18n="resume.profileContinueStep2">Confirm and continue to Step 2: JD-based polish (optional)</span>
+                            <span data-i18n="resume.profileContinueStep2">Confirm and continue to Step 2: Target job description</span>
                         </button>
                         <p class="mt-2 text-xs text-gray-500 text-center">
                             <i class="fas fa-info-circle mr-1"></i>
@@ -910,6 +917,7 @@
             <p id="optimization-hint" class="hidden text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded p-2 mb-3"></p>
             <div id="optimization-gaps-summary" class="mb-4 hidden"></div>
             <div id="optimization-removals" class="mb-4 hidden"></div>
+            <div id="optimization-quant-mode" class="mb-4 hidden p-3 border border-blue-100 bg-blue-50 rounded-lg"></div>
             <div id="optimization-questions" class="space-y-2"></div>
             <div class="flex flex-col sm:flex-row gap-2 mt-4">
                 <button type="button" onclick="submitOptimizationDialog()" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700" data-i18n="resume.submitGenerate">

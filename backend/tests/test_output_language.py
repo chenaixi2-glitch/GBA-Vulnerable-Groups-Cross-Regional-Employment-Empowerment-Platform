@@ -71,6 +71,22 @@ def test_resolve_resume_target_language_ignores_chat_locale():
     assert resolve_resume_target_language(state) == "en"
 
 
+def test_resolve_resume_target_language_follows_render_config():
+    state = CopilotState(
+        session_id="sess_test",
+        render_config=RenderConfig(language="zh"),
+        chat_output_language="en",
+    )
+    assert resolve_resume_target_language(state) == "zh"
+
+
+def test_apply_resume_target_language_accepts_chinese():
+    state = CopilotState(session_id="sess_test")
+    apply_resume_target_language(state, "zh")
+    assert state.render_config.language == "zh"
+    assert resolve_resume_target_language(state) == "zh"
+
+
 def test_resolve_output_language_falls_back_to_render_config():
     state = CopilotState(
         session_id="sess_test",
@@ -229,3 +245,30 @@ def test_resolve_output_language_defaults_to_english_without_state_locale():
 def test_resolve_resume_target_language_defaults_to_english_without_content():
     state = CopilotState(session_id="sess_test")
     assert resolve_resume_target_language(state) == "en"
+
+
+def test_resolve_interview_question_language_follows_resume_target():
+    state = CopilotState(
+        session_id="sess_test",
+        render_config=RenderConfig(language="zh"),
+    )
+    assert resolve_interview_question_language(state) == "zh"
+
+
+def test_apply_interview_question_language_empty_falls_back_to_resume():
+    state = CopilotState(
+        session_id="sess_test",
+        render_config=RenderConfig(language="zh"),
+    )
+    apply_interview_question_language(state, None)
+    assert state.chat_question_output_language == "zh"
+    assert state.meta.interview_question_language == "zh"
+
+
+def test_resolve_interview_feedback_language_follows_question_language():
+    state = CopilotState(
+        session_id="sess_test",
+        render_config=RenderConfig(language="zh"),
+        chat_question_output_language="zh",
+    )
+    assert resolve_interview_feedback_language(state) == "zh"

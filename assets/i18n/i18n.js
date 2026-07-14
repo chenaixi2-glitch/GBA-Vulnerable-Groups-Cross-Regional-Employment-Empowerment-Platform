@@ -2,43 +2,31 @@
     'use strict';
 
     var LANG_KEY = 'gba_ui_lang';
-    var SUPPORTED = ['en', 'zh-CN', 'zh-TW', 'pt'];
+    /** UI is English-only; other locales were removed from the product. */
+    var SUPPORTED = ['en'];
     var LABELS = {
-        en: 'English',
-        'zh-CN': '简体中文',
-        'zh-TW': '繁體中文',
-        pt: 'Português'
+        en: 'English'
     };
 
-    /** Language names shown in the switcher (English fallbacks when UI is English) */
+    /** Language names shown in the switcher */
     var LANG_NAMES_FB = {
-        en: 'English',
-        'zh-CN': 'Simplified Chinese',
-        'zh-TW': 'Traditional Chinese',
-        pt: 'Portuguese'
+        en: 'English'
     };
 
     /** UI locale → resume/API language code */
     var UI_TO_API = {
-        en: 'en',
-        'zh-CN': 'zh',
-        'zh-TW': 'zh-TW',
-        pt: 'pt'
+        en: 'en'
     };
 
     var API_TO_UI = {
-        en: 'en',
-        zh: 'zh-CN',
-        'zh-cn': 'zh-CN',
-        'zh-tw': 'zh-TW',
-        pt: 'pt'
+        en: 'en'
     };
 
     var RESUME_LANG_LABELS = {
-        zh: { en: 'Simplified Chinese', 'zh-CN': '简体中文', 'zh-TW': '簡體中文', pt: 'Chinês simplificado' },
-        'zh-TW': { en: 'Traditional Chinese', 'zh-CN': '繁体中文', 'zh-TW': '繁體中文', pt: 'Chinês tradicional' },
-        en: { en: 'English', 'zh-CN': '英文', 'zh-TW': '英文', pt: 'Inglês' },
-        pt: { en: 'Portuguese (Macau)', 'zh-CN': '葡语（澳门）', 'zh-TW': '葡語（澳門）', pt: 'Português (Macau)' }
+        zh: { en: 'Simplified Chinese' },
+        'zh-TW': { en: 'Traditional Chinese' },
+        en: { en: 'English' },
+        pt: { en: 'Portuguese (Macau)' }
     };
 
     var RESUME_LANG_CODES = ['zh', 'zh-TW', 'en', 'pt'];
@@ -153,7 +141,9 @@
     function getLang() {
         try {
             var saved = localStorage.getItem(LANG_KEY);
-            if (saved && LABELS[saved]) return saved;
+            if (saved && saved !== 'en') {
+                localStorage.setItem(LANG_KEY, 'en');
+            }
         } catch (e) {}
         return 'en';
     }
@@ -567,7 +557,7 @@
     }
 
     function setLang(lang) {
-        if (!LABELS[lang]) return;
+        lang = 'en';
         try {
             localStorage.setItem(LANG_KEY, lang);
         } catch (e) {}
@@ -603,116 +593,24 @@
     }
 
     function languageSwitcherInnerHtml() {
-        return (
-            '<button type="button" class="flex items-center gap-2 text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-50" aria-haspopup="listbox" aria-expanded="false">' +
-            '<i class="fas fa-globe" aria-hidden="true"></i><span id="current-language">English</span><span aria-hidden="true">▾</span></button>' +
-            '<div class="language-dropdown" role="listbox">' +
-            '<a href="#" role="option" data-lang="en" data-i18n-lang="en">English</a>' +
-            '<a href="#" role="option" data-lang="zh-CN" data-i18n-lang="zh-CN">Simplified Chinese</a>' +
-            '<a href="#" role="option" data-lang="zh-TW" data-i18n-lang="zh-TW">Traditional Chinese</a>' +
-            '<a href="#" role="option" data-lang="pt" data-i18n-lang="pt">Portuguese</a>' +
-            '</div>'
-        );
+        return '';
     }
 
     function bindLanguageSwitcherToggles() {
-        document.querySelectorAll('.language-selector').forEach(function (sel) {
-            if (sel.dataset.langToggleBound) return;
-            sel.dataset.langToggleBound = '1';
-            var btn = sel.querySelector('button');
-            if (!btn) return;
-            btn.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                var willOpen = !sel.classList.contains('is-open');
-                document.querySelectorAll('.language-selector').forEach(function (other) {
-                    other.classList.remove('is-open');
-                    var otherBtn = other.querySelector('button');
-                    if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
-                });
-                if (willOpen) {
-                    sel.classList.add('is-open');
-                    btn.setAttribute('aria-expanded', 'true');
-                }
-            });
-        });
-        if (document.documentElement.dataset.gbaLangGlobalClick) return;
-        document.documentElement.dataset.gbaLangGlobalClick = '1';
-        document.addEventListener('click', function () {
-            document.querySelectorAll('.language-selector').forEach(function (sel) {
-                sel.classList.remove('is-open');
-                var btn = sel.querySelector('button');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-            });
-        });
-        document.addEventListener('keydown', function (event) {
-            if (event.key !== 'Escape') return;
-            document.querySelectorAll('.language-selector').forEach(function (sel) {
-                sel.classList.remove('is-open');
-                var btn = sel.querySelector('button');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-            });
-        });
+        /* UI language switcher disabled (English-only). */
     }
 
     function ensureLanguageSwitcher() {
-        if (document.querySelector('[data-lang]') || document.getElementById('ui-lang') || document.getElementById('gba-lang-switcher')) {
-            return;
-        }
-        injectLanguageSwitcherStyles();
-        var wrap = document.createElement('div');
-        wrap.id = 'gba-lang-switcher';
-
+        /* Hide legacy multi-language switcher UI. */
+        document.querySelectorAll('.language-selector, #gba-lang-switcher').forEach(function (el) {
+            el.style.display = 'none';
+        });
         var slot = document.getElementById('header-lang-slot');
-        if (slot) {
-            wrap.className = 'language-selector relative text-sm shrink-0';
-            if (slot.classList.contains('gba-lang-on-dark') || slot.dataset.langTheme === 'dark') {
-                wrap.classList.add('gba-lang-on-dark');
-            }
-            wrap.innerHTML = languageSwitcherInnerHtml();
-            slot.appendChild(wrap);
-            return;
-        }
-
-        var headerRow =
-            document.querySelector('header.flex.items-center.justify-between') ||
-            document.querySelector('header .flex.items-center.justify-between') ||
-            document.querySelector('header .flex.flex-wrap.items-center.justify-between') ||
-            document.querySelector('nav .flex.items-center.justify-between') ||
-            document.querySelector('nav .flex.flex-wrap.items-center.justify-between');
-
-        wrap.innerHTML = languageSwitcherInnerHtml();
-        if (headerRow) {
-            wrap.className = 'language-selector shrink-0';
-            headerRow.appendChild(wrap);
-            return;
-        }
-
-        wrap.className = 'language-selector gba-lang-floating';
-        document.body.appendChild(wrap);
+        if (slot) slot.style.display = 'none';
     }
 
     function bindLanguageControls() {
-        document.querySelectorAll('[data-lang]').forEach(function (node) {
-            if (node.dataset.i18nBound) return;
-            node.dataset.i18nBound = '1';
-            node.addEventListener('click', function (event) {
-                event.preventDefault();
-                setLang(node.getAttribute('data-lang'));
-                document.querySelectorAll('.language-selector').forEach(function (sel) {
-                    sel.classList.remove('is-open');
-                });
-                if (window.showToast) window.showToast(t('common.languageUpdated', 'Language updated.'));
-            });
-        });
-        var existingSelect = document.getElementById('ui-lang');
-        if (existingSelect && !existingSelect.dataset.i18nBound) {
-            existingSelect.dataset.i18nBound = '1';
-            existingSelect.addEventListener('change', function () {
-                var v = existingSelect.value;
-                setLang(v === 'zh' ? 'zh-CN' : v);
-            });
-        }
+        /* UI language switching disabled (English-only). */
     }
 
     var initPromise = null;
@@ -721,10 +619,7 @@
         if (initPromise) return initPromise;
         initPromise = Promise.resolve().then(function () {
             snapshotI18nDefaults();
-            injectLanguageSwitcherStyles();
             ensureLanguageSwitcher();
-            bindLanguageSwitcherToggles();
-            bindLanguageControls();
             var lang = getLang();
             return loadLocale(lang).then(function () {
                 applyLanguage(lang);
@@ -735,15 +630,10 @@
     }
 
     function uiLangToApiLang(uiLang) {
-        return UI_TO_API[uiLang || getLang()] || 'en';
+        return 'en';
     }
 
     function apiLangToUiLang(apiLang) {
-        if (!apiLang) return getLang();
-        var key = String(apiLang).toLowerCase();
-        if (key === 'zh-tw') return 'zh-TW';
-        if (key === 'zh' || key === 'zh-cn') return 'zh-CN';
-        if (key === 'pt') return 'pt';
         return 'en';
     }
 

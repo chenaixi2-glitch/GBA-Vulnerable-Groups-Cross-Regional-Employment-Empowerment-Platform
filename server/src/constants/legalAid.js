@@ -1,33 +1,33 @@
 'use strict';
 
-/** 法律服务诉求类别（与捐款箱法律服务模块一致） */
+/** Legal aid request categories (aligned with donation-box legal services) */
 const LEGAL_AID_CATEGORIES = {
-  labor_rights: '劳动权益咨询',
-  cross_border: '跨境就业法律指导',
-  anti_discrimination: '反就业歧视法律援助',
-  disability_employment: '残疾人士就业权益',
-  career_return: '职场回归女性支持',
-  other: '其他法律诉求',
+  labor_rights: 'Labor rights consultation',
+  cross_border: 'Cross-border employment guidance',
+  anti_discrimination: 'Anti-discrimination legal aid',
+  disability_employment: 'Disability employment rights',
+  career_return: 'Career-returning women support',
+  other: 'Other legal request',
 };
 
 const VALID_CATEGORIES = Object.keys(LEGAL_AID_CATEGORIES);
 
 const REQUEST_STATUS = {
-  pending: '待接单',
-  assigned: '已接单',
-  platform_assisting: '平台协助联系中',
-  in_progress: '处理中',
-  resolved: '已解决',
-  completed: '已完成',
-  cancelled: '已取消',
+  pending: 'Pending',
+  assigned: 'Assigned',
+  platform_assisting: 'Platform assisting',
+  in_progress: 'In progress',
+  resolved: 'Resolved',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
 };
 
 const VALID_STATUSES = Object.keys(REQUEST_STATUS);
 
 const HELPER_ROLES = {
-  lawyer: '执业律师',
-  volunteer: '法律志愿者',
-  other: '其他帮助者',
+  lawyer: 'Licensed lawyer',
+  volunteer: 'Legal volunteer',
+  other: 'Other helper',
 };
 
 const VALID_HELPER_ROLES = Object.keys(HELPER_ROLES);

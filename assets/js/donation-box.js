@@ -288,7 +288,7 @@
           container.querySelector('#donation-history').classList.remove('hidden');
           container.querySelector('#donation-history-list').innerHTML = list
             .slice(0, 5)
-            .map((d) => `<li class="flex justify-between p-2 bg-gray-50 rounded-lg"><span>¥${formatMoney(d.amount)}</span><span class="text-gray-500">${new Date(d.created_at).toLocaleDateString()}</span></li>`)
+            .map((d) => `<li class="flex justify-between p-2 bg-gray-50 rounded-lg"><span>¥${formatMoney(d.amount)}</span><span class="text-gray-500">${new Date(d.created_at).toLocaleDateString('en-US')}</span></li>`)
             .join('');
         }
       }

@@ -788,9 +788,9 @@
   "resume": {
     "languageLabel": "Idioma do CV",
     "selectHint": "Após selecionar, marcamos no editor de CV os módulos a preencher ou corrigir.",
-    "languageActionHint": "Escolha o idioma e clique em «Gerar conteúdo do CV» para rever na área de edição — sem JD.",
+    "languageActionHint": "Após gerar o CV adaptado à JD no Passo 2, reveja na edição e exporte.",
     "generateProfilePreview": "Gerar conteúdo do CV",
-    "profileExportHint": "Após rever, pré-visualize ou exporte em qualquer formato:",
+    "profileExportHint": "Após gerar e rever no Passo 2, pré-visualize ou exporte:",
     "previewActionsLabel": "Pré-visualizar:",
     "exportActionsLabel": "Exportar:",
     "previewPdf": "Pré-visualizar PDF",

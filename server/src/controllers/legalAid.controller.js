@@ -21,7 +21,7 @@ function sanitizeAttachments(raw) {
     const data = item?.data_base64 ? String(item.data_base64) : '';
     const size = data ? Math.ceil((data.length * 3) / 4) : Number(item?.size || 0);
     if (size > MAX_ATTACHMENT_BYTES) {
-      throw ApiError.badRequest(`附件「${name}」超过 ${MAX_ATTACHMENT_BYTES / 1024}KB 限制`);
+      throw ApiError.badRequest(`Attachment "${name}" exceeds the ${MAX_ATTACHMENT_BYTES / 1024}KB limit`);
     }
     return { name, mime, size, data_base64: data || null };
   });
@@ -94,11 +94,11 @@ function getMeta(req, res) {
 }
 
 /** POST /api/legal-aid/requests */
-async function createRequest(req, res) {
+async function createFlowRequest(req, res) {
   const user = await UserModel.findById(req.user.id);
-  if (!user) throw ApiError.notFound('用户不存在');
+  if (!user) throw ApiError.notFound('User not found.');
   if (user.role !== 'individual' && user.role !== 'admin') {
-    throw ApiError.forbidden('仅个人用户可提交法律服务诉求');
+    throw ApiError.forbidden('Only individual users can submit legal aid requests.');
   }
 
   const category = req.body.category;
@@ -106,9 +106,11 @@ async function createRequest(req, res) {
   const description = String(req.body.description || '').trim();
   const preferPlatform = Boolean(req.body.prefer_platform);
 
-  if (!isValidCategory(category)) throw ApiError.badRequest('请选择有效的诉求类别');
-  if (!title || title.length > 200) throw ApiError.badRequest('请填写诉求标题（不超过200字）');
-  if (!description || description.length < 10) throw ApiError.badRequest('请详细描述您的法律诉求（至少10字）');
+  if (!isValidCategory(category)) throw ApiError.badRequest('Please select a valid request category.');
+  if (!title || title.length > 200) throw ApiError.badRequest('Please enter a request title (max 200 characters).');
+  if (!description || description.length < 10) {
+    throw ApiError.badRequest('Please describe your legal request in detail (at least 10 characters).');
+  }
 
   const attachments = sanitizeAttachments(req.body.attachments);
 
@@ -116,7 +118,7 @@ async function createRequest(req, res) {
   let platformNote = null;
   if (preferPlatform) {
     status = 'platform_assisting';
-    platformNote = '用户提交诉求时选择优先由平台协助联系律师或法律资源。';
+    platformNote = 'Applicant requested platform assistance to connect with lawyers or legal resources.';
   }
 
   const request = await LegalAidModel.create({
@@ -135,8 +137,8 @@ async function createRequest(req, res) {
   res.status(201).json({
     success: true,
     message: preferPlatform
-      ? '诉求已提交，平台将协助您联系合适的法律资源。'
-      : '诉求已提交，等待律师或志愿者提供帮助。',
+      ? 'Request submitted. The platform will help connect you with suitable legal resources.'
+      : 'Request submitted. Waiting for a lawyer or volunteer to offer help.',
     data: { request: toPublicRequest({ ...request, responses: [] }, req.user) },
   });
 }
@@ -188,7 +190,7 @@ async function listOpen(req, res) {
 /** GET /api/legal-aid/requests/:id */
 async function getOne(req, res) {
   const request = await LegalAidModel.findById(req.params.id);
-  if (!request) throw ApiError.notFound('诉求不存在');
+  if (!request) throw ApiError.notFound('Request not found.');
 
   const [withResponses] = await attachAndMap([request], req.user);
   const isApplicant = request.applicant_user_id === req.user.id;
@@ -196,7 +198,7 @@ async function getOne(req, res) {
   const isOpen = !['completed', 'cancelled'].includes(request.status);
 
   if (!isApplicant && !isHelper && !isOpen && req.user.role !== 'admin') {
-    throw ApiError.forbidden('无权查看该诉求');
+    throw ApiError.forbidden('You do not have permission to view this request.');
   }
 
   res.json({
@@ -208,20 +210,20 @@ async function getOne(req, res) {
 /** POST /api/legal-aid/requests/:id/accept */
 async function acceptRequest(req, res) {
   const request = await LegalAidModel.findById(req.params.id);
-  if (!request) throw ApiError.notFound('诉求不存在');
+  if (!request) throw ApiError.notFound('Request not found.');
   if (request.applicant_user_id === req.user.id) {
-    throw ApiError.badRequest('不能为自己的诉求提供帮助');
+    throw ApiError.badRequest('You cannot offer help on your own request.');
   }
   if (['completed', 'cancelled'].includes(request.status)) {
-    throw ApiError.badRequest('该诉求已关闭');
+    throw ApiError.badRequest('This request is closed.');
   }
 
   const existing = await LegalAidModel.findResponse(request.id, req.user.id);
-  if (existing) throw ApiError.badRequest('您已为该诉求提供过帮助');
+  if (existing) throw ApiError.badRequest('You have already offered help on this request.');
 
   const assigneeRole = req.body.helper_role || 'volunteer';
   if (!VALID_HELPER_ROLES.includes(assigneeRole)) {
-    throw ApiError.badRequest('请选择有效的帮助者身份');
+    throw ApiError.badRequest('Please select a valid helper role.');
   }
 
   const assigneeNote = req.body.note ? String(req.body.note).trim().slice(0, 500) : null;
@@ -240,7 +242,7 @@ async function acceptRequest(req, res) {
   const [mapped] = await attachAndMap([updated], req.user);
   res.json({
     success: true,
-    message: '已记录您的法律帮助，诉求将继续展示供更多人参与。请尽快与申请人取得联系。',
+    message: 'Your legal help has been recorded. The request remains visible for others. Please contact the applicant soon.',
     data: { request: mapped },
   });
 }
@@ -248,32 +250,32 @@ async function acceptRequest(req, res) {
 /** POST /api/legal-aid/requests/:id/platform-assist */
 async function platformAssist(req, res) {
   const request = await LegalAidModel.findById(req.params.id);
-  if (!request) throw ApiError.notFound('诉求不存在');
+  if (!request) throw ApiError.notFound('Request not found.');
 
   const isApplicant = request.applicant_user_id === req.user.id;
   const isAdmin = req.user.role === 'admin';
   if (!isApplicant && !isAdmin) {
-    throw ApiError.forbidden('仅申请人或管理员可请求平台协助');
+    throw ApiError.forbidden('Only the applicant or an admin can request platform assistance.');
   }
   if (!['pending', 'platform_assisting'].includes(request.status) && !isAdmin) {
-    throw ApiError.badRequest('当前状态无法转为平台协助');
+    throw ApiError.badRequest('This request cannot be switched to platform assistance in its current status.');
   }
 
   const platformNote =
     String(req.body.platform_note || '').trim().slice(0, 1000) ||
     (isAdmin
-      ? '平台管理员已介入，正在协助联系合适的法律资源。'
-      : '用户请求平台协助联系律师或法律志愿者。');
+      ? 'A platform admin has stepped in to help connect suitable legal resources.'
+      : 'Applicant requested platform assistance to connect with lawyers or legal volunteers.');
 
   const ok = await LegalAidModel.requestPlatformAssist(request.id, { platformNote });
-  if (!ok && !isAdmin) throw ApiError.badRequest('无法更新为平台协助状态');
+  if (!ok && !isAdmin) throw ApiError.badRequest('Unable to update to platform assistance status.');
   if (!ok && isAdmin) await LegalAidModel.updateStatus(request.id, 'platform_assisting', { platformNote });
 
   const updated = await LegalAidModel.findById(request.id);
   const [mapped] = await attachAndMap([updated], req.user);
   res.json({
     success: true,
-    message: '已标记为平台协助联系，工作人员将尽快对接法律资源。',
+    message: 'Marked for platform assistance. Staff will connect legal resources shortly.',
     data: { request: mapped },
   });
 }
@@ -281,28 +283,28 @@ async function platformAssist(req, res) {
 /** PATCH /api/legal-aid/requests/:id/status */
 async function updateStatus(req, res) {
   const request = await LegalAidModel.findById(req.params.id);
-  if (!request) throw ApiError.notFound('诉求不存在');
+  if (!request) throw ApiError.notFound('Request not found.');
 
   const status = req.body.status;
   const allowed = ['in_progress', 'resolved', 'completed', 'cancelled'];
-  if (!allowed.includes(status)) throw ApiError.badRequest('无效的状态');
+  if (!allowed.includes(status)) throw ApiError.badRequest('Invalid status.');
 
   const isApplicant = request.applicant_user_id === req.user.id;
   const isAdmin = req.user.role === 'admin';
   const isHelper = Boolean(await LegalAidModel.findResponse(request.id, req.user.id));
 
   if (status === 'cancelled') {
-    if (!isApplicant && !isAdmin) throw ApiError.forbidden('仅申请人可取消诉求');
+    if (!isApplicant && !isAdmin) throw ApiError.forbidden('Only the applicant can cancel the request.');
     const ok = await LegalAidModel.cancelByApplicant(request.id, req.user.id);
-    if (!ok && !isAdmin) throw ApiError.badRequest('当前状态无法取消');
+    if (!ok && !isAdmin) throw ApiError.badRequest('This request cannot be cancelled in its current status.');
     if (isAdmin && !ok) await LegalAidModel.updateStatus(request.id, 'cancelled');
   } else if (status === 'completed') {
-    if (!isApplicant && !isAdmin) throw ApiError.forbidden('仅申请人可标记诉求已完成');
+    if (!isApplicant && !isAdmin) throw ApiError.forbidden('Only the applicant can mark the request as completed.');
     const ok = await LegalAidModel.completeByApplicant(request.id, req.user.id);
-    if (!ok && !isAdmin) throw ApiError.badRequest('当前状态无法标记为已完成');
+    if (!ok && !isAdmin) throw ApiError.badRequest('This request cannot be marked completed in its current status.');
     if (isAdmin && !ok) await LegalAidModel.updateStatus(request.id, 'completed');
   } else if (status === 'resolved' || status === 'in_progress') {
-    if (!isHelper && !isAdmin) throw ApiError.forbidden('仅提供帮助的用户可更新处理进度');
+    if (!isHelper && !isAdmin) throw ApiError.forbidden('Only helpers can update progress status.');
     await LegalAidModel.updateStatus(request.id, status);
   }
 
@@ -310,14 +312,14 @@ async function updateStatus(req, res) {
   const [mapped] = await attachAndMap([updated], req.user);
   res.json({
     success: true,
-    message: status === 'completed' ? '诉求已标记为已完成' : '状态已更新',
+    message: status === 'completed' ? 'Request marked as completed.' : 'Status updated.',
     data: { request: mapped },
   });
 }
 
 module.exports = {
   getMeta,
-  createRequest,
+  createRequest: createFlowRequest,
   listMine,
   listMineCompleted,
   listAssigned,

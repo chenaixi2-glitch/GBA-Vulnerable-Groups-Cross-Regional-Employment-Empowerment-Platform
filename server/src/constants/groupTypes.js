@@ -1,18 +1,18 @@
 'use strict';
 
-/** 平台支持的弱势群体 / 目标人群类型 */
+/** Supported vulnerable / target group type labels (UI English) */
 const GROUP_TYPES = {
-  disability: '残疾人士',
-  elderly_45plus: '45岁以上劳动者',
-  career_returner: '职场回归女性',
-  youth: '低收入青年',
+  disability: 'People with disabilities',
+  elderly_45plus: 'Workers aged 45+',
+  career_returner: 'Career-returning women',
+  youth: 'Low-income youth',
 };
 
 const VALID_GROUP_TYPES = Object.keys(GROUP_TYPES);
 
-const VULNERABLE_GROUP_FRIENDLY_LABEL = '弱势群体友好';
+const VULNERABLE_GROUP_FRIENDLY_LABEL = 'Vulnerable-group friendly';
 
-/** 自动匹配阈值（可按业务调整） */
+/** Auto-match thresholds */
 const MATCH_THRESHOLDS = {
   ELDERLY_MIN_AGE: 45,
   YOUTH_MAX_AGE: 30,
@@ -21,40 +21,40 @@ const MATCH_THRESHOLDS = {
 };
 
 const GENDER_OPTIONS = {
-  male: '男',
-  female: '女',
-  other: '其他',
-  prefer_not_say: '不愿透露',
+  male: 'Male',
+  female: 'Female',
+  other: 'Other',
+  prefer_not_say: 'Prefer not to say',
 };
 
 const DISABILITY_TYPES = {
-  none: '无',
-  physical: '肢体残疾',
-  visual: '视力残疾',
-  hearing: '听力残疾',
-  intellectual: '智力残疾',
-  mental: '精神残疾',
-  other: '其他残疾',
+  none: 'None',
+  physical: 'Physical disability',
+  visual: 'Visual disability',
+  hearing: 'Hearing disability',
+  intellectual: 'Intellectual disability',
+  mental: 'Mental disability',
+  other: 'Other disability',
 };
 
-/** 企业发岗：年龄范围下拉 */
+/** Corporate job post: age range options */
 const AGE_RANGE_OPTIONS = {
-  any: '不限年龄',
-  '45_plus': '45岁及以上',
-  '30_below': '30岁及以下',
+  any: 'Any age',
+  '45_plus': '45 and above',
+  '30_below': '30 and below',
 };
 
-/** 企业发岗：残疾接纳政策 */
+/** Corporate job post: disability policy */
 const DISABILITY_POLICY_OPTIONS = {
-  any: '不限残疾状况',
-  open: '接纳残疾人士',
+  any: 'Any disability status',
+  open: 'Open to people with disabilities',
 };
 
-/** 企业发岗：职业空窗 */
+/** Corporate job post: career gap */
 const CAREER_GAP_OPTIONS = {
-  any: '不限空窗',
-  yes: '欢迎有空窗经历者',
-  no: '要求无职业空窗',
+  any: 'Any career gap',
+  yes: 'Welcome applicants with career gaps',
+  no: 'No career gap required',
 };
 
 function isValidGroupType(value) {
@@ -261,7 +261,7 @@ function sortApplicantsForCorporate(applications, job) {
 function formatGroupTypesLabel(types) {
   return parseGroupTypesJson(types)
     .map((t) => GROUP_TYPES[t] || t)
-    .join('、');
+    .join(', ');
 }
 
 function computeVulnerableFriendly(criteria, targetGroupTypes) {

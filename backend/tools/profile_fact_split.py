@@ -169,6 +169,26 @@ def detect_material_language(material_text: str) -> str:
     return "mixed"
 
 
+def resume_target_language_from_material(material_text: str) -> str:
+    """Map uploaded resume text to a resume generation target language (zh or en)."""
+    lang = detect_material_language(material_text)
+    if lang in ("en", "zh"):
+        return lang
+
+    body = material_text or ""
+    marker = "以下为附件解析文本:"
+    if marker in body:
+        body = body.split(marker, 1)[-1]
+    body = body.strip()
+    cjk_chars = len(_CJK_RE.findall(body))
+    latin_words = len(_LATIN_WORD_RE.findall(body))
+    if cjk_chars > 0 and cjk_chars >= latin_words:
+        return "zh"
+    if latin_words > 0:
+        return "en"
+    return "en"
+
+
 def material_language_instruction(material_text: str) -> str:
     lang = detect_material_language(material_text)
     if lang == "en":

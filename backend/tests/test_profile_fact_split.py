@@ -10,6 +10,7 @@ from tools.profile_fact_split import (
     expand_profile_facts,
     material_language_instruction,
     reroute_profile_extras,
+    resume_target_language_from_material,
 )
 
 
@@ -26,6 +27,21 @@ def test_detect_material_language_english_resume():
 def test_detect_material_language_chinese_resume():
     text = "张三\n北京大学 计算机科学 本科\n负责后端开发"
     assert detect_material_language(text) == "zh"
+
+
+def test_resume_target_language_from_material_chinese():
+    text = "张三\n北京大学 计算机科学 本科\n负责后端开发与系统维护工作"
+    assert resume_target_language_from_material(text) == "zh"
+
+
+def test_resume_target_language_from_material_english():
+    text = "John Smith\nSoftware Engineer\nBuilt REST APIs with Python and Django"
+    assert resume_target_language_from_material(text) == "en"
+
+
+def test_resume_target_language_from_material_mixed_defaults_to_majority():
+    text = "张三 Alex\n负责客户服务 Handled daily inquiries across channels"
+    assert resume_target_language_from_material(text) in ("zh", "en")
 
 
 def test_expand_profile_facts_splits_json_array():

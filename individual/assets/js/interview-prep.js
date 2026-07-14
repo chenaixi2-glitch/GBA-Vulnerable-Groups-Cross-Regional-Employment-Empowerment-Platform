@@ -1,6 +1,6 @@
 /**
  * GBA Platform - Interview Preparation
- * Prerequisites for interview_agent: candidate_profile (JD optional)
+ * Prerequisites for interview_agent: candidate_profile + target job (name-only JD is enough)
  */
 
 let interviewSession = {
@@ -12,15 +12,16 @@ let interviewSession = {
     tone: 'professional',
     programVersion: 'quick',
     programLabel: '',
-    questionLanguage: '',
-    feedbackLanguage: '',
+    questionLanguage: 'en',
+    feedbackLanguage: 'en',
     savedRecordId: null,
 };
 
 /** 用户是否已手动选择面试题语言（避免页面语言切换时覆盖） */
+/** Language pickers omitted — fixed to English; keep flags true so generate gates pass. */
 let interviewLanguageUserSelected = {
-    question: false,
-    feedback: false,
+    question: true,
+    feedback: true,
 };
 
 /** 已保存题库记录列表（登录用户） */
@@ -152,6 +153,7 @@ let interviewMode = 'question_bank'; // question_bank | custom | interactive
 
 let interviewPrerequisites = {
     profileReady: false,
+    jobReady: false,
 };
 
 let interviewSetup = null;
@@ -190,32 +192,30 @@ function resumeLangDisplayLabel(code) {
 }
 
 function getDefaultInterviewLang() {
-    if (typeof apiClient !== 'undefined' && apiClient.getPageLanguage) {
-        return apiClient.getPageLanguage();
-    }
-    if (typeof window.GBAI18n !== 'undefined' && GBAI18n.uiLangToApiLang) {
-        return normalizeInterviewLang(GBAI18n.uiLangToApiLang(GBAI18n.getLang()));
+    if (typeof defaultResumeLanguageFromUi === 'function') {
+        return defaultResumeLanguageFromUi();
     }
     return 'zh';
 }
 
-function initInterviewLanguages() {
-    const defaultLang = getDefaultInterviewLang();
-    interviewSession.questionLanguage = defaultLang;
-    interviewSession.feedbackLanguage = defaultLang;
+function applyInterviewLanguageFromResume(language) {
+    const lang = normalizeInterviewLang(language || getDefaultInterviewLang());
+    interviewSession.questionLanguage = lang;
+    interviewSession.feedbackLanguage = lang;
+    interviewLanguageUserSelected.question = true;
+    interviewLanguageUserSelected.feedback = true;
     syncQuestionLanguageButtons();
     syncFeedbackLanguageButtons();
     updateQuestionLanguageStatus();
+    return lang;
+}
+
+function initInterviewLanguages() {
+    applyInterviewLanguageFromResume(getDefaultInterviewLang());
     window.addEventListener('gba:language-changed', () => {
-        const pageLang = getDefaultInterviewLang();
-        if (!interviewLanguageUserSelected.question) {
-            interviewSession.questionLanguage = pageLang;
-            syncQuestionLanguageButtons();
-        }
-        if (!interviewLanguageUserSelected.feedback) {
-            interviewSession.feedbackLanguage = pageLang;
-            syncFeedbackLanguageButtons();
-        }
+        // Keep interview content language tied to uploaded resume, not page UI locale.
+        syncQuestionLanguageButtons();
+        syncFeedbackLanguageButtons();
         updateQuestionLanguageStatus();
         if (typeof selectInterviewMode === 'function') selectInterviewMode(interviewMode);
         updateInteractiveSaveButton();
@@ -289,7 +289,7 @@ function getSelectedQuestionLanguage() {
 }
 
 function getSelectedFeedbackLanguage() {
-    return normalizeInterviewLang(interviewSession.feedbackLanguage || getDefaultInterviewLang());
+    return normalizeInterviewLang(interviewSession.feedbackLanguage || getSelectedQuestionLanguage());
 }
 
 function initializeInterviewPrep() {
@@ -297,12 +297,14 @@ function initializeInterviewPrep() {
 
     interviewSetup = new CandidateJdSetup({
         parsedTextRows: 14,
+        requireJdText: true,
         ids: {
             fileInput: 'interview-resume-file',
             profileText: 'interview-profile-text',
             fileName: 'interview-file-name',
             fileInfo: 'interview-file-info',
             jdText: 'interview-jd-text',
+            jobTitle: 'job-title',
             jdSection: 'interview-jd-section',
             profileReviewSection: 'interview-profile-review',
             profileSaveStatus: 'interview-profile-save-status',
@@ -316,15 +318,27 @@ function initializeInterviewPrep() {
             employerType: ['interview-employer-type'],
             experienceLevel: ['interview-experience-level'],
         },
-        onProfileReady: () => {
+        i18n: {
+            jdRequired: ['interview.toast.pasteJd', 'Please enter at least a job title (full JD is optional)'],
+        },
+        onProfileReady: (response) => {
             interviewPrerequisites.profileReady = true;
+            const detectedLang = response?.render_config?.language
+                || response?.candidate_profile?.language
+                || response?.language;
+            if (detectedLang) {
+                applyInterviewLanguageFromResume(detectedLang);
+                ensureInterviewLanguagesSynced().catch(() => {});
+            }
             updatePrerequisiteStatus();
         },
         onJobReady: () => {
+            interviewPrerequisites.jobReady = true;
             updatePrerequisiteStatus();
         },
         onPrerequisitesChange: () => {
             if (interviewSetup?.profileReady) interviewPrerequisites.profileReady = true;
+            if (interviewSetup?.jobReady) interviewPrerequisites.jobReady = true;
             updatePrerequisiteStatus();
         },
         onProfileSaved: () => bootstrapSavedProfileForInterview(),
@@ -338,18 +352,62 @@ function initializeInterviewPrep() {
 }
 
 function setupInputValidation() {
-    // Start button state is driven by profileReady only (see updateStartButtonState).
+    const syncJob = () => {
+        if (interviewSetup?.jobReady) {
+            interviewPrerequisites.jobReady = true;
+        }
+        updatePrerequisiteStatus();
+    };
+    document.getElementById('job-title')?.addEventListener('input', syncJob);
+    document.getElementById('interview-jd-text')?.addEventListener('input', syncJob);
+}
+
+function getInterviewJobIdentity() {
+    if (interviewSetup?.getJobIdentity) {
+        return interviewSetup.getJobIdentity();
+    }
+    const title = document.getElementById('job-title')?.value.trim() || '';
+    const jd = document.getElementById('interview-jd-text')?.value.trim() || '';
+    const name = title || (jd ? jd.split('\n')[0].trim() : '');
+    return { jdText: jd, targetJobTitle: title, name, hasIdentity: Boolean(name) };
+}
+
+/**
+ * Ensure target job is filled (name-only OK) and submitted before starting an interview session.
+ */
+async function ensureInterviewJobReady() {
+    const identity = getInterviewJobIdentity();
+    if (!identity.hasIdentity) {
+        Utils.showToast(uiT('interview.toast.pasteJd', 'Please enter at least a job title (full JD is optional)'));
+        document.getElementById('interview-jd-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('job-title')?.focus();
+        return false;
+    }
+    if (interviewSetup?.jobReady || interviewPrerequisites.jobReady) {
+        interviewPrerequisites.jobReady = true;
+        return true;
+    }
+    const response = await interviewSetup?.submitJd({
+        targetJobTitle: identity.targetJobTitle || identity.name,
+        jdText: identity.jdText || identity.name,
+    });
+    if (!response && !interviewSetup?.jobReady) return false;
+    interviewPrerequisites.jobReady = true;
+    updatePrerequisiteStatus();
+    return true;
 }
 
 function updateStartButtonState() {
     const startButton = document.getElementById('btn-load-questions');
-    const ready = interviewPrerequisites.profileReady;
-
+    if (!startButton) return;
+    const identity = getInterviewJobIdentity();
+    const ready = interviewPrerequisites.profileReady && identity.hasIdentity;
     startButton.disabled = !ready;
 }
 
 function updatePrerequisiteStatus() {
     setPrerequisiteItem('prereq-profile', interviewPrerequisites.profileReady);
+    setPrerequisiteItem('prereq-job', interviewPrerequisites.jobReady || getInterviewJobIdentity().hasIdentity);
     updateStartButtonState();
 }
 
@@ -383,8 +441,16 @@ async function bootstrapSavedProfileForInterview() {
     await SavedProfileBootstrap.restoreFromUrl({
         setup: interviewSetup,
         bannerId: 'interview-saved-profile-banner',
-        onRestored: () => {
+        onRestored: (result) => {
             interviewPrerequisites.profileReady = true;
+            const lang = result?.language
+                || result?.render_config?.language
+                || result?.draft?.language
+                || result?.candidate_profile?.language;
+            if (lang) {
+                applyInterviewLanguageFromResume(lang);
+                ensureInterviewLanguagesSynced().catch(() => {});
+            }
             updatePrerequisiteStatus();
         },
     });
@@ -398,8 +464,15 @@ async function loadSavedProfileForInterview(recordId) {
             recordId,
             setup: interviewSetup,
             bannerId: 'interview-saved-profile-banner',
-            onRestored: () => {
+            onRestored: (result) => {
                 interviewPrerequisites.profileReady = true;
+                const lang = result?.language
+                    || result?.render_config?.language
+                    || result?.candidate_profile?.language;
+                if (lang) {
+                    applyInterviewLanguageFromResume(lang);
+                    ensureInterviewLanguagesSynced().catch(() => {});
+                }
                 updatePrerequisiteStatus();
             },
         });
@@ -431,7 +504,11 @@ async function uploadInterviewProfile() {
 
 async function submitInterviewJobDescription() {
     try {
-        await interviewSetup?.submitJd();
+        const identity = getInterviewJobIdentity();
+        await interviewSetup?.submitJd({
+            targetJobTitle: identity.targetJobTitle || identity.name,
+            jdText: identity.jdText || identity.name,
+        });
     } catch (error) {
         console.error('JD submission error:', error);
     }
@@ -630,6 +707,8 @@ async function loadInterviewQuestions() {
 
     if (!ensureInterviewProfileApplied()) return;
 
+    if (!(await ensureInterviewJobReady())) return;
+
     let progress = null;
     try {
         const { programVersion, specializedFocus } = getSelectedProgramOptions();
@@ -645,7 +724,7 @@ async function loadInterviewQuestions() {
         }) : null;
 
         const response = await apiClient.startInterviewSession(
-            jobTitle, industry, interviewSession.tone, targetContext, programVersion, specializedFocus,
+            jobTitle || getInterviewJobIdentity().name, industry, interviewSession.tone, targetContext, programVersion, specializedFocus,
             getSelectedQuestionLanguage()
         );
 
@@ -748,6 +827,8 @@ async function loadCustomInterviewQuestions() {
 
     if (!ensureInterviewProfileApplied()) return;
 
+    if (!(await ensureInterviewJobReady())) return;
+
     let progress = null;
     try {
         progress = startQuestionGenerationProgress('custom', 'custom', '', questions.length);
@@ -823,6 +904,8 @@ async function startInteractiveInterview() {
 
     if (!ensureInterviewProfileApplied()) return;
 
+    if (!(await ensureInterviewJobReady())) return;
+
     try {
         await ensureInterviewLanguagesSynced();
         Utils.showLoading(uiT('interview.loadingTitle', 'Generating Questions'));
@@ -842,7 +925,7 @@ async function startInteractiveInterview() {
 
         const response = await apiClient.startInteractiveInterview({
             tone: interviewSession.tone,
-            jobTitle,
+            jobTitle: jobTitle || getInterviewJobIdentity().name,
             industry,
             programVersion,
             specializedFocus,
@@ -852,7 +935,7 @@ async function startInteractiveInterview() {
 
         const session = response.interactive_interview;
         syncInteractiveSessionFromResponse(session);
-        interviewSession.jobTitle = jobTitle;
+        interviewSession.jobTitle = jobTitle || getInterviewJobIdentity().name;
 
         Utils.hideLoading();
         Utils.showToast(uiT('interview.toast.started', 'Interactive mock interview started'));
@@ -2070,10 +2153,12 @@ function restartSession() {
         interviewLanguageUserSelected = { question: false, feedback: false };
         interviewPrerequisites = {
             profileReady: false,
+            jobReady: false,
         };
         interviewSetup?.clearFile();
         if (interviewSetup) {
             interviewSetup.profileReady = false;
+            interviewSetup.jobReady = false;
         }
         updateQuestionLanguageStatus();
 

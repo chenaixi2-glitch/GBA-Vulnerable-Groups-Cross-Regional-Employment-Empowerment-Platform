@@ -25,6 +25,7 @@ class Material(BaseModel):
     type: str  # pdf / docx / text / message
     content: str
     uploaded_at: str
+    language: str = ""  # zh | zh-TW | en | pt — detected from this upload
 
 
 class Fact(BaseModel):
@@ -39,6 +40,7 @@ class CandidateProfile(BaseModel):
     profile_basic: ProfileBasic = Field(default_factory=ProfileBasic)
     materials: list[Material] = Field(default_factory=list)
     facts: list[Fact] = Field(default_factory=list)
+    language: str = ""  # zh | zh-TW | en | pt — language of the uploaded source resume
 
 
 class Education(BaseModel):

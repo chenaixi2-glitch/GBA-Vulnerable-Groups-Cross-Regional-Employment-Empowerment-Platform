@@ -621,7 +621,7 @@ def _check_traditional_chinese_resume(
         (r"婚姻|marital|married|single|離異", "tw_forbid_marital", "marital_status"),
         (r"籍貫|民族|ethnicity|height|身高", "tw_forbid_ethnicity", "ethnicity"),
         (r"政治面貌|黨員|party member|身份證號", "tw_forbid_political", "political_id"),
-        (r"birthday|出生|date of birth|dob", "tw_forbid_dob", "date_of_birth"),
+        (r"birthday|出生日期|出生年月|date\s+of\s+birth|\bd\.?o\.?b\.?\b|出生\s*[:：]|出生于|出生於", "tw_forbid_dob", "date_of_birth"),
     ]
     for pat, item_id, field in forbidden_patterns:
         if _has_pattern(text, [pat]):
@@ -737,7 +737,7 @@ def _check_english_resume(
         (r"婚姻|marital|married|single|离异", "en_forbid_marital", "marital_status"),
         (r"籍贯|民族|ethnicity|height|身高", "en_forbid_ethnicity", "ethnicity"),
         (r"政治面貌|党员|party member|身份证号", "en_forbid_political", "political_id"),
-        (r"birthday|出生|date of birth|dob", "en_forbid_dob", "date_of_birth"),
+        (r"birthday|出生日期|出生年月|date\s+of\s+birth|\bd\.?o\.?b\.?\b|出生\s*[:：]|出生于|出生於", "en_forbid_dob", "date_of_birth"),
     ]
     for pat, item_id, field in forbidden_patterns:
         if _has_pattern(text, [pat]):

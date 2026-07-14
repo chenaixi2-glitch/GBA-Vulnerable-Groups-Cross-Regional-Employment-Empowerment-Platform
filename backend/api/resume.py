@@ -347,7 +347,12 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
     from api.chat import _aload_state
     from api.draft_utils import sync_draft_to_session, draft_to_profile
     from datetime import datetime, timezone
-    from storage.mysql_client import get_mysql_pool, MySQLStore
+    from storage.mysql_client import (
+        get_mysql_pool,
+        MySQLStore,
+        ensure_candidate_profiles_language_column,
+        ensure_saved_profile_records_table,
+    )
 
     user = get_optional_user(request)
     if not user:
@@ -400,6 +405,8 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
     row_id = req.record_id.strip() or f"spr_{uuid.uuid4().hex[:16]}"
 
     pool = await get_mysql_pool()
+    await ensure_saved_profile_records_table(pool)
+    await ensure_candidate_profiles_language_column(pool)
     db = MySQLStore(pool)
 
     if req.record_id.strip():
@@ -409,6 +416,17 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
         if not req.record_name.strip() or record_name == "Resume profile":
             record_name = existing.get("record_name") or record_name
 
+    from tools.output_language import resolve_resume_target_language
+
+    profile_language = (
+        (state.candidate_profile.language or "").strip()
+        or resolve_resume_target_language(state)
+    )
+    if profile_language and not (state.candidate_profile.language or "").strip():
+        state.candidate_profile = state.candidate_profile.model_copy(
+            update={"language": profile_language}
+        )
+
     try:
         await db.upsert_session(req.session_id, user_id=user_id)
         await db.save_profile_record(
@@ -417,11 +435,20 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
             user_id=user_id,
             record_name=record_name,
             candidate_name=candidate_name,
+            language=profile_language,
             data={
                 "draft": draft,
                 "candidate_profile": state.candidate_profile.model_dump(),
+                "language": profile_language,
+                "render_config": state.render_config.model_dump() if state.render_config else None,
             },
             overwrite=bool(req.record_id.strip()),
+        )
+        # Keep session-level candidate_profiles.language in sync on explicit save.
+        await db.save_candidate_profile(
+            f"profile_{req.session_id}",
+            req.session_id,
+            state.candidate_profile.model_dump(),
         )
     except Exception as exc:
         logger.error("Profile record save failed: %s", exc, exc_info=True)
@@ -434,6 +461,7 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
         "session_id": req.session_id,
         "record_id": row_id,
         "record_name": record_name,
+        "language": profile_language,
         "saved_at": updated_at,
         "updated_at": updated_at,
     }
@@ -549,6 +577,27 @@ async def restore_saved_profile_record(record_id: str, req: RestoreSavedProfileR
     else:
         state.candidate_profile = draft_to_profile(draft)
 
+    from tools.output_language import (
+        apply_interview_feedback_language,
+        apply_interview_question_language,
+        apply_resume_target_language,
+    )
+
+    restored_language = (
+        str(record.get("language") or "").strip()
+        or str(data.get("language") or "").strip()
+        or (state.candidate_profile.language if state.candidate_profile else "")
+        or ((data.get("render_config") or {}).get("language") if isinstance(data.get("render_config"), dict) else "")
+    )
+    if restored_language:
+        if state.candidate_profile and not (state.candidate_profile.language or "").strip():
+            state.candidate_profile = state.candidate_profile.model_copy(
+                update={"language": restored_language}
+            )
+        apply_resume_target_language(state, restored_language)
+        apply_interview_question_language(state, restored_language)
+        apply_interview_feedback_language(state, restored_language)
+
     await sync_draft_to_session(store, req.session_id, draft)
 
     persist_data = state.model_dump(exclude={
@@ -563,6 +612,8 @@ async def restore_saved_profile_record(record_id: str, req: RestoreSavedProfileR
         "session_id": req.session_id,
         "record_id": record_id,
         "record_name": record.get("record_name") or "",
+        "language": restored_language or "",
+        "render_config": state.render_config.model_dump() if state.render_config else None,
         "draft": draft,
     }
 

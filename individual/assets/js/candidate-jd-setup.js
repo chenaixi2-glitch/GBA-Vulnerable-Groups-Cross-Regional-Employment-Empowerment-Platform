@@ -34,7 +34,8 @@
             this.config = {
                 showLoading: true,
                 revealJdAfterProfile: true,
-                requireJdText: false,
+                /** Require a job identity: JD text and/or job title (name-only is enough). */
+                requireJdText: true,
                 parsedTextRows: 12,
                 ...config,
             };
@@ -131,6 +132,23 @@
 
         getJdText() {
             return document.getElementById(this.config.ids.jdText)?.value.trim() || '';
+        }
+
+        getJobTitle() {
+            const id = this.config.ids?.jobTitle;
+            if (id) return document.getElementById(id)?.value.trim() || '';
+            return '';
+        }
+
+        /**
+         * Job identity for validation: JD box and/or dedicated title field.
+         * A job name alone is enough — full JD is not required.
+         */
+        getJobIdentity(options = {}) {
+            const jdText = (options.jdText ?? this.getJdText()).trim();
+            const targetJobTitle = (options.targetJobTitle ?? this.getJobTitle()).trim();
+            const name = targetJobTitle || (jdText ? jdText.split('\n')[0].trim() : '');
+            return { jdText, targetJobTitle, name, hasIdentity: Boolean(name) };
         }
 
         getTargetContext(jdOverride) {
@@ -398,8 +416,9 @@
 
         async submitJd(options = {}) {
             const i18n = this.config.i18n || {};
-            const jdText = options.jdText ?? this.getJdText();
-            const targetJobTitle = options.targetJobTitle ?? '';
+            const identity = this.getJobIdentity(options);
+            const jdText = identity.jdText;
+            const targetJobTitle = identity.targetJobTitle;
             const ctx = this.getTargetContext(jdText);
 
             if (this.profileDirty) {
@@ -407,18 +426,11 @@
                 return null;
             }
 
-            if (this.config.requireJdText && !jdText) {
+            // JD is required, but a job name alone is enough (full JD optional).
+            if (this.config.requireJdText !== false && !identity.hasIdentity) {
                 Utils.showToast(cjsT(
                     i18n.jdRequired?.[0] || 'interview.toast.pasteJd',
-                    i18n.jdRequired?.[1] || 'Please paste the target job description or fill in target job fields'
-                ));
-                return null;
-            }
-
-            if (!jdText && !ctx?.industry && !ctx?.employer_type && !ctx?.experience_level && !targetJobTitle) {
-                Utils.showToast(cjsT(
-                    i18n.jdRequired?.[0] || 'interview.toast.pasteJd',
-                    i18n.jdRequired?.[1] || 'Please paste the target job description or fill in target job fields'
+                    i18n.jdRequired?.[1] || 'Please enter at least a job title (full JD is optional)'
                 ));
                 return null;
             }
@@ -431,7 +443,7 @@
             }
 
             try {
-                const jobPayload = jdText || ctx?.jd_text || targetJobTitle;
+                const jobPayload = jdText || ctx?.jd_text || targetJobTitle || identity.name;
                 const response = await apiClient.submitJobDescription(jobPayload, ctx);
                 this.jobReady = true;
                 this.updatePrerequisites();

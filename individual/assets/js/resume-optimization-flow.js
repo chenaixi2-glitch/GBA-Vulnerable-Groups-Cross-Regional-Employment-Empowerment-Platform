@@ -159,13 +159,76 @@ function mergeSupplementQuestions(questions, gaps) {
     return qs;
 }
 
+function isQuantificationQuestion(q) {
+    return /量化|quantif|números|numbers|metrics|quantified/i.test(`${q?.question || ''} ${q?.reason || ''}`);
+}
+
+/**
+ * Build generation/optimize instruction clause from user quantification preference.
+ * @param {'industry_standard'|'none'|''} mode
+ */
+function buildQuantificationEditClause(mode) {
+    if (mode === 'industry_standard') {
+        return (
+            'QUANTIFICATION_MODE=industry_standard: Prefer any real metrics the user provided in clarifications. '
+            + 'For experience entries still lacking user-provided metrics, supplement with conservative, '
+            + 'industry-typical quantified outcomes appropriate to the target industry/role and experience level '
+            + '(e.g. team size, users served, latency/throughput, process efficiency ranges commonly seen in similar work). '
+            + 'Do not invent company-specific revenue, exclusive awards, or unverifiable personal claims; '
+            + 'keep estimates plausible and role-typical.'
+        );
+    }
+    if (mode === 'none') {
+        return (
+            'QUANTIFICATION_MODE=none: Prefer any real metrics the user provided in clarifications. '
+            + 'For experience entries without user-provided metrics, write objective qualitative descriptions '
+            + '(scope, collaboration, tech complexity, business impact in words) with zero invented numbers, '
+            + 'percentages, user counts, or fabricated KPIs.'
+        );
+    }
+    return (
+        'Add quantified results only when supported by my profile facts or clarifications; '
+        + 'never fabricate numbers or achievements.'
+    );
+}
+
+function collectQuantificationMode() {
+    const selected = document.querySelector('input[name="optimization-quant-mode"]:checked');
+    const value = selected?.value || 'none';
+    return value === 'industry_standard' ? 'industry_standard' : 'none';
+}
+
+function renderQuantificationModeOptions(container) {
+    if (!container) return;
+    // English UI only for now (i18n deferred)
+    container.innerHTML = `
+        <h4 class="text-sm font-semibold text-gray-900 mb-1">How to handle missing metrics</h4>
+        <p class="text-xs text-gray-600 mb-3">Filling real metrics below is optional. If you leave them blank, choose whether to supplement with industry-standard estimates or generate a non-quantified version.</p>
+        <label class="flex items-start gap-2 mb-2 cursor-pointer">
+            <input type="radio" name="optimization-quant-mode" value="industry_standard" class="mt-1 text-blue-600 focus:ring-blue-500">
+            <span class="text-sm text-gray-800">
+                <span class="font-medium">Supplement with industry-standard metrics</span>
+                <span class="block text-xs text-gray-500 mt-0.5">No need to fill numbers — use conservative, role-typical metrics for the target industry.</span>
+            </span>
+        </label>
+        <label class="flex items-start gap-2 cursor-pointer">
+            <input type="radio" name="optimization-quant-mode" value="none" class="mt-1 text-blue-600 focus:ring-blue-500" checked>
+            <span class="text-sm text-gray-800">
+                <span class="font-medium">Do not supplement — generate without metrics</span>
+                <span class="block text-xs text-gray-500 mt-0.5">If you also leave the fields blank, experiences will use qualitative wording only (no invented numbers).</span>
+            </span>
+        </label>
+    `;
+    container.classList.remove('hidden');
+}
+
 function showOptimizationDialog({ gaps = [], questions = [], removals = [], alignmentHint = '' } = {}) {
     const qs = mergeSupplementQuestions(questions, gaps).filter(Boolean);
     const removalItems = (removals || []).filter((r) => r && (r.title || r.reason));
     const quantGaps = (gaps || []).filter((g) => (g.type || '').toLowerCase() === 'no_quantification');
-    const hasQuantFollowUp = quantGaps.length > 0 || qs.some((q) => /量化|quantif|números|numbers|metrics/i.test(`${q.question || ''} ${q.reason || ''}`));
+    const hasQuantFollowUp = quantGaps.length > 0 || qs.some((q) => isQuantificationQuestion(q));
     if (!qs.length && !alignmentHint && !hasQuantFollowUp && !removalItems.length) {
-        return Promise.resolve({ proceed: true, answers: [], removals: [] });
+        return Promise.resolve({ proceed: true, answers: [], removals: [], quantificationMode: '' });
     }
 
     return new Promise((resolve) => {
@@ -175,9 +238,10 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
         const removalsEl = document.getElementById('optimization-removals');
         const questionsEl = document.getElementById('optimization-questions');
         const hintEl = document.getElementById('optimization-hint');
+        const quantModeEl = document.getElementById('optimization-quant-mode');
 
         if (!modal || !questionsEl) {
-            resolve({ proceed: true, answers: [], removals: [] });
+            resolve({ proceed: true, answers: [], removals: [], quantificationMode: hasQuantFollowUp ? 'none' : '' });
             return;
         }
 
@@ -237,14 +301,24 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
         }
 
         if (hintEl) {
+            // English UI only for now (i18n deferred)
             const quantHint = hasQuantFollowUp
-                ? uiT('resume.opt.quantHint', 'Some experiences lack quantified results. If you have real metrics (users served, performance gains, team size, etc.), please share them below. Leave blank if none — we will not invent numbers.')
+                ? 'Some experiences lack quantified results. You may optionally enter real metrics below, or choose to supplement with industry-standard estimates / generate a non-quantified version.'
                 : '';
             const combinedHint = [alignmentHint, quantHint].filter(Boolean).join('\n\n');
             hintEl.textContent = combinedHint;
             hintEl.classList.toggle('hidden', !combinedHint);
             if (combinedHint) {
                 hintEl.className = 'mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800 whitespace-pre-line';
+            }
+        }
+
+        if (quantModeEl) {
+            if (hasQuantFollowUp) {
+                renderQuantificationModeOptions(quantModeEl);
+            } else {
+                quantModeEl.innerHTML = '';
+                quantModeEl.classList.add('hidden');
             }
         }
 
@@ -257,15 +331,17 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
                 <h4 class="text-sm font-semibold text-gray-900 mb-2">${uiT('resume.opt.supplementTitle', 'Supplement your experience')}</h4>
                 ${qs.map((q, i) => {
                 const required = (q.priority || '').toLowerCase() === 'high';
-                const isQuant = /量化|quantif|números|numbers|metrics/i.test(`${q.question || ''} ${q.reason || ''}`);
+                const isQuant = isQuantificationQuestion(q);
+                // Quant UI copy is English-only for now (i18n deferred)
                 const placeholder = isQuant
-                    ? uiT('resume.opt.quantAnswerPlaceholder', 'Enter real numbers if you have them (e.g. 10k users, 30% faster); leave blank if none')
+                    ? 'Optional: enter real numbers (e.g. 10k users, 30% faster). Leave blank to use the choice above.'
                     : uiT('resume.opt.answerPlaceholder', 'Enter your answer...');
                 return `
-                <div class="optimization-question mb-4" data-qid="${escapeHtml(q.id || `q_${i}`)}">
+                <div class="optimization-question mb-4" data-qid="${escapeHtml(q.id || `q_${i}`)}" data-is-quant="${isQuant ? '1' : '0'}">
                     <label class="block text-sm font-medium text-gray-800 mb-1">
                         ${escapeHtml(q.question || '')}
                         ${required ? '<span class="text-red-500 ml-1">*</span>' : ''}
+                        ${isQuant ? '<span class="ml-1 text-xs font-normal text-gray-500">(optional)</span>' : ''}
                     </label>
                     ${q.reason ? `<p class="text-xs text-gray-500 mb-1">${escapeHtml(q.reason)}</p>` : ''}
                     <textarea rows="3" class="optimization-answer w-full border border-gray-300 rounded-lg p-2 text-sm"
@@ -358,6 +434,9 @@ function collectOptimizationAnswers() {
 function submitOptimizationDialog() {
     const { answers, missingRequired, firstMissingTextarea } = collectOptimizationAnswers();
     const removals = collectRemovalDecisions();
+    const quantModeEl = document.getElementById('optimization-quant-mode');
+    const hasQuantMode = quantModeEl && !quantModeEl.classList.contains('hidden');
+    const quantificationMode = hasQuantMode ? collectQuantificationMode() : '';
     if (missingRequired) {
         showOptimizationValidationError(uiT(
             'resume.opt.requiredQuestions',
@@ -371,7 +450,7 @@ function submitOptimizationDialog() {
     }
     hideOptimizationDialog();
     if (_optimizationResolver) {
-        _optimizationResolver({ proceed: true, answers, removals });
+        _optimizationResolver({ proceed: true, answers, removals, quantificationMode });
         _optimizationResolver = null;
     }
 }
@@ -379,7 +458,7 @@ function submitOptimizationDialog() {
 function cancelOptimizationDialog() {
     hideOptimizationDialog();
     if (_optimizationResolver) {
-        _optimizationResolver({ proceed: false, answers: [], removals: [] });
+        _optimizationResolver({ proceed: false, answers: [], removals: [], quantificationMode: '' });
         _optimizationResolver = null;
     }
 }

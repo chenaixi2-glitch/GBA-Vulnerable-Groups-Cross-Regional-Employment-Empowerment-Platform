@@ -11,18 +11,18 @@ const ApiError = require('../utils/ApiError');
 function assertJobOwner(job, user) {
   if (user.role === 'admin') return;
   if (job.company_user_id !== user.id) {
-    throw ApiError.forbidden('无权查看该岗位的应聘者');
+    throw ApiError.forbidden('You do not have permission to view applicants for this job.');
   }
 }
 
 async function apply(req, res) {
   const jobId = parseInt(req.params.id, 10);
   const job = await JobModel.findById(jobId);
-  if (!job) throw ApiError.notFound('岗位不存在');
-  if (job.status !== 'active') throw ApiError.badRequest('该岗位已关闭招聘');
+  if (!job) throw ApiError.notFound('Job not found.');
+  if (job.status !== 'active') throw ApiError.badRequest('This job is no longer open for applications.');
 
   if (job.source === 'external') {
-    throw ApiError.badRequest('外部岗位请在合作招聘网站投递', {
+    throw ApiError.badRequest('Please apply for external jobs on the partner recruitment site.', {
       source: 'external',
       source_url: job.source_url || 'https://www.jyfw.org.cn/',
     });
@@ -30,18 +30,18 @@ async function apply(req, res) {
 
   const user = await UserModel.findById(req.user.id);
   if (!user.age || user.gender == null) {
-    throw ApiError.badRequest('请先完善个人资料（年龄、性别、收入等）');
+    throw ApiError.badRequest('Please complete your profile (age, gender, income, etc.) first.');
   }
 
   if (!userMatchesJobCriteria(user, job.target_criteria, {
     source: job.source,
     vulnerable_group_friendly: job.vulnerable_group_friendly,
   })) {
-    throw ApiError.forbidden('您的画像不符合该岗位硬性匹配条件');
+    throw ApiError.forbidden('Your profile does not meet this job\'s required targeting criteria.');
   }
 
   const existing = await ApplicationModel.findByJobAndUser(jobId, req.user.id);
-  if (existing) throw ApiError.conflict('您已投递过该岗位');
+  if (existing) throw ApiError.conflict('You have already applied to this job.');
 
   const resume = await ResumeModel.findByUserId(req.user.id);
   const { score, reasons } = scoreJobResume(job, resume);
@@ -59,7 +59,7 @@ async function apply(req, res) {
 
   res.status(201).json({
     success: true,
-    message: '投递成功',
+    message: 'Application submitted successfully.',
     data: { application },
   });
 }
@@ -68,18 +68,18 @@ async function withdraw(req, res) {
   const applicationId = parseInt(req.params.applicationId, 10);
   const application = await ApplicationModel.deleteByIdForUser(applicationId, req.user.id);
   if (!application) {
-    throw ApiError.notFound('投递记录不存在或无权撤销');
+    throw ApiError.notFound('Application not found or you cannot withdraw it.');
   }
 
   await JobModel.decrementApplicationsCount(application.job_id);
 
-  res.json({ success: true, message: '已撤销投递' });
+  res.json({ success: true, message: 'Application withdrawn.' });
 }
 
 async function listApplicants(req, res) {
   const jobId = parseInt(req.params.id, 10);
   const job = await JobModel.findById(jobId);
-  if (!job) throw ApiError.notFound('岗位不存在');
+  if (!job) throw ApiError.notFound('Job not found.');
   assertJobOwner(job, req.user);
 
   const applications = sortApplicantsForCorporate(
@@ -92,8 +92,8 @@ async function listApplicants(req, res) {
       applications,
       vulnerable_group_friendly: job.vulnerable_group_friendly,
       sort_note: job.vulnerable_group_friendly
-        ? '弱势群体友好岗位：已识别弱势群体应聘者优先展示'
-        : '按匹配分排序',
+        ? 'Vulnerable-group friendly job: identified vulnerable applicants are listed first'
+        : 'Sorted by match score',
     },
   });
 }
@@ -107,18 +107,18 @@ async function updateApplicationStatus(req, res) {
   const applicationId = parseInt(req.params.applicationId, 10);
   const { status } = req.body;
   if (!['pending', 'reviewing', 'accepted', 'rejected'].includes(status)) {
-    throw ApiError.badRequest('状态值不合法');
+    throw ApiError.badRequest('Invalid status value.');
   }
 
   const application = await ApplicationModel.findById(applicationId);
-  if (!application) throw ApiError.notFound('投递记录不存在');
+  if (!application) throw ApiError.notFound('Application not found.');
 
   const job = await JobModel.findById(application.job_id);
-  if (!job) throw ApiError.notFound('岗位不存在');
+  if (!job) throw ApiError.notFound('Job not found.');
   assertJobOwner(job, req.user);
 
   const updated = await ApplicationModel.updateStatus(applicationId, status, req.user.id);
-  res.json({ success: true, message: '状态已更新', data: { application: updated } });
+  res.json({ success: true, message: 'Status updated.', data: { application: updated } });
 }
 
 module.exports = {

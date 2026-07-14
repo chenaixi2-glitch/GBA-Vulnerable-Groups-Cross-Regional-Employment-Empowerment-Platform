@@ -63,6 +63,7 @@ def run_init_schema() -> None:
         _migrate_learning_path_plans(connection)
         _migrate_jd_cache(connection)
         _migrate_saved_profile_records(connection)
+        _migrate_profile_language_columns(connection)
     finally:
         connection.close()
 
@@ -226,6 +227,7 @@ def _migrate_saved_profile_records(connection) -> None:
             user_id         BIGINT UNSIGNED  NOT NULL COMMENT '登录用户 ID（来自 Node JWT sub）',
             record_name     VARCHAR(256)     NOT NULL DEFAULT '',
             candidate_name  VARCHAR(128)     NOT NULL DEFAULT '',
+            language        VARCHAR(16)      NOT NULL DEFAULT '' COMMENT '上传简历语言：zh / zh-TW / en / pt',
             data            JSON             NOT NULL,
             saved_at        DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_spr_user (user_id),
@@ -240,6 +242,40 @@ def _migrate_saved_profile_records(connection) -> None:
         print("[INFO] saved_profile_records 表已就绪。")
     except pymysql.Error as e:
         print(f"[WARN] saved_profile_records 迁移失败: {e}")
+
+
+def _migrate_profile_language_columns(connection) -> None:
+    """为候选人画像 / 已保存简历记录补充 language 列（幂等）。"""
+    cfg = get_mysql_config()
+    db_name = cfg["database"]
+    alters = [
+        (
+            "candidate_profiles.language",
+            f"""
+            ALTER TABLE `{db_name}`.`candidate_profiles`
+            ADD COLUMN language VARCHAR(16) NOT NULL DEFAULT ''
+                COMMENT '上传简历语言：zh / zh-TW / en / pt' AFTER version
+            """,
+        ),
+        (
+            "saved_profile_records.language",
+            f"""
+            ALTER TABLE `{db_name}`.`saved_profile_records`
+            ADD COLUMN language VARCHAR(16) NOT NULL DEFAULT ''
+                COMMENT '上传简历语言：zh / zh-TW / en / pt' AFTER candidate_name
+            """,
+        ),
+    ]
+    for label, sql in alters:
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+            print(f"[INFO] {label} 列已添加。")
+        except pymysql.Error as e:
+            if e.args and e.args[0] == 1060:
+                print(f"[INFO] {label} 列已存在，跳过。")
+            else:
+                print(f"[WARN] {label} 迁移失败: {e}")
 
 
 def _is_comment_only(sql: str) -> bool:

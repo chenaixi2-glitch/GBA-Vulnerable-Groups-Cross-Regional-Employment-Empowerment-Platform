@@ -5,6 +5,10 @@ from __future__ import annotations
 from workflow.state import CopilotState, RenderConfig
 from tools.resume_layout import VALID_RESUME_LANGUAGES, language_label, normalize_language
 
+# Content-language pickers omitted on interview / learning-path / JD UIs.
+# Resume target language follows the uploaded resume (see resolve_resume_target_language).
+FORCE_OUTPUT_LANGUAGE = "en"
+
 OUTPUT_LANGUAGE_INSTRUCTIONS: dict[str, str] = {
     "zh": (
         "请使用简体中文撰写所有自然语言字段"
@@ -31,53 +35,47 @@ OUTPUT_LANGUAGE_INSTRUCTIONS: dict[str, str] = {
 
 def resolve_page_ui_language(state: CopilotState) -> str:
     """Language for page-scoped features (learning path, gap follow-ups) — never resume target."""
-    if state.chat_output_language:
-        return normalize_language(state.chat_output_language)
-    if state.meta and (state.meta.ui_output_language or "").strip():
-        return normalize_language(state.meta.ui_output_language)
-    return "en"
+    return FORCE_OUTPUT_LANGUAGE
 
 
 def resolve_gap_prompt_language(state: CopilotState) -> str:
     """Language for gap-analysis follow-up questions — always prefer page UI locale."""
-    return resolve_page_ui_language(state)
+    return FORCE_OUTPUT_LANGUAGE
 
 
 def resolve_interview_question_language(state: CopilotState) -> str:
-    """Language for interview questions, reference answers, and interviewer messages."""
+    """Language for interview questions — follows uploaded resume language by default."""
     if state.chat_question_output_language:
         return normalize_language(state.chat_question_output_language)
     if state.meta and (state.meta.interview_question_language or "").strip():
         return normalize_language(state.meta.interview_question_language)
-    return "en"
+    return resolve_resume_target_language(state)
 
 
 def resolve_interview_feedback_language(state: CopilotState) -> str:
-    """Language for answer evaluation, brief feedback, and debrief reports."""
+    """Language for interview feedback — follows question / resume language by default."""
     if state.chat_feedback_output_language:
         return normalize_language(state.chat_feedback_output_language)
     if state.meta and (state.meta.interview_feedback_language or "").strip():
         return normalize_language(state.meta.interview_feedback_language)
-    return "en"
+    return resolve_interview_question_language(state)
 
 
 def resolve_output_language(state: CopilotState) -> str:
     """Language for JD agent prompts — prefers page locale, not interview."""
-    if state.chat_output_language:
-        return normalize_language(state.chat_output_language)
-    if state.meta and (state.meta.ui_output_language or "").strip():
-        return normalize_language(state.meta.ui_output_language)
-    if state.render_config and state.render_config.language:
-        return normalize_language(state.render_config.language)
-    if state.resume_content_json and state.resume_content_json.meta.language:
-        return normalize_language(state.resume_content_json.meta.language)
-    return "en"
+    return FORCE_OUTPUT_LANGUAGE
 
 
 def resolve_resume_target_language(state: CopilotState) -> str:
-    """Language for resume content generation — never follows transient chat UI locale."""
+    """Language for resume content generation — never follows transient chat UI locale.
+
+    Prefers an explicit render_config / profile / resume meta language (set from
+    uploaded resume language or user language conversion).
+    """
     if state.render_config and state.render_config.language:
         return normalize_language(state.render_config.language)
+    if state.candidate_profile and (state.candidate_profile.language or "").strip():
+        return normalize_language(state.candidate_profile.language)
     if state.resume_content_json and state.resume_content_json.meta.language:
         return normalize_language(state.resume_content_json.meta.language)
     return "en"
@@ -119,41 +117,34 @@ def gap_output_language_instruction(language: str | None) -> str:
 
 def apply_chat_output_language(state: CopilotState, language: str | None) -> CopilotState:
     """Set page UI locale for this request (learning path, gap analysis, JD hints)."""
-    if not language or not str(language).strip():
-        state.chat_output_language = ""
-        return state
-    lang = normalize_language(language)
-    if lang not in VALID_RESUME_LANGUAGES:
-        state.chat_output_language = ""
-        return state
+    # Force English while content-language pickers are omitted.
+    lang = FORCE_OUTPUT_LANGUAGE
     state.chat_output_language = lang
     state.meta = state.meta.model_copy(update={"ui_output_language": lang})
     return state
 
 
 def apply_interview_question_language(state: CopilotState, language: str | None) -> CopilotState:
-    """Persist interview question output language; does not change page or feedback locale."""
-    if not language or not str(language).strip():
-        state.chat_question_output_language = ""
-        return state
-    lang = normalize_language(language)
-    if lang not in VALID_RESUME_LANGUAGES:
-        state.chat_question_output_language = ""
-        return state
+    """Persist interview question language; empty input falls back to uploaded resume language."""
+    if language and str(language).strip():
+        lang = normalize_language(language)
+        if lang not in VALID_RESUME_LANGUAGES:
+            lang = resolve_resume_target_language(state)
+    else:
+        lang = resolve_resume_target_language(state)
     state.chat_question_output_language = lang
     state.meta = state.meta.model_copy(update={"interview_question_language": lang})
     return state
 
 
 def apply_interview_feedback_language(state: CopilotState, language: str | None) -> CopilotState:
-    """Persist interview feedback output language; does not change page or question locale."""
-    if not language or not str(language).strip():
-        state.chat_feedback_output_language = ""
-        return state
-    lang = normalize_language(language)
-    if lang not in VALID_RESUME_LANGUAGES:
-        state.chat_feedback_output_language = ""
-        return state
+    """Persist interview feedback language; empty input follows question / resume language."""
+    if language and str(language).strip():
+        lang = normalize_language(language)
+        if lang not in VALID_RESUME_LANGUAGES:
+            lang = resolve_interview_question_language(state)
+    else:
+        lang = resolve_interview_question_language(state)
     state.chat_feedback_output_language = lang
     state.meta = state.meta.model_copy(update={"interview_feedback_language": lang})
     return state
@@ -165,15 +156,14 @@ def apply_interview_languages(
     feedback_language: str | None = None,
 ) -> CopilotState:
     """Apply question and/or feedback language for a single request."""
-    if question_language:
+    if question_language is not None:
         apply_interview_question_language(state, question_language)
-    if feedback_language:
+    if feedback_language is not None:
         apply_interview_feedback_language(state, feedback_language)
     return state
 
-
 def apply_resume_target_language(state: CopilotState, language: str | None) -> CopilotState:
-    """Persist user-selected resume generation target language."""
+    """Persist resume generation target language (from upload detection or user selection)."""
     if not language or not str(language).strip():
         return state
     lang = normalize_language(language)

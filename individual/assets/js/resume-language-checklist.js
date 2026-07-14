@@ -229,7 +229,9 @@ function buildLocalizedChecklistSummary(checklist) {
 
 function localizeChecklist(checklist) {
     if (!checklist) return checklist;
-    const items = (checklist.items || []).map((item) => localizeChecklistItem(item, checklist));
+    const items = (checklist.items || [])
+        .map((item) => localizeChecklistItem(item, checklist))
+        .filter((item) => item.severity === 'ok' || !item.missing || isDisplayableFormatCheckItem(item));
     return {
         ...checklist,
         items,
@@ -311,13 +313,36 @@ function clearFormatCheckMarkers() {
     }
 }
 
+/** Forbidden privacy fields → editor inputs when present; skip entirely if no editable control. */
+const FORBIDDEN_FIELD_TARGETS = {
+    age: '#profile-age',
+    gender: '#profile-gender',
+    political_id: '#profile-political-status',
+    ethnicity: '#profile-native-place',
+};
+
 function resolveFormatCheckTarget(item) {
     const field = item.field || '';
     const category = item.category || '';
-    if (category === 'forbidden') {
-        return document.getElementById('profile-summary') ? '#profile-summary' : '#profile-editor-body';
+    if (FORMAT_CHECK_FIELD_TARGETS[field]) {
+        return FORMAT_CHECK_FIELD_TARGETS[field];
     }
-    return FORMAT_CHECK_FIELD_TARGETS[field] || FORMAT_CHECK_FIELD_TARGETS[category] || null;
+    if (category === 'forbidden') {
+        const sel = FORBIDDEN_FIELD_TARGETS[field];
+        if (sel && document.querySelector(sel)) return sel;
+        return null;
+    }
+    return FORMAT_CHECK_FIELD_TARGETS[category] || null;
+}
+
+/** Hide forbidden items that have no corresponding profile input (e.g. date_of_birth). */
+function isDisplayableFormatCheckItem(item) {
+    if (!item || !item.missing || item.severity === 'ok') return false;
+    if (item.category === 'forbidden') {
+        const selector = resolveFormatCheckTarget(item);
+        return !!(selector && getFormatCheckContainer(selector));
+    }
+    return true;
 }
 
 function getFormatCheckContainer(selector) {
@@ -434,7 +459,7 @@ function applyFormatCheckToProfileEditor(checklist) {
     if (!profileSection || profileSection.classList.contains('hidden')) return;
 
     const labels = checklistSeverityLabels();
-    const actionable = localized.items.filter((item) => item.missing && item.severity !== 'ok');
+    const actionable = localized.items.filter((item) => isDisplayableFormatCheckItem(item));
 
     if (!actionable.length) {
         const hints = document.getElementById('profile-format-hints');
@@ -727,7 +752,9 @@ async function onEmployerTypeSelected(employerType) {
 
 /** Pre-generation: persist target resume language and refresh format checklist. */
 async function applyResumeLanguageSelection(language) {
-    currentResumeLanguage = normalizeResumeLang(language);
+    currentResumeLanguage = typeof normalizeResumeLang === 'function'
+        ? normalizeResumeLang(language)
+        : (language || 'zh');
     updateResumeLanguageBadge(currentResumeLanguage);
     if (typeof ProfileEditor !== 'undefined' && ProfileEditor.updatePhotoVisibility) {
         ProfileEditor.updatePhotoVisibility(currentResumeLanguage);
