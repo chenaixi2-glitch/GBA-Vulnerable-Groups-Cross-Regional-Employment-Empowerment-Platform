@@ -197,6 +197,16 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as e:
         logger.error("Workflow execution failed: %s", e, exc_info=True)
+        err_text = str(e).lower()
+        if (
+            "account balance is insufficient" in err_text
+            or "insufficient" in err_text and "balance" in err_text
+            or "30001" in err_text
+        ):
+            raise HTTPException(
+                status_code=502,
+                detail="AI service account balance is insufficient. Please top up your SiliconFlow/LLM API credits and retry.",
+            )
         raise HTTPException(status_code=500, detail=f"处理失败: {e}")
     graph_ms = elapsed_ms(graph_t0)
 

@@ -6,11 +6,12 @@ import json
 import re
 from typing import Any
 
-from models.embedding import aembed_documents, aembed_query
+from models.embedding import aembed_documents, aembed_query, EmbeddingDisabledError
 from tests.evaluation_utils import cosine_similarity
 from tools.resume_profile_context import batch_facts_by_size, facts_of_type
 from tools.target_job_context import build_enriched_job_dict
 from workflow.state import CopilotState, Fact
+from config_loader import is_embedding_enabled
 from log import get_logger
 
 logger = get_logger("agent")
@@ -88,6 +89,10 @@ async def compute_jd_experience_matches(
     fact_types: tuple[str, ...] = _EXPERIENCE_TYPES,
 ) -> list[dict[str, Any]]:
     """Score each internship/project fact against the target JD via batch embeddings."""
+    if not is_embedding_enabled():
+        logger.info("JD-experience embedding match skipped: embedding.enabled=false")
+        return []
+
     jd_text = build_jd_match_text(state)
     if not jd_text.strip():
         return []
@@ -102,6 +107,9 @@ async def compute_jd_experience_matches(
         jd_vector = await aembed_query(jd_text)
         fact_texts = [_fact_match_text(fact) for fact in facts]
         fact_vectors = await _embed_texts_in_batches(fact_texts)
+    except EmbeddingDisabledError:
+        logger.info("JD-experience embedding match skipped: embedding disabled")
+        return []
     except Exception as exc:
         logger.warning("JD-experience embedding match skipped: %s", exc)
         return []
@@ -133,6 +141,10 @@ async def compute_jd_experience_matches_batched(
     fact_types: tuple[str, ...] = _EXPERIENCE_TYPES,
 ) -> list[dict[str, Any]]:
     """Same as compute_jd_experience_matches but respects fact batching for large profiles."""
+    if not is_embedding_enabled():
+        logger.info("JD-experience embedding match skipped: embedding.enabled=false")
+        return []
+
     jd_text = build_jd_match_text(state)
     if not jd_text.strip():
         return []
@@ -145,6 +157,9 @@ async def compute_jd_experience_matches_batched(
 
     try:
         jd_vector = await aembed_query(jd_text)
+    except EmbeddingDisabledError:
+        logger.info("JD-experience embedding match skipped: embedding disabled")
+        return []
     except Exception as exc:
         logger.warning("JD-experience embedding match skipped: %s", exc)
         return []

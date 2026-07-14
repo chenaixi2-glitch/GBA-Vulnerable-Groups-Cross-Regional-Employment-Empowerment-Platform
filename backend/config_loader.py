@@ -96,6 +96,7 @@ def _build_llm_config(cfg: dict, *, default_temperature: float = 0.3, default_ma
     """将 config.yaml 中的 LLM 小节标准化为 models.llm 使用的 dict。"""
     api_key_env = cfg.get("api_key_env", "")
     return {
+        "enabled": bool(cfg.get("enabled", True)),
         "provider": cfg.get("provider", "openai"),
         "model": cfg["model"],
         "api_base": cfg.get("api_base", ""),
@@ -138,6 +139,7 @@ def get_embedding_config() -> dict:
     cfg = get_config()["embedding"]
     api_key_env = cfg.get("api_key_env", "")
     return {
+        "enabled": bool(cfg.get("enabled", True)),
         "provider": cfg.get("provider", "dashscope"),
         "model": cfg["model"],
         "api_base": cfg.get("api_base", ""),
@@ -149,11 +151,17 @@ def get_embedding_config() -> dict:
     }
 
 
+def is_embedding_enabled() -> bool:
+    """Embedding API 是否启用（临时关闭时为 False，不发起远端请求）。"""
+    return bool(get_embedding_config().get("enabled", True))
+
+
 def get_rerank_config() -> dict:
     """返回 Rerank 配置（provider, model, api_base, api_key, top_n）。"""
     cfg = get_config()["rerank"]
     api_key_env = cfg.get("api_key_env", "")
     return {
+        "enabled": bool(cfg.get("enabled", True)),
         "provider": cfg.get("provider", "dashscope"),
         "model": cfg["model"],
         "api_base": cfg.get("api_base", ""),
@@ -163,6 +171,16 @@ def get_rerank_config() -> dict:
         "api_version": cfg.get("api_version", ""),
         "model_kwargs": cfg.get("model_kwargs", {}),
     }
+
+
+def is_rerank_enabled() -> bool:
+    """Rerank API 是否启用。"""
+    return bool(get_rerank_config().get("enabled", True))
+
+
+def is_resume_parse_enabled() -> bool:
+    """DeepSeek-OCR 是否启用（关闭时 PDF 走本地 pdfplumber）。"""
+    return bool(get_resume_parse_config().get("enabled", True))
 
 
 def get_redis_config() -> dict:

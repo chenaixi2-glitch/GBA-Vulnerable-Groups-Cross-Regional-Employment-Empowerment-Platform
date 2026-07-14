@@ -299,3 +299,24 @@ MySQL connectivity check passed
 Redis connectivity check passed
 Starting AI Career Copilot server on 0.0.0.0:8000
 ```
+
+## 八、暂时关闭 OCR / Embedding / Rerank（省费用）
+
+`backend/config.yaml` 中以下开关默认为 `false`（**model / api_base / api_key_env 配置仍保留**，可随时改回）：
+
+| 配置项 | 关闭时行为 |
+|--------|------------|
+| `resume_parse.enabled` | PDF 用本地 pdfplumber，不调 DeepSeek-OCR |
+| `embedding.enabled` | 不调向量 Embedding API |
+| `rerank.enabled` | 不调 Rerank API |
+| `vector_store.enabled` / `rag.enabled` | 关闭 Chroma RAG 索引与检索（agent 走 state JSON 兜底） |
+
+**再开启：**
+
+1. 将上述对应项改为 `enabled: true`（RAG 需 embedding + rerank + vector_store + rag 一起开）
+2. 确认 `SILICONFLOW_API_KEY` 有余额
+3. 重启 Python 后端
+
+**换模型：** 只改 yaml 里对应段落的 `model`（及如需的 `api_base`），业务代码无需改动。
+
+> 扫描件/无文字层 PDF 在 OCR 关闭时可能解析失败，请优先上传可选中文本的 PDF 或 DOCX。

@@ -6,10 +6,10 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from config_loader import get_rag_config
+from config_loader import get_rag_config, is_embedding_enabled, is_rerank_enabled
 from log import get_logger, elapsed_ms, log_stage_timing
 from models.embedding import aembed_documents, aembed_query
-from models.rerank import arerank_texts
+from models.rerank import arerank_texts, RerankDisabledError
 from storage.vector_client import get_session_chunks_collection, is_vector_store_enabled
 from workflow.state import CopilotState
 
@@ -138,7 +138,7 @@ def format_chunks_for_prompt(chunks: list[RetrievedChunk]) -> str:
 async def index_session(state: CopilotState) -> None:
     """将当前会话 artifact 索引到 ChromaDB session_chunks（全量替换该 session）。"""
     cfg = _rag_cfg()
-    if not cfg["enabled"] or not is_vector_store_enabled():
+    if not cfg["enabled"] or not is_vector_store_enabled() or not is_embedding_enabled():
         return
 
     chunks = build_chunks_from_state(state)
@@ -190,7 +190,7 @@ async def index_session(state: CopilotState) -> None:
 async def retrieve(session_id: str, query: str, top_k: int | None = None) -> list[RetrievedChunk]:
     """向量检索 + rerank，按 session_id 过滤。"""
     cfg = _rag_cfg()
-    if not cfg["enabled"] or not is_vector_store_enabled():
+    if not cfg["enabled"] or not is_vector_store_enabled() or not is_embedding_enabled():
         return []
     if not session_id or not (query or "").strip():
         return []
@@ -254,6 +254,16 @@ async def retrieve(session_id: str, query: str, top_k: int | None = None) -> lis
             )
             return candidates[:rerank_n]
 
+        if not is_rerank_enabled():
+            log_stage_timing(
+                logger,
+                "rag.retrieve.total",
+                elapsed_ms(retrieve_t0),
+                session=session_id,
+                hits=len(candidates[:rerank_n]),
+            )
+            return candidates[:rerank_n]
+
         try:
             rerank_t0 = time.perf_counter()
             reranked = await arerank_texts(
@@ -283,6 +293,8 @@ async def retrieve(session_id: str, query: str, top_k: int | None = None) -> lis
                 hits=len(ordered or candidates[:rerank_n]),
             )
             return ordered or candidates[:rerank_n]
+        except RerankDisabledError:
+            return candidates[:rerank_n]
         except Exception as rerank_exc:
             logger.warning("RAG rerank failed, using vector order: %s", rerank_exc)
             return candidates[:rerank_n]

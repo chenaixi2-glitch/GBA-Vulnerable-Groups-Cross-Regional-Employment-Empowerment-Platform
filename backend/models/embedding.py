@@ -3,7 +3,11 @@
 import asyncio
 from typing import Any
 
-from config_loader import get_embedding_config
+from config_loader import get_embedding_config, is_embedding_enabled
+
+
+class EmbeddingDisabledError(RuntimeError):
+    """Raised when embedding.enabled=false — caller should skip remote embed calls."""
 
 
 def _normalize_provider(provider: str) -> str:
@@ -81,6 +85,9 @@ def _create_huggingface_embedding(cfg: dict) -> Any:
 
 def get_embedding_model() -> Any:
     """根据 embedding.provider 返回对应 Embedding 实例。"""
+    if not is_embedding_enabled():
+        raise EmbeddingDisabledError("embedding.enabled=false — SiliconFlow embedding API is temporarily disabled")
+
     cfg = get_embedding_config()
     provider = _normalize_provider(cfg.get("provider", "dashscope"))
 
@@ -103,6 +110,8 @@ def get_embedding_model() -> Any:
 
 async def aembed_query(text: str) -> list[float]:
     """异步获取单条文本的 embedding 向量。"""
+    if not is_embedding_enabled():
+        raise EmbeddingDisabledError("embedding.enabled=false — SiliconFlow embedding API is temporarily disabled")
     model = get_embedding_model()
     if hasattr(model, "aembed_query"):
         return await model.aembed_query(text)
@@ -111,6 +120,8 @@ async def aembed_query(text: str) -> list[float]:
 
 async def aembed_documents(texts: list[str]) -> list[list[float]]:
     """异步获取多条文本的 embedding 向量。"""
+    if not is_embedding_enabled():
+        raise EmbeddingDisabledError("embedding.enabled=false — SiliconFlow embedding API is temporarily disabled")
     model = get_embedding_model()
     if hasattr(model, "aembed_documents"):
         return await model.aembed_documents(texts)

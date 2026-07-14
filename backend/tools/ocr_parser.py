@@ -23,6 +23,8 @@ _OCR_PROMPTS = {
 def parse_pdf_bytes_with_ocr(data: bytes, filename: str = "") -> str:
     """使用 DeepSeek-OCR 解析 PDF 字节流，多页并行 OCR，以 --- 分隔。"""
     cfg = get_resume_parse_config()
+    if not cfg.get("enabled", True):
+        raise RuntimeError("resume_parse.enabled=false — OCR API is temporarily disabled")
     if not cfg.get("api_key"):
         raise RuntimeError("resume_parse API key is not configured (SILICONFLOW_API_KEY)")
 

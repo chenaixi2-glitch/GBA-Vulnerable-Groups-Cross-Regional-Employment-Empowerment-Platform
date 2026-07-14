@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from config_loader import get_dialogue_memory_config
+from config_loader import get_dialogue_memory_config, is_embedding_enabled
 from log import get_logger
 from models.embedding import aembed_documents
 from models.llm import ainvoke_json_with_schema, get_llm
@@ -186,7 +186,7 @@ async def load_user_summary(user_id: str | int) -> str:
 async def persist_user_summary(user_id: str | int, summary: str) -> None:
     """将对话摘要写入 Chroma user_memory（跨会话）。"""
     cfg = _cfg()
-    if not cfg["cross_session_enabled"] or not is_vector_store_enabled():
+    if not cfg["cross_session_enabled"] or not is_vector_store_enabled() or not is_embedding_enabled():
         return
 
     summary = (summary or "").strip()

@@ -16,7 +16,9 @@ llm:
   timeout: 180   # per-call; observed ~60–90s on SiliconFlow
 
 # 简历文件 OCR 解析（PDF 等）与画像结构化抽取
+# enabled: false = temp off（用 pdfplumber）；改 true 即恢复 DeepSeek-OCR（model 等配置保留）
 resume_parse:
+  enabled: false
   provider: "openai_compatible"
   model: "deepseek-ai/DeepSeek-OCR"
   api_base: "https://api.siliconflow.cn/v1"
@@ -58,13 +60,17 @@ judge:
   max_tokens: 2048
   timeout: 180
 
+# enabled: false = temp off（无向量 HTTP）；改 true 并打开 vector_store/rag 即恢复
 embedding:
+  enabled: false
   provider: "openai_compatible"
   model: "Qwen/Qwen3-Embedding-8B"
   api_base: "https://api.siliconflow.cn/v1"
   api_key_env: "SILICONFLOW_API_KEY"
 
+# enabled: false = temp off；改 true 即恢复 Rerank API
 rerank:
+  enabled: false
   provider: "siliconflow"
   model: "Qwen/Qwen3-Reranker-8B"
   api_base: "https://api.siliconflow.cn/v1"
@@ -73,12 +79,12 @@ rerank:
   instruction: "Given a job-seeking or resume optimization query, rank passages by relevance to the candidate profile and target role."
 
 vector_store:
-  enabled: true
+  enabled: false   # temp off with embedding; set true when restoring RAG
   provider: chromadb
   persist_directory: "./data/chroma"
 
 rag:
-  enabled: true
+  enabled: false   # temp off; set true with embedding+rerank+vector_store
   search_top_k: 10
   rerank_top_n: 5
   min_score: 0.0

@@ -59,6 +59,12 @@ def _parse_pdf(path: Path) -> str:
 
 
 def _parse_pdf_bytes(data: bytes, *, filename: str = "") -> str:
+    from config_loader import is_resume_parse_enabled
+
+    if not is_resume_parse_enabled():
+        logger.info("resume_parse.enabled=false — using pdfplumber for %s", filename or "pdf")
+        return _parse_pdf_bytes_fallback(data)
+
     from tools.ocr_parser import parse_pdf_bytes_with_ocr
 
     try:

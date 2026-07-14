@@ -3,7 +3,11 @@
 import asyncio
 from typing import Any
 
-from config_loader import get_rerank_config
+from config_loader import get_rerank_config, is_rerank_enabled
+
+
+class RerankDisabledError(RuntimeError):
+    """Raised when rerank.enabled=false — caller should skip remote rerank calls."""
 
 
 class _SiliconFlowReranker:
@@ -117,6 +121,9 @@ def _normalize_provider(provider: str) -> str:
 
 def get_reranker() -> Any:
     """根据 rerank.provider 返回对应 reranker 对象。"""
+    if not is_rerank_enabled():
+        raise RerankDisabledError("rerank.enabled=false — SiliconFlow rerank API is temporarily disabled")
+
     cfg = get_rerank_config()
     provider = _normalize_provider(cfg.get("provider", "dashscope"))
 
@@ -173,6 +180,9 @@ def _normalize_rerank_results(raw_results: Any, top_n: int) -> list[dict]:
 
 def rerank_texts(documents: list[str], query: str, top_n: int | None = None) -> list[dict]:
     """对文本列表执行 rerank，返回统一格式结果。"""
+    if not is_rerank_enabled():
+        raise RerankDisabledError("rerank.enabled=false — SiliconFlow rerank API is temporarily disabled")
+
     cfg = get_rerank_config()
     if top_n is None:
         top_n = int(cfg.get("top_n", 5))
