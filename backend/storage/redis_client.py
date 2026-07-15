@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any
 
@@ -13,6 +14,8 @@ from log import get_logger
 logger = get_logger("storage")
 
 _redis_client: aioredis.Redis | None = None
+_redis_lock: asyncio.Lock | None = None
+_using_fakeredis = False
 
 # 默认 TTL 24 小时
 _DEFAULT_TTL = 60 * 60 * 24
@@ -20,34 +23,77 @@ _DEFAULT_TTL = 60 * 60 * 24
 _DRAFT_TTL_LOGGED_IN = 60 * 60 * 12
 
 
+def _get_init_lock() -> asyncio.Lock:
+    """Lazy lock so imports work before an event loop exists."""
+    global _redis_lock
+    if _redis_lock is None:
+        _redis_lock = asyncio.Lock()
+    return _redis_lock
+
+
+def is_using_fakeredis() -> bool:
+    """True when the process fell back to in-memory FakeRedis (non-durable)."""
+    return _using_fakeredis
+
+
 async def get_redis_client() -> aioredis.Redis:
-    """获取 Redis 异步连接（单例）；本地无 Redis 时回退 fakeredis。"""
-    global _redis_client
-    if _redis_client is None:
+    """获取 Redis 异步连接（单例）；本地无 Redis 时回退 fakeredis。
+
+    Uses a lock so concurrent first requests cannot create multiple FakeRedis
+    instances (which would make sessions appear as 404 across requests).
+    """
+    global _redis_client, _using_fakeredis
+    if _redis_client is not None:
+        return _redis_client
+
+    async with _get_init_lock():
+        if _redis_client is not None:
+            return _redis_client
+
         cfg = get_redis_config()
-        _redis_client = aioredis.Redis(
+        # Fail fast when Redis is down — long reconnect retries widen the race window.
+        from redis.backoff import NoBackoff
+        from redis.retry import Retry
+
+        real_client = aioredis.Redis(
             host=cfg["host"],
             port=cfg["port"],
             db=cfg["db"],
             password=cfg.get("password") or None,
             decode_responses=True,
+            socket_connect_timeout=0.5,
+            socket_timeout=0.5,
+            retry=Retry(NoBackoff(), 0),
         )
         try:
-            if not await _redis_client.ping():
+            if not await real_client.ping():
                 raise ConnectionError("Redis PING failed")
+            _redis_client = real_client
+            _using_fakeredis = False
             logger.info("Redis async client initialized: %s:%s db=%s", cfg["host"], cfg["port"], cfg["db"])
         except Exception as exc:
             try:
+                await real_client.aclose()
+            except Exception:
+                pass
+            try:
                 import fakeredis.aioredis as fakeredis_aioredis
-                _redis_client = fakeredis_aioredis.FakeRedis(decode_responses=True)
-                await _redis_client.ping()
+
+                fake = fakeredis_aioredis.FakeRedis(decode_responses=True)
+                await fake.ping()
+                _redis_client = fake
+                _using_fakeredis = True
                 logger.warning(
-                    "Real Redis unavailable (%s); falling back to in-memory fakeredis",
+                    "Real Redis unavailable (%s); falling back to in-memory fakeredis "
+                    "(sessions are lost on process restart / reload — start Redis on %s:%s for durable sessions)",
                     exc,
+                    cfg["host"],
+                    cfg["port"],
                 )
             except Exception as fallback_exc:
                 logger.error("Redis and fakeredis both unavailable: %s", fallback_exc)
                 raise
+
     return _redis_client
 
 

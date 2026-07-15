@@ -2228,7 +2228,14 @@ class APIClient {
         }
 
         if (hasAnswers) {
-            const lines = answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
+            const lines = answers.map((a) => {
+                const meta = [];
+                if (a.target_field) meta.push(`target_field=${a.target_field}`);
+                const related = a.related_fact_ids || a.related_section_ids || [];
+                if (related.length) meta.push(`related_fact_ids=${related.join(',')}`);
+                const header = meta.length ? ` [${meta.join('|')}]` : '';
+                return `Q${header}: ${a.question}\nA: ${a.answer}`;
+            }).join('\n\n');
             sections.push('', 'CLARIFICATIONS (add or update profile facts from my answers):', lines);
         }
 
@@ -2335,7 +2342,11 @@ class APIClient {
                 employer_type: (targetContext && targetContext.employer_type) || '',
                 experience_level: (targetContext && targetContext.experience_level) || '',
                 typography_fit_mode: (targetContext && targetContext.typography_fit_mode) || '',
-                clear_generated_resume: options.clearGeneratedResume !== false,
+                clear_generated_resume: options.clearGeneratedResume !== false && !options.incremental,
+                incremental: Boolean(options.incremental),
+                affected_fact_ids: Array.isArray(options.affectedFactIds) ? options.affectedFactIds : [],
+                affected_sections: Array.isArray(options.affectedSections) ? options.affectedSections : [],
+                clarifications: options.clarifications || '',
             };
 
             const base = String(API_CONFIG.BASE_URL || '').replace(/\/$/, '');
@@ -3030,7 +3041,11 @@ class APIClient {
         try {
             const fLang = this.resolvePageLanguage(feedbackLanguage);
             const message = `Evaluate my answer to question ${questionId}: ${answer}`;
-            const response = await this.chat(message, [], { language: fLang, languageScope: 'interview_feedback' });
+            const response = await this.chat(message, [], {
+                language: fLang,
+                languageScope: 'interview_feedback',
+                forcedIntent: 'evaluate_answer',
+            });
             return response;
         } catch (error) {
             console.error('Submit answer error:', error);
@@ -3566,8 +3581,23 @@ class APIClient {
                     return new Error(apiT('errors.http403', 'HTTP 403 Forbidden — {detail} [{url}]', { detail: mappedDetail, url }));
                 case 404: {
                     const data = error.response.data || {};
-                    if (data.detail && typeof data.detail === 'string' && !/^not found$/i.test(data.detail)) {
-                        return new Error(apiT('errors.http404', 'HTTP 404 Not Found — {detail} [{url}]', { detail: apiMsg(data.detail), url }));
+                    const rawDetail = typeof data.detail === 'string' ? data.detail : '';
+                    if (/会话不存在/.test(rawDetail)) {
+                        const err = new Error(apiT(
+                            'errors.sessionLost',
+                            'Session expired or was reset (e.g. server restart without Redis). Please re-upload or regenerate the resume, then export again.'
+                        ));
+                        err.code = 'SESSION_LOST';
+                        return err;
+                    }
+                    if (/简历 HTML 尚未生成/.test(rawDetail)) {
+                        return new Error(apiT(
+                            'errors.resumeHtmlNotReady',
+                            'Resume preview HTML is not ready yet. Wait for generation to finish, then try export again.'
+                        ));
+                    }
+                    if (rawDetail && !/^not found$/i.test(rawDetail)) {
+                        return new Error(apiT('errors.http404', 'HTTP 404 Not Found — {detail} [{url}]', { detail: apiMsg(rawDetail), url }));
                     }
                     return new Error(apiT('errors.http404', 'HTTP 404 Not Found — {detail} [{url}]', {
                         detail: apiT('errors.notFound', 'Resource not found. Please check your session ID.'),

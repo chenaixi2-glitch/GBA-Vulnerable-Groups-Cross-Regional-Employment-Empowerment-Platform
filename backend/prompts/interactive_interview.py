@@ -25,7 +25,7 @@ INTERACTIVE_INTERVIEW_START_PROMPT = """你是资深企业面试官，正在进�
 {profile_json}
 
 ## 规则
-1. 第一条问题必须是「自我介绍」，要求候选人结构化回答（个人背景+核心经历+匹配岗位优势+求职意向）
+1. 第一条问题必须是「Tell me about yourself」，要求候选人结构化回答（background + core experience + role fit strengths + career goal）
 2. 开场白自然简短（1-2句），说明当前是第几轮面试、面试官角色，然后提出问题
 3. interviewer_message 中开场与问题可合并为一段连贯口语
 4. 问题须紧扣当前阶段的固定提问模块
@@ -43,8 +43,8 @@ INTERACTIVE_INTERVIEW_START_PROMPT = """你是资深企业面试官，正在进�
 {{
     "brief_feedback": "",
     "follow_up_type": "new_topic",
-    "interviewer_message": "开场白 + 第一个问题（自我介绍）",
-    "category": "简历深挖与个人经历",
+    "interviewer_message": "Opening + first question (Tell me about yourself)",
+    "category": "Resume deep dive & experience",
     "should_end": false
 }}
 """

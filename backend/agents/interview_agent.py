@@ -29,15 +29,27 @@ from log import get_logger
 logger = get_logger("agent")
 
 FIXED_SELF_INTRO_ID = "qa_self_intro"
-FIXED_SELF_INTRO_CATEGORY = "简历深挖与个人经历"
-FIXED_SELF_INTRO_QUESTION = "自我介绍"
+FIXED_SELF_INTRO_CATEGORY = "Resume deep dive & experience"
+FIXED_SELF_INTRO_QUESTION = "Tell me about yourself"
 MAX_CUSTOM_QUESTIONS = 30
 CUSTOM_STAGE_ID = "custom"
 CUSTOM_STAGE_NAME = "自定义题目"
 
+_SELF_INTRO_MARKERS = (
+    "自我介绍",
+    "tell me about yourself",
+    "introduce yourself",
+    "self-introduction",
+    "self introduction",
+    "brief introduction about yourself",
+)
+
 
 def _is_self_intro_question(question: str) -> bool:
-    return "自我介绍" in question.strip()
+    q = (question or "").strip().lower()
+    if not q:
+        return False
+    return any(marker in q for marker in _SELF_INTRO_MARKERS)
 
 
 def _parse_program_from_message(message: str) -> tuple[str, str]:
@@ -63,32 +75,23 @@ def _ensure_fixed_self_intro(
     interview_qa: list[InterviewQA],
     program: InterviewProgramConfig | None = None,
 ) -> list[InterviewQA]:
-    """Ensure the first QA is always the fixed self-introduction in stage 0."""
-    intro_answer = ""
-    intro_refs: list[str] = []
-    remaining: list[InterviewQA] = []
+    """Prepend the fixed self-intro only when the LLM bank has none."""
+    if any(_is_self_intro_question(item.question) for item in interview_qa):
+        return interview_qa
+
     first_stage = program.stages[0] if program and program.stages else None
-
-    for item in interview_qa:
-        if _is_self_intro_question(item.question):
-            if not intro_answer:
-                intro_answer = item.answer
-                intro_refs = list(item.source_refs)
-            continue
-        remaining.append(item)
-
     fixed_intro = InterviewQA(
         id=FIXED_SELF_INTRO_ID,
         category=FIXED_SELF_INTRO_CATEGORY,
         question=FIXED_SELF_INTRO_QUESTION,
-        answer=intro_answer,
-        source_refs=intro_refs,
+        answer="",
+        source_refs=[],
         version=1,
         stage_id=first_stage.stage_id if first_stage else "screening",
-        stage_name=first_stage.name if first_stage else "初筛面试",
+        stage_name=first_stage.name if first_stage else "Screening interview",
         stage_index=0,
     )
-    return [fixed_intro, *remaining]
+    return [fixed_intro, *interview_qa]
 
 
 def _assign_stages_from_program(

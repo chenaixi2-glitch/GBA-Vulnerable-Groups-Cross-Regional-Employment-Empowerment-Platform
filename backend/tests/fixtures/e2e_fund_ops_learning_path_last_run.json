@@ -1,0 +1,196 @@
+{
+  "ok": true,
+  "steps": {
+    "health": {
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "export": {
+          "pdf": true,
+          "docx": true
+        },
+        "mcp": {
+          "enabled": true,
+          "servers": [
+            "gba-jobs",
+            "gba-docs"
+          ]
+        }
+      }
+    },
+    "upload": {
+      "status": 200,
+      "sec": 57.5,
+      "session_id": "sess_c0f48d312df9410a",
+      "name": "Chen Aixi",
+      "facts": 19,
+      "agents": [
+        "profile_agent"
+      ],
+      "reply": "已完成本轮处理。\n\n**执行过程**\n1. 用户输入：用户本轮没有额外文字说明，请优先基于附件内容完成解析。 以下是用户上传附件解析出的文本，请把它们视作本轮输入的一部分。若用户文字与附件内容冲突，以用户文字中的明确要求为准；若需要抽取候选人信息或岗位信息，请优先使用附件中的原始内容，不要忽略...\n2. 意图识别：upload_profile\n3. 执行计划：profile_agent\n4. 节"
+    },
+    "target_context": {
+      "status": 200,
+      "sec": 0.0
+    },
+    "upload_jd": {
+      "status": 200,
+      "sec": 8.5,
+      "job_title": "Fund Operations Associate",
+      "agents": [
+        "jd_agent"
+      ],
+      "reply": "已完成本轮处理。\n\n**执行过程**\n1. 用户输入：Job Title: Fund Operations Associate（基金运营专员） Company Type: Private Asset Management / Fund Operations Industry: Finance ...\n2. 意图识别：upload_jd\n3. 执行计划：jd_agent\n4. 节点产物：\n   - "
+    },
+    "analysis": {
+      "status": 200,
+      "sec": 44.2,
+      "agents": [
+        "learning_path_agent"
+      ],
+      "gaps_count": 3,
+      "resources_count": 4,
+      "estimated_total_hours": 34,
+      "gaps": [
+        {
+          "id": "gap_1",
+          "type": "missing_skill",
+          "severity": "medium",
+          "description": "The candidate lacks specific experience in fund operations or middle-office functions, which is preferred in the job description. While the candidate has strong data analysis skills (Python, SQL), the role requires familiarity with daily fund operations tasks like NAV review, trade settlement, and cash reconciliation, which are not evident in the candidate's background.",
+          "estimated_hours": 15,
+          "related_section_ids": [
+            "jd_requirements"
+          ],
+          "resolved": false,
+          "resolution_source": "gap_analysis"
+        },
+        {
+          "id": "gap_2",
+          "type": "missing_experience",
+          "severity": "high",
+          "description": "The candidate's internships are in compliance data verification, marketing data analysis, and economic data analysis, but none directly relate to fund operations, NAV calculations, or middle-office functions. The job requires experience in supporting daily fund operations, which is not present in the candidate's profile.",
+          "estimated_hours": 20,
+          "related_section_ids": [
+            "jd_requirements"
+          ],
+          "resolved": false,
+          "resolution_source": "gap_analysis"
+        },
+        {
+          "id": "gap_3",
+          "type": "no_quantification",
+          "severity": "medium",
+          "description": "The candidate's achievements in internships are described in qualitative terms (e.g., 'accurately identified compliance risks') but lack quantifiable metrics such as the number of projects handled, impact on risk reduction, or specific improvements made. The job requires careful documentation and process monitoring, which may benefit from quantifiable data.",
+          "estimated_hours": 9,
+          "related_section_ids": [
+            "jd_responsibilities"
+          ],
+          "resolved": false,
+          "resolution_source": "gap_analysis"
+        }
+      ],
+      "resources": [
+        {
+          "id": "res_1",
+          "skill": "Fund Operations",
+          "type": "course",
+          "title": "Fund Operations: NAV Calculation and Trade Settlement",
+          "platform": "Coursera",
+          "duration": "10 hours",
+          "duration_hours": 10.0,
+          "url": "https://www.coursera.org/learn/fund-operations",
+          "rating": 4.7
+        },
+        {
+          "id": "res_2",
+          "skill": "Fund Operations",
+          "type": "course",
+          "title": "Introduction to Middle-Office Functions in Finance",
+          "platform": "edX",
+          "duration": "8 hours",
+          "duration_hours": 8.0,
+          "url": "https://www.edx.org/course/introduction-to-middle-office-functions-in-finance",
+          "rating": 4.5
+        },
+        {
+          "id": "res_3",
+          "skill": "Data Organization",
+          "type": "course",
+          "title": "Excel for Financial Modeling and Analysis",
+          "platform": "Udemy",
+          "duration": "12 hours",
+          "duration_hours": 12.0,
+          "url": "https://www.udemy.com/course/excel-for-financial-modeling/",
+          "rating": 4.8
+        },
+        {
+          "id": "res_4",
+          "skill": "Quantifiable Skills",
+          "type": "course",
+          "title": "How to Quantify Achievements in Professional Settings",
+          "platform": "LinkedIn Learning",
+          "duration": "4 hours",
+          "duration_hours": 4.0,
+          "url": "https://www.linkedin.com/learning/how-to-quantify-achievements-in-your-resume",
+          "rating": 4.3
+        }
+      ],
+      "reply": "已完成本轮处理。\n\n**执行过程**\n1. 用户输入：Please analyze my skill gaps against the target job and recommend learning resources with estimated study hours. Do not ...\n2. 意图识别：learning_path\n3. 执行计划：learning_path_agent\n4. 节点产物：\n   - planner [success]：识别意图为 learning_path，执行计划为 learning_path_agent。（intent=learning_path; reason=client forced intent: learning_path; execution_plan=learning_path_agent; forced_intent=True",
+      "daily_hours": 0.0,
+      "timeline_count": 0
+    },
+    "timeline": {
+      "status": 200,
+      "sec": 11.3,
+      "agents": [
+        "learning_path_agent"
+      ],
+      "timeline_count": 4,
+      "timeline": [
+        {
+          "phase": 1,
+          "title": "Fund Operations Fundamentals",
+          "weeks": "1-2",
+          "skills": [
+            "Fund Operations",
+            "NAV Calculation",
+            "Trade Settlement"
+          ],
+          "description": "Focus on building foundational knowledge of fund operations tasks such as NAV review, trade settlement, and cash reconciliation. Complete the Coursera course on Fund Operations to gain practical understanding of these processes."
+        },
+        {
+          "phase": 2,
+          "title": "Excel and Data Organization Skills",
+          "weeks": "3-4",
+          "skills": [
+            "Excel",
+            "Data Organization"
+          ],
+          "description": "Strengthen Excel skills specifically for financial operations. Take the Udemy course on Excel for Financial Modeling and Analysis to enhance data organization and reporting capabilities, which are critical for daily fund operations."
+        },
+        {
+          "phase": 3,
+          "title": "Quantifying Achievements",
+          "weeks": "5",
+          "skills": [
+            "Quantifiable Skills"
+          ],
+          "description": "Learn how to translate experiences into measurable achievements. Complete the LinkedIn Learning course on quantifying professional accomplishments to better document work processes and impacts, aligning with the job's emphasis on detail-oriented documentation."
+        },
+        {
+          "phase": 4,
+          "title": "Middle-Office Functions Overview",
+          "weeks": "6",
+          "skills": [
+            "Middle-Office Functions"
+          ],
+          "description": "Gain familiarity with middle-office responsibilities like regulatory data requests and audit preparation. Complete the edX course on middle-office functions to bridge the gap in operational experience and prepare for coordination with internal teams."
+        }
+      ],
+      "daily_hours": 2.0,
+      "estimated_total_hours": 34,
+      "reply": "已完成本轮处理。\n\n**执行过程**\n1. 用户输入：Generate my learning timeline with 2 hours per day based on the analyzed gaps and resources.\n2. 意图识别：learning_path\n3. 执行计划：learning_path_agent\n4. 节点产物：\n   - planner [success]：识别意图为 learning_path，执行计划为 learning_path_agent。（intent=learning_path; reason=client forced intent: learning_path; execution_plan=learning_path_agent; forced_intent=True）\n   - learning_path_agent [suc"
+    }
+  },
+  "session_id": "sess_c0f48d312df9410a"
+}

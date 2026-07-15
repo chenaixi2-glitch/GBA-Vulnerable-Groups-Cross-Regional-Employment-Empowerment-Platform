@@ -997,14 +997,41 @@ const ProfileEditor = {
         if (!mapped) return 0;
 
         this.polishingFactIds = Array.isArray(polishingFactIds) ? polishingFactIds.slice() : [];
+        // Never keep legacy polish-placeholder strings inside editable fields.
+        (mapped.modules || []).forEach((mod) => {
+            if (this.isPolishPlaceholderContent(mod.content)) {
+                mod.content = '';
+                if (mod.fields && typeof mod.fields === 'object') {
+                    ['responsibilities', 'achievements', 'description', 'content', 'role'].forEach((key) => {
+                        if (this.isPolishPlaceholderContent(mod.fields[key])) {
+                            mod.fields[key] = '';
+                        }
+                    });
+                }
+            }
+        });
         this.draft = this.ensureDraftShape(mapped);
         this.render({ preserveDraft: true });
         if (typeof refreshLanguageChecklist === 'function') {
             refreshLanguageChecklist(this.getResumeLang());
         }
         const changed = this.applyTranslationHighlights(beforeSnapshot, this.draft);
-        this.scheduleSave(true);
+        // While modules are polishing, skip autosave so placeholder/busy UI never overwrites server draft.
+        if (!(this.polishingFactIds || []).length) {
+            this.scheduleSave(true);
+        }
         return changed;
+    },
+
+    isPolishPlaceholderContent(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return false;
+        return (
+            raw.startsWith('Polishing')
+            || raw.includes('正在润色')
+            || raw.includes('正在潤色')
+            || raw.startsWith('Polimento')
+        );
     },
 
     renderSupplementSection() {

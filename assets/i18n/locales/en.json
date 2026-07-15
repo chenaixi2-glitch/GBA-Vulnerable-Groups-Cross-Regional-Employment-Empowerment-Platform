@@ -13,6 +13,8 @@
     "networkErrorWithUrl": "Network error — no response from {url}. Ensure the backend is running (cd backend && python main.py).",
     "unexpected": "An unexpected error occurred.",
     "notFound": "Resource not found. Please check your session ID.",
+    "sessionLost": "Session expired or was reset (e.g. server restart without Redis). Please re-upload or regenerate the resume, then export again.",
+    "resumeHtmlNotReady": "Resume preview HTML is not ready yet. Wait for generation to finish, then try export again.",
     "backendUnavailable": "Backend is unavailable. Please ensure the API server is running.",
     "backendUnavailableTitle": "Backend unavailable",
     "backendRetry": "Retry connection",

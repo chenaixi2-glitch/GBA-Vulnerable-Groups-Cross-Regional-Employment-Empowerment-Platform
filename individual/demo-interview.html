@@ -21,42 +21,6 @@
             font-family: 'Inter', sans-serif;
         }
         
-        .interviewer-avatar {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            transition: all 0.3s ease;
-        }
-        
-        .avatar-professional {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            animation: breathe 3s ease-in-out infinite;
-        }
-        
-        .avatar-friendly {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            animation: breathe 4s ease-in-out infinite;
-        }
-        
-        .avatar-pressure {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes breathe {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.7); }
-            50% { box-shadow: 0 0 0 20px rgba(79, 172, 254, 0); }
-        }
-        
         .question-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -98,30 +62,6 @@
             height: 100%;
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             transition: width 0.3s ease;
-        }
-        
-        .tone-selector {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .tone-option {
-            flex: 1;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .tone-option:hover {
-            border-color: #667eea;
-        }
-        
-        .tone-option.selected {
-            border-color: #667eea;
-            background-color: #ede9fe;
         }
         
         .session-report {
@@ -337,35 +277,6 @@
                                 </div>
                                 <p id="interview-question-language-status" class="text-xs text-gray-500 mt-2"></p>
                             </div>
-                            <div class="mt-4 pt-4 border-t border-gray-100">
-                                <div class="flex justify-center mb-3">
-                                    <div id="interviewer-avatar" class="interviewer-avatar avatar-professional" style="width:100px;height:100px;font-size:2.5rem;">
-                                        🧑‍💼
-                                    </div>
-                                </div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="interview.interviewStyle">Interview Style</label>
-                                <div class="tone-selector">
-                                    <div class="tone-option selected" data-tone="professional" onclick="selectTone('professional')">
-                                        <i class="fas fa-briefcase text-2xl mb-1 block"></i>
-                                        <div class="text-xs font-medium" data-i18n="interview.toneProfessional">Professional</div>
-                                    </div>
-                                    <div class="tone-option" data-tone="friendly" onclick="selectTone('friendly')">
-                                        <i class="fas fa-smile text-2xl mb-1 block"></i>
-                                        <div class="text-xs font-medium" data-i18n="interview.toneFriendly">Friendly</div>
-                                    </div>
-                                    <div class="tone-option" data-tone="pressure" onclick="selectTone('pressure')">
-                                        <i class="fas fa-fire text-2xl mb-1 block"></i>
-                                        <div class="text-xs font-medium" data-i18n="interview.tonePressure">Pressure</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" onclick="submitInterviewJobDescription()" class="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700" data-i18n="interview.submitJd">
-                                Submit Job Description
-                            </button>
-                            <button id="btn-load-questions" onclick="loadInterviewQuestions()" class="mt-2 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Parse your profile first">
-                                <i class="fas fa-play mr-2"></i>
-                                <span data-i18n="interview.startSession">Start Interview Session</span>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -465,6 +376,24 @@
                             </div>
                             <div id="program-stages-preview" class="mt-3 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 space-y-1"></div>
                         </div>
+
+                        <div id="interview-primary-actions" class="mt-6 grid sm:grid-cols-2 gap-3">
+                            <button id="btn-load-questions" type="button" onclick="startQuestionBankFlow()" class="btn-interview-action w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Complete profile and job title first">
+                                <i class="fas fa-list-ul mr-2"></i>
+                                <span data-i18n="interview.generateQuestionBank">Generate Question Bank</span>
+                            </button>
+                            <button id="btn-start-mock" type="button" onclick="startMockInterviewFlow()" class="btn-interview-action w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Complete profile and job title first">
+                                <i class="fas fa-comments mr-2"></i>
+                                <span data-i18n="interview.startSession">Start Mock Interview</span>
+                            </button>
+                        </div>
+                        <button id="btn-custom-answers-main" type="button" onclick="startCustomAnswersFlow()" class="btn-interview-action hidden mt-3 w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Complete profile and job title first">
+                            <i class="fas fa-magic mr-2"></i>
+                            <span data-i18n="interview.generateReferenceAnswers">Generate Reference Answers</span>
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2 text-center" data-i18n="interview.generateHint">
+                            Complete your profile and target job on the left, then choose Generate Question Bank or Start Mock Interview.
+                        </p>
                     </div>
                 </div>
 
@@ -491,6 +420,10 @@
                         <i class="fas fa-info-circle mr-1"></i>
                         Complete profile, JD, and resume steps first. Supports numbered lists and Q: prefixes.
                     </p>
+                    <button id="btn-custom-answers" type="button" onclick="startCustomAnswersFlow()" class="btn-interview-action mt-4 w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Complete profile and job title first">
+                        <i class="fas fa-magic mr-2"></i>
+                        <span data-i18n="interview.generateReferenceAnswers">Generate Reference Answers</span>
+                    </button>
                 </div>
 
                 <div id="question-bank-panel">
@@ -603,7 +536,7 @@
                 </div>
 
                 <!-- AI Feedback -->
-                <div id="feedback-section" class="hidden">
+                <div id="feedback-section" class="bg-white rounded-xl p-6 border shadow-sm mt-6 hidden">
                     <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i class="fas fa-robot text-purple-600"></i>
                         <span data-i18n="interview.feedbackTitle">AI Feedback & Suggestions</span>

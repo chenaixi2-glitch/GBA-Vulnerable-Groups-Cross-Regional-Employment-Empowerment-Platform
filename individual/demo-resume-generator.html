@@ -409,6 +409,17 @@
                         <i class="fas fa-info-circle mr-1"></i>
                         <span data-i18n="resume.generateJdHint">Runs gap analysis and optimization against the job description. After generation, review in the editor and export.</span>
                     </p>
+                    <!-- 开发联调：URL 加 ?devReplay=1 或 localStorage.gba_dev_replay=1 后显示 -->
+                    <div id="dev-replay-generate-wrap" class="hidden mt-3">
+                        <button id="btn-dev-replay-generate" type="button" onclick="quickRetryResumeGenerate()"
+                            class="w-full border border-amber-500 text-amber-800 bg-amber-50 py-2 rounded-lg text-sm font-medium hover:bg-amber-100">
+                            <i class="fas fa-bolt mr-1"></i>跳过解析/缺口，直接生成
+                        </button>
+                        <label class="mt-2 flex items-center gap-2 text-xs text-amber-900/80 cursor-pointer">
+                            <input type="checkbox" id="dev-replay-show-gap-dialog" class="rounded border-amber-400">
+                            仍弹出能力缺口填写（跳过缺口 LLM 分析）
+                        </label>
+                    </div>
                 </section>
             </div>
 

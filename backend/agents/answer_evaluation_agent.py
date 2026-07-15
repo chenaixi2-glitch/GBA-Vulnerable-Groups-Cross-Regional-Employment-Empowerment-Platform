@@ -75,10 +75,17 @@ async def _run_llm_judge(
         ),
     )
     try:
-        return await ainvoke_json_with_schema(
-            judge_llm, prompt, LLMJudgeRubricOutput, logger, "LLM Judge"
+        # Reuse already-imported helper to avoid stale-module NameError on reload.
+        return await ainvoke_json_with_language_guard(
+            judge_llm,
+            prompt,
+            LLMJudgeRubricOutput,
+            logger,
+            "LLM Judge",
+            "en",
         )
-    except RuntimeError as exc:
+    except Exception as exc:
+        # Judge is optional; do not fail the primary evaluation on judge errors.
         logger.warning("LLM Judge failed, using empty rubric: %s", exc)
         return LLMJudgeRubricOutput()
 

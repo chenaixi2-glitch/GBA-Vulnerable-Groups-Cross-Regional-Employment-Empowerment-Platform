@@ -1,0 +1,49 @@
+{
+  "session_id": "sess_6750d7acc7d3463a",
+  "job_title": "Fund Operations Associate",
+  "agents": [
+    "interview_agent"
+  ],
+  "seconds": 168.8,
+  "count": 13,
+  "stages": {
+    "综合面·初筛+终面": 1,
+    "第二轮·专业/技术面": 12
+  },
+  "sample": [
+    {
+      "stage": "综合面·初筛+终面",
+      "category": "简历深挖与个人经历",
+      "question": "自我介绍",
+      "answer_len": 290
+    },
+    {
+      "stage": "第二轮·专业/技术面",
+      "category": "岗位认知与求职动机",
+      "question": "你对我们公司和这个基金运营专员岗位的理解是什么？为什么选择申请这个职位？",
+      "answer_len": 269
+    },
+    {
+      "stage": "第二轮·专业/技术面",
+      "category": "职业规划与稳定性",
+      "question": "你未来1-2年的职业规划是什么？为什么选择加入我们公司？",
+      "answer_len": 240
+    },
+    {
+      "stage": "第二轮·专业/技术面",
+      "category": "职场软实力与团队协作",
+      "question": "请分享一次你与团队成员合作完成任务的经历，特别是你在其中扮演的角色和如何解决潜在冲突。",
+      "answer_len": 222
+    },
+    {
+      "stage": "第二轮·专业/技术面",
+      "category": "压力应变与短板复盘",
+      "question": "基金运营工作需要高度细致和及时处理问题，能否举例说明你在压力下如何应对挑战？",
+      "answer_len": 268
+    }
+  ],
+  "ok": true,
+  "error": null,
+  "has_self_intro": true,
+  "missing_answers": 0
+}

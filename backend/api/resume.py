@@ -90,6 +90,9 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
 
     from api.draft_utils import apply_profile_extras_to_resume_state
 
+    # Explicit preview/export should always render, even if generation deferred HTML.
+    state.skip_render = False
+
     state, photo_changed = apply_profile_extras_to_resume_state(state)
     if photo_changed:
         persist_data = state.model_dump(exclude=_PERSIST_EXCLUDE)
@@ -1035,6 +1038,11 @@ class GenerateStreamRequest(BaseModel):
     experience_level: str = ""
     typography_fit_mode: str = ""
     clear_generated_resume: bool = True
+    # Incremental polish: reuse resume_content_json and only re-work affected modules
+    incremental: bool = False
+    affected_fact_ids: list[str] = Field(default_factory=list)
+    affected_sections: list[str] = Field(default_factory=list)
+    clarifications: str = ""
 
 
 class TranslateResumeRequest(BaseModel):
@@ -1204,7 +1212,8 @@ async def generate_resume_stream(req: GenerateStreamRequest, request: Request, b
     if target not in VALID_RESUME_LANGUAGES:
         raise HTTPException(status_code=422, detail="language 必须为 zh、zh-TW、en 或 pt")
     state.render_config = state.render_config.model_copy(update={"language": target})
-    if req.clear_generated_resume:
+    use_incremental = bool(req.incremental) and state.resume_content_json is not None
+    if req.clear_generated_resume and not use_incremental:
         state.resume_content_json = None
         state.resume_html = ResumeHtml()
     state.skip_render = True
@@ -1236,6 +1245,7 @@ async def generate_resume_stream(req: GenerateStreamRequest, request: Request, b
                     await queue.put({
                         "type": "progress",
                         "phase": meta.get("phase"),
+                        "mode": meta.get("mode") or ("incremental" if use_incremental else "full"),
                         "resume_content_json": partial_content.model_dump(),
                         "pending_fact_ids": meta.get("pending_fact_ids", []),
                         "completed_fact_ids": meta.get("completed_fact_ids", []),
@@ -1248,6 +1258,10 @@ async def generate_resume_stream(req: GenerateStreamRequest, request: Request, b
                     final_state,
                     edit_instruction=req.instruction.strip(),
                     on_progress=on_progress,
+                    affected_fact_ids=set(req.affected_fact_ids or []),
+                    affected_sections=set(req.affected_sections or []),
+                    clarifications=req.clarifications or "",
+                    incremental=use_incremental,
                 )
                 final_state = final_state.model_copy(update={
                     "resume_content_json": resume_content,

@@ -62,6 +62,54 @@ async def _load_session_state(session_id: str, request: Request) -> CopilotState
     return CopilotState.model_validate(saved)
 
 
+async def _ensure_resume_html_for_export(session_id: str, state: CopilotState) -> CopilotState:
+    """Deferred preview: render HTML from resume_content_json when export needs it."""
+    if state.resume_html and state.resume_html.html:
+        return state
+    if state.resume_content_json is None:
+        raise HTTPException(status_code=404, detail="简历内容尚未生成")
+
+    from api.chat import _aload_state, _asave_state
+    from api.draft_utils import _persist_payload, apply_profile_extras_to_resume_state
+    from agents.render_agent import render_node_async
+    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+
+    client = await get_redis_client()
+    store = RedisSessionStore(session_id, client)
+
+    # Re-load under queue lock so concurrent export/preview share one render.
+    try:
+        async with llm_queue_slot(session_id):
+            saved = await _aload_state(store)
+            if not saved:
+                raise HTTPException(status_code=404, detail="会话不存在")
+            state = CopilotState.model_validate(saved)
+            if state.resume_html and state.resume_html.html:
+                return state
+            if state.resume_content_json is None:
+                raise HTTPException(status_code=404, detail="简历内容尚未生成")
+
+            state, photo_changed = apply_profile_extras_to_resume_state(state)
+            if photo_changed:
+                await _asave_state(store, _persist_payload(state.model_dump()))
+
+            updates = await render_node_async(state)
+            data = state.model_dump()
+            data.update(updates)
+            final = CopilotState.model_validate(data)
+            await _asave_state(store, _persist_payload(final.model_dump()))
+            if not final.resume_html or not final.resume_html.html:
+                raise HTTPException(status_code=500, detail="预览渲染结果为空，请重试")
+            return final
+    except SessionBusyError:
+        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Export auto-render failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"预览渲染失败: {exc}") from exc
+
+
 def _resume_export_filename(state: CopilotState, ext: str) -> str:
     from tools.resume_export import sanitize_export_filename
 
@@ -405,6 +453,9 @@ async def export_resume(req: ExportRequest, request: Request):
     normalized_target = (req.target or "resume").strip().lower()
     normalized_format = (req.format or "html").strip().lower()
 
+    if normalized_target == "resume" and normalized_format in {"pdf", "docx", "html"}:
+        state = await _ensure_resume_html_for_export(req.session_id, state)
+
     if normalized_target == "resume" and normalized_format == "pdf":
         content, media_type, filename = _export_resume_pdf(state)
         return _build_binary_response(content, media_type, filename)
@@ -420,6 +471,7 @@ async def export_resume(req: ExportRequest, request: Request):
 async def export_resume_pdf(req: SessionExportRequest, request: Request):
     """导出简历 PDF（由 HTML 渲染）。"""
     state = await _load_session_state(req.session_id, request)
+    state = await _ensure_resume_html_for_export(req.session_id, state)
     pdf_bytes, media_type, filename = _export_resume_pdf(state)
     return _build_binary_response(pdf_bytes, media_type, filename)
 
@@ -428,6 +480,7 @@ async def export_resume_pdf(req: SessionExportRequest, request: Request):
 async def export_resume_docx(req: SessionExportRequest, request: Request):
     """导出简历 DOCX（由 HTML 渲染）。"""
     state = await _load_session_state(req.session_id, request)
+    state = await _ensure_resume_html_for_export(req.session_id, state)
     docx_bytes, media_type, filename = _export_resume_docx(state)
     return _build_binary_response(docx_bytes, media_type, filename)
 

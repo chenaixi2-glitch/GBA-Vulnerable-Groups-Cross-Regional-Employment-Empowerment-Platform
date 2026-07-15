@@ -115,6 +115,23 @@ if __name__ == "__main__":
     logger.info("Starting AI Career Copilot server on %s:%s", cfg["host"], cfg["port"])
     is_debug = cfg.get("debug", False)
     workers = cfg.get("workers", 2)
+
+    from storage.redis_client import is_using_fakeredis
+
+    if is_using_fakeredis():
+        # In-memory FakeRedis is per-process; multi-worker would lose sessions across requests.
+        if workers != 1:
+            logger.warning(
+                "Forcing workers=1 because Redis fell back to in-memory fakeredis "
+                "(configured workers=%s). Start a real Redis server for multi-worker.",
+                workers,
+            )
+            workers = 1
+        if is_debug:
+            logger.warning(
+                "debug/reload is enabled with fakeredis — editing backend files will wipe all sessions"
+            )
+
     uvicorn.run(
         "main:app",
         app_dir=str(BACKEND_DIR),

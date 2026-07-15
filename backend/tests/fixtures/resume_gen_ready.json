@@ -1,0 +1,502 @@
+{
+  "dumped_from": "sess_1783506159650_mmzt6hi8d",
+  "dumped_at": "2026-07-15T19:36:03",
+  "source": "mysql",
+  "state": {
+    "session_id": "sess_1783506159650_mmzt6hi8d",
+    "job": {
+      "id": "job_e6a4fe91b910",
+      "source": "Job Title: AI Developer\n\nResponsibilities:\n- Design, develop, and implement AI models and solutions using Python and LLM APIs.\n- Collaborate with cross-functional teams to define project requirements and integrate AI features into existing systems.\n- Conduct data preprocessing, model training, and evaluation to ensure accuracy and efficiency.\n- Optimize AI algorithms and fine-tune models based on performance metrics and business needs.\n- Document code and technical specifications to support team collaboration and future development.\n\nRequirements:\n- Bachelor's or Master's degree in Computer Science, Engineering, or a related field.\n- Proficiency in Python programming and experience with LLM APIs.\n- Strong understanding of machine learning concepts and AI application development.\n- Experience with data analysis and manipulation using SQL.\n- Excellent problem-solving skills and ability to work in a fast-paced environment.\n\nPreferred Qualifications:\n- Familiarity with web development technologies (HTML/CSS/JavaScript).\n- Experience in product development or data analysis roles.\n- Knowledge of compliance and regulatory frameworks.\n\nAdditional Information:\n- Candidates should demonstrate experience in AI-driven project implementation and cross-team coordination.\n- Proficiency in English and Mandarin required.\n\nNote: This position may involve occasional cross-regional collaboration within the Greater Bay Area.",
+      "parsed_at": "2026-07-15T11:08:09.185258+00:00",
+      "version": 1,
+      "industry": "Internet",
+      "title": "AI Developer",
+      "tech_stack": [
+        "Python",
+        "LLM APIs",
+        "SQL"
+      ],
+      "keywords": [
+        "AI",
+        "Machine Learning",
+        "Model Development",
+        "Data Preprocessing"
+      ],
+      "hard_skills": [
+        "Python programming",
+        "LLM APIs",
+        "Machine learning concepts",
+        "Data analysis",
+        "SQL"
+      ],
+      "soft_skills": [
+        "Problem-solving",
+        "Collaboration",
+        "Cross-functional teamwork",
+        "Fast-paced environment adaptation"
+      ],
+      "responsibilities": [
+        "Design, develop, and implement AI models and solutions using Python and LLM APIs.",
+        "Collaborate with cross-functional teams to define project requirements and integrate AI features into existing systems.",
+        "Conduct data preprocessing, model training, and evaluation to ensure accuracy and efficiency.",
+        "Optimize AI algorithms and fine-tune models based on performance metrics and business needs.",
+        "Document code and technical specifications to support team collaboration and future development."
+      ],
+      "education_requirement": "Bachelor's or Master's degree in Computer Science, Engineering, or a related field.",
+      "experience_requirement": "Proficiency in Python programming and experience with LLM APIs; strong understanding of machine learning concepts and AI application development; experience with data analysis and manipulation using SQL.",
+      "implicit_preferences": [
+        "Experience in AI-driven project implementation and cross-team coordination.",
+        "Familiarity with web development technologies (HTML/CSS/JavaScript).",
+        "Experience in product development or data analysis roles.",
+        "Knowledge of compliance and regulatory frameworks."
+      ],
+      "bonus_items": [
+        "Proficiency in English and Mandarin.",
+        "Occasional cross-regional collaboration within the Greater Bay Area."
+      ]
+    },
+    "candidate_profile": {
+      "profile_basic": {
+        "name": "Chen Aixi (Ashe)",
+        "email": "u3665026@connect.hku.hk",
+        "phone": "+85269438705",
+        "city": "",
+        "school": "The University of Hong Kong",
+        "extras": {
+          "visa_type": "Student Visa"
+        }
+      },
+      "materials": [
+        {
+          "material_id": "mat_38df07ec7cca",
+          "type": "message",
+          "content": "用户本轮没有额外文字说明，请优先基于附件内容完成解析。\n\n以下是用户上传附件解析出的文本，请把它们视作本轮输入的一部分。若用户文字与附件内容冲突，以用户文字中的明确要求为准；若需要抽取候选人信息或岗位信息，请优先使用附件中的原始内容，不要忽略文件名提供的上下文。本说明文字为中文仅作系统提示，不得据此将英文简历内容翻译成中文。\n\n[附件 1] 文件名: Ashe_web3_AI.pdf\n以下为附件解析文本:\nChen Aixi (Ashe)\n+85269438705 | u3665026@connect.hku.hk | VisaStatus: StudentVisa | NoticePeriod: Immediate\nSUMMARY\nHKUECICpostgraduatewithinterdisciplinaryexperienceinLLMapplication,Web3productimplementation,data\nanalysis,andfinancialcomplianceresearch. Skilledinrequirementsorting,businessprocessdecomposition,data\ncalibration,andcross-teamcoordination.\nEDUCATION\nTheUniversityofHongKong,MasterofElectronicCommerceandInternet Sept. 2025–Present\nComputing (ExpectedNov. 2026)\nSunYat-senUniversity,BachelorofEconomics(GPA3.5/4.0) Sept. 2021–Jun. 2025\nINTERNSHIP\nVSystems,Web3ProductDevelopment Mar. 2026–May2025\n• DecoupledandimplementedtheWeb3couponmodule,completedAPIintegration,datastandardization,field\nmappinganddirtydatacleansingtoprovideunifieddownstreaminterfaces.\n• Ledbusinessprocesssorting,interfacedefinitionandfrontend-backendintegration,anddeliveredfull-cycle\nproductimplementationefficientlywithCursor.\nTianYiMa,BigDataR&DEngineer(AIDirection) Jun. 2025–Aug. 2025\n• StudiedCVpapersonurbanrobotandtelecomdigitrecognition,andsortedoutmodeloptimizationlogicand\nkeyvariablesaffectingaccuracy.\n• Deliveredstructuredtechnicalobservationreportsandassistedtheteaminsummarizingtechnicalschemesand\nmethodology.\nShenzhenStockExchange,ComplianceResearch Feb. 2025–Apr. 2025\n• Collected,organizedandcross-verifiedpoliciesandmarketinformationforREITs,anddeliveredindustry\nanalysismaterialsandPPTframeworks.\n• IdentifiedcompliancerisksandindustrytrendsofREITsbusiness,formedstandardizedresearchresults,and\nsupporteddecision-makingandreportinginfixedincomefield.\nChinaTelecom,DataAnalyst Jun. 2024–Aug. 2024\n• Processedbusinessdataincludingdatasorting,caliberalignment,indicatorstatisticsanddataanomaly\ndetectionbasedonbusinessrequirements.\n• Organizeddataflow,builtreusabledataextractionlogic,standardizedreportsandledgerstosupportbusiness\nreview.\nPROJECT\nGBAVulnerableGroupsCross-RegionalEmploymentEmpowermentPlatform, Feb. 2026–Present\nLeader&AISpecialist (ExpectedAug. 2026)\n• DesignedanAIrecruitmentplatformwithmodulesincludingresumeoptimization,LLMQ&A,jobmatchingand\nuser/admindashboards.\n• Completedrequirementdecompositionandfunctionplanning,andrealizedautomatedrecommendationvia\nPythonandLLMAPI.\nSKILLS\nLanguage: Mandarin(Native),English(Fluent),Cantonese(Beginner)\nTechnicalSkills: Python(Proficient),SQL(Proficient),Word/Excel/PowerPoint(Proficient),\nHTML/CSS/JavaScript(Familiar),Java(Familiar)\nSoftwareProficiency: AdobePhotoshop(PS),AdobeIllustrator(AI),AdobePremiere(PR),OpenAI\nPROFESSIONAL QUALIFICATION\nIELTS6.5IssuedbyBritishCouncil,IDP&CambridgeAssessmentEnglish\nUIDesignerCertificateIssuedbyEducationandExaminationCenterofMIIT,China",
+          "uploaded_at": "2026-07-15T11:05:34.273819+00:00",
+          "language": "en"
+        }
+      ],
+      "facts": [
+        {
+          "id": "fact_education_1",
+          "type": "education",
+          "content": "{\"school\": \"The University of Hong Kong\", \"major\": \"Master of Electronic Commerce and Internet Computing\", \"degree\": \"Master\", \"start_date\": \"Sept. 2025\", \"end_date\": \"Expected Nov. 2026\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_education_2",
+          "type": "education",
+          "content": "{\"school\": \"Sun Yat-sen University\", \"major\": \"Economics\", \"degree\": \"Bachelor\", \"start_date\": \"Sept. 2021\", \"end_date\": \"Jun. 2025\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_1",
+          "type": "skill",
+          "content": "{\"skill\": \"Python\", \"level\": \"Proficient\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_2",
+          "type": "skill",
+          "content": "{\"skill\": \"SQL\", \"level\": \"Proficient\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_3",
+          "type": "skill",
+          "content": "{\"skill\": \"Word/Excel/PowerPoint\", \"level\": \"Proficient\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_4",
+          "type": "skill",
+          "content": "{\"skill\": \"HTML/CSS/JavaScript\", \"level\": \"Familiar\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_5",
+          "type": "skill",
+          "content": "{\"skill\": \"Java\", \"level\": \"Familiar\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_6",
+          "type": "skill",
+          "content": "{\"skill\": \"Mandarin\", \"level\": \"Native\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_7",
+          "type": "skill",
+          "content": "{\"skill\": \"English\", \"level\": \"Fluent\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_8",
+          "type": "skill",
+          "content": "{\"skill\": \"Cantonese\", \"level\": \"Beginner\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_9",
+          "type": "skill",
+          "content": "{\"skill\": \"Adobe Photoshop\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_10",
+          "type": "skill",
+          "content": "{\"skill\": \"Adobe Illustrator\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_11",
+          "type": "skill",
+          "content": "{\"skill\": \"Adobe Premiere\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_skill_12",
+          "type": "skill",
+          "content": "{\"skill\": \"OpenAI\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_internship_1",
+          "type": "internship",
+          "content": "{\"company\": \"VSystems\", \"start_date\": \"Mar. 2025\", \"end_date\": \"May 2025\", \"responsibilities\": \"Decoupled and implemented the Web3 coupon module, completed API integration, data standardization, field mapping and dirty data cleansing to provide unified downstream interfaces. Led business process sorting, interface definition and frontend-backend integration, and delivered full-cycle product implementation efficiently with Cursor.\", \"title\": \"Web3 Product Development\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_internship_2",
+          "type": "internship",
+          "content": "{\"company\": \"TianYiMa\", \"start_date\": \"Jun. 2025\", \"end_date\": \"Aug. 2025\", \"responsibilities\": \"Studied CV papers on urban robot and telecom digit recognition, and sorted out model optimization logic and key variables affecting accuracy. Delivered structured technical observation reports and assisted the team in summarizing technical schemes and methodology.\", \"title\": \"Big Data R&D Engineer (AI Direction)\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_internship_3",
+          "type": "internship",
+          "content": "{\"company\": \"Shenzhen Stock Exchange\", \"start_date\": \"Feb. 2025\", \"end_date\": \"Apr. 2025\", \"responsibilities\": \"Collected, organized and cross-verified policies and market information for REITs, and delivered industry analysis materials and PPT frameworks. Identified compliance risks and industry trends of REITs business, formed standardized research results, and supported decision-making and reporting in fixed income field.\", \"title\": \"Compliance Research\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_internship_4",
+          "type": "internship",
+          "content": "{\"company\": \"China Telecom\", \"start_date\": \"Jun. 2024\", \"end_date\": \"Aug. 2024\", \"responsibilities\": \"Processed business data including data sorting, calibralignment, indicator statistics and data anomaly detection based on business requirements. Organized data flow, built reusable data extraction logic, standardized reports and ledgers to support business review.\", \"title\": \"Data Analyst\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_project_1",
+          "type": "project",
+          "content": "{\"title\": \"GBAVulnerableGroupsCross-RegionalEmploymentEmpowermentPlatform\", \"role\": \"Leader&AISpecialist\", \"start_date\": \"Feb. 2026\", \"end_date\": \"Expected Aug. 2026\", \"tech_stack\": [\"Python\", \"LLM API\"], \"responsibilities\": \"Designed an AI recruitment platform with modules including resume optimization, LLM Q&A, job matching and user/admindashboards. Completed requirement decomposition and function planning, and realized automated recommendation via Python and LLM API.\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_qualification_1",
+          "type": "award",
+          "content": "{\"name\": \"IELTS 6.5\", \"authority\": \"British Council,IDP&Cambridge Assessment English\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        },
+        {
+          "id": "fact_qualification_2",
+          "type": "award",
+          "content": "{\"name\": \"UIDesignerCertificate\", \"authority\": \"Education and Examination Center of MIIT, China\"}",
+          "source_refs": [
+            "user_draft"
+          ],
+          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+        }
+      ],
+      "language": ""
+    },
+    "resume_content_json": {
+      "profile": {
+        "name": "Chen Aixi (Ashe)",
+        "email": "u3665026@connect.hku.hk",
+        "phone": "+85269438705",
+        "city": "",
+        "github": "",
+        "linkedin": "",
+        "address": "",
+        "education": [
+          {
+            "id": "edu_1",
+            "school": "The University of Hong Kong",
+            "major": "",
+            "degree": "",
+            "start_date": "",
+            "end_date": ""
+          },
+          {
+            "id": "fact_education_1",
+            "school": "The University of Hong Kong",
+            "major": "Master of Electronic Commerce and Internet Computing",
+            "degree": "Master",
+            "start_date": "Sept. 2025",
+            "end_date": "Expected Nov. 2026"
+          },
+          {
+            "id": "fact_education_2",
+            "school": "Sun Yat-sen University",
+            "major": "Economics",
+            "degree": "Bachelor",
+            "start_date": "Sept. 2021",
+            "end_date": "Jun. 2025"
+          }
+        ],
+        "extras": {
+          "visa_type": "Student Visa",
+          "has_photo": "false"
+        }
+      },
+      "summary": "",
+      "skills": [
+        {
+          "id": "",
+          "title": "Python programming",
+          "content": "",
+          "source_refs": [],
+          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+        },
+        {
+          "id": "skill_2",
+          "title": "updated_at",
+          "content": "updated_at",
+          "source_refs": [],
+          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+        }
+      ],
+      "internships": [
+        {
+          "id": "fact_internship_1",
+          "title": "VSystems",
+          "content": "- Developed and integrated the Web3 coupon module using Python.\n- Standardized data and cleansed dirty data to ensure unified downstream interfaces.\n- Collaborated with frontend and backend teams to deliver full-cycle product implementation.",
+          "source_refs": [
+            "fact_internship_1"
+          ],
+          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+        },
+        {
+          "id": "fact_internship_2",
+          "title": "TianYiMa",
+          "content": "- Researched cutting-edge AI papers on urban robotics and telecom digit recognition.\n- Analyzed model optimization strategies and identified key variables influencing accuracy.\n- Authored technical reports and contributed to team methodology refinement.",
+          "source_refs": [
+            "fact_internship_2"
+          ],
+          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+        },
+        {
+          "id": "fact_internship_3",
+          "title": "Compliance Research Intern",
+          "content": "- Researched REIT compliance policies and market trends to support fixed income decision-making.\n- Organized and verified industry data to deliver analysis materials and PPT frameworks.\n- Identified compliance risks and industry trends for REIT business.",
+          "source_refs": [
+            "fact_internship_3"
+          ],
+          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+        },
+        {
+          "id": "fact_internship_4",
+          "title": "China Telecom",
+          "content": "- Processed business data through sorting, alignment, and anomaly detection based on requirements.\n- Developed reusable data extraction logic and standardized reports to support business reviews.\n- Organized data flow to improve efficiency and accuracy in data handling.",
+          "source_refs": [
+            "fact_internship_4"
+          ],
+          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+        }
+      ],
+      "projects": [
+        {
+          "id": "fact_project_1",
+          "title": "GBAVulnerableGroupsCross-RegionalEmploymentEmpowermentPlatform",
+          "content": "- Led development of an AI-powered recruitment platform, optimizing resume parsing and job matching algorithms.\n- Integrated LLM APIs to create interactive Q&A features and automated candidate recommendations.\n- Designed user/admin dashboards and implemented backend functionality using Python.",
+          "source_refs": [
+            "fact_project_1"
+          ],
+          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+        }
+      ],
+      "awards": [],
+      "papers": [],
+      "meta": {
+        "target_role": "AI Developer",
+        "language": "en",
+        "version": 4,
+        "last_updated_at": "2026-07-15T11:35:28.945885+00:00",
+        "content_hash": "0300d23c262edc15"
+      }
+    },
+    "render_config": {
+      "template_id": "default",
+      "theme": "light",
+      "language": "en",
+      "font_family": "Inter",
+      "font_size": 12,
+      "line_height": 1.35,
+      "page_margin": {
+        "top": 18,
+        "right": 18,
+        "bottom": 18,
+        "left": 18
+      },
+      "section_order": [
+        "profile",
+        "internships",
+        "projects",
+        "skills",
+        "education"
+      ],
+      "dense_mode": true,
+      "accent_style": "minimal",
+      "visibility_map": {},
+      "layout_mode": "single-column",
+      "spacing_scale": "compact",
+      "page_limit": 1,
+      "typography_fit_mode": "auto",
+      "version": 2,
+      "last_render_reason": "A4 single page排版（English，entry）"
+    },
+    "resume_html": {
+      "html": "",
+      "version": 1,
+      "derived_from_content_version": 0,
+      "derived_from_render_version": 0,
+      "updated_at": "",
+      "checksum": ""
+    },
+    "gaps": [],
+    "questions_to_ask": [],
+    "experiences_to_remove": [],
+    "learning_path_timeline": [],
+    "learning_path_resources": [],
+    "learning_path_estimated_hours": 0,
+    "learning_path_daily_hours": 0.0,
+    "last_answer_evaluation": null,
+    "interview_qa": [],
+    "interactive_interview": {
+      "status": "idle",
+      "tone": "professional",
+      "job_title": "",
+      "industry": "",
+      "program_version": "quick",
+      "specialized_focus": "",
+      "job_track": "general",
+      "current_stage_index": 0,
+      "stages": [],
+      "max_rounds": 10,
+      "round_count": 0,
+      "turns": [],
+      "debrief": null,
+      "started_at": "",
+      "ended_at": "",
+      "phase": "primary",
+      "primary_questions": [],
+      "follow_up_questions": [],
+      "current_question_id": "",
+      "pending_feedbacks": [],
+      "poll_sequence": 0,
+      "end_reason": "",
+      "closing_message": ""
+    },
+    "conversation_events": [],
+    "meta": {
+      "active_resume_content_version": 0,
+      "active_render_version": 0,
+      "active_html_version": 0,
+      "last_user_message_id": "",
+      "last_successful_pipeline": "",
+      "employer_type": "",
+      "target_jd_text": "",
+      "target_industry": "",
+      "target_experience_level": "",
+      "ui_output_language": "",
+      "interview_question_language": "",
+      "interview_feedback_language": "",
+      "dirty_flags": {
+        "content_dirty": false,
+        "render_dirty": false,
+        "interview_dirty": false,
+        "export_dirty": false
+      },
+      "dialogue_turns": [],
+      "dialogue_summary": "",
+      "extracted_facts": []
+    },
+    "pending_actions": [],
+    "user_message": "",
+    "user_attachments": [],
+    "current_intent": "",
+    "execution_plan": [],
+    "reply_message": "",
+    "triggered_agents": [],
+    "workflow_trace": [],
+    "profile_replace_mode": false,
+    "forced_intent": "",
+    "context_scope": "",
+    "resume_language_target": "",
+    "chat_output_language": "",
+    "chat_question_output_language": "",
+    "chat_feedback_output_language": "",
+    "memory_context": "",
+    "auth_token": "",
+    "skip_render": true
+  }
+}

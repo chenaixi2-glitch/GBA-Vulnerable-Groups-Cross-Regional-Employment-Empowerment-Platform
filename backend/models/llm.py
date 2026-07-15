@@ -198,14 +198,13 @@ def _extract_text_content(response: Any) -> str:
 
 
 def _get_json_llm(llm: Any) -> Any:
-    cfg = get_llm_config()
-    provider = _normalize_provider(cfg.get("provider", "openai"))
-    if provider == "deepseek" and hasattr(llm, "bind"):
-        try:
-            return llm.bind(response_format={"type": "json_object"})
-        except Exception:
-            return llm
-    return llm
+    """Prefer JSON object mode when the provider supports OpenAI-style response_format."""
+    if not hasattr(llm, "bind"):
+        return llm
+    try:
+        return llm.bind(response_format={"type": "json_object"})
+    except Exception:
+        return llm
 
 
 def _strip_code_fences(text: str) -> str:
@@ -247,14 +246,44 @@ def _extract_balanced_json(text: str) -> str:
     return text
 
 
+_DEGENERATE_TOKEN_PATTERNS = (
+    ('" "', 40),
+    ("项目描述", 12),
+    ("content\": \"项目", 8),
+    ("仅输出", 6),
+    ("contentcontent", 1),
+)
+
+
+def _looks_like_degenerate_json_output(text: str) -> bool:
+    """Detect repetition loops that are useless for JSON repair."""
+    sample = (text or "")[:6000]
+    if not sample.strip():
+        return True
+    for needle, threshold in _DEGENERATE_TOKEN_PATTERNS:
+        if sample.count(needle) >= threshold:
+            return True
+    # High density of isolated quote/space pairs
+    if len(sample) > 800 and sample.count('"') > 200 and sample.count('" "') > 30:
+        return True
+    # Length-truncated instruction-echo degeneration (seen on SiliconFlow polish failures)
+    if "仅输出" in sample and sample.count('"') > 40 and "{" in sample[:40]:
+        # Valid short JSON rarely needs dozens of quotes plus instruction echo.
+        if "items" not in sample or len(sample) > 1500:
+            return True
+    return False
+
+
 def _build_repair_prompt(raw_output: str, schema: type[BaseModel], error: Exception) -> str:
     schema_json = json.dumps(schema.model_json_schema(), ensure_ascii=False, indent=2)
+    # Cap repair payload — stuffing multi-KB degeneration loops makes retry worse.
+    clipped = raw_output if len(raw_output) <= 4000 else raw_output[:4000] + "\n…(truncated)"
     return (
         "你是 JSON 修复器。请把下面内容修复为单个合法 JSON 对象，并严格符合给定 JSON Schema。"
         "不要输出 Markdown，不要输出解释，不要输出代码块。\n\n"
         f"JSON Schema:\n{schema_json}\n\n"
         f"上一轮错误:\n{error}\n\n"
-        f"待修复内容:\n{raw_output}"
+        f"待修复内容:\n{clipped}"
     )
 
 
@@ -262,6 +291,18 @@ async def _ainvoke_model(llm: Any, payload: Any) -> Any:
     if hasattr(llm, "ainvoke"):
         return await llm.ainvoke(payload)
     return await asyncio.to_thread(llm.invoke, payload)
+
+
+def _content_from_length_error(exc: BaseException) -> str:
+    """Recover truncated text from openai.LengthFinishReasonError when possible."""
+    completion = getattr(exc, "completion", None)
+    if completion is None:
+        return ""
+    choices = getattr(completion, "choices", None) or []
+    if not choices:
+        return ""
+    message = getattr(choices[0], "message", None)
+    return _extract_text_content(getattr(message, "content", "") or "")
 
 
 async def ainvoke_json_with_schema(
@@ -275,10 +316,40 @@ async def ainvoke_json_with_schema(
     json_llm = _get_json_llm(llm)
     request_prompt = prompt
     last_error: Exception | None = None
+    use_json_mode = True
 
     for attempt in range(2):
         llm_t0 = time.perf_counter()
-        response = await _ainvoke_model(json_llm, request_prompt)
+        active_llm = json_llm if use_json_mode else llm
+        hit_length_limit = False
+        try:
+            response = await _ainvoke_model(active_llm, request_prompt)
+            raw_output = _extract_text_content(response)
+        except Exception as invoke_exc:
+            # Some providers raise LengthFinishReasonError when completion hits max_tokens.
+            raw_output = _content_from_length_error(invoke_exc)
+            hit_length_limit = True
+            if not raw_output:
+                logger.error("%s LLM invoke failed on attempt %d: %s", agent_name, attempt + 1, invoke_exc)
+                last_error = invoke_exc
+                if attempt == 0:
+                    use_json_mode = False
+                    request_prompt = (
+                        f"{prompt}\n\n"
+                        "CRITICAL: Previous output hit the token limit. "
+                        "Return one compact valid JSON object only (<1500 tokens). "
+                        "No Markdown, no prose, no repetition."
+                    )
+                    continue
+                break
+            logger.warning(
+                "%s hit output length limit on attempt %d; trying truncated content (%d chars)",
+                agent_name,
+                attempt + 1,
+                len(raw_output),
+            )
+            last_error = invoke_exc
+
         log_stage_timing(
             _timing_logger,
             f"llm.{agent_name}",
@@ -286,16 +357,45 @@ async def ainvoke_json_with_schema(
             attempt=attempt + 1,
             repair=attempt > 0,
         )
-        raw_output = _extract_text_content(response)
+
+        # Length-truncated degeneration is not worth parsing/repairing — retry compact.
+        if hit_length_limit and attempt == 0 and _looks_like_degenerate_json_output(raw_output):
+            logger.warning(
+                "%s degenerate truncated output; retrying with compact instruction",
+                agent_name,
+            )
+            use_json_mode = True
+            request_prompt = (
+                f"{prompt}\n\n"
+                "CRITICAL: Previous attempt hit the output length limit and degenerated. "
+                "Return one compact valid JSON object only (<800 tokens). "
+                "No Markdown, no prose, no repetition."
+            )
+            continue
+
         try:
             parsed = parse_json_response(raw_output)
             return schema.model_validate(parsed)
         except (json.JSONDecodeError, ValidationError, TypeError, ValueError) as exc:
+            preview = raw_output if len(raw_output) <= 2000 else raw_output[:2000] + "\n…(truncated)"
             logger.error("%s JSON parse/validation failed on attempt %d: %s", agent_name, attempt + 1, exc)
-            logger.error("%s raw model output on attempt %d:\n%s", agent_name, attempt + 1, raw_output)
+            logger.error("%s raw model output on attempt %d:\n%s", agent_name, attempt + 1, preview)
             last_error = exc
             if attempt == 0:
-                request_prompt = _build_repair_prompt(raw_output, schema, exc)
+                if _looks_like_degenerate_json_output(raw_output):
+                    # Re-run original task instead of "repairing" garbage loops.
+                    logger.warning(
+                        "%s degenerate output detected; retrying original prompt instead of repair",
+                        agent_name,
+                    )
+                    use_json_mode = True
+                    request_prompt = (
+                        f"{prompt}\n\n"
+                        "CRITICAL: Previous attempt degenerated into repetitive tokens. "
+                        "Return one compact valid JSON object only. No Markdown, no prose."
+                    )
+                else:
+                    request_prompt = _build_repair_prompt(raw_output, schema, exc)
                 continue
             break
 

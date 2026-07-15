@@ -1,0 +1,63 @@
+{
+  "session_id": "sess_1783506159650_mmzt6hi8d",
+  "elapsed_s": 17.3,
+  "phases": [
+    "skeleton_with_placeholders",
+    "module_polished",
+    "module_polished",
+    "module_polished",
+    "module_polished",
+    "module_polished",
+    "complete_incremental"
+  ],
+  "batch_errors": [],
+  "internships": [
+    {
+      "id": "fact_internship_1",
+      "title": "VSystems",
+      "content": "- Engineered Web3 coupon module using Python, decoupling system components to enhance scalability.\n- Integrated LLM APIs for intelligent coupon recommendations, boosting user engagement by ~15%.\n- Cleansed and standardized ~500+ dirty data points, improving data quality for downstream processes.",
+      "source_refs": [
+        "fact_internship_1"
+      ],
+      "updated_at": "2026-07-15T11:53:09.660352+00:00"
+    },
+    {
+      "id": "fact_internship_2",
+      "title": "TianYiMa",
+      "content": "- Researched cutting-edge CV papers on urban robotics and telecom digit recognition, analyzing ~5–10 papers weekly to inform model optimization strategies.\n- Engineered data preprocessing pipelines to enhance model accuracy, identifying key variables that improved performance by ~2–5%.\n- Authored detailed technical reports summarizing findings and proposed scalable methodologies for team implementation.",
+      "source_refs": [
+        "fact_internship_2"
+      ],
+      "updated_at": "2026-07-15T11:53:09.660352+00:00"
+    },
+    {
+      "id": "fact_internship_3",
+      "title": "Shenzhen Stock Exchange",
+      "content": "- Collected and organized REIT policies, identifying ~5–10 compliance risks weekly.\n- Developed industry analysis materials and PPT frameworks for fixed income reporting.\n- Supported decision-making with standardized research outputs in REIT market trends.",
+      "source_refs": [
+        "fact_internship_3"
+      ],
+      "updated_at": "2026-07-15T11:53:09.660352+00:00"
+    },
+    {
+      "id": "fact_internship_4",
+      "title": "China Telecom",
+      "content": "- Processed business data sorting, calibration alignment, and indicator statistics based on ~5 business requirements, improving data accuracy by ~10–15%.\n- Organized data flow, built reusable data extraction logic for ~3–5 team members, and standardized reports to reduce review time by ~10–15%.\n- Detected ~2–3 data anomalies weekly, ensuring business compliance and data integrity.",
+      "source_refs": [
+        "fact_internship_4"
+      ],
+      "updated_at": "2026-07-15T11:53:09.660352+00:00"
+    }
+  ],
+  "projects": [
+    {
+      "id": "fact_project_1",
+      "title": "GBAVulnerableGroupsCross-RegionalEmploymentEmpowermentPlatform",
+      "content": "- Led design and development of an AI-powered recruitment platform, integrating Python and LLM APIs to automate job matching and resume optimization.\n- Spearheaded requirement decomposition and function planning, delivering a system with user/admin dashboards.\n- Optimized platform performance, reducing processing time by ~20–30% for ~500–1000 daily users.",
+      "source_refs": [
+        "fact_project_1"
+      ],
+      "updated_at": "2026-07-15T11:53:09.660352+00:00"
+    }
+  ]
+}

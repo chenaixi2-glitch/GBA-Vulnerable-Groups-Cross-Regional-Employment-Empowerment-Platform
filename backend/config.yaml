@@ -40,13 +40,13 @@ translation:
   max_tokens: 4096
   timeout: 120
 
-# 简历内容生成（content_agent）
+# 简历内容生成（content_agent）— 与主 LLM 同模型，避免小 instruct 模型润色退化
 resume_generation:
   provider: "openai_compatible"
-  model: "Qwen/Qwen2.5-7B-Instruct"
+  model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
   api_base: "https://api.siliconflow.cn/v1"
   api_key_env: "SILICONFLOW_API_KEY"
-  temperature: 0.3
+  temperature: 0.2
   max_tokens: 8192
   timeout: 180
 

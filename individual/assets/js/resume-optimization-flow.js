@@ -106,7 +106,7 @@ async function regenerateJdInModal() {
         return;
     }
     try {
-        Utils.showLoading(uiT('resume.opt.regeneratingJd', 'Regenerating job description from your resume...'));
+        Utils.showLoading(uiT('resume.opt.regeneratingJd', 'Regenerating job description from your resume — usually about 30–60 seconds…'));
         const ctx = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : {};
         const result = await apiClient.generateJdFromTitle(jobTitle, ctx);
         Utils.hideLoading();
@@ -153,6 +153,7 @@ function mergeSupplementQuestions(questions, gaps) {
                 'This experience is needed to better match the target role'
             ),
             target_field: field,
+            related_section_ids: Array.isArray(gap.related_section_ids) ? gap.related_section_ids : [],
             priority: (gap.severity || '').toLowerCase() === 'high' ? 'high' : 'medium',
         });
     });
@@ -337,7 +338,11 @@ function showOptimizationDialog({ gaps = [], questions = [], removals = [], alig
                     ? 'Optional: enter real numbers (e.g. 10k users, 30% faster). Leave blank to use the choice above.'
                     : uiT('resume.opt.answerPlaceholder', 'Enter your answer...');
                 return `
-                <div class="optimization-question mb-4" data-qid="${escapeHtml(q.id || `q_${i}`)}" data-is-quant="${isQuant ? '1' : '0'}">
+                <div class="optimization-question mb-4"
+                    data-qid="${escapeHtml(q.id || `q_${i}`)}"
+                    data-is-quant="${isQuant ? '1' : '0'}"
+                    data-target-field="${escapeHtml(q.target_field || '')}"
+                    data-related-fact-ids="${escapeHtml((q.related_section_ids || q.related_fact_ids || []).join(','))}">
                     <label class="block text-sm font-medium text-gray-800 mb-1">
                         ${escapeHtml(q.question || '')}
                         ${required ? '<span class="text-red-500 ml-1">*</span>' : ''}
@@ -419,16 +424,99 @@ function collectOptimizationAnswers() {
         const question = item.querySelector('label')?.textContent?.replace(/\*/g, '').trim() || '';
         const answer = textarea?.value.trim() || '';
         const required = textarea?.dataset.required === '1';
+        const targetField = item.dataset.targetField || '';
+        const relatedFactIds = (item.dataset.relatedFactIds || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
         textarea?.classList.remove('optimization-answer-missing', 'border-red-400', 'ring-2', 'ring-red-200');
         if (required && !answer) {
             missingRequired = true;
             textarea?.classList.add('optimization-answer-missing', 'border-red-400', 'ring-2', 'ring-red-200');
             if (!firstMissingTextarea) firstMissingTextarea = textarea;
         }
-        answers.push({ id: item.dataset.qid, question, answer, required });
+        answers.push({
+            id: item.dataset.qid,
+            question,
+            answer,
+            required,
+            target_field: targetField,
+            related_fact_ids: relatedFactIds,
+        });
     });
 
     return { answers, missingRequired, firstMissingTextarea };
+}
+
+/**
+ * Collect fact ids / sections touched by clarified answers and agreed removals.
+ * Used to drive incremental resume polish instead of full regeneration.
+ */
+function collectAffectedResumeTargets({ answers = [], removals = [], gaps = [] } = {}) {
+    const factIds = new Set();
+    const sections = new Set();
+
+    const addSection = (raw) => {
+        const key = String(raw || '').trim().toLowerCase().replace(/[-\s]+/g, '_');
+        if (!key) return;
+        const aliases = {
+            internship: 'internships',
+            internships: 'internships',
+            work: 'internships',
+            work_experience: 'internships',
+            experience: 'internships',
+            project: 'projects',
+            projects: 'projects',
+            skill: 'skills',
+            skills: 'skills',
+            summary: 'summary',
+            award: 'awards',
+            awards: 'awards',
+            paper: 'papers',
+            papers: 'papers',
+        };
+        sections.add(aliases[key] || key);
+        if (key.startsWith('fact_')) factIds.add(key);
+    };
+
+    (answers || []).forEach((a) => {
+        if (!a?.answer) return;
+        (a.related_fact_ids || a.related_section_ids || []).forEach((id) => {
+            if (id) factIds.add(String(id));
+        });
+        addSection(a.target_field);
+    });
+
+    (removals || []).forEach((r) => {
+        if (!r?.agreed) return;
+        if (r.fact_id) factIds.add(String(r.fact_id));
+        addSection(r.section_type);
+    });
+
+    // Gaps matching answered questions may carry related_section_ids (= fact ids)
+    (gaps || []).forEach((g) => {
+        (g.related_section_ids || []).forEach((id) => {
+            if (id && String(id).startsWith('fact_')) factIds.add(String(id));
+        });
+        addSection(g.target_field);
+    });
+
+    return {
+        affectedFactIds: [...factIds],
+        affectedSections: [...sections],
+    };
+}
+
+function buildClarificationsText(answers = []) {
+    const answered = (answers || []).filter((a) => a?.answer);
+    if (!answered.length) return '';
+    return answered.map((a) => {
+        const meta = [];
+        if (a.target_field) meta.push(`target_field=${a.target_field}`);
+        if (a.related_fact_ids?.length) meta.push(`related_fact_ids=${a.related_fact_ids.join(',')}`);
+        const header = meta.length ? ` [${meta.join('|')}]` : '';
+        return `Q${header}: ${a.question}\nA: ${a.answer}`;
+    }).join('\n\n');
 }
 
 function submitOptimizationDialog() {
@@ -475,7 +563,7 @@ async function ensureJdConfirmedBeforeProceed(jdText, options = {}) {
     let payload = { jd_text: jdText, alignment_note: '', primary_tech_stack: [], clarification_hint: '' };
 
     if (isTitleOnlyJd(jdText)) {
-        Utils.showLoading(uiT('resume.opt.analyzingForJd', 'Analyzing your resume and generating a targeted job description...'));
+        Utils.showLoading(uiT('resume.opt.analyzingForJd', 'Analyzing your resume and generating a targeted job description — usually about 30–60 seconds…'));
         try {
             const ctx = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : {};
             payload = await apiClient.generateJdFromTitle(jdText, ctx);

@@ -61,6 +61,59 @@ function uiT(key, fallback, vars) {
     return s;
 }
 
+/** Map backend stage_id (often Chinese stage_name) to UI-language labels. */
+const INTERVIEW_STAGE_I18N = {
+    screening_final: ['mock.stageScreeningFinal', 'Screening + final combined'],
+    professional: ['mock.stageProfessional', 'Round 2 — professional / technical'],
+    screening: ['mock.stageScreening', 'Round 1 — screening'],
+    final: ['mock.stageFinal', 'Round 3 — director / HR final'],
+    specialized_technical: ['mock.stageSpecializedTechnical', 'Specialized — technical'],
+    specialized_final_negotiation: ['mock.stageSpecializedNegotiation', 'Specialized — final negotiation'],
+    specialized_resume_deep_dive: ['mock.stageSpecializedResume', 'Specialized — resume deep dive'],
+    custom: ['interview.modeCustom', 'Custom Questions'],
+};
+
+const INTERVIEW_STAGE_NAME_ALIASES = {
+    '综合面·初筛+终面': 'screening_final',
+    '第二轮·专业/技术面': 'professional',
+    '第一轮·初筛面试': 'screening',
+    '初筛面试': 'screening',
+    '第三轮·总监/HR终面': 'final',
+    '专项·技术/专业面': 'specialized_technical',
+    '专项·终面谈判': 'specialized_final_negotiation',
+    '专项·简历深挖': 'specialized_resume_deep_dive',
+    '自定义题目': 'custom',
+    'Custom Questions': 'custom',
+};
+
+function resolveInterviewStageId(stageId, stageName = '') {
+    const id = String(stageId || '').trim();
+    if (id && INTERVIEW_STAGE_I18N[id]) return id;
+    const alias = INTERVIEW_STAGE_NAME_ALIASES[String(stageName || '').trim()];
+    if (alias) return alias;
+    if (id.startsWith('specialized_') && INTERVIEW_STAGE_I18N[id]) return id;
+    return id;
+}
+
+function localizeInterviewStageName(stageId, stageName = '', fallbackIndex = null) {
+    const resolved = resolveInterviewStageId(stageId, stageName);
+    const entry = INTERVIEW_STAGE_I18N[resolved];
+    if (entry) return uiT(entry[0], entry[1]);
+    if (stageName && stageName.trim()) return stageName.trim();
+    if (fallbackIndex == null) return '';
+    return uiT('interview.stageFallback', 'Stage {n}', { n: fallbackIndex + 1 });
+}
+
+function shortInterviewStageLabel(name) {
+    const text = String(name || '').trim();
+    if (!text) return '';
+    // Chinese stage names use "第N轮·标题"; English uses "Round N — title"
+    const zh = text.replace(/^第.*?·/, '');
+    if (zh !== text) return zh;
+    const en = text.replace(/^Round\s*\d+\s*[—–-]\s*/i, '');
+    return en || text;
+}
+
 /** 面试程序版本配置（与后端 interview_program.py 对齐） */
 function getInterviewProgramPreviews() {
     return {
@@ -101,7 +154,7 @@ function getProgramStageLabels(programVersion, specializedFocus) {
 function buildQuestionGenerationProgressSteps(mode, programVersion, specializedFocus, questionCount = 0) {
     const steps = [
         {
-            message: uiT('interview.loading.analyzing', 'Analyzing profile and job requirements...'),
+            message: uiT('interview.loading.analyzing', 'Analyzing profile and job requirements — usually about 1.5–2 minutes total…'),
             stepLabel: uiT('interview.loading.stepAnalyze', 'Step 1 · Analyze'),
             percent: 15,
         },
@@ -142,8 +195,8 @@ function buildQuestionGenerationProgressSteps(mode, programVersion, specializedF
 function startQuestionGenerationProgress(mode, programVersion, specializedFocus, questionCount = 0) {
     return Utils.startLoadingProgressSimulation({
         title: mode === 'custom'
-            ? uiT('interview.loadingTitleAnswers', 'Generating Reference Answers')
-            : uiT('interview.loadingTitle', 'Generating Questions'),
+            ? uiT('interview.loadingTitleAnswers', 'Generating Reference Answers — usually about 1.5–2 minutes')
+            : uiT('interview.loadingTitle', 'Generating Questions — usually about 1.5–2 minutes'),
         steps: buildQuestionGenerationProgressSteps(mode, programVersion, specializedFocus, questionCount),
         capPercent: 95,
     });
@@ -348,6 +401,7 @@ function initializeInterviewPrep() {
     bootstrapSavedProfileForInterview();
 
     setupInputValidation();
+    selectInterviewMode(interviewMode);
     updatePrerequisiteStatus();
 }
 
@@ -397,12 +451,18 @@ async function ensureInterviewJobReady() {
     return true;
 }
 
+function getStartInterviewButtons() {
+    return document.querySelectorAll('.btn-interview-action');
+}
+
 function updateStartButtonState() {
-    const startButton = document.getElementById('btn-load-questions');
-    if (!startButton) return;
     const identity = getInterviewJobIdentity();
     const ready = interviewPrerequisites.profileReady && identity.hasIdentity;
-    startButton.disabled = !ready;
+    const hint = uiT('interview.completePrereqHint', 'Complete profile and job title first');
+    getStartInterviewButtons().forEach((btn) => {
+        btn.disabled = !ready;
+        btn.title = ready ? '' : hint;
+    });
 }
 
 function updatePrerequisiteStatus() {
@@ -502,30 +562,9 @@ async function uploadInterviewProfile() {
     }
 }
 
-async function submitInterviewJobDescription() {
-    try {
-        const identity = getInterviewJobIdentity();
-        await interviewSetup?.submitJd({
-            targetJobTitle: identity.targetJobTitle || identity.name,
-            jdText: identity.jdText || identity.name,
-        });
-    } catch (error) {
-        console.error('JD submission error:', error);
-    }
-}
-
-function selectTone(tone) {
-    interviewSession.tone = tone;
-
-    document.querySelectorAll('.tone-option').forEach(option => {
-        option.classList.remove('selected');
-    });
-    document.querySelector(`[data-tone="${tone}"]`).classList.add('selected');
-
-    const avatar = document.getElementById('interviewer-avatar');
-    avatar.className = `interviewer-avatar avatar-${tone}`;
-
-    console.log('Selected tone:', tone);
+/** Interview style UI removed — always use professional mode. */
+function selectTone(_tone) {
+    interviewSession.tone = 'professional';
 }
 
 function selectInterviewMode(mode) {
@@ -538,25 +577,17 @@ function selectInterviewMode(mode) {
     const isInteractive = mode === 'interactive';
     const isCustom = mode === 'custom';
     const showQuestionBank = !isInteractive && (!isCustom || interviewSession.questions.length > 0);
-    document.getElementById('question-bank-panel').classList.toggle('hidden', !showQuestionBank);
+    document.getElementById('question-bank-panel')?.classList.toggle('hidden', !showQuestionBank);
     document.getElementById('custom-questions-panel')?.classList.toggle('hidden', !isCustom || interviewSession.questions.length > 0);
-    document.getElementById('interactive-panel').classList.toggle('hidden', !isInteractive);
+    document.getElementById('interactive-panel')?.classList.toggle('hidden', !isInteractive);
     document.getElementById('program-version-section')?.classList.toggle('hidden', isCustom);
+    document.getElementById('interview-primary-actions')?.classList.toggle('hidden', isCustom);
+    document.getElementById('btn-custom-answers-main')?.classList.toggle('hidden', !isCustom);
     document.getElementById('sidebar-progress-title').textContent = isInteractive
         ? uiT('interview.sidebarProgressInteractive', 'Interview Progress')
         : (isCustom ? uiT('interview.sidebarProgressCustom', 'Custom Questions Progress') : uiT('interview.sidebarProgressQuestionBank', 'Question Bank Progress'));
 
-    const startBtn = document.getElementById('btn-load-questions');
-    if (startBtn) {
-        if (isInteractive) {
-            startBtn.innerHTML = '<i class="fas fa-comments mr-2"></i> ' + uiT('interview.startSession', 'Start Mock Interview');
-        } else if (isCustom) {
-            startBtn.innerHTML = '<i class="fas fa-magic mr-2"></i> ' + uiT('interview.generateReferenceAnswers', 'Generate Reference Answers');
-        } else {
-            startBtn.innerHTML = '<i class="fas fa-play mr-2"></i> ' + uiT('interview.generateQuestionBank', 'Generate Question Bank');
-        }
-    }
-
+    updateStartButtonState();
     updateProgramPreview();
 
     if (isInteractive && interactiveSession.active) {
@@ -581,10 +612,11 @@ function buildQuestionBankStages(questions) {
     questions.forEach((q, index) => {
         const stageIndex = q.stage_index ?? 0;
         if (!stageMap.has(stageIndex)) {
+            const stageId = resolveInterviewStageId(q.stage_id, q.stage_name);
             stageMap.set(stageIndex, {
                 stage_index: stageIndex,
-                stage_id: q.stage_id || '',
-                name: q.stage_name || `Stage ${stageIndex + 1}`,
+                stage_id: stageId,
+                name: localizeInterviewStageName(stageId, q.stage_name, stageIndex),
                 questionIndices: [],
             });
         }
@@ -610,9 +642,18 @@ function renderQuestionBankStageBanner() {
     const badgeEl = document.getElementById('qb-program-badge');
     const trackEl = document.getElementById('qb-stages-track');
 
-    if (nameEl && stage) nameEl.textContent = stage.name;
+    if (nameEl && stage) {
+        nameEl.textContent = localizeInterviewStageName(stage.stage_id, stage.name, stage.stage_index);
+    }
     document.getElementById('qb-stage-subtitle').textContent = stage
-        ? `Question ${stage.questionIndices.indexOf(interviewSession.currentQuestionIndex) + 1} of ${stage.questionIndices.length} in this stage`
+        ? uiT(
+            'interview.qbStageSubtitle',
+            'Question {current} of {total} in this stage',
+            {
+                current: stage.questionIndices.indexOf(interviewSession.currentQuestionIndex) + 1,
+                total: stage.questionIndices.length,
+            }
+        )
         : '';
     if (badgeEl) {
         badgeEl.textContent = interviewSession.programLabel
@@ -627,9 +668,12 @@ function renderQuestionBankStageBanner() {
             const isDone = answeredInStage === s.questionIndices.length;
             const bg = isDone ? 'bg-green-400' : isActive ? 'bg-white' : 'bg-white/30';
             const text = isActive ? 'text-purple-700 font-medium' : isDone ? 'text-white' : 'text-white/70';
+            const label = shortInterviewStageLabel(
+                localizeInterviewStageName(s.stage_id, s.name, s.stage_index)
+            );
             return `<div class="flex-1 min-w-0">
                 <div class="h-1.5 rounded-full ${bg} mb-1"></div>
-                <div class="text-[10px] truncate ${text}">${s.name.replace(/^第.*?·/, '')}</div>
+                <div class="text-[10px] truncate ${text}">${label}</div>
             </div>`;
         }).join('');
     }
@@ -681,6 +725,21 @@ function updateProgramPreview() {
     preview.innerHTML = html;
 }
 
+async function startQuestionBankFlow() {
+    selectInterviewMode('question_bank');
+    return loadInterviewQuestions();
+}
+
+async function startMockInterviewFlow() {
+    selectInterviewMode('interactive');
+    return startInteractiveInterview();
+}
+
+async function startCustomAnswersFlow() {
+    selectInterviewMode('custom');
+    return loadCustomInterviewQuestions();
+}
+
 async function loadInterviewQuestions() {
     if (interviewMode === 'interactive') {
         return startInteractiveInterview();
@@ -729,15 +788,18 @@ async function loadInterviewQuestions() {
         );
 
         if (response.interview_qa && response.interview_qa.length > 0) {
-            interviewSession.questions = response.interview_qa.map((qa, index) => ({
-                id: qa.id || `q_${index}`,
-                question: qa.question,
-                category: qa.category || 'General',
-                answer: qa.answer || '',
-                stage_id: qa.stage_id || '',
-                stage_name: qa.stage_name || '',
-                stage_index: qa.stage_index ?? 0,
-            }));
+            interviewSession.questions = response.interview_qa.map((qa, index) => {
+                const stageId = resolveInterviewStageId(qa.stage_id, qa.stage_name);
+                return {
+                    id: qa.id || `q_${index}`,
+                    question: qa.question,
+                    category: qa.category || 'General',
+                    answer: qa.answer || '',
+                    stage_id: stageId,
+                    stage_name: localizeInterviewStageName(stageId, qa.stage_name, qa.stage_index ?? 0),
+                    stage_index: qa.stage_index ?? 0,
+                };
+            });
             interviewSession.stages = buildQuestionBankStages(interviewSession.questions);
             interviewSession.programVersion = programVersion;
             interviewSession.programLabel = getInterviewProgramPreviews()[programVersion]?.label
@@ -846,18 +908,21 @@ async function loadCustomInterviewQuestions() {
         );
 
         if (response.interview_qa && response.interview_qa.length > 0) {
-            interviewSession.questions = response.interview_qa.map((qa, index) => ({
-                id: qa.id || `q_custom_${index}`,
-                question: qa.question,
-                category: qa.category || 'Custom',
-                answer: qa.answer || '',
-                stage_id: qa.stage_id || 'custom',
-                stage_name: qa.stage_name || 'Custom Questions',
-                stage_index: qa.stage_index ?? 0,
-            }));
+            interviewSession.questions = response.interview_qa.map((qa, index) => {
+                const stageId = resolveInterviewStageId(qa.stage_id || 'custom', qa.stage_name);
+                return {
+                    id: qa.id || `q_custom_${index}`,
+                    question: qa.question,
+                    category: qa.category || 'Custom',
+                    answer: qa.answer || '',
+                    stage_id: stageId || 'custom',
+                    stage_name: localizeInterviewStageName(stageId || 'custom', qa.stage_name, qa.stage_index ?? 0),
+                    stage_index: qa.stage_index ?? 0,
+                };
+            });
             interviewSession.stages = buildQuestionBankStages(interviewSession.questions);
             interviewSession.programVersion = 'custom';
-            interviewSession.programLabel = 'Custom Questions';
+            interviewSession.programLabel = uiT('interview.modeCustom', 'Custom Questions');
         } else {
             throw new Error(uiT('interview.toast.noReferenceAnswers', 'No reference answers generated. Ensure profile, job description, and resume are complete.'));
         }
@@ -975,8 +1040,18 @@ function syncInteractiveSessionFromResponse(session, preserveMeta = {}) {
         })(),
         jobTrack: session.job_track || '',
         currentStageIndex: session.current_stage_index || 0,
-        stages: session.stages || [],
-        turns: session.turns || [],
+        stages: (session.stages || []).map((s, i) => {
+            const stageId = resolveInterviewStageId(s.stage_id, s.name);
+            return {
+                ...s,
+                stage_id: stageId,
+                name: localizeInterviewStageName(stageId, s.name, i),
+            };
+        }),
+        turns: (session.turns || []).map((turn) => ({
+            ...turn,
+            stage_name: localizeInterviewStageName(turn.stage_id, turn.stage_name),
+        })),
         debrief: session.debrief || interactiveSession.debrief || null,
         savedRecordId: preserveMeta.savedRecordId ?? interactiveSession.savedRecordId ?? null,
         savePromptDismissed: preserveMeta.savePromptDismissed ?? interactiveSession.savePromptDismissed ?? false,
@@ -1080,7 +1155,9 @@ function renderStageBanner() {
     const badgeEl = document.getElementById('interactive-program-badge');
     const trackEl = document.getElementById('interactive-stages-track');
 
-    if (stage && nameEl) nameEl.textContent = stage.name || '';
+    if (stage && nameEl) {
+        nameEl.textContent = localizeInterviewStageName(stage.stage_id, stage.name, interactiveSession.currentStageIndex);
+    }
     if (stage && subEl) subEl.textContent = stage.subtitle || '';
     if (badgeEl) {
         badgeEl.textContent = interactiveSession.programLabel
@@ -1094,9 +1171,12 @@ function renderStageBanner() {
             const isDone = s.status === 'completed';
             const bg = isDone ? 'bg-green-400' : isActive ? 'bg-white' : 'bg-white/30';
             const text = isActive ? 'text-purple-700 font-medium' : isDone ? 'text-white' : 'text-white/70';
+            const label = shortInterviewStageLabel(
+                localizeInterviewStageName(s.stage_id, s.name, i)
+            ) || uiT('interview.stageFallback', 'Stage {n}', { n: i + 1 });
             return `<div class="flex-1 min-w-0">
                 <div class="h-1.5 rounded-full ${bg} mb-1"></div>
-                <div class="text-[10px] truncate ${text}">${s.name?.replace(/^第.*?·/, '') || `Stage ${i + 1}`}</div>
+                <div class="text-[10px] truncate ${text}">${label}</div>
             </div>`;
         }).join('');
     }
@@ -1476,9 +1556,11 @@ function updateInteractiveProgress() {
     document.getElementById('progress-fill').style.width = `${percentage}%`;
 
     const stage = interactiveSession.stages?.[interactiveSession.currentStageIndex];
-    let stageLabel = interactiveSession.status === 'completed' ? 'Done' : `Round ${current}`;
+    let stageLabel = interactiveSession.status === 'completed'
+        ? uiT('interview.done', 'Done')
+        : uiT('interview.roundLabel', 'Round {n}', { n: current });
     if (stage && interactiveSession.status !== 'completed') {
-        stageLabel = `${stage.name} · ${stage.turn_count || 0}/${stage.max_turns}`;
+        stageLabel = `${localizeInterviewStageName(stage.stage_id, stage.name, interactiveSession.currentStageIndex)} · ${stage.turn_count || 0}/${stage.max_turns}`;
     }
     document.getElementById('current-q-num').textContent = stageLabel;
 }
@@ -1493,7 +1575,6 @@ function downloadInteractiveDebrief() {
     let report = `INTERACTIVE MOCK INTERVIEW DEBRIEF\n`;
     report += `===================================\n\n`;
     report += `Position: ${interviewSession.jobTitle}\n`;
-    report += `Style: ${interviewSession.tone}\n`;
     report += `Date: ${new Date().toLocaleString()}\n`;
     report += `Overall Score: ${debrief.overall_score}/100\n\n`;
     report += `SUMMARY\n${debrief.summary}\n\n`;
@@ -1746,18 +1827,19 @@ async function restoreQuestionBankRecord(recordId) {
         const data = record.data || {};
         const qaList = data.interview_qa || [];
 
-        interviewSession.questions = qaList.map((qa, index) => ({
-            id: qa.id || `q_${index}`,
-            question: qa.question,
-            category: qa.category || 'General',
-            answer: qa.answer || '',
-            stage_id: qa.stage_id || '',
-            stage_name: qa.stage_name || '',
-            stage_index: qa.stage_index ?? 0,
-        }));
-        interviewSession.stages = data.stages?.length
-            ? data.stages
-            : buildQuestionBankStages(interviewSession.questions);
+        interviewSession.questions = qaList.map((qa, index) => {
+            const stageId = resolveInterviewStageId(qa.stage_id, qa.stage_name);
+            return {
+                id: qa.id || `q_${index}`,
+                question: qa.question,
+                category: qa.category || 'General',
+                answer: qa.answer || '',
+                stage_id: stageId,
+                stage_name: localizeInterviewStageName(stageId, qa.stage_name, qa.stage_index ?? 0),
+                stage_index: qa.stage_index ?? 0,
+            };
+        });
+        interviewSession.stages = buildQuestionBankStages(interviewSession.questions);
         interviewSession.answers = Array.isArray(data.user_answers)
             ? [...data.user_answers]
             : [];
@@ -1765,9 +1847,11 @@ async function restoreQuestionBankRecord(recordId) {
             interviewSession.answers.push('');
         }
         interviewSession.jobTitle = record.job_title || '';
-        interviewSession.tone = record.tone || 'professional';
+        interviewSession.tone = 'professional';
         interviewSession.programVersion = record.program_version || 'quick';
-        interviewSession.programLabel = data.program_label || '';
+        interviewSession.programLabel = getInterviewProgramPreviews()[interviewSession.programVersion]?.label
+            || data.program_label
+            || '';
         interviewSession.currentQuestionIndex = 0;
         interviewSession.savedRecordId = null;
         interviewMode = record.mode === 'custom' ? 'custom' : 'question_bank';
@@ -1775,7 +1859,6 @@ async function restoreQuestionBankRecord(recordId) {
         if (record.job_title) {
             document.getElementById('job-title').value = record.job_title;
         }
-        selectTone(interviewSession.tone);
         selectInterviewMode(interviewMode);
 
         Utils.hideLoading();
@@ -1834,7 +1917,10 @@ function displayCurrentQuestion() {
 
     const stageLabel = document.getElementById('qb-stage-label');
     if (stageLabel) {
-        stageLabel.textContent = question.stage_name ? `${question.stage_name} · ` : '';
+        const localizedStage = localizeInterviewStageName(
+            question.stage_id, question.stage_name, interviewSession.currentQuestionIndex
+        );
+        stageLabel.textContent = localizedStage ? `${localizedStage} · ` : '';
     }
 
     const previousAnswer = interviewSession.answers[interviewSession.currentQuestionIndex];
@@ -1910,15 +1996,20 @@ async function submitAnswer() {
 function displayFeedback(response) {
     const feedbackSection = document.getElementById('feedback-section');
     const feedbackContent = document.getElementById('feedback-content');
+    if (!feedbackSection || !feedbackContent) {
+        console.error('Feedback section missing from page');
+        Utils.showToast(uiT('interview.toast.feedbackFailed', 'Failed to get feedback: {msg}', { msg: 'UI missing' }));
+        return;
+    }
 
     const strengths = response.strengths || [];
     const improvements = response.improvements || [];
-    const score = response.score || null;
+    const score = (response.score === 0 || response.score) ? response.score : null;
     const suggestions = response.suggestions || [];
 
     let html = '';
 
-    if (score) {
+    if (score !== null && score !== undefined) {
         html += `
             <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                 <div class="flex items-center justify-between">
@@ -1926,7 +2017,7 @@ function displayFeedback(response) {
                     <span class="text-2xl font-bold text-purple-600">${score}/100</span>
                 </div>
                 <div class="mt-2 bg-gray-200 rounded-full h-2">
-                    <div class="bg-purple-600 h-2 rounded-full" style="width: ${score}%"></div>
+                    <div class="bg-purple-600 h-2 rounded-full" style="width: ${Math.max(0, Math.min(100, Number(score) || 0))}%"></div>
                 </div>
             </div>
         `;
@@ -1966,6 +2057,9 @@ function displayFeedback(response) {
     if (!html && response.reply_message) {
         html = `<div class="feedback-item feedback-strength"><p class="text-sm text-gray-700">${response.reply_message}</p></div>`;
     }
+    if (!html) {
+        html = `<div class="feedback-item feedback-improvement"><p class="text-sm text-gray-700">${uiT('interview.toast.feedbackFailed', 'Failed to get feedback: {msg}', { msg: 'empty response' })}</p></div>`;
+    }
 
     feedbackContent.innerHTML = html;
     feedbackSection.classList.remove('hidden');
@@ -1987,7 +2081,7 @@ function updateProgress() {
 
     const stage = interviewSession.stages.find(s => s.stage_index === getQuestionBankCurrentStageIndex());
     const stageLabel = stage
-        ? `${stage.name} · Q${stage.questionIndices.indexOf(interviewSession.currentQuestionIndex) + 1}/${stage.questionIndices.length}`
+        ? `${localizeInterviewStageName(stage.stage_id, stage.name, stage.stage_index)} · Q${stage.questionIndices.indexOf(interviewSession.currentQuestionIndex) + 1}/${stage.questionIndices.length}`
         : current;
     document.getElementById('current-q-num').textContent = stageLabel;
 }
@@ -2005,8 +2099,9 @@ function generateSessionReport() {
         interviewSession.stages.forEach((stage) => {
             const answered = stage.questionIndices.filter(i => interviewSession.answers[i]?.trim()).length;
             const total = stage.questionIndices.length;
+            const stageName = localizeInterviewStageName(stage.stage_id, stage.name, stage.stage_index);
             stageHtml += `<div class="flex justify-between bg-white/5 rounded px-3 py-2">
-                <span class="opacity-90">${stage.name}</span>
+                <span class="opacity-90">${stageName}</span>
                 <span class="font-medium">${answered}/${total}</span>
             </div>`;
         });
@@ -2039,10 +2134,6 @@ function generateSessionReport() {
                 <div class="flex justify-between">
                     <span class="opacity-80">Program:</span>
                     <span class="font-medium">${interviewSession.programLabel || interviewSession.programVersion}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="opacity-80">Interview Style:</span>
-                    <span class="font-medium capitalize">${interviewSession.tone}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="opacity-80">Stages:</span>
@@ -2086,7 +2177,6 @@ function downloadReport() {
     let report = `INTERVIEW SESSION REPORT\n`;
     report += `========================\n\n`;
     report += `Position: ${interviewSession.jobTitle}\n`;
-    report += `Style: ${interviewSession.tone}\n`;
     report += `Date: ${new Date().toLocaleString()}\n\n`;
     report += `COMPLETION: ${interviewSession.answers.filter(a => a && a.trim()).length}/${interviewSession.questions.length} questions answered\n\n`;
     report += `QUESTIONS AND ANSWERS:\n`;
@@ -2187,11 +2277,11 @@ function restartSession() {
 
         updatePrerequisiteStatus();
         updateProgress();
-        selectTone('professional');
+        interviewSession.tone = 'professional';
         syncQuestionLanguageButtons();
         syncFeedbackLanguageButtons();
 
-        document.getElementById('btn-load-questions').disabled = true;
+        getStartInterviewButtons().forEach((btn) => { btn.disabled = true; });
         selectInterviewMode(interviewMode);
         updateQuestionBankSaveControls();
         Utils.showToast(uiT('interview.toast.sessionReset', 'Session reset'));

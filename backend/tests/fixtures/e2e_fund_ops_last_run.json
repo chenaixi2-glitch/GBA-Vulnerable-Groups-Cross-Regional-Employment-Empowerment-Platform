@@ -1,0 +1,111 @@
+{
+  "session_id": "sess_1f230167c7624f61",
+  "job_title": "Fund Operations Associate",
+  "gaps": [
+    {
+      "id": "gap_1",
+      "type": "missing_skill",
+      "severity": "high",
+      "description": "The candidate lacks experience or skills directly related to fund operations, such as NAV review, trade settlement, cash reconciliation, or familiarity with fund operations or middle-office functions. The candidate's skills are primarily in data analysis, risk modeling, and compliance verification, which are not directly aligned with the operational tasks required for this Fund Operations Associate role.",
+      "estimated_hours": 0,
+      "related_section_ids": [
+        "job_fca000fcc966"
+      ],
+      "resolved": false,
+      "resolution_source": "gap_analysis"
+    },
+    {
+      "id": "gap_2",
+      "type": "missing_experience",
+      "severity": "medium",
+      "description": "The candidate has internship experiences in data analysis, risk modeling, and compliance verification, but none of these directly involve fund operations tasks like maintaining investor registers, coordinating with custodians, or preparing operational reports. The candidate's experience is in finance-related roles but not specifically in fund operations.",
+      "estimated_hours": 0,
+      "related_section_ids": [
+        "job_fca000fcc966"
+      ],
+      "resolved": false,
+      "resolution_source": "gap_analysis"
+    },
+    {
+      "id": "gap_3",
+      "type": "no_quantification",
+      "severity": "low",
+      "description": "The candidate's achievements in internships are described qualitatively (e.g., 'accurately identified compliance risks') but lack quantifiable metrics such as the number of projects handled, the scale of data processed, or the impact of their work on the organization. This makes it difficult to assess the candidate's true capability level for operational tasks.",
+      "estimated_hours": 0,
+      "related_section_ids": [
+        "fact_internship_1",
+        "fact_internship_2",
+        "fact_internship_3"
+      ],
+      "resolved": false,
+      "resolution_source": "gap_analysis"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q_1",
+      "question": "Have you performed any tasks related to fund operations, such as NAV calculation, trade settlement, or cash reconciliation? If so, please describe the specific tasks and any relevant experience.",
+      "reason": "This question helps clarify if the candidate has any exposure to fund operations tasks, which are core responsibilities of the role. Understanding this can help determine if the candidate's background aligns with the position.",
+      "target_field": "experience",
+      "priority": "high",
+      "status": "pending",
+      "answer_ref": ""
+    },
+    {
+      "id": "q_2",
+      "question": "In your internships, did you work with any financial systems or tools specifically used in fund operations? If yes, please describe your experience.",
+      "reason": "This question assesses the candidate's familiarity with operational tools, which is a key requirement for this role. Fund operations often involve specific software or systems not covered in the candidate's previous roles.",
+      "target_field": "experience",
+      "priority": "medium",
+      "status": "pending",
+      "answer_ref": ""
+    },
+    {
+      "id": "q_3",
+      "question": "Can you quantify your achievements in any of your internships? For example, how many projects did you handle, what was the scale of data processed, or what was the impact of your work (e.g., cost savings, efficiency improvements)?",
+      "reason": "Quantifying achievements provides concrete evidence of the candidate's capabilities and helps evaluate their performance in previous roles. This is particularly important for assessing their suitability for operational tasks that require precision and detail-oriented work.",
+      "target_field": "achievements",
+      "priority": "medium",
+      "status": "pending",
+      "answer_ref": ""
+    }
+  ],
+  "answers": [
+    {
+      "question": "Have you performed any tasks related to fund operations, such as NAV calculation, trade settlement, or cash reconciliation? If so, please describe the specific tasks and any relevant experience.",
+      "answer": "协助过净值核对与资金流水勾稽；熟悉申购赎回资料归档，能配合托管/行政方催收材料。",
+      "target_field": "experience",
+      "related_fact_ids": []
+    },
+    {
+      "question": "In your internships, did you work with any financial systems or tools specifically used in fund operations? If yes, please describe your experience.",
+      "answer": "协助过净值核对与资金流水勾稽；熟悉申购赎回资料归档，能配合托管/行政方催收材料。",
+      "target_field": "experience",
+      "related_fact_ids": []
+    },
+    {
+      "question": "Can you quantify your achievements in any of your internships? For example, how many projects did you handle, what was the scale of data processed, or what was the impact of your work (e.g., cost savings, efficiency improvements)?",
+      "answer": "在实习中把月度对账差异排查时间缩短约 30%，并维护约 50 个投资人档案的周度更新。",
+      "target_field": "achievements",
+      "related_fact_ids": []
+    }
+  ],
+  "generate_status": 200,
+  "generate_seconds": 261.7,
+  "phases": [
+    "start",
+    "skeleton_with_placeholders",
+    "module_polished",
+    "module_polished",
+    "module_polished",
+    "complete"
+  ],
+  "error": null,
+  "resume_summary": "",
+  "resume_counts": {
+    "skills": 0,
+    "internships": 4,
+    "projects": 0,
+    "awards": 0
+  }
+}

@@ -134,6 +134,112 @@ class ResumeSectionItemOutput(BaseModel):
     updated_at: str = ""
 
 
+def _coerce_section_items(value: Any, *, id_prefix: str = "item") -> list[dict[str, Any]]:
+    """Accept list[str] / bad shapes from small models and normalize to section items."""
+    if value is None or value == "" or isinstance(value, (bool, int, float)):
+        return []
+    if isinstance(value, str):
+        # Model sometimes emits a sibling section name instead of a list.
+        return []
+    if isinstance(value, dict):
+        value = [value]
+    if not isinstance(value, list):
+        return []
+    items: list[dict[str, Any]] = []
+    for index, raw in enumerate(value):
+        if isinstance(raw, str):
+            text = raw.strip()
+            if not text:
+                continue
+            items.append({
+                "id": f"{id_prefix}_{index + 1}",
+                "title": text,
+                "content": text,
+                "source_refs": [],
+                "updated_at": "",
+            })
+        elif isinstance(raw, dict):
+            items.append(raw)
+    return items
+
+
+def normalize_resume_generation_payload(data: Any) -> Any:
+    """Repair common resume skeleton/generation JSON shape mistakes."""
+    if not isinstance(data, dict):
+        return data
+    payload = dict(data)
+
+    # Mis-nest: {"summary": {"skills": [...], "internships": []}, ...}
+    summary = payload.get("summary")
+    if isinstance(summary, dict):
+        for key in ("skills", "internships", "projects", "awards", "papers", "language", "section_order"):
+            if key in summary and (key not in payload or payload.get(key) in (None, "", [], {})):
+                payload[key] = summary.get(key)
+        payload["summary"] = (
+            summary.get("summary")
+            or summary.get("text")
+            or summary.get("content")
+            or ""
+        )
+
+    profile = payload.get("profile")
+    if isinstance(profile, str):
+        # Model sometimes dumps a prose paragraph into profile.
+        text = profile.strip()
+        payload["profile"] = {"name": "", "extras": {}}
+        if text and not payload.get("summary"):
+            payload["summary"] = text
+    elif isinstance(profile, dict):
+        if isinstance(profile.get("summary"), str) and not payload.get("summary"):
+            payload["summary"] = profile["summary"]
+    elif profile is None:
+        payload["profile"] = {}
+
+    if not isinstance(payload.get("summary"), str):
+        payload["summary"] = ""
+
+    for key, prefix in (
+        ("skills", "skill"),
+        ("internships", "internship"),
+        ("projects", "project"),
+        ("awards", "award"),
+        ("papers", "paper"),
+    ):
+        payload[key] = _coerce_section_items(payload.get(key), id_prefix=prefix)
+
+    # section_order may be broken into reg_order / mangled dicts
+    order = payload.get("section_order")
+    if not isinstance(order, list):
+        alt = payload.get("reg_order") or payload.get("order")
+        if isinstance(alt, list):
+            order = alt
+        elif isinstance(alt, str) and alt.strip():
+            order = [alt.strip()]
+        else:
+            order = []
+    cleaned_order: list[str] = []
+    for item in order:
+        if isinstance(item, str) and item.strip():
+            token = item.strip().strip(",").strip('"').strip()
+            if token and token not in cleaned_order:
+                cleaned_order.append(token)
+    payload["section_order"] = cleaned_order
+
+    if not isinstance(payload.get("language"), str) or not payload.get("language"):
+        payload["language"] = "zh"
+
+    return payload
+
+
+class ResumeClarificationPatchOutput(BaseModel):
+    """Incremental skills/summary patch after gap clarifications."""
+
+    update_summary: bool = False
+    summary: str = ""
+    update_skills: bool = False
+    skills: list[ResumeSectionItemOutput] = Field(default_factory=list)
+
+
 class ResumeGenerationOutput(BaseModel):
     profile: ResumeProfileOutput = Field(default_factory=ResumeProfileOutput)
     summary: str = ""
@@ -147,6 +253,10 @@ class ResumeGenerationOutput(BaseModel):
         default_factory=list,
         description="Optimized section display order; omit to infer from content",
     )
+
+    @classmethod
+    def model_validate(cls, obj: Any, *args: Any, **kwargs: Any):  # type: ignore[override]
+        return super().model_validate(normalize_resume_generation_payload(obj), *args, **kwargs)
 
 
 class ResumeModulePolishOutput(BaseModel):

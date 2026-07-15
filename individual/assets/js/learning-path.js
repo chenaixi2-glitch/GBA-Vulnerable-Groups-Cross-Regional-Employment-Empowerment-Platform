@@ -302,7 +302,7 @@ async function generateLearningPathAnalysis() {
         document.getElementById('assessment-section').classList.add('hidden');
         document.getElementById('loading-state').classList.remove('hidden');
         document.getElementById('loading-state').querySelector('p').textContent =
-            uiT('learningPath.loadingDesc', 'AI is analyzing skill gaps and curating resources...');
+            uiT('learningPath.loadingDesc', 'AI is analyzing skill gaps and curating resources — usually about 1–2 minutes…');
 
         const response = await apiClient.generateLearningPathAnalysis({
             targetJob: inputs.targetJob || (inputs.jdText ? inputs.jdText.split('\n')[0].trim() : ''),
@@ -359,7 +359,7 @@ async function generateLearningPathTimeline() {
         document.getElementById('btn-generate-timeline').disabled = true;
         document.getElementById('loading-state').classList.remove('hidden');
         document.getElementById('loading-state').querySelector('p').textContent =
-            uiT('learningPath.loadingTimelineDesc', 'Building your personalized learning timeline...');
+            uiT('learningPath.loadingTimelineDesc', 'Building your personalized learning timeline — usually about 30–60 seconds…');
 
         const targetContext = typeof collectTargetJobContext === 'function'
             ? collectTargetJobContext({

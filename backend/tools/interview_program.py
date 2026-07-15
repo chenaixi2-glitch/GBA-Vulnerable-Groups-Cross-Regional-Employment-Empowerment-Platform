@@ -46,7 +46,7 @@ class InterviewProgramConfig:
 
 
 SCREENING_MODULES = [
-    "自我介绍（结构化：个人背景+核心经历+匹配岗位优势+求职意向）",
+    "Tell me about yourself (structured: background + core experience + role fit strengths + career goal)",
     "离职/求职原因（话术合理性、稳定性）",
     "对本次投递岗位、公司业务的理解",
     "个人职业规划（短期1-2年）",

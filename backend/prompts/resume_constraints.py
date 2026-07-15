@@ -12,6 +12,34 @@ RESUME_EXPERIENCE_POLISH_GUIDELINES = """
 - 不得捏造公司名、项目名、岗位职责、技术栈、获奖或任何用户未提供的事实（QUANTIFICATION_MODE=industry_standard 仅放宽「常见规模/效率类指标」的行业惯例补充，不放宽事实造假）
 """
 
+_QUANT_MODE_INDUSTRY = """量化规则（QUANTIFICATION_MODE=industry_standard）— 必须严格执行：
+- 优先使用用户/画像已提供的真实数字
+- 对仍缺数字的每条经历，content 中至少写入 1 个保守、角色常见的量化指标（可用区间）
+  技术岗示例：integrated ~8–12 APIs；cut cleanup time ~20–30%；served ~1k–5k daily ops；team of 3–5；p95 latency ~200ms
+  业务/研究岗示例：reviewed ~20–50 documents/week；built ~5–10 slide decks；flagged ~3–5 compliance risks
+- 禁止捏造公司专属营收、独家奖项或不可核验的个人独占成就
+- 禁止整段只有定性空话；缺真实数字也要用上列量级区间补齐"""
+
+_QUANT_MODE_NONE = """量化规则（QUANTIFICATION_MODE=none）：
+- 优先使用用户/画像已提供的真实数字
+- 缺数字时只用客观定性描述（范围、协作、技术复杂度、业务影响文字表述）
+- 禁止出现编造的百分比、用户数、营收金额、性能提升幅度等"""
+
+_QUANT_MODE_DEFAULT = """量化规则（默认）：
+- 仅可使用画像或澄清中已明确提供的数字；无数据时用客观定性描述
+- 禁止凭空编造具体数值"""
+
+
+def resolution_quantification_instruction(edit_instruction: str = "") -> str:
+    """Map edit_instruction QUANTIFICATION_MODE into a compact polish-prompt clause."""
+    text = edit_instruction or ""
+    if "QUANTIFICATION_MODE=industry_standard" in text:
+        return _QUANT_MODE_INDUSTRY
+    if "QUANTIFICATION_MODE=none" in text:
+        return _QUANT_MODE_NONE
+    return _QUANT_MODE_DEFAULT
+
+
 RESUME_A4_ONE_PAGE_CONSTRAINTS = """
 ## 单页 A4 约束（必须严格遵守）
 - 整份简历排版后必须完整落在一页 A4 纸内（210mm × 297mm），禁止溢出到第二页

@@ -1,0 +1,38 @@
+{
+  "session_id": "sess_4779f3a259c947a7",
+  "job_title": "Fund Operations Associate",
+  "ok": true,
+  "rounds": [
+    {
+      "round": 0,
+      "question": "自我介绍"
+    },
+    {
+      "round": 1,
+      "next_question": "你对我们公司的基金运营岗位有什么了解？为什么选择申请这个岗位？",
+      "phase": "primary",
+      "status": "active",
+      "got_feedback": true,
+      "message": "INTERVIEW_TURN_NEXT",
+      "next_differs": true
+    },
+    {
+      "round": 2,
+      "next_question": "你对未来1-2年的职业规划是什么？为什么选择在香港发展？",
+      "phase": "primary",
+      "status": "active",
+      "got_feedback": true,
+      "message": "INTERVIEW_TURN_NEXT",
+      "next_differs": true
+    },
+    {
+      "round": 3,
+      "next_question": "请分享一次你与团队合作完成任务的经历，以及你在合作中发挥了什么作用。",
+      "phase": "primary",
+      "status": "active",
+      "got_feedback": true,
+      "message": "INTERVIEW_TURN_NEXT",
+      "next_differs": true
+    }
+  ]
+}

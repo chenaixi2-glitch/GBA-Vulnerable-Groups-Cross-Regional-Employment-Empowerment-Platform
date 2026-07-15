@@ -438,7 +438,7 @@
             if (this.config.showLoading) {
                 Utils.showLoading(cjsT(
                     i18n.jdLoading?.[0] || 'resume.toast.analyzingJd',
-                    i18n.jdLoading?.[1] || 'Analyzing job description...'
+                    i18n.jdLoading?.[1] || 'Analyzing job description — usually about 30–60 seconds (instant if cached)…'
                 ));
             }
 

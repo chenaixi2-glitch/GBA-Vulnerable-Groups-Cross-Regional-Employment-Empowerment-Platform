@@ -131,7 +131,7 @@ def get_resume_generation_config() -> dict:
     """返回简历内容生成模型配置。"""
     root = get_config()
     cfg = root.get("resume_generation") or root.get("llm", {})
-    return _build_llm_config(cfg, default_temperature=0.3, default_max_tokens=8192)
+    return _build_llm_config(cfg, default_temperature=0.2, default_max_tokens=8192)
 
 
 def get_embedding_config() -> dict:

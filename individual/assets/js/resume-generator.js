@@ -606,7 +606,7 @@ async function fillSuggestedJd(industry, experienceLevel, employerType, options 
         beginAiTaskAttempt();
         if (generateBtn) generateBtn.disabled = true;
         if (!silent) {
-            Utils.showLoading(uiT('resume.toast.generatingJd', 'Generating suggested job description...'));
+            Utils.showLoading(uiT('resume.toast.generatingJd', 'Generating suggested job description — usually about 30–60 seconds…'));
         }
 
         const result = await apiClient.generateJobDescription(
@@ -1007,7 +1007,7 @@ async function executeUploadResume() {
         beginAiTaskAttempt();
         Utils.showLoading(uiT('resume.toast.uploadingResume', 'Uploading resume...'));
         slowHintTimer = setTimeout(() => {
-            Utils.showLoading(uiT('resume.toast.uploadingSlow', 'AI is parsing your resume — this may take 1–2 minutes, please wait…'));
+            Utils.showLoading(uiT('resume.toast.uploadingSlow', 'AI is parsing your resume — usually about 1–2 minutes, please wait…'));
         }, 8000);
 
         let response;
@@ -1202,7 +1202,7 @@ async function generateResumeFromProfile(options = {}) {
     try {
         beginAiTaskAttempt();
         if (!silent) {
-            Utils.showLoading(uiT('resume.toast.generatingProfileResume', 'Generating resume from your profile...'));
+            Utils.showLoading(uiT('resume.toast.generatingProfileResume', 'Generating resume from your profile — usually about 2–3 minutes…'));
         }
         const beforeDraftSnapshot = (typeof ProfileEditor !== 'undefined' && ProfileEditor.captureDraftSnapshot)
             ? ProfileEditor.captureDraftSnapshot()
@@ -1327,7 +1327,7 @@ async function generateResume() {
 
         await syncDraftBeforeGenerate({ required: true, showLoading: true });
 
-        Utils.showLoading(uiT('resume.toast.analyzingJd', 'Analyzing job description...'));
+        Utils.showLoading(uiT('resume.toast.analyzingJd', 'Analyzing job description — usually about 30–60 seconds (instant if cached)…'));
         document.getElementById('agent-status-panel').classList.remove('hidden');
         document.getElementById('empty-state').classList.add('hidden');
 
@@ -1343,6 +1343,7 @@ async function generateResume() {
 
         updateAgentStatus('agent-jd', 'completed');
         updateAgentStatus('agent-gap', 'running');
+        Utils.showLoading(uiT('resume.toast.analyzingGaps', 'Analyzing skill gaps — usually about 1–2 minutes…'));
 
         // 单独以页面 UI 语言跑缺口分析，避免 JD 提交链路返回旧语言/缓存的 questions
         let gapGaps = [];
@@ -1385,7 +1386,7 @@ async function generateResume() {
         }
 
         updateAgentStatus('agent-content', 'running');
-        Utils.showLoading(uiT('resume.toast.generatingResume', 'Generating your customized resume...'));
+        Utils.showLoading(uiT('resume.toast.generatingResume', 'Generating your customized resume — usually about 2–3 minutes…'));
         setResumeView('edit', { scroll: true, scrollTargetId: 'profile-editor-body' });
 
         const quantClause = typeof buildQuantificationEditClause === 'function'
@@ -1430,6 +1431,12 @@ async function generateResume() {
                             'resume.toast.polishingModules',
                             'Skeleton ready — experience modules are being polished in parallel'
                         ));
+                    }
+                    if (event.batch_error) {
+                        Utils.showToast(uiT(
+                            'resume.toast.polishBatchFallback',
+                            'Some experience modules kept the original profile text after polish failed — try Polish again on those cards'
+                        ), 5000);
                     }
                 },
             }
@@ -1482,6 +1489,172 @@ async function generateResume() {
 }
 
 window.generateResume = generateResume;
+
+/**
+ * 开发/联调用：复用当前会话里已有的画像 + JD，跳过上传解析与缺口分析 LLM。
+ * 开启方式：URL ?devReplay=1 或 localStorage.setItem('gba_dev_replay','1')
+ */
+async function quickRetryResumeGenerate() {
+    const generateBtn = document.getElementById('btn-dev-replay-generate');
+    if (generateBtn?.dataset.busy === '1') return;
+    if (!guardAiTaskRetry()) return;
+
+    const setBusy = (busy) => {
+        if (!generateBtn) return;
+        generateBtn.dataset.busy = busy ? '1' : '0';
+        generateBtn.disabled = busy;
+        generateBtn.classList.toggle('opacity-50', busy);
+    };
+
+    setBusy(true);
+    try {
+        beginAiTaskAttempt();
+        apiClient.ensureSessionStarted();
+        if (!hasParsedProfileOnPage()) {
+            Utils.showToast(uiT(
+                'resume.toast.uploadOrPaste',
+                'Please upload a file or paste resume text'
+            ) + '（或先 seed 已有会话）');
+            return;
+        }
+
+        const showDialog = Boolean(document.getElementById('dev-replay-show-gap-dialog')?.checked);
+        const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null;
+        if (targetContext) {
+            try {
+                await apiClient.syncTargetJobContext(targetContext);
+            } catch (_) {
+                /* optional */
+            }
+        }
+
+        let optimizationResult = { proceed: true, answers: [], removals: [], quantificationMode: '' };
+        if (showDialog) {
+            let gaps = [];
+            let questions = [];
+            let removals = [];
+            try {
+                const status = await apiClient.getSessionResumeStatus?.().catch(() => null);
+                gaps = status?.gaps || [];
+                questions = status?.questions_to_ask || [];
+                removals = status?.experiences_to_remove || [];
+            } catch (_) { /* empty — dialog still allows free-text */ }
+            Utils.hideLoading();
+            optimizationResult = await showOptimizationDialog({
+                gaps,
+                questions,
+                removals,
+                alignmentHint: 'Dev replay：跳过缺口分析，可直接填写补充后生成',
+            });
+            if (!optimizationResult?.proceed) {
+                Utils.showToast(uiT('resume.toast.cancelledGenerate', 'Resume generation cancelled'));
+                return;
+            }
+            const answered = (optimizationResult.answers || []).filter((a) => a.answer);
+            const agreedRemovals = (optimizationResult.removals || []).filter((r) => r.agreed);
+            if (answered.length || agreedRemovals.length) {
+                Utils.showLoading(uiT('resume.toast.updatingProfile', 'Updating profile with your answers...'));
+                await apiClient.submitOptimizationFeedback({
+                    answers: answered,
+                    removals: agreedRemovals,
+                });
+            }
+        }
+
+        const quantClause = typeof buildQuantificationEditClause === 'function'
+            ? buildQuantificationEditClause(optimizationResult.quantificationMode || '')
+            : 'Add quantified results only when supported by my profile facts; never fabricate numbers.';
+        const generateInstruction = (
+            'Please generate a customized resume based on my experience and target position. '
+            + 'Polish each experience entry to align with the target job, follow industry-standard resume conventions, '
+            + 'and keep all content within one A4 page. '
+            + quantClause
+        );
+
+        Utils.showLoading(uiT('resume.toast.generatingResume', 'Generating your customized resume...'));
+        setResumeView('edit', { scroll: true, scrollTargetId: 'profile-editor-body' });
+        updateAgentStatus('agent-content', 'running');
+
+        let streamAppliedSkeleton = false;
+        const resumeResponse = await apiClient.generateResume(
+            generateInstruction,
+            targetContext,
+            {
+                forcedIntent: 'content_edit',
+                skipRender: true,
+                clearGeneratedResume: true,
+                streamOnly: true,
+                onProgress: (event) => {
+                    if (!event?.resume_content_json) return;
+                    applyResumeGenerationResult(
+                        {
+                            resume_content_json: event.resume_content_json,
+                            language: event.language || currentResumeLanguage,
+                        },
+                        event.language || currentResumeLanguage,
+                        {
+                            deferPreview: true,
+                            polishingFactIds: event.pending_fact_ids || [],
+                            silent: true,
+                        }
+                    );
+                    if (!streamAppliedSkeleton && event.phase === 'skeleton_with_placeholders') {
+                        streamAppliedSkeleton = true;
+                        Utils.hideLoading();
+                        Utils.showToast(uiT(
+                            'resume.toast.polishingModules',
+                            'Skeleton ready — experience modules are being polished in parallel'
+                        ));
+                    }
+                    if (event.batch_error) {
+                        Utils.showToast(uiT(
+                            'resume.toast.polishBatchFallback',
+                            'Some experience modules kept the original profile text after polish failed — try Polish again on those cards'
+                        ), 5000);
+                    }
+                },
+            }
+        );
+
+        updateAgentStatus('agent-content', 'completed');
+        applyResumeGenerationResult(
+            resumeResponse,
+            resumeResponse.language || resumeResponse.resume_content_json?.meta?.language || currentResumeLanguage,
+            { deferPreview: true, polishingFactIds: [] }
+        );
+        Utils.hideLoading();
+        Utils.showToast(uiT(
+            'resume.toast.generatedEditBeforeExport',
+            'Resume content ready in the editor — review and export when ready (preview renders on export)'
+        ));
+        setResumeView('edit', { scroll: true });
+    } catch (error) {
+        Utils.hideLoading();
+        Utils.showAiTaskErrorToast(error, 'resume.toast.generateFailed', 'Failed to generate resume: {msg}', { msg: error.message });
+        console.error('Dev replay generate error:', error);
+        updateAgentStatus('agent-content', 'failed');
+    } finally {
+        setBusy(false);
+        Utils.refreshAiTaskRetryButtonGuards?.();
+        if (typeof hideOptimizationDialog === 'function') hideOptimizationDialog();
+    }
+}
+
+function initDevReplayGenerateUi() {
+    const wrap = document.getElementById('dev-replay-generate-wrap');
+    if (!wrap) return;
+    const params = new URLSearchParams(window.location.search || '');
+    const enabled = params.get('devReplay') === '1'
+        || localStorage.getItem('gba_dev_replay') === '1';
+    wrap.classList.toggle('hidden', !enabled);
+}
+
+window.quickRetryResumeGenerate = quickRetryResumeGenerate;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDevReplayGenerateUi);
+} else {
+    initDevReplayGenerateUi();
+}
 
 const GAP_TYPE_I18N = {
     missing_skill: ['resume.toast.gapTypeMissingSkill', 'Missing skill'],
@@ -2061,7 +2234,7 @@ async function optimizeResume() {
 
     try {
         beginAiTaskAttempt();
-        Utils.showLoading(uiT('resume.toast.analyzingGaps', 'Analyzing gaps for optimization...'));
+        Utils.showLoading(uiT('resume.toast.analyzingGaps', 'Analyzing skill gaps — usually about 1–2 minutes…'));
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null;
         await apiClient.syncTargetJobContext(targetContext);
 
@@ -2085,40 +2258,113 @@ async function optimizeResume() {
         const answered = (optimizationResult.answers || []).filter((a) => a.answer);
         const agreedRemovals = (optimizationResult.removals || []).filter((r) => r.agreed);
         if (answered.length || agreedRemovals.length) {
-            Utils.showLoading(uiT('resume.toast.applyingClarifications', 'Applying your clarifications...'));
+            Utils.showLoading(uiT('resume.toast.applyingClarifications', 'Applying your clarifications — usually about 20–60 seconds…'));
             await apiClient.submitOptimizationFeedback({
                 answers: answered,
                 removals: agreedRemovals,
             });
         }
 
-        Utils.showLoading(uiT('resume.toast.optimizingA4', 'Optimizing resume for one A4 page...'));
+        const affected = typeof collectAffectedResumeTargets === 'function'
+            ? collectAffectedResumeTargets({ answers: answered, removals: agreedRemovals, gaps })
+            : { affectedFactIds: [], affectedSections: [] };
+        const clarificationsText = typeof buildClarificationsText === 'function'
+            ? buildClarificationsText(answered)
+            : '';
+        const canIncremental = Boolean(
+            answered.length || agreedRemovals.length
+        ) && Boolean(
+            affected.affectedFactIds.length || affected.affectedSections.length
+        );
+
+        Utils.showLoading(canIncremental
+            ? uiT('resume.toast.polishingAffected', 'Updating affected resume modules — usually about 1–2 minutes…')
+            : uiT('resume.toast.optimizingA4', 'Optimizing resume for one A4 page — usually about 2–3 minutes…'));
         const beforeSnapshot = await captureCurrentResumeSnapshot();
         const quantClause = typeof buildQuantificationEditClause === 'function'
             ? buildQuantificationEditClause(optimizationResult.quantificationMode || '')
             : 'Add quantified results only when supported by my profile facts; never fabricate numbers.';
-        const optimizeInstruction = (
-            'Optimize my resume for the target job. Polish experience entries to highlight role-relevant achievements, '
-            + 'follow industry-standard conventions, and shorten wording so the entire resume fits on one A4 page '
-            + 'without losing key achievements. '
-            + quantClause
-        );
-        const response = await apiClient.optimizeResume(
-            optimizeInstruction,
-            targetContext
-        );
+
+        let response;
+        if (canIncremental) {
+            const optimizeInstruction = (
+                'Incrementally update my existing resume for the target job using clarifications. '
+                + 'Only rewrite affected modules; keep unchanged sections as-is. '
+                + 'Shorten wording so the resume fits one A4 page without losing key achievements. '
+                + quantClause
+            );
+            let streamAppliedSkeleton = false;
+            response = await apiClient.generateResume(
+                optimizeInstruction,
+                targetContext,
+                {
+                    forcedIntent: 'content_edit',
+                    skipRender: true,
+                    clearGeneratedResume: false,
+                    incremental: true,
+                    affectedFactIds: affected.affectedFactIds,
+                    affectedSections: affected.affectedSections,
+                    clarifications: clarificationsText,
+                    streamOnly: true,
+                    onProgress: (event) => {
+                        if (!event?.resume_content_json) return;
+                        applyResumeGenerationResult(
+                            {
+                                resume_content_json: event.resume_content_json,
+                                language: event.language || currentResumeLanguage,
+                            },
+                            event.language || currentResumeLanguage,
+                            {
+                                deferPreview: true,
+                                polishingFactIds: event.pending_fact_ids || [],
+                                silent: true,
+                            }
+                        );
+                        if (!streamAppliedSkeleton && event.phase === 'skeleton_with_placeholders') {
+                            streamAppliedSkeleton = true;
+                            Utils.hideLoading();
+                            Utils.showToast(uiT(
+                                'resume.toast.polishingAffectedModules',
+                                'Reusing your resume skeleton — polishing only the modules you clarified'
+                            ));
+                        }
+                        if (event.batch_error) {
+                            Utils.showToast(uiT(
+                                'resume.toast.polishBatchFallback',
+                                'Some experience modules kept the original profile text after polish failed — try Polish again on those cards'
+                            ), 5000);
+                        }
+                    },
+                }
+            );
+        } else {
+            const optimizeInstruction = (
+                'Optimize my resume for the target job. Polish experience entries to highlight role-relevant achievements, '
+                + 'follow industry-standard conventions, and shorten wording so the entire resume fits on one A4 page '
+                + 'without losing key achievements. '
+                + quantClause
+            );
+            response = await apiClient.optimizeResume(optimizeInstruction, targetContext);
+        }
 
         let optimizedHtml = response.resume_html?.html || '';
-        if (response.resume_html && response.resume_html.html) {
+        if (response.resume_content_json) {
+            applyResumeGenerationResult(
+                response,
+                response.language || response.resume_content_json?.meta?.language || currentResumeLanguage,
+                { deferPreview: true, polishingFactIds: [] }
+            );
+        } else if (response.resume_html && response.resume_html.html) {
             displayResume(response.resume_html.html);
+            optimizedHtml = response.resume_html.html;
         } else {
-            const resumeData = await apiClient.getResumeHtml();
-            if (resumeData.resume_html && resumeData.resume_html.html) {
+            const resumeData = await apiClient.getResumeHtml().catch(() => null);
+            if (resumeData?.resume_html?.html) {
                 optimizedHtml = resumeData.resume_html.html;
                 displayResume(optimizedHtml);
             }
         }
-        if (beforeSnapshot.html && optimizedHtml) {
+        if (beforeSnapshot.html && (optimizedHtml || response.resume_content_json)) {
             pushResumeUndoSnapshot(beforeSnapshot);
         }
         updateResumeLanguageBadge(response.resume_content_json?.meta?.language || currentResumeLanguage);

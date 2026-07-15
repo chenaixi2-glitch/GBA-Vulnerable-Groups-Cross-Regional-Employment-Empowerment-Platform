@@ -107,6 +107,50 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 8. 即使部分字段为空，也必须返回合法 JSON 对象
 """
 
+RESUME_SKELETON_PROMPT = """你是简历内容生成专家。这是分步生成的第 1 步：只生成轻量骨架 JSON。
+
+目标语言：{target_language_label}（language 字段设为 "{target_language}"）
+
+{resume_output_language_instruction}
+
+硬性要求（输出必须极短，完成 token 预算约 4096，禁止写满）：
+- 只生成：profile、summary、skills、awards、papers、language、section_order
+- internships 与 projects 必须是空数组 []，不要写任何经历正文（后续步骤会单独润色）
+- summary 最多 2 句；skills 最多 6 条，每条 content ≤ 40 字/词
+- awards/papers 仅在画像确有时填写，否则 []
+- 不得捏造事实；禁止输出 Markdown 或解释
+
+目标岗位（摘要）：
+{job_json}
+
+候选人画像（经历仅列出 id，正文勿展开）：
+{profile_json}
+
+{edit_instruction}
+
+机器协议：仅返回一个合法 JSON 对象，例如：
+{{
+  "profile": {{
+    "name": "",
+    "email": "",
+    "phone": "",
+    "city": "",
+    "github": "",
+    "education": [],
+    "extras": {{}}
+  }},
+  "summary": "",
+  "skills": [{{"id": "skill_1", "title": "", "content": "", "source_refs": [], "updated_at": ""}}],
+  "internships": [],
+  "projects": [],
+  "awards": [],
+  "papers": [],
+  "language": "{target_language}",
+  "section_order": ["summary", "education", "skills", "internships", "projects"]
+}}
+"""
+
+
 RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用户的修改指令，只更新简历中受影响的部分。
 
 {RESUME_A4_ONE_PAGE_CONSTRAINTS}
@@ -143,43 +187,36 @@ RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用�
 6. 即使指令不明确，也必须返回合法 JSON 对象
 """
 
-RESUME_MODULE_SECTION_PROMPT = """你是简历内容生成专家。请仅针对下列候选人经历片段，结合目标岗位生成「{section_label}」板块的 STAR 格式条目。
+# Compact on purpose: verbose A4/polish guideline dumps make small models overrun max_tokens.
+RESUME_MODULE_SECTION_PROMPT = """你是简历润色助手。把下列经历改写成贴合目标岗位的「{section_label}」STAR 要点，输出紧凑 JSON。
 
-目标语言：{target_language_label}（language 字段设为 "{target_language}"）
-
+目标语言：{target_language_label}（language="{target_language}"）
 {resume_output_language_instruction}
 
-{RESUME_A4_ONE_PAGE_CONSTRAINTS}
+硬性限制（必须遵守，避免超长输出）：
+- 每条经历 content：最多 3 条 bullet；中文每条 ≤40 字；英文/葡语每条 ≤22 词
+- 必须相对输入事实做措辞改写与岗位对齐，禁止原样照抄输入 content
+- 禁止捏造公司名/项目名/未提供的岗位职责
+- 整份 JSON 必须完整可解析，预计 <800 tokens
 
-{RESUME_EXPERIENCE_POLISH_GUIDELINES}
+{quantification_instruction}
 
 目标岗位（摘要）：
 {job_json}
 
-本批次候选人经历（仅可使用下列事实，禁止捏造）：
+候选人经历（仅可使用下列事实）：
 {facts_json}
 
-机器协议：
-- 返回且仅返回一个合法 JSON 对象
-- 不要输出 Markdown、代码块、注释或额外说明
-- 所有 key 必须使用双引号
-
-返回格式：
+只返回合法 JSON（无 Markdown/解释）：
 {{
-    "items": [
-        {{
-            "id": "沿用或基于 fact id",
-            "title": "标题",
-            "content": "STAR 格式正文",
-            "source_refs": [],
-            "updated_at": ""
-        }}
-    ]
+  "items": [
+    {{
+      "id": "必须与输入 fact.id 完全一致",
+      "title": "公司或项目名",
+      "content": "- bullet1\\n- bullet2",
+      "source_refs": ["同一 fact.id"],
+      "updated_at": ""
+    }}
+  ]
 }}
-
-注意：
-1. 仅输出 items 数组，每条对应一条输入经历
-2. 不得捏造量化数据；无数据时用客观描述
-3. 措辞须贴合目标岗位关键词
-4. 所有正文字段须统一使用目标语言
 """

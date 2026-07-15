@@ -67,7 +67,7 @@ def test_specialized_resume_deep_dive():
         specialized_focus="resume_deep_dive",
     )
     assert program.specialized_focus == "resume_deep_dive"
-    assert "自我介绍" in program.stages[0].focus_modules[0]
+    assert "Tell me about yourself" in program.stages[0].focus_modules[0]
 
 
 def test_format_program_overview():
