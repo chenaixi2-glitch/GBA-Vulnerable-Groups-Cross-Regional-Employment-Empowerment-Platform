@@ -66,15 +66,59 @@ function isAiTaskPendingError(error) {
     return error.code === API_ERROR.SESSION_BUSY || error.code === API_ERROR.REQUEST_TIMEOUT;
 }
 
+/** English labels for backend LLM task codes (e.g. resume_generate). */
+const AI_TASK_LABELS_EN = {
+    chat: 'AI chat',
+    profile_parse: 'profile parsing',
+    profile_update: 'profile update',
+    jd_parse: 'job description parsing',
+    jd_generate: 'job description generation',
+    gap_analysis: 'skill gap analysis',
+    learning_path: 'learning path generation',
+    resume_generate: 'resume generation',
+    resume_edit: 'resume editing',
+    resume_translate: 'resume translation',
+    resume_render: 'resume rendering',
+    resume_module_translate: 'resume module translation',
+    resume_module_polish: 'resume module polishing',
+    interview_custom: 'custom interview answer generation',
+    interview_start: 'mock interview setup',
+    interview_evaluate: 'interview answer evaluation',
+    interview_debrief: 'interview debrief generation',
+    interview_feedback: 'interview feedback generation',
+    export_render: 'export rendering',
+};
+
+/** Human-readable label for a backend LLM task code (e.g. resume_generate). */
+function formatAiTaskLabel(taskType) {
+    const code = String(taskType || '').trim();
+    if (!code) return '';
+    const en = AI_TASK_LABELS_EN[code] || code.replace(/_/g, ' ');
+    return apiT(`errors.aiTasks.${code}`, en);
+}
+
+/** SESSION_BUSY toast — names the running task when the API returns it. */
+function formatSessionBusyMessage(taskType) {
+    const label = formatAiTaskLabel(taskType);
+    if (label) {
+        return apiT(
+            'errors.sessionBusyWithTask',
+            'Another AI task is already running for this session ({task}). Please wait for it to finish, then try again.',
+            { task: label }
+        );
+    }
+    return apiT(
+        'errors.sessionBusy',
+        'Another AI task is already running for this session. Please wait for it to finish, then try again.'
+    );
+}
+
 /**
  * User-facing message for AI task failures (timeout / session busy vs generic).
  */
 function getAiTaskErrorMessage(error, fallbackKey, fallbackEn, vars) {
     if (error && error.code === API_ERROR.SESSION_BUSY) {
-        return error.message || apiT(
-            'errors.sessionBusy',
-            'Another AI task is already running for this session. Please wait for it to finish, then try again.'
-        );
+        return formatSessionBusyMessage(error.task || '');
     }
     if (error && error.code === API_ERROR.REQUEST_TIMEOUT) {
         return apiT(
@@ -101,7 +145,15 @@ function formatRetryDuration(totalSeconds) {
 
 function buildAiTaskRetryBannerMessage(state) {
     const time = formatRetryDuration(state.retryAfter);
+    const taskLabel = formatAiTaskLabel(state.taskType);
     if (state.queueStatus === 'queued' && state.queuePosition > 0) {
+        if (taskLabel) {
+            return apiT(
+                'errors.aiTaskRetryQueuedWithTask',
+                '“{task}” is queued (position {position}). You can retry in about {time}.',
+                { task: taskLabel, position: state.queuePosition, time }
+            );
+        }
         return apiT(
             'errors.aiTaskRetryQueued',
             'Queued (position {position}). You can retry in about {time}.',
@@ -109,10 +161,24 @@ function buildAiTaskRetryBannerMessage(state) {
         );
     }
     if (state.errorKind === API_ERROR.REQUEST_TIMEOUT) {
+        if (taskLabel) {
+            return apiT(
+                'errors.aiTaskRetryCountdownTimeoutWithTask',
+                'The request timed out, but “{task}” may still be running. You can retry in about {time}.',
+                { task: taskLabel, time }
+            );
+        }
         return apiT(
             'errors.aiTaskRetryCountdownTimeout',
             'The request timed out, but processing may continue in the background. You can retry in about {time}.',
             { time }
+        );
+    }
+    if (taskLabel) {
+        return apiT(
+            'errors.aiTaskRetryCountdownWithTask',
+            '“{task}” is still running. You can retry in about {time}.',
+            { task: taskLabel, time }
         );
     }
     return apiT(
@@ -430,13 +496,18 @@ class MockAPIService {
 
     async updateLearningPathTimeline(sessionId, timeline) {
         await this.delay(300);
-        const lastWeeks = timeline.length ? timeline[timeline.length - 1].weeks : '0';
-        const match = String(lastWeeks).match(/(\d+)$/);
+        const lastPeriod = timeline.length
+            ? (timeline[timeline.length - 1].period || timeline[timeline.length - 1].weeks || timeline[timeline.length - 1].days || '0')
+            : '0';
+        const match = String(lastPeriod).match(/(\d+)$/);
+        const unit = timeline[0]?.unit || 'week';
         return {
             ok: true,
             message: apiT('mock.timelineUpdatedDemo', 'Timeline updated (demo mode).'),
             session_id: sessionId,
             timeline,
+            timeline_unit: unit,
+            estimated_span: match ? parseInt(match[1], 10) : timeline.length * 4,
             estimated_weeks: match ? parseInt(match[1], 10) : timeline.length * 4,
         };
     }
@@ -2386,7 +2457,20 @@ class APIClient {
                     if (!line) continue;
                     const payload = JSON.parse(line.slice(6));
                     if (payload.type === 'error') {
-                        throw new Error(payload.detail || apiT('errors.resumeStreamFailed', 'Resume stream failed'));
+                        const detail = payload.detail;
+                        if (detail && typeof detail === 'object' && detail.code === API_ERROR.SESSION_BUSY) {
+                            const err = new Error(formatSessionBusyMessage(detail.task));
+                            err.code = API_ERROR.SESSION_BUSY;
+                            if (detail.task) err.task = String(detail.task);
+                            throw err;
+                        }
+                        if (detail === API_ERROR.SESSION_BUSY) {
+                            const err = new Error(formatSessionBusyMessage(''));
+                            err.code = API_ERROR.SESSION_BUSY;
+                            throw err;
+                        }
+                        const detailText = typeof detail === 'string' ? detail : (detail ? JSON.stringify(detail) : '');
+                        throw new Error(detailText || apiT('errors.resumeStreamFailed', 'Resume stream failed'));
                     }
                     if (typeof options.onProgress === 'function') {
                         options.onProgress(payload);
@@ -3400,7 +3484,7 @@ class APIClient {
     /**
      * Step 2: Generate timeline after user selects daily study hours.
      */
-    async generateLearningPathTimeline(dailyHours, targetContext = null, language = null) {
+    async generateLearningPathTimeline(dailyHours, targetContext = null, language = null, planUnit = 'week') {
         await this.ensureBackendAvailable();
         if (this.useMockMode) {
             throw new Error(apiT('errors.learningPathRequiresBackend', 'Learning path requires a connected backend. Demo mode is not supported for this feature.'));
@@ -3409,8 +3493,10 @@ class APIClient {
         try {
             await this.syncTargetJobContext(targetContext);
             const lang = this.resolvePageLanguage(language);
+            const unit = ['month', 'week', 'day'].includes(planUnit) ? planUnit : 'week';
+            const unitWord = unit === 'day' ? 'daily' : unit === 'month' ? 'monthly' : 'weekly';
             const response = await this.chat(
-                `Generate my learning timeline with ${dailyHours} hours per day based on the analyzed gaps and resources.`,
+                `Generate my learning timeline with ${dailyHours} hours per day as a ${unitWord} plan (timeline_unit=${unit}) based on the analyzed gaps and resources.`,
                 [],
                 { language: lang, usePageLanguage: false, forcedIntent: 'learning_path' }
             );
@@ -3447,6 +3533,32 @@ class APIClient {
             return response.data;
         } catch (error) {
             console.error('Update learning path timeline error:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    /**
+     * Expand one timeline phase into a finer plan (month→week, week→day).
+     */
+    async expandLearningPathTimeline(phaseIndex, targetUnit = 'day') {
+        try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
+
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                throw new Error(apiT('errors.learningPathRequiresBackend', 'Learning path requires a connected backend. Demo mode is not supported for this feature.'));
+            }
+
+            const response = await this.client.post('/learning-path/timeline/expand', {
+                session_id: this.sessionId,
+                phase_index: phaseIndex,
+                target_unit: targetUnit,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Expand learning path timeline error:', error);
             throw this.handleError(error);
         }
     }
@@ -3605,11 +3717,17 @@ class APIClient {
                     }));
                 }
                 case 409: {
-                    const code = typeof detail === 'string' ? detail.trim() : '';
-                    const err = new Error(
-                        apiCode(code, 'errors.sessionBusy', 'Another AI task is already running for this session. Please wait for it to finish, then try again.')
-                    );
+                    let code = '';
+                    let task = '';
+                    if (detail && typeof detail === 'object') {
+                        code = String(detail.code || '').trim();
+                        task = String(detail.task || '').trim();
+                    } else if (typeof detail === 'string') {
+                        code = detail.trim();
+                    }
+                    const err = new Error(formatSessionBusyMessage(task));
                     if (code) err.code = code;
+                    if (task) err.task = task;
                     return err;
                 }
                 case 422:
@@ -3673,6 +3791,7 @@ const Utils = {
     _aiTaskRetryState: {
         active: false,
         errorKind: null,
+        taskType: '',
         retryAfter: 0,
         queueStatus: 'idle',
         queuePosition: 0,
@@ -3715,6 +3834,7 @@ const Utils = {
         if (state.pollTimer) clearInterval(state.pollTimer);
         state.active = false;
         state.errorKind = null;
+        state.taskType = '';
         state.retryAfter = 0;
         state.queueStatus = 'idle';
         state.queuePosition = 0;
@@ -3730,6 +3850,7 @@ const Utils = {
         const state = this._aiTaskRetryState;
         state.active = true;
         state.errorKind = error.code;
+        state.taskType = String(error.task || '').trim();
         state.retryAfter = error.code === API_ERROR.REQUEST_TIMEOUT ? 90 : 30;
         this._applyAiTaskRetryButtonGuards();
         this._ensureAiTaskRetryBanner();
@@ -3753,6 +3874,9 @@ const Utils = {
 
         state.queueStatus = status.status || 'idle';
         state.queuePosition = Number(status.position) || 0;
+        if (status.task_type) {
+            state.taskType = String(status.task_type).trim();
+        }
         const retryAfter = Number(status.retry_after_seconds) || 0;
 
         if (status.status === 'idle' && retryAfter <= 0) {

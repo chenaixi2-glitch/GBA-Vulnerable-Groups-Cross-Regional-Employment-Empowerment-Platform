@@ -1,7 +1,11 @@
 /**
  * GBA Platform - Learning Path Generator
- * Two-step flow: gaps + resources → daily hours → timeline
+ * Two-step flow: gaps (+ resources when enabled) → daily hours → timeline
+ * Curated Learning Resources UI is temporarily hidden; backend flag LEARNING_PATH_RESOURCES_ENABLED.
  */
+
+/** Keep in sync with backend LEARNING_PATH_RESOURCES_ENABLED. */
+const LEARNING_PATH_RESOURCES_UI_ENABLED = false;
 
 let learningPathData = null;
 let timelineEditMode = false;
@@ -121,6 +125,7 @@ function initializeLearningPath() {
             profileApplyBtn: 'btn-learning-apply-profile',
             profileSaveBtn: 'btn-learning-save-profile',
             profileOverwriteBtn: 'btn-learning-overwrite-profile',
+            profileSubmitBtn: 'btn-learning-submit-profile',
         },
         targetJobFields: {
             jdText: ['jd-text'],
@@ -134,13 +139,17 @@ function initializeLearningPath() {
         },
         i18n: {
             profileRequired: ['learningPath.toast.profileRequired', 'Please upload a resume or paste profile text'],
+            profileLoadingTitle: ['learningPath.toast.profileLoadingTitle', 'Parsing Resume'],
+            profileLoading: ['learningPath.toast.profileLoading', 'Uploading resume...'],
+            profileLoadingSlow: ['learningPath.toast.profileLoadingSlow', 'AI is parsing your resume — usually about 1–2 minutes, please wait…'],
             profileSuccess: ['learningPath.toast.profileSubmitted', 'Profile submitted successfully'],
             profileFailed: ['learningPath.toast.profileFailed', 'Failed to submit profile: {msg}'],
+            jdLoadingTitle: ['learningPath.toast.jdLoadingTitle', 'Submitting Job Description'],
+            jdLoading: ['learningPath.toast.jdLoading', 'Analyzing job description — usually about 30–60 seconds (instant if cached)…'],
             jdRequired: ['learningPath.toast.targetJobRequired', 'Please enter at least a target job title (full JD is optional)'],
             jdSuccess: ['learningPath.toast.jdSubmitted', 'Job description submitted successfully'],
             jdFailed: ['learningPath.toast.jdFailed', 'Failed to submit JD: {msg}'],
         },
-        buildProfileFallback: buildLearningProfileFallback,
         onPrerequisitesChange: updateLearningAnalyzeButton,
         onProfileSaved: () => bootstrapSavedProfileForLearningPath(),
     });
@@ -151,15 +160,17 @@ function initializeLearningPath() {
     document.querySelectorAll('input[name="daily-hours"]').forEach(radio => {
         radio.addEventListener('change', onDailyHoursChange);
     });
+    document.querySelectorAll('input[name="plan-unit"]').forEach(radio => {
+        radio.addEventListener('change', updateProjectedDurationHint);
+    });
     const customInput = document.getElementById('custom-daily-hours');
     if (customInput) {
-        customInput.addEventListener('input', updateProjectedWeeksHint);
+        customInput.addEventListener('input', () => {
+            updateRecommendedUnitHint();
+            updateProjectedDurationHint();
+        });
     }
     updateSaveLoginHint();
-}
-
-function buildLearningProfileFallback() {
-    return 'Here is my candidate profile.';
 }
 
 function updateLearningAnalyzeButton() {
@@ -303,6 +314,10 @@ async function generateLearningPathAnalysis() {
         document.getElementById('loading-state').classList.remove('hidden');
         document.getElementById('loading-state').querySelector('p').textContent =
             uiT('learningPath.loadingDesc', 'AI is analyzing skill gaps and curating resources — usually about 1–2 minutes…');
+        Utils.showLoading(
+            uiT('learningPath.loadingDesc', 'AI is analyzing skill gaps and curating resources — usually about 1–2 minutes…'),
+            { title: uiT('learningPath.loadingTitle', 'Analyzing Skill Gaps') }
+        );
 
         const response = await apiClient.generateLearningPathAnalysis({
             targetJob: inputs.targetJob || (inputs.jdText ? inputs.jdText.split('\n')[0].trim() : ''),
@@ -322,6 +337,7 @@ async function generateLearningPathAnalysis() {
             currentSkills,
         });
 
+        Utils.hideLoading();
         document.getElementById('loading-state').classList.add('hidden');
         document.getElementById('learning-path-results').classList.remove('hidden');
         document.getElementById('empty-state').classList.add('hidden');
@@ -330,12 +346,16 @@ async function generateLearningPathAnalysis() {
         displayOverview(learningPathData);
         displaySkillGaps(learningPathData.skillGaps);
         displayFollowUpQuestions(learningPathData.followUpQuestions);
-        displayResources(learningPathData.resources);
-        updateProjectedWeeksHint();
+        if (LEARNING_PATH_RESOURCES_UI_ENABLED) {
+            displayResources(learningPathData.resources);
+        }
+        updateProjectedDurationHint();
+        syncRecommendedPlanUnit();
 
         Utils.showToast(uiT('learningPath.toast.gapCompleted', 'Skill gap analysis completed! Choose your daily study hours.'));
         document.getElementById('daily-hours-section').scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
+        Utils.hideLoading();
         document.getElementById('loading-state').classList.add('hidden');
         document.getElementById('assessment-section').classList.remove('hidden');
         Utils.showToast(uiT('learningPath.toast.gapFailed', 'Failed to analyze skill gaps: {msg}', { msg: error.message }));
@@ -360,6 +380,10 @@ async function generateLearningPathTimeline() {
         document.getElementById('loading-state').classList.remove('hidden');
         document.getElementById('loading-state').querySelector('p').textContent =
             uiT('learningPath.loadingTimelineDesc', 'Building your personalized learning timeline — usually about 30–60 seconds…');
+        Utils.showLoading(
+            uiT('learningPath.loadingTimelineDesc', 'Building your personalized learning timeline — usually about 30–60 seconds…'),
+            { title: uiT('learningPath.loadingTimelineTitle', 'Generating Timeline') }
+        );
 
         const targetContext = typeof collectTargetJobContext === 'function'
             ? collectTargetJobContext({
@@ -371,17 +395,28 @@ async function generateLearningPathTimeline() {
                 },
             })
             : null;
+        const planUnit = getSelectedPlanUnit();
         const response = await apiClient.generateLearningPathTimeline(
             dailyHours,
             targetContext,
-            getSelectedLearningPathLanguage()
+            getSelectedLearningPathLanguage(),
+            planUnit
         );
 
         learningPathData.dailyHours = dailyHours;
-        learningPathData.timeline = response.timeline || [];
-        learningPathData.estimatedWeeks = calculateEstimatedWeeks(learningPathData.timeline)
-            || computeWeeksFromHours(learningPathData.estimatedHours, dailyHours);
+        learningPathData.timelineUnit = response.timeline_unit || planUnit;
+        learningPathData.timeline = normalizeTimeline(response.timeline || [], learningPathData.timelineUnit);
+        learningPathData.estimatedDays = response.estimated_days
+            || computeDaysFromHours(learningPathData.estimatedHours, dailyHours);
+        learningPathData.estimatedWeeks = response.estimated_weeks
+            || Math.max(1, Math.ceil(learningPathData.estimatedDays / 7));
+        learningPathData.estimatedMonths = response.estimated_months
+            || Math.max(1, Math.ceil(learningPathData.estimatedDays / 30));
+        learningPathData.estimatedSpan = response.estimated_span
+            || calculateEstimatedSpan(learningPathData.timeline)
+            || spanForUnit(learningPathData);
 
+        Utils.hideLoading();
         document.getElementById('loading-state').classList.add('hidden');
         document.getElementById('timeline-section').classList.remove('hidden');
         document.getElementById('timeline-actions').classList.remove('hidden');
@@ -395,6 +430,7 @@ async function generateLearningPathTimeline() {
         Utils.showToast(uiT('learningPath.toast.timelineGenerated', 'Learning timeline generated!'));
         document.getElementById('timeline-section').scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
+        Utils.hideLoading();
         document.getElementById('loading-state').classList.add('hidden');
         Utils.showToast(uiT('learningPath.toast.timelineFailed', 'Failed to generate timeline: {msg}', { msg: error.message }));
         console.error('Timeline generation error:', error);
@@ -413,18 +449,57 @@ function getSelectedDailyHours() {
     return parseFloat(selected.value);
 }
 
-function onDailyHoursChange(event) {
-    const customInput = document.getElementById('custom-hours-input');
-    if (event.target.value === 'custom') {
-        customInput.classList.remove('hidden');
-    } else {
-        customInput.classList.add('hidden');
-    }
-    updateProjectedWeeksHint();
+function getSelectedPlanUnit() {
+    const selected = document.querySelector('input[name="plan-unit"]:checked');
+    return selected?.value || 'week';
 }
 
-function updateProjectedWeeksHint() {
-    const hint = document.getElementById('projected-weeks-hint');
+function setSelectedPlanUnit(unit) {
+    const input = document.querySelector(`input[name="plan-unit"][value="${unit}"]`);
+    if (input) input.checked = true;
+}
+
+function recommendPlanUnit(totalHours, dailyHours) {
+    const days = computeDaysFromHours(totalHours, dailyHours);
+    if (days <= 14) return 'day';
+    if (days <= 90) return 'week';
+    return 'month';
+}
+
+function onDailyHoursChange(event) {
+    const customInput = document.getElementById('custom-hours-input');
+    if (event?.target?.value === 'custom') {
+        customInput.classList.remove('hidden');
+    } else if (event?.target && event.target.value !== 'custom') {
+        customInput.classList.add('hidden');
+    }
+    updateRecommendedUnitHint();
+    updateProjectedDurationHint();
+}
+
+function updateRecommendedUnitHint() {
+    const hint = document.getElementById('recommended-unit-hint');
+    if (!hint || !learningPathData?.estimatedHours) return;
+    const dailyHours = getSelectedDailyHours();
+    if (!dailyHours) {
+        hint.textContent = '';
+        return;
+    }
+    const recommended = recommendPlanUnit(learningPathData.estimatedHours, dailyHours);
+    hint.textContent = `Recommended for your estimated duration: ${unitLabel(recommended, true)}.`;
+}
+
+function syncRecommendedPlanUnit({ select = true } = {}) {
+    if (!learningPathData?.estimatedHours) return;
+    const dailyHours = getSelectedDailyHours();
+    if (!dailyHours) return;
+    const recommended = recommendPlanUnit(learningPathData.estimatedHours, dailyHours);
+    if (select) setSelectedPlanUnit(recommended);
+    updateRecommendedUnitHint();
+}
+
+function updateProjectedDurationHint() {
+    const hint = document.getElementById('projected-duration-hint');
     if (!hint || !learningPathData?.estimatedHours) return;
 
     const dailyHours = getSelectedDailyHours();
@@ -433,11 +508,18 @@ function updateProjectedWeeksHint() {
         return;
     }
 
-    const weeks = computeWeeksFromHours(learningPathData.estimatedHours, dailyHours);
-    hint.textContent = uiT('learningPath.projectedWeeksHint', 'At {hours} hour(s) per day, you\'ll need approximately {weeks} week(s) to complete the plan.', { hours: dailyHours, weeks: weeks });
+    const days = computeDaysFromHours(learningPathData.estimatedHours, dailyHours);
+    const weeks = Math.max(1, Math.ceil(days / 7));
+    const months = Math.max(1, Math.ceil(days / 30));
+    const unit = getSelectedPlanUnit();
+    hint.textContent = `At ${dailyHours} hour(s)/day ≈ ${days} day(s) / ${weeks} week(s) / ${months} month(s). Generating a ${unitLabel(unit)} plan.`;
 
     if (!learningPathData.timeline?.length) {
-        document.getElementById('estimated-weeks').textContent = weeks;
+        const spanEl = document.getElementById('estimated-span');
+        if (spanEl) {
+            spanEl.textContent = unit === 'day' ? days : unit === 'month' ? months : weeks;
+        }
+        updateEstimatedSpanLabel(unit);
     }
 }
 
@@ -458,8 +540,12 @@ function processAnalysisResponse(response, { targetJob, currentSkills }) {
         resources,
         estimatedHours,
         dailyHours: 0,
+        timelineUnit: 'week',
         totalSkills: skillGaps.length,
+        estimatedDays: 0,
         estimatedWeeks: 0,
+        estimatedMonths: 0,
+        estimatedSpan: 0,
         confidenceScore: calculateConfidenceScore(skillGaps),
         triggeredAgents: response.triggered_agents || [],
     };
@@ -470,9 +556,72 @@ function inferHoursFromResources(resources) {
     return total > 0 ? Math.round(total) : 0;
 }
 
-function computeWeeksFromHours(totalHours, dailyHours) {
+function computeDaysFromHours(totalHours, dailyHours) {
     if (!totalHours || !dailyHours) return 0;
-    return Math.max(1, Math.ceil(totalHours / (dailyHours * 7)));
+    return Math.max(1, Math.ceil(totalHours / dailyHours));
+}
+
+function computeWeeksFromHours(totalHours, dailyHours) {
+    const days = computeDaysFromHours(totalHours, dailyHours);
+    return days ? Math.max(1, Math.ceil(days / 7)) : 0;
+}
+
+function phasePeriod(phase) {
+    return phase?.period || phase?.days || phase?.weeks || '';
+}
+
+function normalizeTimeline(timeline, fallbackUnit = 'week') {
+    return (timeline || []).map((phase, index) => ({
+        phase: phase.phase || index + 1,
+        title: phase.title || '',
+        period: phasePeriod(phase),
+        unit: phase.unit || fallbackUnit,
+        skills: phase.skills || [],
+        description: phase.description || '',
+        children: normalizeTimeline(phase.children || [], phase.unit === 'month' ? 'week' : 'day'),
+    }));
+}
+
+function calculateEstimatedSpan(timeline) {
+    if (!timeline.length) return 0;
+    const lastPhase = timeline[timeline.length - 1];
+    const match = String(phasePeriod(lastPhase)).match(/(\d+)$/);
+    return match ? parseInt(match[1], 10) : timeline.length * 4;
+}
+
+function spanForUnit(data) {
+    const unit = data.timelineUnit || 'week';
+    if (unit === 'day') return data.estimatedDays || 0;
+    if (unit === 'month') return data.estimatedMonths || 0;
+    return data.estimatedWeeks || 0;
+}
+
+function unitLabel(unit, plural = false) {
+    if (unit === 'day') return plural ? 'daily plan' : 'daily';
+    if (unit === 'month') return plural ? 'monthly plan' : 'monthly';
+    return plural ? 'weekly plan' : 'weekly';
+}
+
+function periodDisplay(phase) {
+    const unit = phase.unit || 'week';
+    const period = phasePeriod(phase) || '—';
+    if (unit === 'day') return `Days ${period}`;
+    if (unit === 'month') return `Months ${period}`;
+    return `Weeks ${period}`;
+}
+
+function updateEstimatedSpanLabel(unit) {
+    const label = document.getElementById('estimated-span-label');
+    if (!label) return;
+    if (unit === 'day') label.textContent = 'Estimated Days';
+    else if (unit === 'month') label.textContent = 'Estimated Months';
+    else label.textContent = 'Estimated Weeks';
+}
+
+function nextExpandUnit(unit) {
+    if (unit === 'month') return 'week';
+    if (unit === 'week') return 'day';
+    return null;
 }
 
 function mapGapAnalysisResults(gaps) {
@@ -499,13 +648,6 @@ function mapSeverityToPriority(severity) {
     }
 }
 
-function calculateEstimatedWeeks(timeline) {
-    if (!timeline.length) return 0;
-    const lastPhase = timeline[timeline.length - 1];
-    const match = lastPhase.weeks.match(/(\d+)$/);
-    return match ? parseInt(match[1], 10) : timeline.length * 6;
-}
-
 function calculateConfidenceScore(skillGaps) {
     const highPriorityCount = skillGaps.filter(g => g.priority === 'High').length;
     const baseScore = 85;
@@ -516,7 +658,12 @@ function calculateConfidenceScore(skillGaps) {
 function displayOverview(data) {
     document.getElementById('total-skills').textContent = data.totalSkills;
     document.getElementById('estimated-hours').textContent = data.estimatedHours || 0;
-    document.getElementById('estimated-weeks').textContent = data.estimatedWeeks || '—';
+    const unit = data.timelineUnit || getSelectedPlanUnit();
+    const spanEl = document.getElementById('estimated-span');
+    if (spanEl) {
+        spanEl.textContent = data.estimatedSpan || spanForUnit(data) || '—';
+    }
+    updateEstimatedSpanLabel(unit);
     document.getElementById('confidence-score').textContent = `${data.confidenceScore}%`;
 }
 
@@ -652,16 +799,21 @@ function cancelTimelineEdit() {
 
 function readTimelineFromForm() {
     const items = document.querySelectorAll('[data-timeline-phase]');
-    return Array.from(items).map((el, index) => ({
-        phase: index + 1,
-        title: el.querySelector('[data-field="title"]')?.value.trim() || '',
-        weeks: el.querySelector('[data-field="weeks"]')?.value.trim() || '',
-        description: el.querySelector('[data-field="description"]')?.value.trim() || '',
-        skills: (el.querySelector('[data-field="skills"]')?.value || '')
-            .split(',')
-            .map(s => s.trim())
-            .filter(Boolean),
-    }));
+    return Array.from(items).map((el, index) => {
+        const existing = learningPathData.timeline[index] || {};
+        return {
+            phase: index + 1,
+            title: el.querySelector('[data-field="title"]')?.value.trim() || '',
+            period: el.querySelector('[data-field="period"]')?.value.trim() || '',
+            unit: existing.unit || learningPathData.timelineUnit || 'week',
+            description: el.querySelector('[data-field="description"]')?.value.trim() || '',
+            skills: (el.querySelector('[data-field="skills"]')?.value || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean),
+            children: existing.children || [],
+        };
+    });
 }
 
 async function applyTimelineEdits() {
@@ -670,8 +822,8 @@ async function applyTimelineEdits() {
         Utils.showToast(uiT('learningPath.toast.timelineEmpty', 'Timeline cannot be empty'));
         return;
     }
-    if (timeline.some(p => !p.title || !p.weeks)) {
-        Utils.showToast(uiT('learningPath.toast.phaseNeedsTitle', 'Each phase needs a title and week range'));
+    if (timeline.some(p => !p.title || !p.period)) {
+        Utils.showToast('Each phase needs a title and period range (e.g. 1-4)');
         return;
     }
 
@@ -679,9 +831,13 @@ async function applyTimelineEdits() {
         document.getElementById('btn-apply-timeline').disabled = true;
         const result = await apiClient.updateLearningPathTimeline(timeline);
 
-        learningPathData.timeline = result.timeline || timeline;
-        learningPathData.estimatedWeeks = result.estimated_weeks
-            || calculateEstimatedWeeks(learningPathData.timeline);
+        learningPathData.timeline = normalizeTimeline(result.timeline || timeline, learningPathData.timelineUnit);
+        learningPathData.timelineUnit = result.timeline_unit || learningPathData.timelineUnit;
+        learningPathData.estimatedDays = result.estimated_days || learningPathData.estimatedDays;
+        learningPathData.estimatedWeeks = result.estimated_weeks || learningPathData.estimatedWeeks;
+        learningPathData.estimatedMonths = result.estimated_months || learningPathData.estimatedMonths;
+        learningPathData.estimatedSpan = result.estimated_span
+            || calculateEstimatedSpan(learningPathData.timeline);
 
         timelineEditMode = false;
         setTimelineEditControls(false);
@@ -729,7 +885,7 @@ function displayTimeline(timeline, editing = timelineEditMode) {
     const container = document.getElementById('timeline-container');
 
     if (!timeline.length) {
-        container.innerHTML = '<p class="text-gray-600 text-sm">' + escapeHtml(uiT('learningPath.timelineEmptyHint', 'Timeline will appear after you choose daily study hours.')) + '</p>';
+        container.innerHTML = '<p class="text-gray-600 text-sm">Timeline will appear after you choose daily study hours and plan granularity.</p>';
         return;
     }
 
@@ -740,6 +896,7 @@ function displayTimeline(timeline, editing = timelineEditMode) {
                 <div class="bg-gray-50 border border-blue-200 rounded-lg p-4 ml-4 space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-blue-600 uppercase">${escapeHtml(uiT('learningPath.phaseLabel', 'Phase {n}', { n: phase.phase || index + 1 }))}</span>
+                        <span class="text-xs text-gray-500 uppercase">${escapeHtml(phase.unit || 'week')}</span>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.editTitleLabel', 'Title'))}</label>
@@ -747,8 +904,8 @@ function displayTimeline(timeline, editing = timelineEditMode) {
                             class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">${escapeHtml(uiT('learningPath.editWeeksLabel', 'Weeks (e.g. 1-4)'))}</label>
-                        <input data-field="weeks" type="text" value="${escapeHtml(phase.weeks)}"
+                        <label class="block text-xs text-gray-500 mb-1">Period (e.g. 1-4)</label>
+                        <input data-field="period" type="text" value="${escapeHtml(phasePeriod(phase))}"
                             class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
                     <div>
@@ -767,13 +924,31 @@ function displayTimeline(timeline, editing = timelineEditMode) {
         return;
     }
 
-    container.innerHTML = timeline.map(phase => `
-        <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="bg-white border border-gray-200 rounded-lg p-4 ml-4">
-                <div class="flex items-center justify-between mb-2">
+    container.innerHTML = timeline.map((phase, index) => renderTimelinePhase(phase, index)).join('');
+}
+
+function renderTimelinePhase(phase, index, nested = false) {
+    const expandUnit = nextExpandUnit(phase.unit);
+    const hasChildren = Array.isArray(phase.children) && phase.children.length > 0;
+    const expandBtn = (!nested && expandUnit && !hasChildren)
+        ? `<button type="button" onclick="expandTimelinePhase(${index})"
+                class="mt-3 px-3 py-1.5 text-xs font-medium border border-green-600 text-green-700 rounded-lg hover:bg-green-50">
+                Break into ${expandUnit === 'day' ? 'daily' : 'weekly'} plan
+           </button>`
+        : '';
+    const childrenHtml = hasChildren
+        ? `<div class="mt-4 ml-2 pl-4 border-l-2 border-green-200 space-y-3">
+            ${phase.children.map((child, childIdx) => renderTimelinePhase(child, childIdx, true)).join('')}
+           </div>`
+        : '';
+
+    return `
+        <div class="timeline-item ${nested ? 'ml-2' : ''}">
+            ${nested ? '' : '<div class="timeline-dot"></div>'}
+            <div class="bg-white border border-gray-200 rounded-lg p-4 ${nested ? '' : 'ml-4'}">
+                <div class="flex items-center justify-between mb-2 gap-2">
                     <h4 class="font-bold text-gray-900">${escapeHtml(phase.title)}</h4>
-                    <span class="text-sm text-gray-500">${escapeHtml(uiT('learningPath.weeksLabel', 'Weeks {weeks}', { weeks: phase.weeks }))}</span>
+                    <span class="text-sm text-gray-500 whitespace-nowrap">${escapeHtml(periodDisplay(phase))}</span>
                 </div>
                 <p class="text-sm text-gray-600 mb-3">${escapeHtml(phase.description)}</p>
                 <div class="flex flex-wrap gap-2">
@@ -783,13 +958,54 @@ function displayTimeline(timeline, editing = timelineEditMode) {
                         </span>
                     `).join('')}
                 </div>
+                ${expandBtn}
+                ${childrenHtml}
             </div>
         </div>
-    `).join('');
+    `;
+}
+
+async function expandTimelinePhase(phaseIndex) {
+    if (!learningPathData?.timeline?.[phaseIndex]) return;
+    const phase = learningPathData.timeline[phaseIndex];
+    const targetUnit = nextExpandUnit(phase.unit);
+    if (!targetUnit) {
+        Utils.showToast('This phase is already at daily granularity');
+        return;
+    }
+
+    try {
+        Utils.showLoading(`Expanding phase into a ${targetUnit} plan…`, { title: 'Expanding Timeline' });
+        const result = await apiClient.expandLearningPathTimeline(phaseIndex, targetUnit);
+        learningPathData.timeline = normalizeTimeline(result.timeline || [], learningPathData.timelineUnit);
+        learningPathData.estimatedSpan = result.estimated_span
+            || calculateEstimatedSpan(learningPathData.timeline);
+        displayOverview(learningPathData);
+        displayTimeline(learningPathData.timeline, false);
+        Utils.showToast(`Phase expanded into ${targetUnit} steps`);
+    } catch (error) {
+        Utils.showToast(`Failed to expand phase: ${error.message}`);
+        console.error('Expand timeline error:', error);
+    } finally {
+        Utils.hideLoading();
+    }
 }
 
 function displayResources(resources) {
+    const section = document.getElementById('learning-resources-section');
     const container = document.getElementById('resources-container');
+    if (!container) return;
+    if (!LEARNING_PATH_RESOURCES_UI_ENABLED) {
+        if (section) {
+            section.classList.add('hidden');
+            section.setAttribute('aria-hidden', 'true');
+        }
+        return;
+    }
+    if (section) {
+        section.classList.remove('hidden');
+        section.removeAttribute('aria-hidden');
+    }
 
     if (!resources.length) {
         container.innerHTML = '<p class="text-gray-600 text-sm">' + escapeHtml(uiT('learningPath.resourcesEmptyHint', 'Resources will appear once skill gaps are identified.')) + '</p>';
@@ -843,7 +1059,11 @@ function downloadLearningPlan() {
     if (learningPathData.dailyHours) {
         plan += `Daily Study Time: ${learningPathData.dailyHours} hours/day\n`;
     }
-    plan += `Timeline: ${learningPathData.estimatedWeeks || 'TBD'} weeks\n`;
+    plan += `Timeline unit: ${learningPathData.timelineUnit || 'week'}\n`;
+    plan += `Timeline span: ${learningPathData.estimatedSpan || 'TBD'} ${learningPathData.timelineUnit || 'week'}(s)\n`;
+    if (learningPathData.estimatedDays) {
+        plan += `Approx. duration: ${learningPathData.estimatedDays} day(s) / ${learningPathData.estimatedWeeks || '—'} week(s) / ${learningPathData.estimatedMonths || '—'} month(s)\n`;
+    }
     plan += `Skills to Master: ${learningPathData.totalSkills}\n`;
     plan += `Success Probability: ${learningPathData.confidenceScore}%\n`;
     plan += `Analysis Engine: learning_path_agent\n\n`;
@@ -873,8 +1093,14 @@ function downloadLearningPlan() {
         plan += `=================\n\n`;
 
         learningPathData.timeline.forEach(phase => {
-            plan += `${phase.title} (Weeks ${phase.weeks})\n`;
-            plan += `Skills: ${phase.skills.join(', ')}\n\n`;
+            plan += `${phase.title} (${periodDisplay(phase)})\n`;
+            plan += `Skills: ${(phase.skills || []).join(', ')}\n`;
+            if (phase.children?.length) {
+                phase.children.forEach(child => {
+                    plan += `  - ${child.title} (${periodDisplay(child)})\n`;
+                });
+            }
+            plan += '\n';
         });
     }
 
@@ -893,7 +1119,11 @@ function exportLearningPlanJson() {
         targetJob: learningPathData.targetJob,
         estimatedHours: learningPathData.estimatedHours,
         dailyHours: learningPathData.dailyHours,
+        timelineUnit: learningPathData.timelineUnit,
+        estimatedDays: learningPathData.estimatedDays,
         estimatedWeeks: learningPathData.estimatedWeeks,
+        estimatedMonths: learningPathData.estimatedMonths,
+        estimatedSpan: learningPathData.estimatedSpan,
         confidenceScore: learningPathData.confidenceScore,
         skillGaps: learningPathData.skillGaps,
         followUpQuestions: learningPathData.followUpQuestions,
@@ -913,11 +1143,13 @@ function refreshLearningPathLocalizedUI() {
     displayOverview(learningPathData);
     displaySkillGaps(learningPathData.skillGaps || []);
     displayFollowUpQuestions(learningPathData.followUpQuestions || []);
-    displayResources(learningPathData.resources || []);
+    if (LEARNING_PATH_RESOURCES_UI_ENABLED) {
+        displayResources(learningPathData.resources || []);
+    }
     if (learningPathData.timeline && learningPathData.timeline.length) {
         displayTimeline(learningPathData.timeline);
     }
-    updateProjectedWeeksHint();
+    updateProjectedDurationHint();
 }
 
 window.addEventListener('gba:language-changed', refreshLearningPathLocalizedUI);

@@ -7,7 +7,14 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from workflow.state import CandidateProfile, CopilotState, Fact, ProfileBasic, ResumeHtml
+from workflow.state import (
+    CandidateProfile,
+    CopilotState,
+    Education,
+    Fact,
+    ProfileBasic,
+    ResumeHtml,
+)
 
 
 from tools.module_field_schema import (
@@ -28,15 +35,7 @@ MODULE_TYPE_LABELS = {
 
 
 def _education_entry_to_content(entry: dict[str, Any]) -> str:
-    fields = entry.get("fields") if isinstance(entry.get("fields"), dict) else {}
-    payload = {
-        "school": entry.get("school") or fields.get("school") or "",
-        "major": entry.get("major") or fields.get("major") or "",
-        "degree": entry.get("degree") or fields.get("degree") or "",
-        "start_date": entry.get("start_date") or fields.get("start_date") or "",
-        "end_date": entry.get("end_date") or fields.get("end_date") or "",
-    }
-    return fields_to_fact_content("education", payload)
+    return fields_to_fact_content("education", _education_fields_from_draft_entry(entry))
 
 
 def _module_draft_fields(module: dict[str, Any]) -> dict[str, Any]:
@@ -219,10 +218,92 @@ def _photo_url_from_extras(extras: dict[str, Any] | None) -> str:
     return str(extras.get("photo_url") or extras.get("photo_data") or "").strip()
 
 
+def _education_fields_from_draft_entry(entry: dict[str, Any]) -> dict[str, str]:
+    fields = entry.get("fields") if isinstance(entry.get("fields"), dict) else {}
+    return {
+        "school": str(entry.get("school") or fields.get("school") or "").strip(),
+        "major": str(entry.get("major") or fields.get("major") or "").strip(),
+        "degree": str(entry.get("degree") or fields.get("degree") or "").strip(),
+        "start_date": str(entry.get("start_date") or fields.get("start_date") or "").strip(),
+        "end_date": str(entry.get("end_date") or fields.get("end_date") or "").strip(),
+    }
+
+
+def _education_list_from_draft(draft: dict[str, Any]) -> list[Education]:
+    """Build resume Education entries from the profile-editor draft (source of truth)."""
+    education: list[Education] = []
+    for entry in draft.get("education") or []:
+        if not isinstance(entry, dict):
+            continue
+        fields = _education_fields_from_draft_entry(entry)
+        if not any(fields.get(k) for k in ("school", "major", "degree")):
+            continue
+        education.append(Education(
+            id=str(entry.get("id") or f"edu_{uuid.uuid4().hex[:8]}"),
+            school=fields["school"],
+            major=fields["major"],
+            degree=fields["degree"],
+            start_date=fields["start_date"],
+            end_date=fields["end_date"],
+        ))
+    return education
+
+
+def _invalidate_resume_html(data: dict[str, Any], state: CopilotState) -> None:
+    if not (state.resume_html and state.resume_html.html):
+        return
+    data["resume_html"] = ResumeHtml(
+        html="",
+        version=state.resume_html.version,
+    ).model_dump()
+    meta = state.meta.model_copy(update={
+        "dirty_flags": state.meta.dirty_flags.model_copy(update={"render_dirty": True}),
+    })
+    data["meta"] = meta.model_dump()
+
+
+def apply_draft_sections_to_resume_state(
+    state: CopilotState,
+    draft: dict[str, Any] | None,
+) -> tuple[CopilotState, bool]:
+    """Sync editor draft sections (education, contact) into resume_content_json.
+
+    Draft is authoritative for education list so deletions/edits show up in PDF preview.
+    Returns (updated_state, content_changed).
+    """
+    if not state.resume_content_json or not draft:
+        return state, False
+
+    before = state.resume_content_json.model_dump()
+    resume = state.resume_content_json.model_copy(deep=True)
+
+    basic = draft.get("profile_basic") or {}
+    profile_updates: dict[str, Any] = {
+        "education": _education_list_from_draft(draft),
+    }
+    for key in ("name", "email", "phone", "city"):
+        value = str(basic.get(key) or "").strip()
+        if value:
+            profile_updates[key] = value
+
+    resume = resume.model_copy(update={
+        "profile": resume.profile.model_copy(update=profile_updates),
+    })
+
+    changed = before != resume.model_dump()
+    if not changed:
+        return state, False
+
+    data = state.model_dump()
+    data["resume_content_json"] = resume.model_dump()
+    _invalidate_resume_html(data, state)
+    return CopilotState.model_validate(data), True
+
+
 def apply_profile_extras_to_resume_state(state: CopilotState) -> tuple[CopilotState, bool]:
     """Merge candidate profile extras (photo, etc.) into resume_content_json.
 
-    Returns (updated_state, photo_changed).
+    Returns (updated_state, content_changed).
     """
     if not state.resume_content_json:
         return state, False
@@ -239,21 +320,14 @@ def apply_profile_extras_to_resume_state(state: CopilotState) -> tuple[CopilotSt
 
     data = state.model_dump()
     data["resume_content_json"] = merged.model_dump()
-    if photo_changed and state.resume_html and state.resume_html.html:
-        data["resume_html"] = ResumeHtml(
-            html="",
-            version=state.resume_html.version,
-        ).model_dump()
-        meta = state.meta.model_copy(update={
-            "dirty_flags": state.meta.dirty_flags.model_copy(update={"render_dirty": True}),
-        })
-        data["meta"] = meta.model_dump()
+    if photo_changed:
+        _invalidate_resume_html(data, state)
 
     return CopilotState.model_validate(data), photo_changed
 
 
 async def sync_draft_to_session(store, session_id: str, draft: dict[str, Any]) -> None:
-    """Merge draft into Redis session state candidate_profile."""
+    """Merge draft into Redis session state candidate_profile and resume content."""
     from api.chat import _aload_state, _asave_state
 
     saved = await _aload_state(store)
@@ -270,5 +344,6 @@ async def sync_draft_to_session(store, session_id: str, draft: dict[str, Any]) -
     state_dict = state.model_dump()
     state_dict["candidate_profile"] = profile.model_dump()
     state = CopilotState.model_validate(state_dict)
+    state, _ = apply_draft_sections_to_resume_state(state, draft)
     state, _ = apply_profile_extras_to_resume_state(state)
     await _asave_state(store, _persist_payload(state.model_dump()))

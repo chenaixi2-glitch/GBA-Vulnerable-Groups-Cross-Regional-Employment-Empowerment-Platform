@@ -83,13 +83,15 @@ async def seed_session(session_id: str) -> None:
             LearningPathPhase(
                 phase=1,
                 title="Foundation",
-                weeks="1-4",
+                period="1-4",
+                unit="week",
                 skills=["System design"],
                 description="Learn fundamentals",
             ),
         ],
         learning_path_estimated_hours=120,
         learning_path_daily_hours=2.0,
+        learning_path_timeline_unit="week",
     )
     await store.save_state(state.model_dump(exclude={
         "user_message", "user_attachments", "current_intent",
@@ -168,14 +170,16 @@ async def run_api_flow(session_id: str, *, in_process: bool = False) -> str:
             {
                 "phase": 1,
                 "title": "Foundation (edited)",
-                "weeks": "1-3",
+                "period": "1-3",
+                "unit": "week",
                 "skills": ["System design", "Architecture"],
                 "description": "Updated phase goal",
             },
             {
                 "phase": 2,
                 "title": "Practice",
-                "weeks": "4-8",
+                "period": "4-8",
+                "unit": "week",
                 "skills": ["Case studies"],
                 "description": "Apply knowledge",
             },

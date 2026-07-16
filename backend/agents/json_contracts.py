@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class IntentClassificationOutput(BaseModel):
@@ -410,9 +410,31 @@ class LearningPathResourceOutput(BaseModel):
 class LearningPathPhaseOutput(BaseModel):
     phase: int = 1
     title: str = ""
-    weeks: str = ""
+    period: str = ""
+    unit: str = "week"  # month | week | day
     skills: list[str] = Field(default_factory=list)
     description: str = ""
+    children: list["LearningPathPhaseOutput"] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _compat_legacy_period(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        data = dict(data)
+        if not str(data.get("period") or "").strip():
+            if str(data.get("days") or "").strip():
+                data["period"] = data["days"]
+                data.setdefault("unit", "day")
+            elif str(data.get("weeks") or "").strip():
+                data["period"] = data["weeks"]
+                data.setdefault("unit", "week")
+        unit = str(data.get("unit") or "").strip().lower()
+        if unit not in {"month", "week", "day"}:
+            data["unit"] = "week"
+        else:
+            data["unit"] = unit
+        return data
 
 
 class LearningPathAnalysisOutput(BaseModel):
@@ -435,6 +457,10 @@ class LearningPathResourcesOutput(BaseModel):
 
 class LearningPathTimelineOutput(BaseModel):
     timeline: list[LearningPathPhaseOutput] = Field(default_factory=list)
+
+
+class LearningPathExpandOutput(BaseModel):
+    children: list[LearningPathPhaseOutput] = Field(default_factory=list)
 
 
 class LearningPathOutput(BaseModel):

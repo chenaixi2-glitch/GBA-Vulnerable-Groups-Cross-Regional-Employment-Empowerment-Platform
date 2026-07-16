@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from typing import Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ---- 子结构 ----
@@ -191,9 +191,33 @@ class AnswerEvaluation(BaseModel):
 class LearningPathPhase(BaseModel):
     phase: int = 1
     title: str = ""
-    weeks: str = ""
+    period: str = ""  # e.g. "1-4"
+    unit: str = "week"  # month | week | day
     skills: list[str] = Field(default_factory=list)
     description: str = ""
+    children: list["LearningPathPhase"] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _compat_legacy_period(cls, data: Any) -> Any:
+        """Accept legacy weeks/days fields from older sessions / clients."""
+        if not isinstance(data, dict):
+            return data
+        data = dict(data)
+        period = str(data.get("period") or "").strip()
+        if not period:
+            if str(data.get("days") or "").strip():
+                data["period"] = data["days"]
+                data.setdefault("unit", "day")
+            elif str(data.get("weeks") or "").strip():
+                data["period"] = data["weeks"]
+                data.setdefault("unit", "week")
+        unit = str(data.get("unit") or "").strip().lower()
+        if unit not in {"month", "week", "day"}:
+            data["unit"] = "week"
+        else:
+            data["unit"] = unit
+        return data
 
 
 class LearningPathResource(BaseModel):
@@ -310,6 +334,10 @@ class InteractiveInterviewSession(BaseModel):
     poll_sequence: int = 0
     end_reason: str = ""
     closing_message: str = ""
+    # Prompt 侧记忆：较早问答摘要；异类优先压缩（turns 仍完整保留供前端）
+    history_summary: str = ""
+    history_compressed_qa_count: int = 0  # 兼容旧会话；优先以 question_ids 为准
+    history_compressed_question_ids: list[str] = Field(default_factory=list)
 
 
 class ConversationEvent(BaseModel):
@@ -410,6 +438,7 @@ class CopilotState(BaseModel):
     learning_path_resources: list[LearningPathResource] = Field(default_factory=list)
     learning_path_estimated_hours: int = 0
     learning_path_daily_hours: float = 0.0
+    learning_path_timeline_unit: str = "week"  # month | week | day
     last_answer_evaluation: Optional[AnswerEvaluation] = None
     interview_qa: list[InterviewQA] = Field(default_factory=list)
     interactive_interview: InteractiveInterviewSession = Field(default_factory=InteractiveInterviewSession)

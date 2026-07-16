@@ -71,7 +71,7 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
     """若已有 resume_content_json 但尚无 HTML，运行 render_agent 生成预览。"""
     from api.chat import _aload_state, _asave_state, _persist_to_mysql_safe
     from agents.render_agent import render_node_async
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -88,13 +88,24 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
     if state.resume_content_json is None:
         raise HTTPException(status_code=400, detail="简历内容尚未生成，请先生成简历")
 
-    from api.draft_utils import apply_profile_extras_to_resume_state
+    from api.draft_utils import (
+        apply_draft_sections_to_resume_state,
+        apply_profile_extras_to_resume_state,
+    )
 
     # Explicit preview/export should always render, even if generation deferred HTML.
     state.skip_render = False
 
+    # Re-apply latest editor draft so education deletions/edits invalidate cached HTML.
+    draft_store = RedisDraftStore(client, req.session_id, user.get("sub") if user else None)
+    draft = await draft_store.load_draft()
+    content_changed = False
+    if draft:
+        state, draft_changed = apply_draft_sections_to_resume_state(state, draft)
+        content_changed = content_changed or draft_changed
     state, photo_changed = apply_profile_extras_to_resume_state(state)
-    if photo_changed:
+    content_changed = content_changed or photo_changed
+    if content_changed:
         persist_data = state.model_dump(exclude=_PERSIST_EXCLUDE)
         await _asave_state(store, persist_data)
 
@@ -106,10 +117,10 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
         }
 
     try:
-        async with llm_queue_slot(req.session_id):
+        async with llm_queue_slot(req.session_id, LlmTask.RESUME_RENDER):
             updates = await render_node_async(state)
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as exc:
         logger.error("Ensure render failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail=f"预览渲染失败: {exc}") from exc
@@ -666,7 +677,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     from agents.json_contracts import JDGenerationOutput
     from models.llm import get_llm
     from tools.output_language_guard import ainvoke_json_with_language_guard
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
     from prompts.jd_generation import JD_GENERATION_PROMPT
     from services.jd_cache_service import lookup_jd_cache_by_params, save_jd_cache
     from tools.jd_cache import params_cache_key, ensure_title_in_jd_text, extract_title_from_jd
@@ -735,7 +746,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
 
     llm = get_llm()
     try:
-        async with llm_queue_slot(req.session_id):
+        async with llm_queue_slot(req.session_id, LlmTask.JD_GENERATE):
             parsed = await ainvoke_json_with_language_guard(
                 llm,
                 prompt,
@@ -744,8 +755,8 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
                 "JD Generation",
                 output_lang,
             )
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as e:
         logger.error("JD generation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"岗位描述生成失败: {e}")
@@ -794,7 +805,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
     """仅岗位名称时，结合候选人简历生成定向 JD，供用户确认后再进入优化流程。"""
     from api.chat import _aload_state, _asave_state
     from services.jd_title_service import generate_jd_from_title_for_profile
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
     from tools.resume_layout import normalize_employer_type, normalize_language
 
     user = get_optional_user(request)
@@ -817,7 +828,7 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
     employer_type = normalize_employer_type(req.employer_type or state.meta.employer_type)
     output_lang = normalize_language(req.language)
     try:
-        async with llm_queue_slot(req.session_id):
+        async with llm_queue_slot(req.session_id, LlmTask.JD_GENERATE):
             parsed = await generate_jd_from_title_for_profile(
                 state,
                 job_title,
@@ -826,8 +837,8 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
                 experience_level=req.experience_level.strip(),
                 language=output_lang,
             )
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except RuntimeError as exc:
@@ -1191,7 +1202,7 @@ async def generate_resume_stream(req: GenerateStreamRequest, request: Request, b
     """SSE stream: skeleton first, then overwrite each experience module as polish batches complete."""
     from api.chat import _aload_state, _asave_state, _persist_to_mysql_safe
     from agents.content_agent import generate_resume_content_with_progress
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
     from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
     from tools.resume_language_checklist import check_resume_language_requirements
     from workflow.state import ResumeHtml
@@ -1230,7 +1241,7 @@ async def generate_resume_stream(req: GenerateStreamRequest, request: Request, b
     async def _run_generation() -> None:
         final_state = state
         try:
-            async with llm_queue_slot(req.session_id):
+            async with llm_queue_slot(req.session_id, LlmTask.RESUME_GENERATE):
                 async def on_progress(parsed, meta: dict[str, Any]) -> None:
                     nonlocal final_state
                     from agents.content_agent import _build_resume_from_parsed, _merge_profile_extras_from_candidate
@@ -1281,8 +1292,8 @@ async def generate_resume_stream(req: GenerateStreamRequest, request: Request, b
                 })
                 if user:
                     background_tasks.add_task(_persist_to_mysql_safe, final_state, user.get("sub"))
-        except SessionBusyError:
-            await queue.put({"type": "error", "detail": SESSION_BUSY_API_DETAIL})
+        except SessionBusyError as exc:
+            await queue.put({"type": "error", "detail": session_busy_detail(exc)})
         except Exception as exc:
             logger.error("Resume stream generation failed: %s", exc, exc_info=True)
             await queue.put({"type": "error", "detail": f"简历生成失败: {exc}"})
@@ -1364,7 +1375,7 @@ async def restore_resume_snapshot(req: RestoreResumeSnapshotRequest, request: Re
 async def generate_resume_from_profile(req: GenerateFromProfileRequest, request: Request, background_tasks: BackgroundTasks):
     """从候选人画像生成简历（不结合 JD、不做缺口优化）— 供语言切换与直接导出。"""
     from api.chat import _aload_state, _asave_state, _persist_to_mysql_safe
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
     from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
     from tools.resume_language_checklist import check_resume_language_requirements
 
@@ -1390,10 +1401,10 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
     state.resume_html = ResumeHtml()
 
     try:
-        async with llm_queue_slot(req.session_id):
+        async with llm_queue_slot(req.session_id, LlmTask.RESUME_GENERATE):
             final = await _run_profile_resume_pipeline(state, defer_render=True)
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as e:
         logger.error("Profile resume generation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
@@ -1425,7 +1436,7 @@ async def translate_resume_module(req: ModuleActionRequest, request: Request, ba
     """单条简历模块翻译 — 用于全量翻译后遗漏模块的再次翻译。"""
     from api.chat import _asave_state, _persist_to_mysql_safe
     from agents.content_agent import apply_translated_module_to_resume, translate_resume_module_async
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
     from tools.resume_layout import normalize_language, VALID_RESUME_LANGUAGES
 
     user = get_optional_user(request)
@@ -1444,7 +1455,7 @@ async def translate_resume_module(req: ModuleActionRequest, request: Request, ba
         raise HTTPException(status_code=400, detail="请先生成或翻译简历后再翻译单条模块")
 
     try:
-        async with llm_queue_slot(req.session_id):
+        async with llm_queue_slot(req.session_id, LlmTask.RESUME_MODULE_TRANSLATE):
             result = await translate_resume_module_async(
                 state,
                 module_id=req.module_id,
@@ -1457,8 +1468,8 @@ async def translate_resume_module(req: ModuleActionRequest, request: Request, ba
                 fields=req.fields or None,
                 target_language=target,
             )
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
@@ -1498,7 +1509,7 @@ async def polish_resume_module(req: ModuleActionRequest, request: Request, backg
     """单条经历模块润色 — 用户对润色结果不满意时可再次润色。"""
     from api.chat import _asave_state, _persist_to_mysql_safe
     from agents.content_agent import apply_translated_module_to_resume, polish_resume_module_async
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -1515,7 +1526,7 @@ async def polish_resume_module(req: ModuleActionRequest, request: Request, backg
         raise HTTPException(status_code=400, detail="请先生成简历后再润色单条模块")
 
     try:
-        async with llm_queue_slot(req.session_id):
+        async with llm_queue_slot(req.session_id, LlmTask.RESUME_MODULE_POLISH):
             result = await polish_resume_module_async(
                 state,
                 module_id=req.module_id,
@@ -1524,8 +1535,8 @@ async def polish_resume_module(req: ModuleActionRequest, request: Request, backg
                 content=req.content,
                 fields=req.fields or None,
             )
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
@@ -1559,7 +1570,7 @@ async def polish_resume_module(req: ModuleActionRequest, request: Request, backg
 async def translate_resume(req: TranslateResumeRequest, request: Request, background_tasks: BackgroundTasks):
     """简历语言切换 — 仅生成 resume_content_json，HTML 预览延迟到导出/预览时渲染。"""
     from api.chat import _ainvoke_graph, _aload_state, _asave_state, _get_graph, _persist_to_mysql_safe
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
     from tools.resume_layout import language_label, normalize_language, VALID_RESUME_LANGUAGES
     from tools.resume_language_checklist import check_resume_language_requirements
     from workflow.state import ResumeHtml
@@ -1587,10 +1598,10 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
             state.resume_html = ResumeHtml()
         state.render_config = state.render_config.model_copy(update={"language": target})
         try:
-            async with llm_queue_slot(req.session_id):
+            async with llm_queue_slot(req.session_id, LlmTask.RESUME_TRANSLATE):
                 final = await _run_profile_resume_pipeline(state, defer_render=True)
-        except SessionBusyError:
-            raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+        except SessionBusyError as exc:
+            raise HTTPException(status_code=409, detail=session_busy_detail(exc))
         except Exception as e:
             logger.error("Profile resume generation (via translate) failed: %s", e, exc_info=True)
             raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
@@ -1610,10 +1621,10 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 
         graph = _get_graph()
         try:
-            async with llm_queue_slot(req.session_id):
+            async with llm_queue_slot(req.session_id, LlmTask.RESUME_TRANSLATE):
                 result = await _ainvoke_graph(graph, state.model_dump())
-        except SessionBusyError:
-            raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+        except SessionBusyError as exc:
+            raise HTTPException(status_code=409, detail=session_busy_detail(exc))
         except Exception as e:
             logger.error("Resume translation failed: %s", e, exc_info=True)
             raise HTTPException(status_code=500, detail=f"简历转换失败: {e}")
@@ -1656,7 +1667,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 async def render_resume(req: RenderRequest, request: Request, background_tasks: BackgroundTasks):
     """渲染指令接口。"""
     from api.chat import _ainvoke_graph, _aload_state, _asave_state, _get_graph, _persist_to_mysql_safe
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
 
     user = get_optional_user(request)
     await ensure_session_access(req.session_id, user)
@@ -1676,10 +1687,10 @@ async def render_resume(req: RenderRequest, request: Request, background_tasks: 
 
     graph = _get_graph()
     try:
-        async with llm_queue_slot(req.session_id):
+        async with llm_queue_slot(req.session_id, LlmTask.RESUME_RENDER):
             result = await _ainvoke_graph(graph, state.model_dump())
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as e:
         logger.error("Render failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"渲染失败: {e}")

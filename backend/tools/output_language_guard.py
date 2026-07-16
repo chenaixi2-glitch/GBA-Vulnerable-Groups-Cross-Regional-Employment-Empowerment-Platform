@@ -38,7 +38,7 @@ _SKIP_FIELD_NAMES = frozenset({
     "template_id", "theme", "font_family", "layout_mode", "spacing_scale", "accent_style",
     "resolution_source", "fact_id", "section_type", "answer_ref", "stage_index", "language",
     "github", "linkedin", "start_date", "end_date",
-    "duration", "rating", "estimated_hours", "duration_hours", "phase", "weeks", "score",
+    "duration", "rating", "estimated_hours", "duration_hours", "phase", "weeks", "period", "unit", "score",
     "overall_score", "relevance", "groundedness", "actionability", "needs_clarification",
     "resolved", "should_end", "dimensions_covered", "resume_cleared", "can_decide",
     "no_more_value", "hard_mismatch", "high_match", "dense_mode", "visibility_map",

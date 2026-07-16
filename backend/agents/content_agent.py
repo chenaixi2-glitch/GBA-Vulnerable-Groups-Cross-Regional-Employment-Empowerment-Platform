@@ -64,6 +64,7 @@ from tools.resume_page_policy import (
     resolve_experience_level,
     resume_constraints_for_state,
 )
+from tools.resume_compact_layout import compact_skills_and_awards
 from tools.resume_layout import (
     language_label,
     normalize_language,
@@ -470,9 +471,8 @@ def _backfill_profile_from_candidate(
     profile = parsed.profile
     education = list(profile.education or [])
     if not education:
-        school = (basic.school or "").strip()
-        if school:
-            education = [EducationOutput(id="edu_1", school=school)]
+        # Prefer structured education facts. profile_basic.school is only a fallback
+        # when no facts exist — using both duplicates the highest degree entry.
         for fact in cand.facts:
             if fact.type != "education":
                 continue
@@ -489,6 +489,10 @@ def _backfill_profile_from_candidate(
                     start_date=str(raw.get("start_date") or ""),
                     end_date=str(raw.get("end_date") or ""),
                 ))
+        if not education:
+            school = (basic.school or "").strip()
+            if school:
+                education = [EducationOutput(id="edu_1", school=school)]
     filled = ResumeProfileOutput(
         name=profile.name or basic.name or "",
         email=profile.email or basic.email or "",
@@ -1736,6 +1740,12 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
     resume_content = _build_resume_from_parsed(parsed, state, language=target_lang)
     resume_content = _merge_profile_extras_from_candidate(resume_content, state)
 
+    # A4 optimize: within Skills / within Awards, one-line + trim (sections stay separate)
+    if intent == "content_edit" and _wants_a4_skills_awards_compact(state.user_message):
+        resume_content, compact_changed = compact_skills_and_awards(resume_content)
+        if compact_changed:
+            logger.info("A4 optimize: compacted items within skills/awards sections")
+
     logger.info("Resume content generated v%d, hash=%s, lang=%s",
                 resume_content.meta.version, resume_content.meta.content_hash, resume_content.meta.language)
 
@@ -1799,6 +1809,20 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
 def content_node(state: CopilotState) -> dict[str, Any]:
     """Resume Content Agent 同步兼容入口。"""
     return asyncio.run(content_node_async(state))
+
+
+def _wants_a4_skills_awards_compact(message: str) -> bool:
+    """True when the user instruction is an A4 / one-page fit optimize request."""
+    text = (message or "").lower()
+    page_hint = any(token in text for token in (
+        "a4", "单页", "一页", "one page", "one-page", "single page", "page limit",
+    ))
+    if not page_hint:
+        return False
+    return any(token in text for token in (
+        "fit", "optim", "shorten", "compact", "精简", "压缩", "优化", "spacing",
+        "skills", "awards",
+    ))
 
 
 async def compress_resume_for_page_limit_async(

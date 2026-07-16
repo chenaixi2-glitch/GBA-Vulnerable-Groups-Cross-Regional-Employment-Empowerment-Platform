@@ -58,9 +58,14 @@
         if (basic.email) lines.push((zh ? '邮箱: ' : 'Email: ') + basic.email);
         if (basic.phone) lines.push((zh ? '电话: ' : 'Phone: ') + basic.phone);
         if (basic.city) lines.push((zh ? '城市: ' : 'City: ') + basic.city);
-        if (basic.school) lines.push((zh ? '学校: ' : 'School: ') + basic.school);
+        const facts = profile.facts || [];
+        const hasEducationFact = facts.some((fact) => fact.type === 'education');
+        // Avoid duplicating education: school + education facts often describe the same degree.
+        if (basic.school && !hasEducationFact) {
+            lines.push((zh ? '学校: ' : 'School: ') + basic.school);
+        }
 
-        (profile.facts || []).forEach((fact) => {
+        facts.forEach((fact) => {
             const title = inferFactTitle(fact.content, fact.type);
             const body = (fact.content || '').trim();
             lines.push('');
@@ -80,17 +85,20 @@
             facts: [],
         };
         const basic = profileLike.profile_basic;
-        if (basic.school) {
+        const educationEntries = draft.education || [];
+        // school is only a fallback when draft.education is empty — both would duplicate.
+        if (basic.school && !educationEntries.length) {
             profileLike.facts.push({
                 type: 'education',
                 content: JSON.stringify({
                     school: basic.school,
-                    major: (draft.education && draft.education[0]?.major) || '',
-                    degree: (draft.education && draft.education[0]?.degree) || '',
+                    major: '',
+                    degree: '',
                 }),
             });
         }
-        (draft.education || []).forEach((edu) => {
+        delete basic.school;
+        educationEntries.forEach((edu) => {
             profileLike.facts.push({
                 type: 'education',
                 content: JSON.stringify({

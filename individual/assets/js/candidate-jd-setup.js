@@ -257,7 +257,10 @@
             }
 
             if (this.config.showLoading) {
-                Utils.showLoading(cjsT('profileReview.applyingEdits', 'Applying profile edits...'));
+                Utils.showLoading(
+                    cjsT('profileReview.applyingEdits', 'Applying profile edits...'),
+                    { title: 'Applying Profile Edits' }
+                );
             }
 
             try {
@@ -347,6 +350,25 @@
             }
         }
 
+        setProfileSubmitBusy(busy) {
+            const btnId = this.config.ids?.profileSubmitBtn;
+            const btn = btnId ? document.getElementById(btnId) : null;
+            if (!btn) return;
+            btn.disabled = Boolean(busy);
+            btn.classList.toggle('opacity-50', Boolean(busy));
+            btn.classList.toggle('cursor-not-allowed', Boolean(busy));
+        }
+
+        showProfileErrorToast(error, i18n) {
+            const fallbackKey = i18n.profileFailed?.[0] || 'interview.toast.profileFailed';
+            const fallbackEn = i18n.profileFailed?.[1] || 'Failed to upload profile: {msg}';
+            if (typeof Utils.showAiTaskErrorToast === 'function') {
+                Utils.showAiTaskErrorToast(error, fallbackKey, fallbackEn);
+                return;
+            }
+            Utils.showToast(cjsT(fallbackKey, fallbackEn, { msg: error.message }));
+        }
+
         async submitProfile() {
             const i18n = this.config.i18n || {};
             const profileText = this.getProfileText();
@@ -363,12 +385,34 @@
                 return null;
             }
 
-            const loadingMsg = cjsT(
-                i18n.profileLoading?.[0] || 'resume.toast.uploadingResume',
-                i18n.profileLoading?.[1] || 'Uploading resume...'
-            );
+            if (this._profileSubmitInFlight) {
+                Utils.showToast(cjsT(
+                    'errors.sessionBusyWithTask',
+                    'Another AI task is already running for this session ({task}). Please wait for it to finish, then try again.',
+                    { task: cjsT('errors.aiTasks.profile_parse', 'profile parsing') }
+                ));
+                return null;
+            }
 
-            if (this.config.showLoading) Utils.showLoading(loadingMsg);
+            const loadingTitle = i18n.profileLoadingTitle?.[1]
+                || 'Parsing Resume';
+            const loadingMsg = i18n.profileLoading?.[1]
+                || 'Uploading resume...';
+            const slowMsg = i18n.profileLoadingSlow?.[1]
+                || 'AI is parsing your resume — usually about 1–2 minutes, please wait…';
+
+            this._profileSubmitInFlight = true;
+            this.setProfileSubmitBusy(true);
+            let slowHintTimer = null;
+
+            if (this.config.showLoading) {
+                Utils.showLoading(loadingMsg, { title: loadingTitle });
+                slowHintTimer = setTimeout(() => {
+                    if (this._profileSubmitInFlight && this.config.showLoading) {
+                        Utils.showLoading(slowMsg, { title: loadingTitle });
+                    }
+                }, 8000);
+            }
 
             try {
                 let response;
@@ -405,12 +449,12 @@
                 return response;
             } catch (error) {
                 if (this.config.showLoading) Utils.hideLoading();
-                Utils.showToast(cjsT(
-                    i18n.profileFailed?.[0] || 'interview.toast.profileFailed',
-                    i18n.profileFailed?.[1] || 'Failed to upload profile: {msg}',
-                    { msg: error.message }
-                ));
+                this.showProfileErrorToast(error, i18n);
                 throw error;
+            } finally {
+                if (slowHintTimer) clearTimeout(slowHintTimer);
+                this._profileSubmitInFlight = false;
+                this.setProfileSubmitBusy(false);
             }
         }
 
@@ -436,10 +480,11 @@
             }
 
             if (this.config.showLoading) {
-                Utils.showLoading(cjsT(
-                    i18n.jdLoading?.[0] || 'resume.toast.analyzingJd',
-                    i18n.jdLoading?.[1] || 'Analyzing job description — usually about 30–60 seconds (instant if cached)…'
-                ));
+                Utils.showLoading(
+                    i18n.jdLoading?.[1]
+                        || 'Analyzing job description — usually about 30–60 seconds (instant if cached)…',
+                    { title: i18n.jdLoadingTitle?.[1] || 'Submitting Job Description' }
+                );
             }
 
             try {

@@ -96,6 +96,21 @@ dialogue_memory:
   summary_max_chars: 2000
   cross_session_enabled: true
 
+# 交互式面试 Prompt 记忆：完整 turns 仍持久化；仅压缩注入 LLM 的历史
+interview_memory:
+  recent_qa_limit: 6
+  compress_threshold: 8
+  debrief_recent_qa_limit: 12
+  max_block_chars: 1000
+  summary_max_chars: 2500
+  # 类别加权：同类高、近类中、远类低 → 远类优先压缩
+  same_category_weight: 1.0
+  near_category_weight: 0.55
+  far_category_weight: 0.2
+  same_stage_bonus: 0.15
+  recency_weight: 0.35
+  debrief_category_scale: 0.25  # 复盘时弱化类别偏向，更偏全景
+
 redis:
   host_from: "server"          # 可被 REDIS_HOST 覆盖；线上建议 REDIS_HOST=127.0.0.1
   port: 6379

@@ -72,14 +72,14 @@ async def _ensure_resume_html_for_export(session_id: str, state: CopilotState) -
     from api.chat import _aload_state, _asave_state
     from api.draft_utils import _persist_payload, apply_profile_extras_to_resume_state
     from agents.render_agent import render_node_async
-    from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
 
     client = await get_redis_client()
     store = RedisSessionStore(session_id, client)
 
     # Re-load under queue lock so concurrent export/preview share one render.
     try:
-        async with llm_queue_slot(session_id):
+        async with llm_queue_slot(session_id, LlmTask.EXPORT_RENDER):
             saved = await _aload_state(store)
             if not saved:
                 raise HTTPException(status_code=404, detail="会话不存在")
@@ -101,8 +101,8 @@ async def _ensure_resume_html_for_export(session_id: str, state: CopilotState) -
             if not final.resume_html or not final.resume_html.html:
                 raise HTTPException(status_code=500, detail="预览渲染结果为空，请重试")
             return final
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except HTTPException:
         raise
     except Exception as exc:

@@ -39,7 +39,7 @@ from auth.jwt import get_optional_user
 from auth.session_access import bind_session_owner, ensure_session_access, extract_user_id
 from storage.redis_client import get_redis_client, RedisSessionStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
-from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
 from tools.output_language import (
     apply_interview_feedback_language,
     apply_interview_languages,
@@ -195,10 +195,10 @@ async def generate_custom_interview_answers(
     apply_interview_question_language(state, req.question_language or req.language)
 
     try:
-        async with llm_queue_slot(session_id):
+        async with llm_queue_slot(session_id, LlmTask.INTERVIEW_CUSTOM):
             result = await custom_interview_answers_async(state, questions)
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as exc:
         logger.error("Custom interview answers failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate reference answers: {exc}")
@@ -270,7 +270,7 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
         raise HTTPException(status_code=400, detail=INTERVIEW_ERR_ALREADY_ACTIVE)
 
     try:
-        async with llm_queue_slot(session_id):
+        async with llm_queue_slot(session_id, LlmTask.INTERVIEW_START):
             max_rounds = req.max_rounds if req.max_rounds > 0 else None
             session = await start_interactive_interview(
                 state,
@@ -281,8 +281,8 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
                 program_version=req.program_version,
                 specialized_focus=req.specialized_focus,
             )
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -404,13 +404,13 @@ async def interactive_end(req: InteractiveEndRequest, request: Request) -> Inter
 
     try:
         if req.generate_debrief:
-            async with llm_queue_slot(req.session_id):
+            async with llm_queue_slot(req.session_id, LlmTask.INTERVIEW_DEBRIEF):
                 session = await generate_interactive_debrief(state)
         else:
             session.status = "completed"
             session.ended_at = session.ended_at or ""
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:

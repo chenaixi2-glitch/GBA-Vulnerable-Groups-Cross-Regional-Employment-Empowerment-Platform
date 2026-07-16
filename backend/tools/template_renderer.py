@@ -118,13 +118,33 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
             )
         return "\n".join(parts)
 
+    def _render_inline_items(items, section_class: str) -> str:
+        """Skills/awards: prefer one visual line per item (title: content)."""
+        parts = []
+        for item in items:
+            title = (item.title or "").strip()
+            body = re.sub(r"\s+", " ", (item.content or "").strip())
+            if title and body:
+                line = f"{_esc(title)}: {_esc(body)}"
+            else:
+                line = _esc(body or title)
+            if not line:
+                continue
+            parts.append(
+                f'<div class="item item-inline {section_class}-item">'
+                f'<p class="item-inline-line">{line}</p>'
+                f'</div>'
+            )
+        return "\n".join(parts)
+
     education_label = labels.get("education") or SECTION_LABELS["en"]["education"]
 
     # 按 section_order 排列（education 独立成节，不再嵌在 profile 内）
     sections_html_map = {
+        # Profile is a header block (name + contact), not a titled section —
+        # omit h2 so "Contact" / "Contactos" does not sit above the name.
         "profile": f"""
             <section class="section section-profile">
-                <h2>{labels["profile"]}</h2>
                 <div class="profile-header">
                     <div class="profile-main">
                         <div class="profile-info">
@@ -153,7 +173,7 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
         "skills": f"""
             <section class="section section-skills">
                 <h2>{labels["skills"]}</h2>
-                {_render_items(content.skills, 'skill')}
+                {_render_inline_items(content.skills, 'skill')}
             </section>
         """ if content.skills else "",
         "internships": f"""
@@ -171,7 +191,7 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
         "awards": f"""
             <section class="section section-awards">
                 <h2>{labels["awards"]}</h2>
-                {_render_items(content.awards, 'award')}
+                {_render_inline_items(content.awards, 'award')}
             </section>
         """ if content.awards else "",
         "papers": f"""
@@ -267,16 +287,35 @@ def _build_zh_template_variables(content: "ResumeContent", config: "RenderConfig
     def _render_zh_skills(items) -> str:
         if not items:
             return ""
-        if len(items) == 1 and "\n" not in (items[0].content or "") and "•" not in (items[0].content or ""):
-            return _content_to_bullets_html(items[0].content)
         parts = []
         for item in items:
             label = (item.title or "").strip()
-            body = (item.content or "").strip()
-            line = f"{label}：{body}" if label and body and label.lower() not in ("skills", "技能", "相关技能") else (body or label)
+            body = re.sub(r"\s+", " ", (item.content or "").strip())
+            if label and body and label not in ("技能", "相关技能", "專業技能", "Skills"):
+                line = f"{label}：{body}"
+            else:
+                line = body or label
             if line:
-                parts.append(f"<li>{_esc(line)}</li>")
-        return f'<ul class="zh-bullets">{"".join(parts)}</ul>' if parts else ""
+                parts.append(line)
+        if not parts:
+            return ""
+        # One visual line per skill group — do not mash all groups into one paragraph
+        return "\n".join(f'<p class="item-inline-line">{_esc(p)}</p>' for p in parts)
+
+    def _render_zh_awards_inline(items) -> str:
+        if not items:
+            return ""
+        parts = []
+        for item in items:
+            label = (item.title or "").strip()
+            body = re.sub(r"\s+", " ", (item.content or "").strip())
+            line = f"{label}：{body}" if label and body else (body or label)
+            if line:
+                parts.append(line)
+        if not parts:
+            return ""
+        # One visual line per award — keep Awards section separate from Skills
+        return "\n".join(f'<p class="item-inline-line">{_esc(p)}</p>' for p in parts)
 
     footer_parts = []
     if extras.get("age"):
@@ -324,7 +363,7 @@ def _build_zh_template_variables(content: "ResumeContent", config: "RenderConfig
         "awards": f"""
             <section class="section section-awards">
                 <h2>{labels["awards"]}</h2>
-                {_render_zh_items(content.awards)}
+                {_render_zh_awards_inline(content.awards)}
             </section>
         """ if content.awards else "",
         "papers": f"""

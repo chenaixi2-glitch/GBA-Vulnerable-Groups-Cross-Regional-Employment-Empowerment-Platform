@@ -17,7 +17,12 @@ from workflow.graph import compile_graph
 from workflow.state import CopilotState, ResumeHtml
 from storage.redis_client import get_redis_client, RedisSessionStore, RedisDraftStore
 from storage.mysql_client import get_mysql_pool, MySQLStore
-from services.llm_queue import SessionBusyError, llm_queue_slot, SESSION_BUSY_API_DETAIL
+from services.llm_queue import (
+    SessionBusyError,
+    llm_queue_slot,
+    resolve_chat_task_type,
+    session_busy_detail,
+)
 from services import dialogue_memory, rag_service
 from tools.output_language import (
     apply_chat_output_language,
@@ -32,6 +37,37 @@ logger = get_logger("api")
 router = APIRouter(prefix="/api", tags=["chat"])
 
 _graph = None
+
+
+def _lp_duration(state: CopilotState) -> dict[str, Any]:
+    """Compute learning-path duration fields for ChatResponse."""
+    import math
+
+    from agents.learning_path_agent import estimate_span_from_timeline, recommend_timeline_unit
+
+    hours = int(state.learning_path_estimated_hours or 0)
+    daily = float(state.learning_path_daily_hours or 0)
+    unit = state.learning_path_timeline_unit or (
+        recommend_timeline_unit(hours, daily or 1.0) if hours else ""
+    )
+    if hours and daily > 0:
+        total_days = max(1, math.ceil(hours / daily))
+        total_weeks = max(1, math.ceil(total_days / 7))
+        total_months = max(1, math.ceil(total_days / 30))
+    else:
+        total_days = total_weeks = total_months = 0
+    span = estimate_span_from_timeline(state.learning_path_timeline) or {
+        "day": total_days,
+        "week": total_weeks,
+        "month": total_months,
+    }.get(unit, 0)
+    return {
+        "timeline_unit": unit,
+        "estimated_days": total_days,
+        "estimated_weeks": total_weeks,
+        "estimated_months": total_months,
+        "estimated_span": span,
+    }
 
 
 def _get_graph():
@@ -63,6 +99,7 @@ def _reset_profile_working_state(state: CopilotState) -> CopilotState:
     state.learning_path_resources = []
     state.learning_path_estimated_hours = 0
     state.learning_path_daily_hours = 0.0
+    state.learning_path_timeline_unit = "week"
     return state
 
 
@@ -109,6 +146,11 @@ class ChatResponse(BaseModel):
     resources: list[dict] = Field(default_factory=list)
     estimated_total_hours: int = 0
     daily_hours: float = 0.0
+    timeline_unit: str = ""
+    estimated_days: int = 0
+    estimated_weeks: int = 0
+    estimated_months: int = 0
+    estimated_span: int = 0
     timing: RequestTiming | None = None
 
 
@@ -189,12 +231,12 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
     graph = _get_graph()
     graph_t0 = time.perf_counter()
     try:
-        async with llm_queue_slot(session_id):
+        async with llm_queue_slot(session_id, resolve_chat_task_type(state.forced_intent)):
             result = await _ainvoke_graph(
                 graph, state.model_dump(), config={"run_name": f"API-Chat-Request: {session_id}"}
             )
-    except SessionBusyError:
-        raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as e:
         logger.error("Workflow execution failed: %s", e, exc_info=True)
         err_text = str(e).lower()
@@ -291,6 +333,7 @@ async def chat(req: ChatRequest, request: Request, background_tasks: BackgroundT
         resources=[r.model_dump() for r in final_state.learning_path_resources],
         estimated_total_hours=final_state.learning_path_estimated_hours,
         daily_hours=final_state.learning_path_daily_hours,
+        **{k: v for k, v in _lp_duration(final_state).items()},
         timing=timing,
     )
 

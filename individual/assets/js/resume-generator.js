@@ -557,7 +557,7 @@ function setupJdSectionListeners() {
 
     if (!industrySelect || !experienceSelect) return;
 
-    // Do not auto-generate JD from empty box — user must enter at least a job title first.
+    // Selecting employer type alone does not auto-generate JD; user clicks Generate Suggested JD.
     employerTypeSelect?.addEventListener('change', async () => {
         const employerType = employerTypeSelect.value;
         if (employerType) {
@@ -643,13 +643,6 @@ async function fillSuggestedJd(industry, experienceLevel, employerType, options 
 }
 
 async function generateSuggestedJd() {
-    const jdDraft = document.getElementById('jd-text')?.value.trim() || '';
-    if (!jdDraft) {
-        Utils.showToast(uiT('resume.toast.jdNameRequired', 'Please enter at least a job title in the JD box first (full job description is optional)'));
-        document.getElementById('jd-text')?.focus();
-        return;
-    }
-
     const industry = document.getElementById('industry-select').value;
     const experienceLevel = document.getElementById('experience-level').value;
     const employerType = document.getElementById('employer-type-select')?.value || '';
@@ -659,6 +652,7 @@ async function generateSuggestedJd() {
         return;
     }
 
+    // Empty JD box is allowed — backend generates a generic JD from the three selectors.
     await fillSuggestedJd(industry, experienceLevel, employerType, { silent: false });
 }
 
@@ -871,6 +865,11 @@ async function previewResumeFormat(format = 'html', options = {}) {
     try {
         if (showLoading) {
             Utils.showLoading(uiT('resume.toast.generatingPreview', 'Generating preview...'));
+        }
+
+        // Flush pending editor edits (e.g. deleted education) before render/cache check.
+        if (typeof ProfileEditor !== 'undefined' && typeof ProfileEditor.persistDraft === 'function') {
+            await ProfileEditor.persistDraft();
         }
 
         if (normalized === 'markdown' || normalized === 'md') {
@@ -1156,7 +1155,7 @@ function applyResumeGenerationResult(response, lang, options = {}) {
             beforeSnapshot: beforeDraftSnapshot,
             polishingFactIds,
         });
-        if (changed > 0 && !deferPreview) {
+        if (changed > 0 && !deferPreview && !silent) {
             setResumeView('edit', { scroll: false });
             Utils.showToast(uiT(
                 'resume.toast.translationReviewFields',
@@ -2244,9 +2243,14 @@ async function optimizeResume() {
             ? buildQuantificationEditClause('')
             : 'Add quantified results only when supported by my profile facts; never fabricate numbers.';
         const optimizeInstruction = (
-            'Optimize my resume for the target job. Polish experience entries to highlight role-relevant achievements, '
-            + 'follow industry-standard conventions, and shorten wording so the entire resume fits on one A4 page '
-            + 'without losing key achievements. '
+            'Optimize my resume for the target job so it fits on one A4 page. '
+            + 'PRIORITY when over length: inside the Skills section and inside the Awards section separately, '
+            + 'put each entry on one line when possible (e.g. "Languages: Python, SQL"), merge multi-line/'
+            + 'bullet lists into comma-separated text, drop filler phrases, and shorten wording; '
+            + 'do NOT merge the Skills section with the Awards section. '
+            + 'Only then shorten experience bullets if still needed. '
+            + 'Polish experience entries to highlight role-relevant achievements, follow industry-standard conventions, '
+            + 'and keep key achievements. '
             + quantClause
         );
         const response = await apiClient.optimizeResume(optimizeInstruction, targetContext);
@@ -2256,8 +2260,9 @@ async function optimizeResume() {
             applyResumeGenerationResult(
                 response,
                 response.language || response.resume_content_json?.meta?.language || currentResumeLanguage,
-                { deferPreview: true, polishingFactIds: [] }
+                { deferPreview: false, polishingFactIds: [], silent: true }
             );
+            optimizedHtml = response.resume_html?.html || optimizedHtml;
         } else if (response.resume_html && response.resume_html.html) {
             displayResume(response.resume_html.html);
             optimizedHtml = response.resume_html.html;
@@ -2268,10 +2273,15 @@ async function optimizeResume() {
                 displayResume(optimizedHtml);
             }
         }
+        if (!optimizedHtml && response.resume_html?.html) {
+            optimizedHtml = response.resume_html.html;
+            displayResume(optimizedHtml);
+        }
         if (beforeSnapshot.html && (optimizedHtml || response.resume_content_json)) {
             pushResumeUndoSnapshot(beforeSnapshot);
         }
         updateResumeLanguageBadge(response.resume_content_json?.meta?.language || currentResumeLanguage);
+        setResumeView('preview', { scroll: true });
         Utils.hideLoading();
         Utils.showToast(uiT('resume.toast.optimizedA4', 'Resume optimized for one A4 page'));
     } catch (error) {
@@ -2390,6 +2400,12 @@ async function exportResume(format = 'pdf') {
 
     try {
         Utils.showLoading(loadingMsg);
+
+        // Flush pending editor edits so export matches the latest draft.
+        if (typeof ProfileEditor !== 'undefined' && typeof ProfileEditor.persistDraft === 'function') {
+            await ProfileEditor.persistDraft();
+        }
+
         const needsHtmlPreview = normalized === 'pdf' || normalized === 'html' || normalized === 'docx';
         const needsMarkdownPreview = normalized === 'markdown' || normalized === 'md';
 

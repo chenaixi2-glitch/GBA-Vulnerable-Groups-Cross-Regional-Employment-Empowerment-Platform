@@ -17,7 +17,7 @@ from prompts.interactive_interview import (
     INTERACTIVE_BANK_FEEDBACK_PROMPT,
     INTERACTIVE_INTERVIEW_DEBRIEF_PROMPT,
 )
-from services.llm_queue import llm_queue_slot
+from services.llm_queue import LlmTask, llm_queue_slot
 from tools.interview_program import (
     InterviewProgramConfig,
     build_interview_program,
@@ -32,6 +32,10 @@ from tools.output_language import (
     interview_opening_message,
     interview_phase_label,
     interview_turn_prompt_language_kwargs,
+)
+from services.interview_memory import (
+    build_prompt_history,
+    maybe_compress_interview_history_safe,
 )
 from tools.target_job_context import build_enriched_job_json
 from workflow.state import (
@@ -108,19 +112,20 @@ def _stages_from_program(program: InterviewProgramConfig) -> list[InterviewStage
     ]
 
 
-def _format_qa_history(session: InteractiveInterviewSession) -> str:
-    lines: list[str] = []
-    for turn in session.turns:
-        if turn.turn_type == "answer":
-            q_turn = next(
-                (t for t in session.turns if t.question_id == turn.question_id and t.role == "interviewer"),
-                None,
-            )
-            q_text = q_turn.content if q_turn else "(unknown question)"
-            lines.append(f"Q: {q_text}\nA: {turn.content}")
-        elif turn.turn_type == "brief_feedback":
-            lines.append(f"[Feedback] {turn.content}")
-    return "\n\n".join(lines) if lines else "(no Q&A yet)"
+def _format_qa_history(
+    session: InteractiveInterviewSession,
+    *,
+    for_debrief: bool = False,
+    anchor_category: str = "",
+    anchor_stage_index: int | None = None,
+) -> str:
+    """组装注入 LLM 的问答历史（类别加权窗口 + 摘要），完整 turns 仍保留在 session。"""
+    return build_prompt_history(
+        session,
+        for_debrief=for_debrief,
+        anchor_category=anchor_category,
+        anchor_stage_index=anchor_stage_index,
+    )
 
 
 def _stages_summary(session: InteractiveInterviewSession) -> str:
@@ -423,6 +428,7 @@ async def submit_interactive_answer(
         role="candidate",
         content=answer,
         turn_type="answer",
+        category=current_q.category,
         round=session.round_count,
         stage_index=current_q.stage_index,
         stage_name=current_q.stage_name,
@@ -475,6 +481,14 @@ async def process_next_pending_feedback(state: CopilotState) -> bool:
         return False
 
     pending.status = "processing"
+    pending_q = _find_question(session, pending.question_id)
+    anchor_category = pending.category or (pending_q.category if pending_q else "")
+    anchor_stage_index = pending_q.stage_index if pending_q else None
+    await maybe_compress_interview_history_safe(
+        session,
+        anchor_category=anchor_category,
+        anchor_stage_index=anchor_stage_index,
+    )
     program = _program_from_state(state, session)
     job_json, profile_json = _context_json(state)
     phase_label = interview_phase_label(state, session.phase)
@@ -490,7 +504,11 @@ async def process_next_pending_feedback(state: CopilotState) -> bool:
         follow_up_total=len(session.follow_up_questions),
         job_json=job_json,
         profile_json=profile_json,
-        conversation_history=_format_qa_history(session),
+        conversation_history=_format_qa_history(
+            session,
+            anchor_category=anchor_category,
+            anchor_stage_index=anchor_stage_index,
+        ),
         current_question=pending.question,
         current_category=pending.category,
         latest_answer=pending.answer,
@@ -499,7 +517,7 @@ async def process_next_pending_feedback(state: CopilotState) -> bool:
 
     slot_key = f"{state.session_id}:fb:{pending.id}"
     try:
-        async with llm_queue_slot(slot_key):
+        async with llm_queue_slot(slot_key, LlmTask.INTERVIEW_FEEDBACK):
             llm = get_llm()
             parsed = await ainvoke_json_with_language_guard(
                 llm,
@@ -655,9 +673,10 @@ async def generate_interactive_debrief(state: CopilotState) -> InteractiveInterv
         session.status = "completed"
         session.ended_at = _now_iso()
 
+    await maybe_compress_interview_history_safe(session, for_debrief=True)
     program = _program_from_state(state, session)
     job_json, profile_json = _context_json(state)
-    history = _format_qa_history(session)
+    history = _format_qa_history(session, for_debrief=True)
 
     feedback_lang_kwargs = interview_feedback_prompt_language_kwargs(state)
     prompt = INTERACTIVE_INTERVIEW_DEBRIEF_PROMPT.format(

@@ -26,9 +26,66 @@ _SESSION_LOCK_PREFIX = "llm:queue:session_lock:"
 class SessionBusyError(Exception):
     """Raised when a session already has an in-flight LLM job."""
 
+    def __init__(self, session_id: str, task_type: str = "") -> None:
+        self.session_id = session_id
+        self.task_type = (task_type or "").strip()
+        super().__init__(session_id)
+
 
 # Machine-readable API detail — frontend maps via i18n apiMessages
 SESSION_BUSY_API_DETAIL = "SESSION_BUSY"
+
+
+class LlmTask:
+    """Stable task codes returned in SESSION_BUSY / queue status (frontend i18n)."""
+
+    CHAT = "chat"
+    PROFILE_PARSE = "profile_parse"
+    PROFILE_UPDATE = "profile_update"
+    JD_PARSE = "jd_parse"
+    JD_GENERATE = "jd_generate"
+    GAP_ANALYSIS = "gap_analysis"
+    LEARNING_PATH = "learning_path"
+    RESUME_GENERATE = "resume_generate"
+    RESUME_EDIT = "resume_edit"
+    RESUME_TRANSLATE = "resume_translate"
+    RESUME_RENDER = "resume_render"
+    RESUME_MODULE_TRANSLATE = "resume_module_translate"
+    RESUME_MODULE_POLISH = "resume_module_polish"
+    INTERVIEW_CUSTOM = "interview_custom"
+    INTERVIEW_START = "interview_start"
+    INTERVIEW_EVALUATE = "interview_evaluate"
+    INTERVIEW_DEBRIEF = "interview_debrief"
+    INTERVIEW_FEEDBACK = "interview_feedback"
+    EXPORT_RENDER = "export_render"
+
+
+_CHAT_INTENT_TASKS = {
+    "upload_profile": LlmTask.PROFILE_PARSE,
+    "profile_patch": LlmTask.PROFILE_UPDATE,
+    "upload_jd": LlmTask.JD_PARSE,
+    "gap_analysis": LlmTask.GAP_ANALYSIS,
+    "content_edit": LlmTask.RESUME_EDIT,
+    "learning_path": LlmTask.LEARNING_PATH,
+    "start_interview": LlmTask.INTERVIEW_START,
+    "evaluate_answer": LlmTask.INTERVIEW_EVALUATE,
+    "language_convert": LlmTask.RESUME_TRANSLATE,
+}
+
+
+def resolve_chat_task_type(forced_intent: str = "") -> str:
+    """Map chat forced_intent to a user-facing task code."""
+    key = (forced_intent or "").strip()
+    return _CHAT_INTENT_TASKS.get(key, LlmTask.CHAT)
+
+
+def session_busy_detail(exc: SessionBusyError | None = None, task_type: str = "") -> dict[str, str]:
+    """Structured 409 detail so the UI can name the running AI task."""
+    detail: dict[str, str] = {"code": SESSION_BUSY_API_DETAIL}
+    task = (exc.task_type if exc else "") or (task_type or "").strip()
+    if task:
+        detail["task"] = task
+    return detail
 
 
 def _job_key(job_id: str) -> str:
@@ -41,6 +98,17 @@ def _session_job_key(session_id: str) -> str:
 
 def _session_lock_key(session_id: str) -> str:
     return f"{_SESSION_LOCK_PREFIX}{session_id}"
+
+
+async def _lookup_session_task_type(client: aioredis.Redis, session_id: str) -> str:
+    if not session_id:
+        return ""
+    job_id = await client.get(_session_lock_key(session_id))
+    if not job_id:
+        job_id = await client.get(_session_job_key(session_id))
+    if not job_id:
+        return ""
+    return (await client.hget(_job_key(job_id), "task_type") or "") or ""
 
 
 async def _session_lock_retry_seconds(client: aioredis.Redis, session_id: str) -> int:
@@ -71,6 +139,7 @@ def _queue_status_payload(
     estimated_wait_seconds: int = 0,
     retry_after_seconds: int = 0,
     job_id: str | None = None,
+    task_type: str = "",
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "enabled": True,
@@ -82,6 +151,7 @@ def _queue_status_payload(
         "max_concurrent": cfg["max_concurrent"],
         "estimated_wait_seconds": estimated_wait_seconds,
         "retry_after_seconds": max(int(retry_after_seconds), 0),
+        "task_type": task_type or "",
     }
     if job_id:
         payload["job_id"] = job_id
@@ -96,6 +166,7 @@ async def get_queue_status(session_id: str) -> dict[str, Any]:
     running_count = int(await client.get(_RUNNING_KEY) or 0)
     waiting_count = int(await client.zcard(_WAITING_KEY) or 0)
     lock_retry = await _session_lock_retry_seconds(client, session_id)
+    task_type = await _lookup_session_task_type(client, session_id)
 
     if not cfg["enabled"]:
         return {
@@ -108,6 +179,7 @@ async def get_queue_status(session_id: str) -> dict[str, Any]:
             "max_concurrent": cfg["max_concurrent"],
             "estimated_wait_seconds": 0,
             "retry_after_seconds": lock_retry,
+            "task_type": task_type if lock_retry > 0 else "",
         }
 
     job_id = await client.get(_session_job_key(session_id))
@@ -119,6 +191,7 @@ async def get_queue_status(session_id: str) -> dict[str, Any]:
                 running_count=running_count,
                 waiting_count=waiting_count,
                 retry_after_seconds=lock_retry,
+                task_type=task_type,
             )
         return _queue_status_payload(
             cfg=cfg,
@@ -137,6 +210,7 @@ async def get_queue_status(session_id: str) -> dict[str, Any]:
             waiting_count=waiting_count,
             retry_after_seconds=max(lock_retry, run_retry),
             job_id=job_id,
+            task_type=task_type,
         )
 
     rank = await client.zrank(_WAITING_KEY, job_id)
@@ -149,6 +223,7 @@ async def get_queue_status(session_id: str) -> dict[str, Any]:
                 waiting_count=waiting_count,
                 retry_after_seconds=lock_retry,
                 job_id=job_id,
+                task_type=task_type,
             )
         return _queue_status_payload(
             cfg=cfg,
@@ -173,6 +248,7 @@ async def get_queue_status(session_id: str) -> dict[str, Any]:
         estimated_wait_seconds=estimated_wait,
         retry_after_seconds=max(lock_retry, estimated_wait),
         job_id=job_id,
+        task_type=task_type,
     )
 
 
@@ -254,9 +330,10 @@ async def _release_slot(client: aioredis.Redis, job_id: str, session_id: str) ->
 
 
 @asynccontextmanager
-async def llm_queue_slot(session_id: str) -> AsyncIterator[str]:
+async def llm_queue_slot(session_id: str, task_type: str = "") -> AsyncIterator[str]:
     """Enqueue an LLM job, wait for a slot, then release when done."""
     cfg = get_llm_queue_config()
+    task = (task_type or "").strip()
     if not cfg["enabled"]:
         yield ""
         return
@@ -271,23 +348,24 @@ async def llm_queue_slot(session_id: str) -> AsyncIterator[str]:
         if await _recover_stale_session_lock(client, session_id):
             locked = await client.set(_session_lock_key(session_id), job_id, nx=True, ex=lock_ttl)
         if not locked:
-            raise SessionBusyError(session_id)
+            running_task = await _lookup_session_task_type(client, session_id)
+            raise SessionBusyError(session_id, running_task)
 
     enqueued_at = time.time()
     try:
         await client.zadd(_WAITING_KEY, {job_id: enqueued_at})
-        await client.hset(
-            _job_key(job_id),
-            mapping={
-                "session_id": session_id,
-                "status": "queued",
-                "enqueued_at": str(enqueued_at),
-            },
-        )
+        mapping = {
+            "session_id": session_id,
+            "status": "queued",
+            "enqueued_at": str(enqueued_at),
+        }
+        if task:
+            mapping["task_type"] = task
+        await client.hset(_job_key(job_id), mapping=mapping)
         await client.expire(_job_key(job_id), job_ttl)
         await client.set(_session_job_key(session_id), job_id, ex=job_ttl)
 
-        logger.info("LLM queue: enqueued job=%s session=%s", job_id, session_id)
+        logger.info("LLM queue: enqueued job=%s session=%s task=%s", job_id, session_id, task or "-")
 
         while True:
             acquired, ahead, running = await _try_acquire(client, job_id, cfg["max_concurrent"])

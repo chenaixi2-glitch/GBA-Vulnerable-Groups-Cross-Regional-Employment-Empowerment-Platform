@@ -12,6 +12,7 @@ from agents.content_agent import _merge_profile_extras_from_candidate, compress_
 from agents.json_contracts import RenderInstructionOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.render_instruction import RENDER_INSTRUCTION_PROMPT
+from tools.resume_compact_layout import compact_skills_and_awards
 from tools.resume_export import count_pdf_pages_from_html
 from tools.template_renderer import render_resume_html
 from tools.resume_page_policy import (
@@ -79,12 +80,14 @@ async def _fit_resume_to_page_limit_async(
     state: CopilotState,
     resume_content,
     render_config: RenderConfig,
-) -> tuple[Any, str, RenderConfig, int | None, int, int]:
-    """Render HTML; adjust typography ladder, then compress content if still over limit."""
+) -> tuple[Any, str, RenderConfig, int | None, int, int, bool]:
+    """Render HTML; adjust typography, then compact skills/awards, then LLM-compress if needed."""
     fit_t0 = time.perf_counter()
     page_limit = render_config.page_limit or resolve_page_limit(state)
     compress_attempts = 0
     typography_steps = 0
+    layout_compact_attempted = False
+    layout_compact_applied = False
 
     while True:
         render_config, html_str, page_count, steps_used = fit_typography_to_page_limit(
@@ -97,6 +100,21 @@ async def _fit_resume_to_page_limit_async(
 
         if page_count is None or page_count <= page_limit:
             break
+
+        # Priority: compact items within skills / within awards before LLM compression
+        if not layout_compact_attempted:
+            layout_compact_attempted = True
+            compact_content, changed = compact_skills_and_awards(resume_content)
+            if changed:
+                logger.info(
+                    "Resume PDF is %d pages (limit %d) — compacting items within skills/awards",
+                    page_count,
+                    page_limit,
+                )
+                resume_content = compact_content
+                layout_compact_applied = True
+                continue
+
         if compress_attempts >= _MAX_PAGE_FIT_ATTEMPTS:
             break
 
@@ -135,9 +153,18 @@ async def _fit_resume_to_page_limit_async(
         pdf_pages=page_count,
         compress_attempts=compress_attempts,
         typography_steps=typography_steps,
+        layout_compact=layout_compact_applied,
     )
 
-    return resume_content, html_str, render_config, page_count, compress_attempts, typography_steps
+    return (
+        resume_content,
+        html_str,
+        render_config,
+        page_count,
+        compress_attempts,
+        typography_steps,
+        layout_compact_applied,
+    )
 
 
 async def render_node_async(state: CopilotState) -> dict[str, Any]:
@@ -198,7 +225,15 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
             ),
         }
 
-    resume_content, html_str, render_config, page_count, compress_attempts, typography_steps = await _fit_resume_to_page_limit_async(
+    (
+        resume_content,
+        html_str,
+        render_config,
+        page_count,
+        compress_attempts,
+        typography_steps,
+        layout_compact_applied,
+    ) = await _fit_resume_to_page_limit_async(
         state,
         resume_content,
         render_config,
@@ -215,30 +250,33 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
     )
 
     logger.info(
-        "HTML rendered v%d (checksum=%s, pdf_pages=%s, compress_attempts=%d, typography_steps=%d)",
+        "HTML rendered v%d (checksum=%s, pdf_pages=%s, compress_attempts=%d, typography_steps=%d, layout_compact=%s)",
         resume_html.version,
         checksum,
         page_count,
         compress_attempts,
         typography_steps,
+        layout_compact_applied,
     )
 
+    content_changed = compress_attempts > 0 or layout_compact_applied
     meta = state.meta.model_copy(update={
         "active_render_version": render_config.version,
         "active_html_version": resume_html.version,
         "dirty_flags": state.meta.dirty_flags.model_copy(update={
             "render_dirty": False,
             "export_dirty": True,
-            "content_dirty": compress_attempts > 0,
+            "content_dirty": content_changed,
         }),
     })
 
     page_limit = render_config.page_limit or resolve_page_limit(state)
     layout_label = page_limit_label(page_limit, render_config.language)
     msg = "简历已渲染。"
-    if compress_attempts > 0:
+    if compress_attempts > 0 or layout_compact_applied:
         if page_count is not None and page_count <= page_limit:
-            msg = f"简历已渲染并自动压缩至 {page_count} 页（上限 {page_limit} 页，{layout_label}）。"
+            detail = "已精简技能/奖项条目并压缩" if layout_compact_applied else "已自动压缩"
+            msg = f"简历已渲染并{detail}至 {page_count} 页（上限 {page_limit} 页，{layout_label}）。"
         else:
             msg = f"简历已渲染；PDF 仍为 {page_count or '?'} 页，超出 {page_limit} 页上限，建议手动优化。"
     elif typography_steps > 0 and page_count is not None:
@@ -266,13 +304,14 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
                 "page_limit": page_limit,
                 "pdf_page_count": page_count,
                 "page_compress_attempts": compress_attempts,
+                "layout_compact_applied": layout_compact_applied,
                 "typography_fit_steps": typography_steps,
                 "typography_fit_mode": render_config.typography_fit_mode,
                 "checksum": resume_html.checksum,
             },
         ),
     }
-    if compress_attempts > 0:
+    if content_changed:
         result["resume_content_json"] = resume_content
     return result
 

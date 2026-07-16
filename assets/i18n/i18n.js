@@ -299,6 +299,8 @@
             ['浏览器打印失败: ', 'errors.printFailedPrefix'],
             ['重新生成失败: ', 'resume.opt.regenerateFailed'],
             ['Failed to upload profile: ', 'interview.toast.profileFailed'],
+            ['Failed to submit profile: ', 'learningPath.toast.profileFailed'],
+            ['Failed to submit JD: ', 'learningPath.toast.jdFailed'],
             ['Failed to submit job description: ', 'interview.toast.jdFailed'],
             ['Failed to generate resume: ', 'interview.toast.resumeFailed'],
             ['Failed to generate questions: ', 'interview.toast.questionsFailed'],

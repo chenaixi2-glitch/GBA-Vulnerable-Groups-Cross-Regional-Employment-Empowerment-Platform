@@ -1,10 +1,14 @@
 {
   "errors": {
     "sessionBusy": "Another AI task is already running for this session. Please wait for it to finish, then try again.",
+    "sessionBusyWithTask": "Another AI task is already running for this session ({task}). Please wait for it to finish, then try again.",
     "aiTaskStillProcessing": "The request timed out, but the server may still be processing your AI task in the background. Please wait before trying again.",
     "aiTaskRetryCountdown": "An AI task is still running. You can retry in about {time}.",
+    "aiTaskRetryCountdownWithTask": "“{task}” is still running. You can retry in about {time}.",
     "aiTaskRetryCountdownTimeout": "The request timed out, but processing may continue in the background. You can retry in about {time}.",
+    "aiTaskRetryCountdownTimeoutWithTask": "The request timed out, but “{task}” may still be running. You can retry in about {time}.",
     "aiTaskRetryQueued": "Queued (position {position}). You can retry in about {time}.",
+    "aiTaskRetryQueuedWithTask": "“{task}” is queued (position {position}). You can retry in about {time}.",
     "aiTaskRetryChecking": "Checking whether the AI task has finished…",
     "aiTaskRetryReady": "You can retry now — click generate again.",
     "retryDurationMinSec": "{minutes} min {seconds} sec",
@@ -18,7 +22,28 @@
     "backendUnavailable": "Backend is unavailable. Please ensure the API server is running.",
     "backendUnavailableTitle": "Backend unavailable",
     "backendRetry": "Retry connection",
-    "backendRestored": "Backend connected — you can retry your request"
+    "backendRestored": "Backend connected — you can retry your request",
+    "aiTasks": {
+      "chat": "AI chat",
+      "profile_parse": "profile parsing",
+      "profile_update": "profile update",
+      "jd_parse": "job description parsing",
+      "jd_generate": "job description generation",
+      "gap_analysis": "skill gap analysis",
+      "learning_path": "learning path generation",
+      "resume_generate": "resume generation",
+      "resume_edit": "resume editing",
+      "resume_translate": "resume translation",
+      "resume_render": "resume rendering",
+      "resume_module_translate": "resume module translation",
+      "resume_module_polish": "resume module polishing",
+      "interview_custom": "custom interview answer generation",
+      "interview_start": "mock interview setup",
+      "interview_evaluate": "interview answer evaluation",
+      "interview_debrief": "interview debrief generation",
+      "interview_feedback": "interview feedback generation",
+      "export_render": "export rendering"
+    }
   },
   "apiMessages": {
     "SESSION_BUSY": "Another AI task is already running for this session. Please wait for it to finish, then try again."

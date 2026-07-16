@@ -1,4 +1,4 @@
-# 第 6 章 AI Algorithm & Agent Technical Realization
+﻿# 第 6 章 AI Algorithm & Agent Technical Realization
 
 本章依据平台当前已上线并完成前后端联调的能力撰写，聚焦个人侧三大 AI 链路（智能简历、模拟面试、学习路径）、企业侧权限差异化复用，以及岗位规则匹配与公平包容机制。对配置中暂未启用的向量检索 / OCR 增强组件、仅停留在界面文案层面的完整盲筛脱敏管线，以及门户中尚未接线的静态壳页面，不作为“已实现交付能力”展开论述。
 

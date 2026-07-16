@@ -393,6 +393,7 @@ function initializeInterviewPrep() {
             profileApplyBtn: 'btn-interview-apply-profile',
             profileSaveBtn: 'btn-interview-save-profile',
             profileOverwriteBtn: 'btn-interview-overwrite-profile',
+            profileSubmitBtn: 'btn-interview-submit-profile',
         },
         targetJobFields: {
             jdText: ['interview-jd-text'],

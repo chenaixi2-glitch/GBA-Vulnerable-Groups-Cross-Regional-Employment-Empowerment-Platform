@@ -715,6 +715,10 @@ const ProfileEditor = {
     },
 
     async persistDraft() {
+        if (this.saveTimer) {
+            clearTimeout(this.saveTimer);
+            this.saveTimer = null;
+        }
         if (!apiClient.sessionId) return;
         try {
             const draft = this.collectDraftFromForm();
