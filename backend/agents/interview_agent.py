@@ -33,7 +33,7 @@ FIXED_SELF_INTRO_CATEGORY = "Resume deep dive & experience"
 FIXED_SELF_INTRO_QUESTION = "Tell me about yourself"
 MAX_CUSTOM_QUESTIONS = 30
 CUSTOM_STAGE_ID = "custom"
-CUSTOM_STAGE_NAME = "自定义题目"
+CUSTOM_STAGE_NAME = "Custom Questions"
 
 _SELF_INTRO_MARKERS = (
     "自我介绍",
@@ -213,14 +213,14 @@ def _align_custom_questions(
         if matched is None:
             matched = InterviewQA(
                 id=f"qa_custom_{uuid.uuid4().hex[:12]}",
-                category="用户自定义",
+                category="User custom",
                 question=question,
                 answer="",
             )
         aligned.append(matched.model_copy(update={
             "id": matched.id or f"qa_custom_{uuid.uuid4().hex[:12]}",
             "question": question,
-            "category": matched.category or "用户自定义",
+            "category": matched.category or "User custom",
         }))
     return aligned
 

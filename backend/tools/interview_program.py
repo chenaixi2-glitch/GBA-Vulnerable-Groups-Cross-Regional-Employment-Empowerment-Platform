@@ -1,4 +1,4 @@
-"""面试模拟程序配置 — 统一三轮流程与极速/完整/专项版本。"""
+"""Interview mock program config — quick / full / specialized stage structure."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ SpecializedFocus = Literal["technical", "final_negotiation", "resume_deep_dive"]
 JobTrack = Literal["tech", "business", "functional", "general"]
 StageId = Literal["screening", "professional", "final", "screening_final"]
 
+# Keep zh keywords so Chinese job titles still map to tracks; detection only.
 TECH_KEYWORDS = ("开发", "工程师", "测试", "算法", "数据", "前端", "后端", "运维", "dev", "engineer", "qa", "test")
 BUSINESS_KEYWORDS = ("产品", "运营", "市场", "销售", "商务", "推广", "pm", "product", "marketing", "sales")
 FUNCTIONAL_KEYWORDS = ("人事", "行政", "财务", "文员", "hr", "admin", "finance", "会计", "出纳")
@@ -47,93 +48,94 @@ class InterviewProgramConfig:
 
 SCREENING_MODULES = [
     "Tell me about yourself (structured: background + core experience + role fit strengths + career goal)",
-    "离职/求职原因（话术合理性、稳定性）",
-    "对本次投递岗位、公司业务的理解",
-    "个人职业规划（短期1-2年）",
-    "通勤、到岗时间、基础薪资预期",
-    "简单简历细节核实（校园经历、实习、基础工作内容）",
+    "Reason for leaving / job search (credibility and stability)",
+    "Understanding of this role and the company's business",
+    "Career plan (short-term, 1–2 years)",
+    "Commute, available start date, and base salary expectations",
+    "Light resume fact-check (campus, internships, basic work content)",
 ]
 
 SCREENING_CATEGORIES = [
-    "简历深挖与个人经历",
-    "岗位认知与求职动机",
-    "职业规划与稳定性",
+    "Resume deep dive & experience",
+    "Role understanding & motivation",
+    "Career planning & stability",
 ]
 
 FINAL_MODULES = [
-    "深挖性格、优缺点、团队合作经历",
-    "抗压/加班/紧急工作场景提问",
-    "为什么录用你、核心竞争力",
-    "薪资谈判、福利诉求、底线沟通",
-    "反问面试官环节（考察求职者思维）",
+    "Personality, strengths/weaknesses, and teamwork examples",
+    "Pressure / overtime / urgent-work scenarios",
+    "Why should we hire you — core competitiveness",
+    "Salary negotiation, benefits asks, and walk-away lines",
+    "Candidate questions for the interviewer (thinking quality)",
 ]
 
 FINAL_CATEGORIES = [
-    "职场软实力与团队协作",
-    "压力应变与短板复盘",
-    "面试反向提问",
-    "职业规划与稳定性",
+    "Soft skills & teamwork",
+    "Stress handling & self-reflection",
+    "Candidate questions for interviewer",
+    "Career planning & stability",
 ]
 
 PROFESSIONAL_TRACK_CONTENT: dict[str, str] = {
     "tech": (
-        "技术岗考察：基础知识点提问 + 简历项目深挖（难点、亮点、复盘、报错解决）"
-        " + 现场实操/手撕题 + 场景问题"
+        "Tech track: fundamentals + resume project deep dive (challenges, highlights, retros, debugging) "
+        "+ live coding / whiteboard + scenario questions"
     ),
     "business": (
-        "业务岗考察：过往项目业绩复盘 + 业务场景题（用户增长、活动落地、客诉处理）"
-        " + 岗位工具使用 + 案例拆解"
+        "Business track: past project outcomes + business scenarios (growth, campaign ops, complaint handling) "
+        "+ tools used + case breakdown"
     ),
     "functional": (
-        "职能岗考察：岗位流程熟练度 + 日常工作场景处理 + 细致度/执行力案例 + 办公技能考察"
+        "Functional track: process fluency + day-to-day scenarios + attention-to-detail / execution examples "
+        "+ office skills"
     ),
     "general": (
-        "通用专业考察：项目实战能力 + 问题解决能力 + 业务思维 + 落地经验"
+        "General track: project delivery + problem solving + business sense + hands-on experience"
     ),
 }
 
 PROFESSIONAL_CATEGORIES = [
-    "专业技能与岗位匹配",
-    "项目实操与问题解决",
-    "简历深挖与个人经历",
-    "岗位认知与求职动机",
+    "Professional skills & role fit",
+    "Hands-on projects & problem solving",
+    "Resume deep dive & experience",
+    "Role understanding & motivation",
 ]
 
 SPECIALIZED_CONFIGS: dict[str, dict] = {
     "technical": {
-        "name": "专项·技术/专业面",
-        "subtitle": "20-30分钟 · 核心提分环节",
-        "interviewer_role": "部门主管/资深员工",
+        "name": "Specialized — Technical / Professional",
+        "subtitle": "20–30 min · Core score-driver",
+        "interviewer_role": "Hiring manager / senior peer",
         "max_turns": 10,
         "focus_modules": [
-            "基础知识点 / 岗位硬技能",
-            "简历项目深挖（难点、亮点、复盘、报错解决）",
-            "现场实操 / 场景题 / 手撕题（技术岗）或业务案例（业务岗）",
-            "万能公式：做过什么→怎么做的→遇到什么问题→怎么解决→数据结果→复盘优化",
+            "Fundamentals / hard skills for the role",
+            "Resume project deep dive (challenges, highlights, retros, debugging)",
+            "Live exercise / scenario / coding (tech) or business case (business)",
+            "Formula: what you did → how → problems → fixes → metrics → retros",
         ],
         "categories": PROFESSIONAL_CATEGORIES,
     },
     "final_negotiation": {
-        "name": "专项·终面谈判",
-        "subtitle": "10-15分钟 · 总监/HRD综合面",
-        "interviewer_role": "总监/HRD",
+        "name": "Specialized — Final Negotiation",
+        "subtitle": "10–15 min · Director / HRD round",
+        "interviewer_role": "Director / HRD",
         "max_turns": 6,
         "focus_modules": FINAL_MODULES,
         "categories": FINAL_CATEGORIES,
     },
     "resume_deep_dive": {
-        "name": "专项·简历深挖",
-        "subtitle": "15-20分钟 · 初筛+经历核实",
-        "interviewer_role": "HR/基础面试官",
+        "name": "Specialized — Resume Deep Dive",
+        "subtitle": "15–20 min · Screening + experience check",
+        "interviewer_role": "HR / screening interviewer",
         "max_turns": 8,
         "focus_modules": SCREENING_MODULES,
-        "categories": SCREENING_CATEGORIES + ["简历深挖与个人经历"],
+        "categories": SCREENING_CATEGORIES + ["Resume deep dive & experience"],
     },
 }
 
 
 def detect_job_track(job_title: str = "", jd_text: str = "") -> str:
-    """根据岗位标题与JD推断岗位赛道。"""
+    """Infer job track from title and JD text."""
     combined = f"{job_title} {jd_text}".lower()
     if any(k in combined for k in TECH_KEYWORDS):
         return "tech"
@@ -147,15 +149,18 @@ def detect_job_track(job_title: str = "", jd_text: str = "") -> str:
 def _screening_stage(max_turns: int = 5) -> InterviewStageConfig:
     return InterviewStageConfig(
         stage_id="screening",
-        name="第一轮·初筛面试",
-        subtitle="10-15分钟 · HR/基础面试官",
-        interviewer_role="HR/初筛面试官",
+        name="Round 1 — Screening",
+        subtitle="10–15 min · HR / screening interviewer",
+        interviewer_role="HR / screening interviewer",
         max_turns=max_turns,
         focus_modules=SCREENING_MODULES,
         categories=SCREENING_CATEGORIES,
         elimination_criteria=[
-            "表达混乱", "求职动机模糊", "完全不了解岗位",
-            "薪资严重不符", "稳定性差",
+            "Unclear communication",
+            "Vague motivation",
+            "No understanding of the role",
+            "Salary expectations far off",
+            "Stability concerns",
         ],
     )
 
@@ -163,14 +168,14 @@ def _screening_stage(max_turns: int = 5) -> InterviewStageConfig:
 def _professional_stage(job_track: str, max_turns: int = 8) -> InterviewStageConfig:
     return InterviewStageConfig(
         stage_id="professional",
-        name="第二轮·专业/技术面",
-        subtitle="20-30分钟 · 部门主管/资深员工",
-        interviewer_role="部门主管/资深员工",
+        name="Round 2 — Professional / Technical",
+        subtitle="20–30 min · Hiring manager / senior peer",
+        interviewer_role="Hiring manager / senior peer",
         max_turns=max_turns,
         focus_modules=[
-            "岗位硬技能与项目实战能力",
-            "问题解决能力与业务思维",
-            "万能公式：做过什么→怎么做的→遇到什么问题→怎么解决→数据结果→复盘优化",
+            "Hard skills and project delivery for the role",
+            "Problem solving and business sense",
+            "Formula: what you did → how → problems → fixes → metrics → retros",
         ],
         categories=PROFESSIONAL_CATEGORIES,
         track_content={job_track: PROFESSIONAL_TRACK_CONTENT[job_track]},
@@ -180,9 +185,9 @@ def _professional_stage(job_track: str, max_turns: int = 8) -> InterviewStageCon
 def _final_stage(max_turns: int = 4) -> InterviewStageConfig:
     return InterviewStageConfig(
         stage_id="final",
-        name="第三轮·总监/HR终面",
-        subtitle="10-15分钟 · 总监/HRD",
-        interviewer_role="总监/HRD",
+        name="Round 3 — Director / HR Final",
+        subtitle="10–15 min · Director / HRD",
+        interviewer_role="Director / HRD",
         max_turns=max_turns,
         focus_modules=FINAL_MODULES,
         categories=FINAL_CATEGORIES,
@@ -192,15 +197,19 @@ def _final_stage(max_turns: int = 4) -> InterviewStageConfig:
 def _screening_final_merged(max_turns: int = 5) -> InterviewStageConfig:
     return InterviewStageConfig(
         stage_id="screening_final",
-        name="综合面·初筛+终面",
-        subtitle="15分钟 · HR+综合评估（极速版合并轮）",
-        interviewer_role="HR/综合面试官",
+        name="Screening + final combined",
+        subtitle="15 min · HR + overall assessment (quick merged round)",
+        interviewer_role="HR / panel interviewer",
         max_turns=max_turns,
         focus_modules=SCREENING_MODULES + FINAL_MODULES[:3],
         categories=list(dict.fromkeys(SCREENING_CATEGORIES + FINAL_CATEGORIES)),
         elimination_criteria=[
-            "表达混乱", "求职动机模糊", "完全不了解岗位",
-            "薪资严重不符", "稳定性差", "价值观明显不匹配",
+            "Unclear communication",
+            "Vague motivation",
+            "No understanding of the role",
+            "Salary expectations far off",
+            "Stability concerns",
+            "Clear values mismatch",
         ],
     )
 
@@ -211,7 +220,7 @@ def build_interview_program(
     job_title: str = "",
     jd_text: str = "",
 ) -> InterviewProgramConfig:
-    """构建面试程序配置。"""
+    """Build interview program configuration."""
     job_track = detect_job_track(job_title, jd_text)
     version = version if version in ("quick", "full", "specialized") else "quick"
 
@@ -265,60 +274,60 @@ def build_interview_program(
 
 
 def format_stage_context(stage: InterviewStageConfig, job_track: str) -> str:
-    """格式化当前轮次考察内容供 Prompt 注入。"""
+    """Format current-stage focus content for prompt injection."""
     lines = [
-        f"【{stage.name}】{stage.subtitle}",
-        f"面试官角色：{stage.interviewer_role}",
+        f"[{stage.name}] {stage.subtitle}",
+        f"Interviewer role: {stage.interviewer_role}",
         "",
-        "固定提问模块：",
+        "Fixed question modules:",
     ]
     for i, mod in enumerate(stage.focus_modules, 1):
         lines.append(f"  {i}. {mod}")
 
     track_hint = stage.track_content.get(job_track) or PROFESSIONAL_TRACK_CONTENT.get(job_track, "")
     if track_hint:
-        lines.extend(["", f"岗位赛道（{job_track}）专项考察：", f"  {track_hint}"])
+        lines.extend(["", f"Job-track focus ({job_track}):", f"  {track_hint}"])
 
     if stage.elimination_criteria:
-        lines.extend(["", "淘汰/低分信号：", *[f"  - {c}" for c in stage.elimination_criteria]])
+        lines.extend(["", "Elimination / low-score signals:", *[f"  - {c}" for c in stage.elimination_criteria]])
 
-    lines.extend(["", "本轮可用分类标签：", f"  {' | '.join(stage.categories)}"])
+    lines.extend(["", "Allowed category labels this round:", f"  {' | '.join(stage.categories)}"])
     return "\n".join(lines)
 
 
 def format_program_overview(program: InterviewProgramConfig) -> str:
-    """格式化完整程序概览。"""
+    """Format full program overview."""
     version_labels = {
-        "quick": "极速版（~30分钟）：合并初试+终面，保留完整专业复试",
-        "full": "完整版（~60分钟）：三轮全流程",
-        "specialized": f"专项版：{program.specialized_focus}",
+        "quick": "Quick (~30 min): merged screening + final, keep full professional round",
+        "full": "Full (~60 min): three complete rounds",
+        "specialized": f"Specialized: {program.specialized_focus}",
     }
     lines = [
         version_labels.get(program.version, program.version),
-        f"预计时长：{program.estimated_minutes}分钟",
-        f"岗位赛道：{program.job_track}",
-        f"共 {program.stage_count} 个阶段，{program.max_rounds} 轮问答",
+        f"Estimated duration: {program.estimated_minutes} min",
+        f"Job track: {program.job_track}",
+        f"{program.stage_count} stage(s), {program.max_rounds} Q&A turns",
         "",
     ]
     for i, stage in enumerate(program.stages, 1):
-        lines.append(f"阶段{i}：{stage.name}（{stage.max_turns}轮）")
+        lines.append(f"Stage {i}: {stage.name} ({stage.max_turns} turns)")
     return "\n".join(lines)
 
 
 def format_stages_generation_spec(program: InterviewProgramConfig) -> str:
-    """格式化各阶段出题规格，供 Question Bank 批量生成 Prompt 使用。"""
+    """Format per-stage generation specs for question-bank prompts."""
     lines = [
-        f"面试程序：{format_program_overview(program)}",
+        f"Interview program: {format_program_overview(program)}",
         "",
-        "各阶段出题规格（必须严格按阶段顺序与题量生成）：",
+        "Per-stage generation spec (strict order and counts):",
     ]
     for i, stage in enumerate(program.stages):
         lines.extend([
             "",
-            f"--- 阶段 {i + 1}（stage_index={i}）---",
+            f"--- Stage {i + 1} (stage_index={i}) ---",
             f"stage_id: {stage.stage_id}",
             f"stage_name: {stage.name}",
-            f"题量: 恰好 {stage.max_turns} 条",
+            f"Question count: exactly {stage.max_turns}",
             format_stage_context(stage, program.job_track),
         ])
     return "\n".join(lines)

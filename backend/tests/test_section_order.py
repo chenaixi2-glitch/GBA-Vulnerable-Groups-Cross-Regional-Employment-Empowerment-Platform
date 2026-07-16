@@ -36,6 +36,37 @@ class TestSectionOrder:
         explicit = ["skills", "summary", "internships", "education"]
         assert resolve_section_order(content, "zh", explicit=explicit) == explicit
 
+    def test_explicit_order_inserts_missing_education(self):
+        content = _sample_content()
+        content = content.model_copy(update={
+            "meta": ResumeContentMeta(language="en"),
+            "profile": content.profile.model_copy(update={"name": "Alex"}),
+        })
+        order = resolve_section_order(
+            content,
+            "en",
+            explicit=["profile", "summary", "skills", "awards"],
+        )
+        assert "education" in order
+        assert order.index("summary") < order.index("education")
+        assert order.index("education") < order.index("skills")
+
+    def test_en_pins_profile_before_skills_and_awards(self):
+        content = _sample_content()
+        content = content.model_copy(update={
+            "meta": ResumeContentMeta(language="en"),
+            "profile": content.profile.model_copy(update={"name": "Alex"}),
+            "awards": [SectionItem(id="a1", title="Dean List", content="2024")],
+        })
+        order = resolve_section_order(
+            content,
+            "en",
+            explicit=["skills", "awards", "summary", "education"],
+        )
+        assert order[0] == "profile"
+        assert order.index("profile") < order.index("skills")
+        assert order.index("profile") < order.index("awards")
+
     def test_infer_from_language_defaults_when_no_explicit(self):
         content = _sample_content()
         order = resolve_section_order(content, "zh", explicit=None)
@@ -46,5 +77,7 @@ class TestSectionOrder:
         zh = default_section_order_for_language("zh")
         en = default_section_order_for_language("en")
         assert "education" in zh
+        assert "education" in en
         assert "profile" in en
+        assert en.index("summary") < en.index("education")
         assert zh != en

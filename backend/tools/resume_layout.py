@@ -31,6 +31,7 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
     "en": {
         "profile": "Contact",
         "summary": "Professional Summary",
+        "education": "Education",
         "skills": "Skills",
         "internships": "Work Experience",
         "projects": "Projects",
@@ -40,6 +41,7 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
     "pt": {
         "profile": "Contactos",
         "summary": "Resumo Profissional",
+        "education": "Formação Académica",
         "skills": "Competências",
         "internships": "Experiência Profissional",
         "projects": "Projectos",
@@ -51,9 +53,9 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
 SECTION_ORDER_BY_LANGUAGE: dict[str, list[str]] = {
     # 仅作 agent 缺省建议 / 冷启动回退，不由模板强制
     "zh": ["summary", "education", "internships", "projects", "skills", "awards"],
-    "zh-TW": ["profile", "summary", "internships", "projects", "skills", "awards"],
-    "en": ["profile", "summary", "internships", "projects", "skills", "awards"],
-    "pt": ["profile", "summary", "internships", "projects", "skills", "awards"],
+    "zh-TW": ["profile", "summary", "education", "internships", "projects", "skills", "awards"],
+    "en": ["profile", "summary", "education", "internships", "projects", "skills", "awards"],
+    "pt": ["profile", "summary", "education", "internships", "projects", "skills", "awards"],
 }
 
 ALL_RESUME_SECTIONS: tuple[str, ...] = (
@@ -67,12 +69,26 @@ def default_section_order_for_language(language: str) -> list[str]:
     return list(SECTION_ORDER_BY_LANGUAGE.get(lang, SECTION_ORDER_BY_LANGUAGE["en"]))
 
 
+def _pin_contact_profile_first(order: list[str], language: str, *, has_profile: bool) -> list[str]:
+    """en / pt / zh-TW 的 Contact(profile) 必须置顶；技能/荣誉不得排到姓名前面。"""
+    if not has_profile or not order:
+        return order
+    lang = normalize_language(language)
+    if lang not in ("en", "pt", "zh-TW"):
+        return order
+    rest = [s for s in order if s != "profile"]
+    return ["profile", *rest]
+
+
 def resolve_section_order(
     resume_content: "ResumeContent",
     language: str,
     explicit: list[str] | None = None,
 ) -> list[str]:
-    """Agent 显式 section_order 优先；否则按有内容的版块 + 语言缺省建议推断。"""
+    """Agent 显式 section_order 优先；否则按有内容的版块 + 语言缺省建议推断。
+
+    对 en/pt/zh-TW：无论 agent 如何排序，有内容的 profile（姓名/联系方式）始终置顶。
+    """
     def _has(section: str) -> bool:
         if section == "profile":
             p = resume_content.profile
@@ -96,17 +112,33 @@ def resolve_section_order(
             return bool(resume_content.papers)
         return False
 
+    preferred = default_section_order_for_language(language)
+
     if explicit:
         cleaned = [s for s in explicit if s in ALL_RESUME_SECTIONS and _has(s)]
         if cleaned:
-            return cleaned
+            # Agent 可能漏列有内容的版块（如 education）；按语言缺省顺序插回，避免掉到文末或丢失标题
+            for section in preferred:
+                if not _has(section) or section in cleaned:
+                    continue
+                pref_idx = preferred.index(section)
+                # preferred 首位（通常是 profile）没有“更早邻居”时，必须插到开头，不能 append 到末尾
+                insert_at = 0 if pref_idx == 0 else len(cleaned)
+                for earlier in reversed(preferred[:pref_idx]):
+                    if earlier in cleaned:
+                        insert_at = cleaned.index(earlier) + 1
+                        break
+                cleaned.insert(insert_at, section)
+            return _pin_contact_profile_first(
+                cleaned, language, has_profile=_has("profile")
+            )
 
-    preferred = default_section_order_for_language(language)
     ordered = [s for s in preferred if _has(s)]
     for section in ALL_RESUME_SECTIONS:
         if _has(section) and section not in ordered:
             ordered.append(section)
-    return ordered or list(preferred)
+    ordered = ordered or list(preferred)
+    return _pin_contact_profile_first(ordered, language, has_profile=_has("profile"))
 
 FONT_BY_LANGUAGE: dict[str, str] = {
     "zh": "Source Han Sans",

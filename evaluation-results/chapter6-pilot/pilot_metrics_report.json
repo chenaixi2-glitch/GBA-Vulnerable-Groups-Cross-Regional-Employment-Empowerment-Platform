@@ -1,0 +1,236 @@
+{
+  "generated_for": "Chapter 6 pilot metrics",
+  "multilingual": {
+    "name": "multilingual_resume_mixing_consistency",
+    "sample_languages": 4,
+    "cases_per_language": 2,
+    "total_cases": 8,
+    "passed": 4,
+    "pass_rate": 1.0,
+    "detail": [
+      {
+        "language": "zh",
+        "clean_flags": [],
+        "mixed_flags": [
+          "具备基金运营经验，熟悉 settlement processing。",
+          "负责 developed 对账模块，提升效率 20%。"
+        ],
+        "clean_pass": true,
+        "mixed_pass": true,
+        "pass": true
+      },
+      {
+        "language": "zh-TW",
+        "clean_flags": [],
+        "mixed_flags": [
+          "具備基金運營經驗，熟悉 settlement processing。",
+          "負責 developed 對賬模組，提升效率 20%。"
+        ],
+        "clean_pass": true,
+        "mixed_pass": true,
+        "pass": true
+      },
+      {
+        "language": "en",
+        "clean_flags": [],
+        "mixed_flags": [
+          "Experienced in fund operations and 现金对账.",
+          "负责 daily cash reconciliation and settlement."
+        ],
+        "clean_pass": true,
+        "mixed_pass": true,
+        "pass": true
+      },
+      {
+        "language": "pt",
+        "clean_flags": [],
+        "mixed_flags": [
+          "Experiência em operações de fundos e 现金对账.",
+          "负责 reconciliação diária de caixa."
+        ],
+        "clean_pass": true,
+        "mixed_pass": true,
+        "pass": true
+      }
+    ],
+    "note": "Offline checklist detector on synthetic clean/mixed samples for zh/zh-TW/en/pt."
+  },
+  "profile_coverage": {
+    "name": "structured_profile_field_coverage",
+    "checks": 6,
+    "passed": 6,
+    "accuracy": 1.0,
+    "fact_types_present": [
+      "award",
+      "education",
+      "internship",
+      "project",
+      "skill"
+    ],
+    "expected_type_hits": 4,
+    "detail": [
+      {
+        "has_name_or_full_name": true
+      },
+      {
+        "has_email": true
+      },
+      {
+        "has_any_fact": true
+      },
+      {
+        "has_skill_or_experience_fact": true
+      },
+      {
+        "has_structured_job_skills": true
+      },
+      {
+        "aixi_target_config_complete": true
+      }
+    ],
+    "note": "Fixture-based field presence (proxy). Live LLM extraction accuracy requires API e2e."
+  },
+  "interview": {
+    "name": "interview_feedback_actionability",
+    "feedback_items": 6,
+    "actionable_items": 6,
+    "actionable_rate": 1.0,
+    "judge_scores": {
+      "relevance": 80,
+      "groundedness": 70,
+      "actionability": 75,
+      "rationale": "The response is relevant and covers the internship experience, problem-solving, and job fit, but lacks specific data to support the claims. It is based on real experiences, however, the process is not described in detail. The feedback offers directions for improvement, but the actual steps to take are not clarified."
+    },
+    "overall_score": 80,
+    "question_bank_ok": true,
+    "question_bank_count": 13,
+    "missing_answers": 0,
+    "has_self_intro": true,
+    "note": "Pilot on stored e2e evaluate-answer + fund-ops interview fixtures."
+  },
+  "match": {
+    "cases": 6,
+    "band_agreement": 5,
+    "band_agreement_rate": 0.8333,
+    "ranking_checks": 8,
+    "ranking_agreement": 8,
+    "ranking_agreement_rate": 1,
+    "scored": [
+      {
+        "id": "cs_high",
+        "expected_band": "high",
+        "score": 71,
+        "predicted_band": "high",
+        "reasons": [
+          "Skills matched: customer service, excel, email, cantonese, ecommerce",
+          "Education meets job requirements",
+          "Has basic work experience",
+          "Matched 7 job keyword(s)"
+        ],
+        "band_agree": true
+      },
+      {
+        "id": "ops_mid",
+        "expected_band": "mid",
+        "score": 45,
+        "predicted_band": "mid",
+        "reasons": [
+          "Skills matched: excel, fund operations",
+          "Education meets job requirements",
+          "Has relevant work experience",
+          "Matched 2 job keyword(s)"
+        ],
+        "band_agree": true
+      },
+      {
+        "id": "dev_low",
+        "expected_band": "low",
+        "score": 24,
+        "predicted_band": "low",
+        "reasons": [
+          "Limited skill overlap with job requirements",
+          "Education partially matches",
+          "Has relevant work experience"
+        ],
+        "band_agree": true
+      },
+      {
+        "id": "data_high",
+        "expected_band": "high",
+        "score": 69,
+        "predicted_band": "mid",
+        "reasons": [
+          "Skills matched: data annotation, attention to detail, excel, python, label",
+          "Has basic work experience",
+          "Matched 6 job keyword(s)"
+        ],
+        "band_agree": false
+      },
+      {
+        "id": "retail_mid",
+        "expected_band": "mid",
+        "score": 50,
+        "predicted_band": "mid",
+        "reasons": [
+          "Skills matched: inventory, excel, customer",
+          "Education meets job requirements",
+          "Has basic work experience",
+          "Matched 2 job keyword(s)"
+        ],
+        "band_agree": true
+      },
+      {
+        "id": "nurse_low",
+        "expected_band": "low",
+        "score": 13,
+        "predicted_band": "low",
+        "reasons": [
+          "Limited skill overlap with job requirements",
+          "Education partially matches",
+          "Limited work experience listed"
+        ],
+        "band_agree": true
+      }
+    ],
+    "rankingChecks": [
+      {
+        "name": "cs_high > ops_mid",
+        "pass": true
+      },
+      {
+        "name": "cs_high > dev_low",
+        "pass": true
+      },
+      {
+        "name": "data_high > retail_mid",
+        "pass": true
+      },
+      {
+        "name": "data_high > nurse_low",
+        "pass": true
+      },
+      {
+        "name": "ops_mid > nurse_low",
+        "pass": true
+      },
+      {
+        "name": "retail_mid > nurse_low",
+        "pass": true
+      },
+      {
+        "name": "ops_mid > dev_low",
+        "pass": true
+      },
+      {
+        "name": "avg_high > avg_low",
+        "pass": true
+      }
+    ],
+    "note": "Pilot hand-labeled bands (high/mid/low) on inclusive/flexible vs mismatched roles."
+  },
+  "unit_tests_reference": {
+    "planner_rule_routing": "evaluation-results/planner-routing/latest — 20 cases, 100% intent & chain accuracy (rule_only)",
+    "chain_consistency": "evaluation-results/chain-consistency/latest — 2/5 pass (40%) on adversarial + happy paths",
+    "pytest_core_ai_subset": "55 passed in language/checklist/planner/interview/profile/normalize suite (1 unrelated custom-stage fail)"
+  }
+}

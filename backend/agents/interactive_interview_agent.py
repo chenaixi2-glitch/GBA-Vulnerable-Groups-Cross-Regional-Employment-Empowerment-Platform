@@ -116,20 +116,20 @@ def _format_qa_history(session: InteractiveInterviewSession) -> str:
                 (t for t in session.turns if t.question_id == turn.question_id and t.role == "interviewer"),
                 None,
             )
-            q_text = q_turn.content if q_turn else "（未知问题）"
-            lines.append(f"问：{q_text}\n答：{turn.content}")
+            q_text = q_turn.content if q_turn else "(unknown question)"
+            lines.append(f"Q: {q_text}\nA: {turn.content}")
         elif turn.turn_type == "brief_feedback":
-            lines.append(f"【点评】{turn.content}")
-    return "\n\n".join(lines) if lines else "（尚无问答）"
+            lines.append(f"[Feedback] {turn.content}")
+    return "\n\n".join(lines) if lines else "(no Q&A yet)"
 
 
 def _stages_summary(session: InteractiveInterviewSession) -> str:
     lines: list[str] = []
     for i, stage in enumerate(session.stages, 1):
         lines.append(
-            f"阶段{i}：{stage.name}（{stage.turn_count}/{stage.max_turns}轮，状态：{stage.status}）"
+            f"Stage {i}: {stage.name} ({stage.turn_count}/{stage.max_turns} turns, status: {stage.status})"
         )
-    return "\n".join(lines) if lines else "（无阶段信息）"
+    return "\n".join(lines) if lines else "(no stage info)"
 
 
 def _find_question(
@@ -550,7 +550,7 @@ async def process_next_pending_feedback(state: CopilotState) -> bool:
         session.follow_up_questions.append(InteractiveQuestionQueueItem(
             id=_question_id(),
             question=fq_text,
-            category=cat or pending.category or "追问",
+            category=cat or pending.category or "Follow-up",
             stage_id=current_q.stage_id if (current_q := _find_question(session, pending.question_id)) else "",
             stage_name=current_q.stage_name if current_q else "",
             stage_index=current_q.stage_index if current_q else 0,
@@ -717,9 +717,9 @@ def session_to_response(session: InteractiveInterviewSession) -> dict[str, Any]:
         current_stage = session.stages[session.current_stage_index]
     data["current_stage"] = current_stage.model_dump() if current_stage else None
     data["program_label"] = {
-        "quick": "极速版 (~30分钟)",
-        "full": "完整版 (~60分钟)",
-        "specialized": "专项版",
+        "quick": "Quick (~30 min)",
+        "full": "Full (~60 min)",
+        "specialized": "Specialized",
     }.get(session.program_version, session.program_version)
 
     current_q = _find_question(session, session.current_question_id) if session.current_question_id else None

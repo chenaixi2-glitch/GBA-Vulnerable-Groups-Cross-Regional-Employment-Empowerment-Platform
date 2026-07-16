@@ -118,7 +118,9 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
             )
         return "\n".join(parts)
 
-    # 按 section_order 排列
+    education_label = labels.get("education") or SECTION_LABELS["en"]["education"]
+
+    # 按 section_order 排列（education 独立成节，不再嵌在 profile 内）
     sections_html_map = {
         "profile": f"""
             <section class="section section-profile">
@@ -131,7 +133,6 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
                             {'<span class="linkedin">' + profile.linkedin + '</span>' if getattr(profile, 'linkedin', '') else ''}
                             {'<span class="github">' + profile.github + '</span>' if profile.github else ''}
                         </div>
-                        <div class="education">{edu_html}</div>
                     </div>
                     {photo_html}
                 </div>
@@ -143,6 +144,12 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
                 <p>{content.summary}</p>
             </section>
         """ if content.summary else "",
+        "education": f"""
+            <section class="section section-education">
+                <h2>{education_label}</h2>
+                <div class="education">{edu_html}</div>
+            </section>
+        """ if edu_html else "",
         "skills": f"""
             <section class="section section-skills">
                 <h2>{labels["skills"]}</h2>

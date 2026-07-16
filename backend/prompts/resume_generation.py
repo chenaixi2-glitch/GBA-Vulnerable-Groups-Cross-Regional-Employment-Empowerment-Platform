@@ -93,13 +93,13 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
     ],
     "papers": [],
     "language": "{target_language}",
-    "section_order": ["根据目标岗位与候选人背景，列出要展示的版块 id，如 summary、education、internships、projects、skills、awards；英文/葡语可含 profile"]
+    "section_order": ["根据目标岗位与候选人背景，列出要展示的版块 id，如 summary、education、internships、projects、skills、awards；英文/葡语须含 profile，有教育内容时必须单独列出 education（不得并入 profile）"]
 }}
 
 注意：
 1. 不得捏造用户未提供的事实；量化数据必须来自候选人画像，缺数据时用客观描述替代，禁止编造数字
 2. 根据 JD 的技术栈和关键词优化经历排序与措辞，使每段经历更贴合目标岗位
-3. section_order 由你根据岗位匹配度决定展示先后（模板只负责排版，不固定顺序）；仅列出有内容的版块
+3. section_order 由你根据岗位匹配度决定正文版块先后；仅列出有内容的版块；education 与 profile 必须分开列出。英文/葡语/繁中：profile（姓名与联系方式）必须位于 section_order 第一位，禁止把 skills/awards 排到 profile 之前
 4. 项目和实习描述使用 STAR 格式，在画像有据时补充量化成果，突出与目标岗位相关的技能与产出
 5. 技能根据 JD 要求的优先级排序
 6. 篇幅须严格符合上文 A4 页数约束，宁可精简内容也不要超长

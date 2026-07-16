@@ -107,7 +107,9 @@ class RenderConfig(BaseModel):
     line_height: float = 1.35
     page_margin: PageMargin = Field(default_factory=PageMargin)
     section_order: list[str] = Field(
-        default_factory=lambda: ["profile", "skills", "projects", "internships", "awards"]
+        default_factory=lambda: [
+            "profile", "summary", "education", "internships", "projects", "skills", "awards",
+        ]
     )
     dense_mode: bool = True
     accent_style: str = "minimal"

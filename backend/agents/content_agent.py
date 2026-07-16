@@ -1595,14 +1595,16 @@ async def generate_resume_content_with_progress(
         resume_content.meta.language,
         resolve_experience_level(state),
     )
+    # Prefer prior section_order on incremental updates, but still run resolve
+    # so missing sections (e.g. education) are filled and Contact(profile) stays pinned.
+    prior_order = None
+    if use_incremental and state.render_config and state.render_config.section_order:
+        prior_order = list(state.render_config.section_order)
     section_order = resolve_section_order(
         resume_content,
         resume_content.meta.language,
-        explicit=parsed.section_order or None,
+        explicit=prior_order or parsed.section_order or None,
     )
-    # Prefer prior section_order on incremental updates
-    if use_incremental and state.render_config and state.render_config.section_order:
-        section_order = list(state.render_config.section_order)
     render_config = render_config.model_copy(update={"section_order": section_order})
     meta = state.meta.model_copy(update={
         "active_resume_content_version": resume_content.meta.version,

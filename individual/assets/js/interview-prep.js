@@ -73,6 +73,7 @@ const INTERVIEW_STAGE_I18N = {
     custom: ['interview.modeCustom', 'Custom Questions'],
 };
 
+/** Legacy Chinese stage names from older saved sessions → stage_id */
 const INTERVIEW_STAGE_NAME_ALIASES = {
     '综合面·初筛+终面': 'screening_final',
     '第二轮·专业/技术面': 'professional',
@@ -83,8 +84,36 @@ const INTERVIEW_STAGE_NAME_ALIASES = {
     '专项·终面谈判': 'specialized_final_negotiation',
     '专项·简历深挖': 'specialized_resume_deep_dive',
     '自定义题目': 'custom',
+    'Screening + final combined': 'screening_final',
+    'Round 1 — Screening': 'screening',
+    'Round 2 — Professional / Technical': 'professional',
+    'Round 3 — Director / HR Final': 'final',
+    'Specialized — Technical / Professional': 'specialized_technical',
+    'Specialized — Final Negotiation': 'specialized_final_negotiation',
+    'Specialized — Resume Deep Dive': 'specialized_resume_deep_dive',
     'Custom Questions': 'custom',
 };
+
+/** Legacy Chinese categories from older sessions → English UI labels */
+const INTERVIEW_CATEGORY_ALIASES = {
+    '简历深挖与个人经历': 'Resume deep dive & experience',
+    '岗位认知与求职动机': 'Role understanding & motivation',
+    '职业规划与稳定性': 'Career planning & stability',
+    '职场软实力与团队协作': 'Soft skills & teamwork',
+    '压力应变与短板复盘': 'Stress handling & self-reflection',
+    '面试反向提问': 'Candidate questions for interviewer',
+    '专业技能与岗位匹配': 'Professional skills & role fit',
+    '项目实操与问题解决': 'Hands-on projects & problem solving',
+    '用户自定义': 'User custom',
+    '自定义题目': 'Custom Questions',
+    '追问': 'Follow-up',
+};
+
+function localizeInterviewCategory(category) {
+    const raw = String(category || '').trim();
+    if (!raw) return '';
+    return INTERVIEW_CATEGORY_ALIASES[raw] || raw;
+}
 
 function resolveInterviewStageId(stageId, stageName = '') {
     const id = String(stageId || '').trim();
@@ -793,7 +822,7 @@ async function loadInterviewQuestions() {
                 return {
                     id: qa.id || `q_${index}`,
                     question: qa.question,
-                    category: qa.category || 'General',
+                    category: localizeInterviewCategory(qa.category) || 'General',
                     answer: qa.answer || '',
                     stage_id: stageId,
                     stage_name: localizeInterviewStageName(stageId, qa.stage_name, qa.stage_index ?? 0),
@@ -913,7 +942,7 @@ async function loadCustomInterviewQuestions() {
                 return {
                     id: qa.id || `q_custom_${index}`,
                     question: qa.question,
-                    category: qa.category || 'Custom',
+                    category: localizeInterviewCategory(qa.category) || 'Custom',
                     answer: qa.answer || '',
                     stage_id: stageId || 'custom',
                     stage_name: localizeInterviewStageName(stageId || 'custom', qa.stage_name, qa.stage_index ?? 0),
@@ -1051,6 +1080,7 @@ function syncInteractiveSessionFromResponse(session, preserveMeta = {}) {
         turns: (session.turns || []).map((turn) => ({
             ...turn,
             stage_name: localizeInterviewStageName(turn.stage_id, turn.stage_name),
+            category: localizeInterviewCategory(turn.category),
         })),
         debrief: session.debrief || interactiveSession.debrief || null,
         savedRecordId: preserveMeta.savedRecordId ?? interactiveSession.savedRecordId ?? null,
@@ -1226,7 +1256,7 @@ function renderInteractiveChat() {
                     <div class="text-xs text-gray-500 mb-1">
                         ${isInterviewer ? uiT('interview.chat.interviewer', 'Interviewer') : uiT('interview.chat.you', 'You')}
                         ${turn.stage_name ? ` · ${turn.stage_name}` : ''}
-                        ${turn.category ? ` · ${turn.category}` : ''}
+                        ${turn.category ? ` · ${localizeInterviewCategory(turn.category)}` : ''}
                     </div>
                     <div class="rounded-lg p-3 text-sm ${isInterviewer ? 'bg-purple-50 border border-purple-100 text-gray-800' : 'bg-blue-50 border border-blue-100 text-gray-800'}">
                         ${turn.content}
@@ -1387,10 +1417,11 @@ function renderInteractiveDebrief(debrief) {
     if (Object.keys(stageScores).length) {
         categoryHtml += '<h4 class="font-semibold mt-4 mb-2">Stage Scores</h4><div class="grid sm:grid-cols-2 gap-2">';
         Object.entries(stageScores).forEach(([stage, score]) => {
+            const stageLabel = localizeInterviewStageName('', stage) || stage;
             categoryHtml += `
                 <div class="bg-white/10 rounded-lg p-3 text-sm">
                     <div class="flex justify-between mb-1">
-                        <span class="opacity-80">${stage}</span>
+                        <span class="opacity-80">${stageLabel}</span>
                         <span class="font-bold">${score}</span>
                     </div>
                     <div class="bg-white/20 rounded-full h-1.5">
@@ -1404,10 +1435,11 @@ function renderInteractiveDebrief(debrief) {
     if (debrief.category_scores) {
         categoryHtml += '<h4 class="font-semibold mt-4 mb-2">Category Scores</h4><div class="grid sm:grid-cols-2 gap-2">';
         Object.entries(debrief.category_scores).forEach(([cat, score]) => {
+            const catLabel = localizeInterviewCategory(cat) || cat;
             categoryHtml += `
                 <div class="bg-white/10 rounded-lg p-3 text-sm">
                     <div class="flex justify-between mb-1">
-                        <span class="opacity-80">${cat}</span>
+                        <span class="opacity-80">${catLabel}</span>
                         <span class="font-bold">${score}</span>
                     </div>
                     <div class="bg-white/20 rounded-full h-1.5">
@@ -1832,7 +1864,7 @@ async function restoreQuestionBankRecord(recordId) {
             return {
                 id: qa.id || `q_${index}`,
                 question: qa.question,
-                category: qa.category || 'General',
+                category: localizeInterviewCategory(qa.category) || 'General',
                 answer: qa.answer || '',
                 stage_id: stageId,
                 stage_name: localizeInterviewStageName(stageId, qa.stage_name, qa.stage_index ?? 0),

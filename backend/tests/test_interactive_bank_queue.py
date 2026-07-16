@@ -87,7 +87,7 @@ def test_enter_follow_up_phase_after_feedbacks_complete():
     session.follow_up_questions.append(InteractiveQuestionQueueItem(
         id="fu1",
         question="Follow up 1",
-        category="追问",
+        category="Follow-up",
         source="follow_up",
         status="pending",
     ))

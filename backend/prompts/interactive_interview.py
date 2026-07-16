@@ -29,6 +29,7 @@ INTERACTIVE_INTERVIEW_START_PROMPT = """你是资深企业面试官，正在进�
 2. 开场白自然简短（1-2句），说明当前是第几轮面试、面试官角色，然后提出问题
 3. interviewer_message 中开场与问题可合并为一段连贯口语
 4. 问题须紧扣当前阶段的固定提问模块
+5. category 必须从本轮「Allowed category labels」中原样选用英文标签，禁止输出中文分类名
 
 ## 输出语言
 {output_language_instruction}
@@ -91,8 +92,8 @@ INTERACTIVE_INTERVIEW_STAGE_TRANSITION_PROMPT = """你是资深企业面试官�
 {{
     "brief_feedback": "",
     "follow_up_type": "new_topic",
-    "interviewer_message": "阶段过渡语 + 新阶段第一个问题",
-    "category": "分类标签（须属于本轮可用分类）",
+    "interviewer_message": "Stage transition + first question of the new stage",
+    "category": "Category label from this stage's allowed list",
     "should_end": false
 }}
 """
@@ -149,8 +150,8 @@ INTERACTIVE_INTERVIEW_DEBRIEF_PROMPT = """你是面试辅导专家。结构化�
         }}
     ],
     "recommendations": ["..."],
-    "category_scores": {{"简历深挖与个人经历": 80}},
-    "stage_scores": {{"第一轮·初筛面试": 75, "第二轮·专业/技术面": 80}}
+    "category_scores": {{"Resume deep dive & experience": 80}},
+    "stage_scores": {{"Round 1 — Screening": 75, "Round 2 — Professional / Technical": 80}}
 }}
 """
 

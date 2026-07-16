@@ -2223,7 +2223,8 @@ async function onResumeLanguageSelected(language) {
 window.onResumeLanguageSelected = onResumeLanguageSelected;
 
 /**
- * Optimize resume content (A4 one-page)
+ * Optimize resume content (A4 one-page).
+ * Gap analysis / clarification already ran before first generate — do not re-ask here.
  */
 async function optimizeResume() {
     if (!resumeGenerated) {
@@ -2234,118 +2235,21 @@ async function optimizeResume() {
 
     try {
         beginAiTaskAttempt();
-        Utils.showLoading(uiT('resume.toast.analyzingGaps', 'Analyzing skill gaps — usually about 1–2 minutes…'));
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null;
         await apiClient.syncTargetJobContext(targetContext);
 
-        let gaps = [];
-        let questions = [];
-        let removals = [];
-        try {
-            const gapResponse = await apiClient.runGapAnalysis();
-            gaps = gapResponse.gaps || [];
-            questions = gapResponse.questions_to_ask || [];
-            removals = gapResponse.experiences_to_remove || [];
-            if (gaps.length) displayGapAnalysis(gaps);
-        } catch (_) {
-            /* gap analysis optional for re-optimize */
-        }
-        Utils.hideLoading();
-
-        const optimizationResult = await showOptimizationDialog({ gaps, questions, removals });
-        if (!optimizationResult?.proceed) return;
-
-        const answered = (optimizationResult.answers || []).filter((a) => a.answer);
-        const agreedRemovals = (optimizationResult.removals || []).filter((r) => r.agreed);
-        if (answered.length || agreedRemovals.length) {
-            Utils.showLoading(uiT('resume.toast.applyingClarifications', 'Applying your clarifications — usually about 20–60 seconds…'));
-            await apiClient.submitOptimizationFeedback({
-                answers: answered,
-                removals: agreedRemovals,
-            });
-        }
-
-        const affected = typeof collectAffectedResumeTargets === 'function'
-            ? collectAffectedResumeTargets({ answers: answered, removals: agreedRemovals, gaps })
-            : { affectedFactIds: [], affectedSections: [] };
-        const clarificationsText = typeof buildClarificationsText === 'function'
-            ? buildClarificationsText(answered)
-            : '';
-        const canIncremental = Boolean(
-            answered.length || agreedRemovals.length
-        ) && Boolean(
-            affected.affectedFactIds.length || affected.affectedSections.length
-        );
-
-        Utils.showLoading(canIncremental
-            ? uiT('resume.toast.polishingAffected', 'Updating affected resume modules — usually about 1–2 minutes…')
-            : uiT('resume.toast.optimizingA4', 'Optimizing resume for one A4 page — usually about 2–3 minutes…'));
+        Utils.showLoading(uiT('resume.toast.optimizingA4', 'Optimizing resume for one A4 page — usually about 2–3 minutes…'));
         const beforeSnapshot = await captureCurrentResumeSnapshot();
         const quantClause = typeof buildQuantificationEditClause === 'function'
-            ? buildQuantificationEditClause(optimizationResult.quantificationMode || '')
+            ? buildQuantificationEditClause('')
             : 'Add quantified results only when supported by my profile facts; never fabricate numbers.';
-
-        let response;
-        if (canIncremental) {
-            const optimizeInstruction = (
-                'Incrementally update my existing resume for the target job using clarifications. '
-                + 'Only rewrite affected modules; keep unchanged sections as-is. '
-                + 'Shorten wording so the resume fits one A4 page without losing key achievements. '
-                + quantClause
-            );
-            let streamAppliedSkeleton = false;
-            response = await apiClient.generateResume(
-                optimizeInstruction,
-                targetContext,
-                {
-                    forcedIntent: 'content_edit',
-                    skipRender: true,
-                    clearGeneratedResume: false,
-                    incremental: true,
-                    affectedFactIds: affected.affectedFactIds,
-                    affectedSections: affected.affectedSections,
-                    clarifications: clarificationsText,
-                    streamOnly: true,
-                    onProgress: (event) => {
-                        if (!event?.resume_content_json) return;
-                        applyResumeGenerationResult(
-                            {
-                                resume_content_json: event.resume_content_json,
-                                language: event.language || currentResumeLanguage,
-                            },
-                            event.language || currentResumeLanguage,
-                            {
-                                deferPreview: true,
-                                polishingFactIds: event.pending_fact_ids || [],
-                                silent: true,
-                            }
-                        );
-                        if (!streamAppliedSkeleton && event.phase === 'skeleton_with_placeholders') {
-                            streamAppliedSkeleton = true;
-                            Utils.hideLoading();
-                            Utils.showToast(uiT(
-                                'resume.toast.polishingAffectedModules',
-                                'Reusing your resume skeleton — polishing only the modules you clarified'
-                            ));
-                        }
-                        if (event.batch_error) {
-                            Utils.showToast(uiT(
-                                'resume.toast.polishBatchFallback',
-                                'Some experience modules kept the original profile text after polish failed — try Polish again on those cards'
-                            ), 5000);
-                        }
-                    },
-                }
-            );
-        } else {
-            const optimizeInstruction = (
-                'Optimize my resume for the target job. Polish experience entries to highlight role-relevant achievements, '
-                + 'follow industry-standard conventions, and shorten wording so the entire resume fits on one A4 page '
-                + 'without losing key achievements. '
-                + quantClause
-            );
-            response = await apiClient.optimizeResume(optimizeInstruction, targetContext);
-        }
+        const optimizeInstruction = (
+            'Optimize my resume for the target job. Polish experience entries to highlight role-relevant achievements, '
+            + 'follow industry-standard conventions, and shorten wording so the entire resume fits on one A4 page '
+            + 'without losing key achievements. '
+            + quantClause
+        );
+        const response = await apiClient.optimizeResume(optimizeInstruction, targetContext);
 
         let optimizedHtml = response.resume_html?.html || '';
         if (response.resume_content_json) {
@@ -2374,10 +2278,6 @@ async function optimizeResume() {
         Utils.hideLoading();
         Utils.showAiTaskErrorToast(error, 'resume.toast.optimizeFailed', 'Optimization failed: {msg}', { msg: error.message });
         console.error('Optimization error:', error);
-    } finally {
-        if (typeof hideOptimizationDialog === 'function') {
-            hideOptimizationDialog();
-        }
     }
 }
 

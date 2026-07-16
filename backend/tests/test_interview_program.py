@@ -58,7 +58,7 @@ def test_specialized_final_negotiation():
         specialized_focus="final_negotiation",
     )
     assert program.specialized_focus == "final_negotiation"
-    assert "薪资谈判" in program.stages[0].focus_modules[3]
+    assert "Salary negotiation" in program.stages[0].focus_modules[3]
 
 
 def test_specialized_resume_deep_dive():
@@ -73,9 +73,9 @@ def test_specialized_resume_deep_dive():
 def test_format_program_overview():
     program = build_interview_program(version="full")
     overview = format_program_overview(program)
-    assert "完整版" in overview
-    assert "阶段1" in overview
-    assert "阶段3" in overview
+    assert "Full (~60 min)" in overview
+    assert "Stage 1" in overview
+    assert "Stage 3" in overview
 
 
 def test_format_stages_generation_spec():
@@ -83,5 +83,14 @@ def test_format_stages_generation_spec():
     spec = format_stages_generation_spec(program)
     assert "stage_index=0" in spec
     assert "stage_index=1" in spec
-    assert "恰好 5 条" in spec
-    assert "恰好 8 条" in spec
+    assert "exactly 5" in spec
+    assert "exactly 8" in spec
+    assert "Role understanding & motivation" in spec
+
+
+def test_category_labels_are_english():
+    program = build_interview_program(version="quick", job_title="Backend Engineer")
+    for stage in program.stages:
+        for cat in stage.categories:
+            assert not any("\u4e00" <= ch <= "\u9fff" for ch in cat)
+            assert stage.name and not any("\u4e00" <= ch <= "\u9fff" for ch in stage.name)

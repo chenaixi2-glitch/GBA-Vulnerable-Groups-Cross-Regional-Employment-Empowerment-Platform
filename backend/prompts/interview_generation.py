@@ -8,11 +8,12 @@ INTERVIEW_GENERATION_PROMPT = """你是资深大厂面试官，专注企业精�
 ## 核心强制规则
 1. 全程序第一条 QA 必须是自我介绍，category 为「Resume deep dive & experience」，question 固定为「Tell me about yourself」，stage_index 为 0，stage_id/stage_name 对应第一阶段；
 2. 每条 QA 必须包含 stage_id、stage_name、stage_index，且 stage_index 从 0 递增，同一阶段内题目紧扣该阶段固定提问模块；
-3. 各阶段题量必须严格等于规格中的「题量」字段，全程序共 {total_questions} 条；
-4. category 只能使用该阶段「可用分类标签」中的值；
-5. 专业/技术面遵循万能公式：做过什么 → 怎么做的 → 遇到什么问题 → 怎么解决 → 数据结果 → 复盘优化；
-6. 所有问题紧扣候选人画像与岗位 JD（若有），禁止无关通用题；
-7. 每条 answer 专属定制：观点 + 案例/场景 + 落地成果 + 岗位适配，可直接用于面试演练。
+3. 各阶段题量必须严格等于规格中的「Question count」字段，全程序共 {total_questions} 条；
+4. category 只能使用该阶段「Allowed category labels」中的英文值；
+5. stage_name / category 必须使用英文字符串（与程序配置一致），不要输出中文标签；
+6. 专业/技术面遵循万能公式：做过什么 → 怎么做的 → 遇到什么问题 → 怎么解决 → 数据结果 → 复盘优化；
+7. 所有问题紧扣候选人画像与岗位 JD（若有），禁止无关通用题；
+8. 每条 answer 专属定制：观点 + 案例/场景 + 落地成果 + 岗位适配，可直接用于面试演练。
 
 ## 输入信息
 岗位JD（可选，可能为空）：
@@ -36,7 +37,7 @@ INTERVIEW_GENERATION_PROMPT = """你是资深大厂面试官，专注企业精�
         {{
             "id": "qa_1",
             "stage_id": "screening",
-            "stage_name": "第一轮·初筛面试",
+            "stage_name": "Round 1 — Screening",
             "stage_index": 0,
             "category": "Resume deep dive & experience",
             "question": "Precise, conversational interview question",
@@ -52,14 +53,15 @@ STANDALONE_INTERVIEW_GENERATION_PROMPT = """你是资深面试官。用户希望
 请根据用户消息与已有上下文，按两阶段结构生成 8-12 条高质量面试问答。
 
 ## 阶段结构
-阶段1（stage_index=0，4-5条）：初筛面 — Tell me about yourself、求职动机、岗位认知、稳定性
-阶段2（stage_index=1，4-7条）：专业/技术面 — 技能、项目、场景题
+阶段1（stage_index=0，4-5条）：Screening — Tell me about yourself, motivation, role understanding, stability
+阶段2（stage_index=1，4-7条）：Professional / Technical — skills, projects, scenario questions
 
 ## 规则
 1. 第一条必须是自我介绍，category 为「Resume deep dive & experience」，question 固定为「Tell me about yourself」，stage_index=0；
 2. 每条 QA 须含 stage_id、stage_name、stage_index；
 3. 若上下文不足，可基于用户消息中的岗位/行业生成专业题；
 4. 每条 answer 给出可直接参考的应答要点（STAR 结构优先）。
+5. stage_name / category 必须使用英文字符串（与程序配置一致）。
 
 ## 用户消息
 {user_message}
@@ -83,7 +85,7 @@ STANDALONE_INTERVIEW_GENERATION_PROMPT = """你是资深面试官。用户希望
         {{
             "id": "qa_1",
             "stage_id": "screening",
-            "stage_name": "初筛面试",
+            "stage_name": "Round 1 — Screening",
             "stage_index": 0,
             "category": "Resume deep dive & experience",
             "question": "Question",

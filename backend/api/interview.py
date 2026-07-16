@@ -188,7 +188,7 @@ async def generate_custom_interview_answers(
 
     questions = parse_custom_questions(req.questions if req.questions else req.questions_text)
     if not questions:
-        raise HTTPException(status_code=400, detail="请至少提供一道面试题")
+        raise HTTPException(status_code=400, detail="Please provide at least one interview question")
 
     state = await _load_state(session_id)
     state.session_id = session_id
@@ -201,12 +201,12 @@ async def generate_custom_interview_answers(
         raise HTTPException(status_code=409, detail=SESSION_BUSY_API_DETAIL)
     except Exception as exc:
         logger.error("Custom interview answers failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"生成参考答案失败: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate reference answers: {exc}")
 
     interview_qa = result.get("interview_qa") or []
     if not interview_qa:
         trace = result.get("workflow_trace") or []
-        detail = "未能生成参考答案"
+        detail = "Could not generate reference answers"
         if trace:
             detail = trace[-1].get("output_summary") or detail
         raise HTTPException(status_code=400, detail=detail)
@@ -219,7 +219,7 @@ async def generate_custom_interview_answers(
     return CustomInterviewAnswersResponse(
         session_id=session_id,
         interview_qa=[qa.model_dump() for qa in interview_qa],
-        message=f"已为 {len(interview_qa)} 道自定义题目生成参考答案。",
+        message=f"Generated reference answers for {len(interview_qa)} custom questions.",
     )
 
 
@@ -237,9 +237,9 @@ async def set_interview_language(req: InterviewLanguageRequest, request: Request
     q_lang = normalize_language(req.question_language or req.language or "")
     f_lang = normalize_language(req.feedback_language or "")
     if q_lang and q_lang not in VALID_RESUME_LANGUAGES:
-        raise HTTPException(status_code=422, detail="question_language 必须为 zh、zh-TW、en 或 pt")
+        raise HTTPException(status_code=422, detail="question_language must be zh, zh-TW, en, or pt")
     if f_lang and f_lang not in VALID_RESUME_LANGUAGES:
-        raise HTTPException(status_code=422, detail="feedback_language 必须为 zh、zh-TW、en 或 pt")
+        raise HTTPException(status_code=422, detail="feedback_language must be zh, zh-TW, en, or pt")
 
     if q_lang:
         apply_interview_question_language(state, q_lang)
@@ -287,7 +287,7 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
         logger.error("Interactive interview start failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"开启模拟面试失败: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to start mock interview: {exc}")
 
     state.interactive_interview = session
     await _save_state(session_id, state)
@@ -320,7 +320,7 @@ async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> Int
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
         logger.error("Interactive interview turn failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"处理回答失败: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to process answer: {exc}")
 
     state.interactive_interview = session
     await _save_state(req.session_id, state)
@@ -415,7 +415,7 @@ async def interactive_end(req: InteractiveEndRequest, request: Request) -> Inter
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
         logger.error("Interactive interview end failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"生成复盘失败: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate debrief: {exc}")
 
     state.interactive_interview = session
     await _save_state(req.session_id, state)
@@ -442,9 +442,9 @@ async def interactive_status(session_id: str, request: Request) -> dict[str, Any
         "max_rounds": session.max_rounds,
         "program_version": session.program_version,
         "program_label": {
-            "quick": "极速版 (~30分钟)",
-            "full": "完整版 (~60分钟)",
-            "specialized": "专项版",
+            "quick": "Quick (~30 min)",
+            "full": "Full (~60 min)",
+            "specialized": "Specialized",
         }.get(session.program_version, session.program_version),
         "current_stage_index": session.current_stage_index,
         "current_stage": session.stages[session.current_stage_index].model_dump()
@@ -464,11 +464,11 @@ async def interactive_save(req: InteractiveSaveRequest, request: Request) -> dic
     """登录用户将本场模拟面试结果保存到数据库。"""
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录后再保存模拟面试记录")
+        raise HTTPException(status_code=401, detail="Please log in before saving the mock interview")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     await bind_session_owner(req.session_id, user)
 
@@ -476,22 +476,22 @@ async def interactive_save(req: InteractiveSaveRequest, request: Request) -> dic
     session = state.interactive_interview
 
     if session.status != "completed":
-        raise HTTPException(status_code=400, detail="模拟面试尚未结束，无法保存")
+        raise HTTPException(status_code=400, detail="Mock interview is not finished yet")
     if not session.turns:
-        raise HTTPException(status_code=400, detail="没有可保存的面试对话记录")
+        raise HTTPException(status_code=400, detail="No interview conversation to save")
     if session.debrief is None:
-        raise HTTPException(status_code=400, detail="请先生成复盘报告后再保存")
+        raise HTTPException(status_code=400, detail="Please generate the debrief report before saving")
 
     record_id = req.record_id.strip() or None
 
     try:
         saved_id = await _persist_interactive_interview_safe(state, user_id, record_id)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"保存失败: {exc}")
+        raise HTTPException(status_code=500, detail=f"Save failed: {exc}")
 
     return {
         "ok": True,
-        "message": "模拟面试记录已保存到您的账户。",
+        "message": "Mock interview saved to your account.",
         "session_id": req.session_id,
         "record_id": saved_id,
     }
@@ -502,11 +502,11 @@ async def interactive_history(request: Request, limit: int = 20) -> dict[str, An
     """列出当前登录用户已保存的模拟面试记录摘要。"""
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录")
+        raise HTTPException(status_code=401, detail="Please log in")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     pool = await get_mysql_pool()
     db = MySQLStore(pool)
@@ -524,17 +524,17 @@ async def get_saved_interactive_interview(record_id: str, request: Request) -> d
     """获取单条已保存的模拟面试完整记录。"""
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录")
+        raise HTTPException(status_code=401, detail="Please log in")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     pool = await get_mysql_pool()
     db = MySQLStore(pool)
     record = await db.get_interactive_interview_for_user(record_id, user_id)
     if record is None:
-        raise HTTPException(status_code=404, detail="记录不存在或无权访问")
+        raise HTTPException(status_code=404, detail="Record not found or access denied")
 
     if record.get("saved_at") is not None:
         record["saved_at"] = str(record["saved_at"])
@@ -567,11 +567,11 @@ async def save_question_bank(req: QuestionBankSaveRequest, request: Request) -> 
     """登录用户将题库练习记录保存到数据库。"""
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录后再保存题库记录")
+        raise HTTPException(status_code=401, detail="Please log in before saving the question bank")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     await bind_session_owner(req.session_id, user)
 
@@ -580,7 +580,7 @@ async def save_question_bank(req: QuestionBankSaveRequest, request: Request) -> 
     if not questions and state.interview_qa:
         questions = [qa.model_dump() for qa in state.interview_qa]
     if not questions:
-        raise HTTPException(status_code=400, detail="没有可保存的面试题目，请先生成题库")
+        raise HTTPException(status_code=400, detail="No interview questions to save — generate a question bank first")
 
     row_id = f"qbs_{uuid.uuid4().hex[:16]}"
     job_title = req.job_title.strip() or (state.job.title if state.job else "")
@@ -615,11 +615,11 @@ async def save_question_bank(req: QuestionBankSaveRequest, request: Request) -> 
         )
     except Exception as exc:
         logger.error("Question bank save failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"保存失败: {exc}")
+        raise HTTPException(status_code=500, detail=f"Save failed: {exc}")
 
     return {
         "ok": True,
-        "message": "题库记录已保存到您的账户。",
+        "message": "Question bank saved to your account.",
         "session_id": req.session_id,
         "record_id": row_id,
         "record_name": record_name,
@@ -632,11 +632,11 @@ async def question_bank_history(request: Request, limit: int = 20) -> dict[str, 
     """列出当前登录用户已保存的题库记录摘要。"""
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录")
+        raise HTTPException(status_code=401, detail="Please log in")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     pool = await get_mysql_pool()
     db = MySQLStore(pool)
@@ -660,17 +660,17 @@ async def get_saved_question_bank(record_id: str, request: Request) -> dict[str,
     """获取单条已保存的题库完整记录。"""
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录")
+        raise HTTPException(status_code=401, detail="Please log in")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     pool = await get_mysql_pool()
     db = MySQLStore(pool)
     record = await db.get_question_bank_session_for_user(record_id, user_id)
     if record is None:
-        raise HTTPException(status_code=404, detail="记录不存在或无权访问")
+        raise HTTPException(status_code=404, detail="Record not found or access denied")
 
     if record.get("saved_at") is not None:
         record["saved_at"] = str(record["saved_at"])
