@@ -28,7 +28,8 @@ MODULE_TYPE_LABELS = {
     "education": "Education",
     "skill": "Skills",
     "project": "Projects",
-    "internship": "Work / Internship",
+    "work": "Work Experience",
+    "internship": "Internships",
     "award": "Awards",
     "paper": "Publications",
     "custom": "Custom Section",
@@ -36,6 +37,7 @@ MODULE_TYPE_LABELS = {
 
 _MODULE_TYPE_TO_SECTION: dict[str, str] = {
     "skill": "skills",
+    "work": "works",
     "internship": "internships",
     "project": "projects",
     "award": "awards",
@@ -45,6 +47,7 @@ _MODULE_TYPE_TO_SECTION: dict[str, str] = {
 
 _RESUME_MODULE_SECTIONS: tuple[str, ...] = (
     "skills",
+    "works",
     "internships",
     "projects",
     "awards",

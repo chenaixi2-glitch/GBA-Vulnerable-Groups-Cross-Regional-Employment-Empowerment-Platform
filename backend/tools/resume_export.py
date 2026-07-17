@@ -344,8 +344,9 @@ def resume_content_to_docx_bytes(content: "ResumeContent") -> bytes:
 
     sections = [
         ("skills", content.skills),
-        ("projects", content.projects),
+        ("works", content.works),
         ("internships", content.internships),
+        ("projects", content.projects),
         ("awards", content.awards),
         ("papers", content.papers),
     ]

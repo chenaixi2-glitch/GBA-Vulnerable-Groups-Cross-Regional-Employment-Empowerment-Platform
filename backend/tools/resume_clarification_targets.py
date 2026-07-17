@@ -10,9 +10,10 @@ from workflow.state import CopilotState, Fact, ResumeContent, SectionItem
 _FIELD_ALIASES: dict[str, str] = {
     "internship": "internships",
     "internships": "internships",
-    "work": "internships",
-    "work_experience": "internships",
-    "experience": "internships",
+    "work": "works",
+    "works": "works",
+    "work_experience": "works",
+    "experience": "works",
     "project": "projects",
     "projects": "projects",
     "skill": "skills",
@@ -26,6 +27,7 @@ _FIELD_ALIASES: dict[str, str] = {
 }
 
 _SECTION_TO_FACT_TYPE: dict[str, str] = {
+    "works": "work",
     "internships": "internship",
     "projects": "project",
     "skills": "skill",
@@ -33,7 +35,7 @@ _SECTION_TO_FACT_TYPE: dict[str, str] = {
     "papers": "paper",
 }
 
-EXPERIENCE_SECTIONS = frozenset({"internships", "projects"})
+EXPERIENCE_SECTIONS = frozenset({"works", "internships", "projects"})
 SOFT_SECTIONS = frozenset({"skills", "summary"})
 
 
@@ -141,13 +143,18 @@ def resolve_affected_targets(
     if profile is not None and resume is not None:
         existing_ids = _resume_item_keys(resume)
         for fact in profile.facts:
-            if fact.type not in ("internship", "project"):
+            if fact.type not in ("work", "internship", "project"):
                 continue
             if fact.id in existing_ids:
                 continue
             if fact.id in fact_ids or "user_clarification" in (fact.source_refs or []):
                 fact_ids.add(fact.id)
-                sections.add("internships" if fact.type == "internship" else "projects")
+                if fact.type == "work":
+                    sections.add("works")
+                elif fact.type == "internship":
+                    sections.add("internships")
+                else:
+                    sections.add("projects")
 
     return fact_ids, sections
 
@@ -160,7 +167,7 @@ def _item_keys(item: SectionItem) -> set[str]:
 
 def _resume_item_keys(resume: ResumeContent) -> set[str]:
     keys: set[str] = set()
-    for section in ("skills", "internships", "projects", "awards", "papers"):
+    for section in ("skills", "works", "internships", "projects", "awards", "papers"):
         for item in getattr(resume, section) or []:
             keys |= _item_keys(item)
     return keys
@@ -184,6 +191,7 @@ def prune_resume_to_profile_facts(resume: ResumeContent, state: CopilotState) ->
 
     updates = {
         "skills": [i for i in resume.skills if _keep(i)],
+        "works": [i for i in resume.works if _keep(i)],
         "internships": [i for i in resume.internships if _keep(i)],
         "projects": [i for i in resume.projects if _keep(i)],
         "awards": [i for i in resume.awards if _keep(i)],
@@ -207,6 +215,6 @@ def needs_experience_polish(fact_ids: set[str], sections: set[str], state: Copil
     if sections & EXPERIENCE_SECTIONS:
         return True
     for fact in facts_for_ids(state, fact_ids):
-        if fact.type in ("internship", "project"):
+        if fact.type in ("work", "internship", "project"):
             return True
     return False

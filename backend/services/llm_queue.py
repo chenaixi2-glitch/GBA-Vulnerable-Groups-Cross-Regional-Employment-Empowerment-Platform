@@ -50,6 +50,7 @@ class LlmTask:
     RESUME_EDIT = "resume_edit"
     RESUME_TRANSLATE = "resume_translate"
     RESUME_RENDER = "resume_render"
+    RESUME_OPTIMIZE_A4 = "resume_optimize_a4"
     RESUME_MODULE_TRANSLATE = "resume_module_translate"
     RESUME_MODULE_POLISH = "resume_module_polish"
     INTERVIEW_CUSTOM = "interview_custom"

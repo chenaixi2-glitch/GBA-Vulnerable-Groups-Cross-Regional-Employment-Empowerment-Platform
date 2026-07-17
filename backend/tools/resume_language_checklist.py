@@ -35,7 +35,7 @@ def _resume_body_lines(resume: ResumeContent | None) -> list[str]:
         return lines
     if resume.summary:
         lines.append(resume.summary)
-    for section in (resume.skills, resume.internships, resume.projects, resume.awards, resume.papers):
+    for section in (resume.skills, resume.works, resume.internships, resume.projects, resume.awards, resume.papers):
         for item in section:
             if item.title:
                 lines.append(item.title)
@@ -119,7 +119,7 @@ def _text_blob(state: CopilotState, resume: ResumeContent | None) -> str:
         for key, val in (getattr(p, "extras", None) or {}).items():
             parts.append(f"{key}:{val}")
         parts.append(resume.summary or "")
-        for section in (resume.skills, resume.internships, resume.projects, resume.awards, resume.papers):
+        for section in (resume.skills, resume.works, resume.internships, resume.projects, resume.awards, resume.papers):
             for item in section:
                 parts.extend([item.title, item.content])
         for edu in p.education:
@@ -207,6 +207,13 @@ def _candidate_has_education(state: CopilotState) -> bool:
     return False
 
 
+def _candidate_has_work(state: CopilotState) -> bool:
+    cp = state.candidate_profile
+    if not cp:
+        return False
+    return any(f.type == "work" and (f.content or "").strip() for f in cp.facts)
+
+
 def _candidate_has_internship(state: CopilotState) -> bool:
     cp = state.candidate_profile
     if not cp:
@@ -270,9 +277,9 @@ def _has_education(state: CopilotState, resume: ResumeContent | None, text: str)
 
 
 def _has_work_experience(state: CopilotState, resume: ResumeContent | None, text: str) -> bool:
-    if resume and resume.internships:
+    if resume and (resume.works or resume.internships):
         return True
-    if _candidate_has_internship(state):
+    if _candidate_has_work(state) or _candidate_has_internship(state):
         return True
     return _has_pattern(
         text,
@@ -513,16 +520,23 @@ def _check_chinese_resume(
     items.append(_item("zh_education", "content", "education", "教育经历", "required",
                       "中文简历教育经历通常紧跟个人信息", "学校、专业、学位、起止时间", has_edu))
 
-    # 实习/工作 — 单项选填，但四类经历至少一项
-    has_work = _has_work_experience(state, resume, text)
-    items.append(_item("zh_experience", "content", "internships", "实习/工作经历", "recommended",
-                      "可补充实习或工作经历以突出实践背景", "按时间倒序，描述职责与成果", has_work))
+    # 工作 / 实习 — 分栏选填，但四类经历至少一项
+    has_work = bool(resume and resume.works) or _candidate_has_work(state) or _has_pattern(
+        text, [r"工作经历|全职|正式工作|work experience|full[- ]?time"]
+    )
+    has_intern = bool(resume and resume.internships) or _candidate_has_internship(state) or _has_pattern(
+        text, [r"实习|intern"]
+    )
+    items.append(_item("zh_work", "content", "works", "工作经历", "recommended",
+                      "可补充正式工作经历以突出实践背景", "按时间倒序，描述职责与成果", has_work))
+    items.append(_item("zh_experience", "content", "internships", "实习经历", "recommended",
+                      "可补充实习经历以突出实践背景", "按时间倒序，描述职责与成果", has_intern))
 
     has_any_exp = _has_any_experience_track(state, resume, text)
     items.append(_item("zh_experience_any", "content", "experience_any",
                       "实习/工作/校内/志愿经历（至少一项）", "required",
                       "需至少填写一类经历：实习、工作、校内活动或志愿服务",
-                      "可添加实习/工作、项目（校内）、或其他（志愿）条目", has_any_exp))
+                      "可添加工作、实习、项目（校内）、或其他（志愿）条目", has_any_exp))
 
     # 项目经历
     has_proj = bool(resume and resume.projects) or _has_pattern(text, [r"项目"])
@@ -637,16 +651,20 @@ def _check_traditional_chinese_resume(
                                 "Professional Summary 建議控制在 3-4 行",
                                 f"刪減至核心賣點，整份履歷保持 {page_limit} 頁以內"))
 
-    has_work = _has_work_experience(state, resume, text)
-    items.append(_item("tw_experience", "content", "internships", "Work Experience", "recommended",
-                      "可補充工作/實習經歷以突出實踐背景",
+    has_work = bool(resume and resume.works) or _candidate_has_work(state)
+    items.append(_item("tw_work", "content", "works", "Work Experience", "recommended",
+                      "可補充正式工作經歷以突出實踐背景",
                       "動詞開頭 + 量化結果，如：Led X, improved Y by 20%", has_work))
+    has_intern = bool(resume and resume.internships) or _candidate_has_internship(state)
+    items.append(_item("tw_experience", "content", "internships", "Internships", "recommended",
+                      "可補充實習經歷以突出實踐背景",
+                      "動詞開頭 + 量化結果，如：Led X, improved Y by 20%", has_intern))
 
     has_any_exp = _has_any_experience_track(state, resume, text)
     items.append(_item("tw_experience_any", "content", "experience_any",
                       "實習/工作/校內/志願經歷（至少一項）", "required",
                       "需至少填寫一類經歷：實習、工作、校內活動或志願服務",
-                      "可添加實習/工作、項目（校內）、或其他（志願）條目", has_any_exp))
+                      "可添加工作、實習、項目（校內）、或其他（志願）條目", has_any_exp))
 
     has_quant = _has_pattern(text, [r"\d+\s*%", r"\d+\s*(users|clients|projects|k|m)", r"increased|reduced|improved|boosted|by \d"])
     items.append(_item("tw_quantified", "content", "metrics", "量化成果", "recommended",
@@ -758,17 +776,21 @@ def _check_english_resume(
                                 f"英文 Resume 的 Summary 建议控制在 {'3-4 行' if page_limit > 1 else '3-4 行（单页）'}",
                                 f"删减至核心卖点，整份简历保持 {page_limit} 页以内"))
 
-    # Work Experience before Education
-    has_work = _has_work_experience(state, resume, text)
-    items.append(_item("en_experience", "content", "internships", "Work Experience", "recommended",
-                      "可补充工作/实习经历以突出实践背景",
-                      "动词开头 + 量化结果，如：Led X, improved Y by 20%", has_work))
+    # Work Experience / Internships before Education
+    has_work = bool(resume and resume.works) or _candidate_has_work(state)
+    items.append(_item("en_work", "content", "works", "Work Experience", "recommended",
+                      "Add full-time or part-time work experience when available",
+                      "Action verb + quantified result, e.g. Led X, improved Y by 20%", has_work))
+    has_intern = bool(resume and resume.internships) or _candidate_has_internship(state)
+    items.append(_item("en_experience", "content", "internships", "Internships", "recommended",
+                      "Add internship experience when available",
+                      "Action verb + quantified result, e.g. Led X, improved Y by 20%", has_intern))
 
     has_any_exp = _has_any_experience_track(state, resume, text)
     items.append(_item("en_experience_any", "content", "experience_any",
-                      "实习/工作/校内/志愿经历（至少一项）", "required",
-                      "需至少填写一类经历：实习、工作、校内活动或志愿服务",
-                      "可添加实习/工作、项目（校内）、或其他（志愿）条目", has_any_exp))
+                      "Work / internship / campus / volunteer (at least one)", "required",
+                      "Include at least one of: work, internship, campus activity, or volunteer",
+                      "Add Work Experience, Internships, Projects, or Other (volunteer)", has_any_exp))
 
     # 量化描述检查
     has_quant = _has_pattern(text, [r"\d+\s*%", r"\d+\s*(users|clients|projects|k|m)", r"increased|reduced|improved|boosted|by \d"])

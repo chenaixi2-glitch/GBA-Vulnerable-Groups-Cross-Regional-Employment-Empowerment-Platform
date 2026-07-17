@@ -22,7 +22,7 @@ RENDER_INSTRUCTION_PROMPT = """你是简历渲染配置专家。请根据用户�
     "font_size": 14,
     "line_height": 1.5,
     "page_margin": {{"top": 24, "right": 24, "bottom": 24, "left": 24}},
-    "section_order": ["profile", "summary", "education", "internships", "projects", "skills", "awards"],
+    "section_order": ["profile", "summary", "education", "works", "internships", "projects", "skills", "awards"],
     "dense_mode": true,
     "language": "zh",
     "accent_style": "minimal / bold / underline",

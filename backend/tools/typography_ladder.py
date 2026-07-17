@@ -111,10 +111,11 @@ def fit_typography_to_page_limit(
                 break
 
     if best_pages is not None and best_pages > page_limit:
+        # Tighten step by step; keep the tightest evaluated step even if still over.
         for step_index in range(best_index + 1, len(TYPOGRAPHY_LADDER)):
             cfg, html, pages = _render(step_index)
+            best_index, best_cfg, best_html, best_pages = step_index, cfg, html, pages
             if pages is not None and pages <= page_limit:
-                best_index, best_cfg, best_html, best_pages = step_index, cfg, html, pages
                 break
 
     return best_cfg, best_html, best_pages, steps_evaluated

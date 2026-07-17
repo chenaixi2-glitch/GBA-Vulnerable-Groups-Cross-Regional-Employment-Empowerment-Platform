@@ -87,6 +87,7 @@ def build_chunks_from_state(state: CopilotState) -> list[tuple[str, str, dict[st
             ))
         for section_name, items in (
             ("skills", rc.skills),
+            ("works", rc.works),
             ("internships", rc.internships),
             ("projects", rc.projects),
             ("awards", rc.awards),

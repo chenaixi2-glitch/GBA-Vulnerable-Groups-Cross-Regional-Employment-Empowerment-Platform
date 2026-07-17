@@ -55,7 +55,7 @@ JD–经历语义匹配（embedding 预计算，按批次；可能为空数组�
         {{
             "id": "rem_1",
             "fact_id": "fact_internship_2",
-            "section_type": "internship | project | award | paper | skill | education",
+            "section_type": "work | internship | project | award | paper | skill | education",
             "title": "<experience title in the required output language>",
             "reason": "<clear explanation why this entry is low-relevance or redundant for the target role — NOT for page length or layout, in the required output language>",
             "priority": "recommended | optional"

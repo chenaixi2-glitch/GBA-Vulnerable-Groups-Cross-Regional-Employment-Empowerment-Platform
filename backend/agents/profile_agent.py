@@ -84,7 +84,7 @@ def _extract_clarifications_block(user_message: str) -> str:
 
 
 def _normalize_fact_content(fact_type: str, content: str) -> str:
-    """Ensure internship job titles land in role (not only title)."""
+    """Ensure work/internship job titles land in role (not only title)."""
     fields = parse_fact_content(fact_type, content)
     return fields_to_fact_content(fact_type, fields) or content
 

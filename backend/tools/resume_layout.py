@@ -13,6 +13,7 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
         "summary": "自我评价",
         "education": "教育经历",
         "skills": "相关技能",
+        "works": "工作经历",
         "internships": "实习经历",
         "projects": "在校经历",
         "awards": "获奖经历",
@@ -23,6 +24,7 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
         "summary": "個人總結",
         "education": "教育經歷",
         "skills": "專業技能",
+        "works": "工作經歷",
         "internships": "實習經歷",
         "projects": "項目經歷",
         "awards": "獲獎經歷",
@@ -33,7 +35,8 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
         "summary": "Professional Summary",
         "education": "Education",
         "skills": "Skills",
-        "internships": "Work Experience",
+        "works": "Work Experience",
+        "internships": "Internships",
         "projects": "Projects",
         "awards": "Honors & Awards",
         "papers": "Publications",
@@ -43,7 +46,8 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
         "summary": "Resumo Profissional",
         "education": "Formação Académica",
         "skills": "Competências",
-        "internships": "Experiência Profissional",
+        "works": "Experiência Profissional",
+        "internships": "Estágios",
         "projects": "Projectos",
         "awards": "Prémios e Distinções",
         "papers": "Publicações",
@@ -52,14 +56,14 @@ SECTION_LABELS: dict[str, dict[str, str]] = {
 
 SECTION_ORDER_BY_LANGUAGE: dict[str, list[str]] = {
     # 仅作 agent 缺省建议 / 冷启动回退，不由模板强制
-    "zh": ["summary", "education", "internships", "projects", "skills", "awards"],
-    "zh-TW": ["profile", "summary", "education", "internships", "projects", "skills", "awards"],
-    "en": ["profile", "summary", "education", "internships", "projects", "skills", "awards"],
-    "pt": ["profile", "summary", "education", "internships", "projects", "skills", "awards"],
+    "zh": ["summary", "education", "works", "internships", "projects", "skills", "awards"],
+    "zh-TW": ["profile", "summary", "education", "works", "internships", "projects", "skills", "awards"],
+    "en": ["profile", "summary", "education", "works", "internships", "projects", "skills", "awards"],
+    "pt": ["profile", "summary", "education", "works", "internships", "projects", "skills", "awards"],
 }
 
 ALL_RESUME_SECTIONS: tuple[str, ...] = (
-    "profile", "summary", "education", "skills", "internships", "projects", "awards", "papers",
+    "profile", "summary", "education", "skills", "works", "internships", "projects", "awards", "papers",
 )
 
 
@@ -102,6 +106,8 @@ def resolve_section_order(
             return bool(resume_content.profile.education)
         if section == "skills":
             return bool(resume_content.skills)
+        if section == "works":
+            return bool(resume_content.works)
         if section == "internships":
             return bool(resume_content.internships)
         if section == "projects":

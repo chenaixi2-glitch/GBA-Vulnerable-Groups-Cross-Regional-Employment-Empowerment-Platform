@@ -93,7 +93,8 @@ async def _ensure_resume_html_for_export(session_id: str, state: CopilotState) -
             if photo_changed:
                 await _asave_state(store, _persist_payload(state.model_dump()))
 
-            updates = await render_node_async(state)
+            # Export deferred render: same as preview — spacing/font only, keep editor text.
+            updates = await render_node_async(state, allow_content_fit=False)
             data = state.model_dump()
             data.update(updates)
             final = CopilotState.model_validate(data)
@@ -370,8 +371,9 @@ def _export_resume_markdown(state: CopilotState) -> str:
 
     sections = [
         ("技能", content.skills),
-        ("项目", content.projects),
+        ("工作", content.works),
         ("实习", content.internships),
+        ("项目", content.projects),
         ("奖项", content.awards),
         ("论文", content.papers),
     ]

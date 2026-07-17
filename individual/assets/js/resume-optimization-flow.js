@@ -462,9 +462,10 @@ function collectAffectedResumeTargets({ answers = [], removals = [], gaps = [] }
         const aliases = {
             internship: 'internships',
             internships: 'internships',
-            work: 'internships',
-            work_experience: 'internships',
-            experience: 'internships',
+            work: 'works',
+            works: 'works',
+            work_experience: 'works',
+            experience: 'works',
             project: 'projects',
             projects: 'projects',
             skill: 'skills',

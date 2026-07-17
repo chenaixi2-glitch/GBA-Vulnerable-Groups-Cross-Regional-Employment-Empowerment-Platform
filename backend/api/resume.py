@@ -66,6 +66,82 @@ class EnsureRenderRequest(BaseModel):
     session_id: str
 
 
+class OptimizeA4Request(BaseModel):
+    session_id: str
+
+
+@router.post("/optimize-a4")
+async def optimize_resume_a4(req: OptimizeA4Request, request: Request, background_tasks: BackgroundTasks):
+    """Dedicated A4 one-page optimize: Skills → page check → typography → experience compress.
+
+    Does not run content_agent / chat rewrite.
+    """
+    from api.chat import _aload_state, _asave_state, _persist_to_mysql_safe
+    from agents.a4_optimize_pipeline import run_a4_optimize_pipeline
+    from api.draft_utils import (
+        apply_draft_sections_to_resume_state,
+        apply_profile_extras_to_resume_state,
+    )
+    from services.llm_queue import SessionBusyError, LlmTask, llm_queue_slot, session_busy_detail
+
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+    if user:
+        await bind_session_owner(req.session_id, user)
+
+    client = await get_redis_client()
+    store = RedisSessionStore(req.session_id, client)
+    saved = await _aload_state(store)
+    if not saved:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    state = CopilotState.model_validate(saved)
+    if state.resume_content_json is None:
+        raise HTTPException(status_code=400, detail="简历内容尚未生成，请先生成简历")
+
+    draft_store = RedisDraftStore(client, req.session_id, user.get("sub") if user else None)
+    draft = await draft_store.load_draft()
+    if draft:
+        state, _ = apply_draft_sections_to_resume_state(state, draft)
+    state, _ = apply_profile_extras_to_resume_state(state)
+    state.skip_render = False
+
+    try:
+        async with llm_queue_slot(req.session_id, LlmTask.RESUME_OPTIMIZE_A4):
+            updates = await run_a4_optimize_pipeline(state)
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
+    except Exception as exc:
+        logger.error("A4 optimize failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"A4 优化失败: {exc}") from exc
+
+    data = state.model_dump()
+    data.update(updates)
+    final = CopilotState.model_validate(data)
+
+    persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
+    await _asave_state(store, persist_data)
+
+    if user:
+        background_tasks.add_task(_persist_to_mysql_safe, final, user.get("sub"))
+
+    if not final.resume_html or not final.resume_html.html:
+        raise HTTPException(status_code=500, detail="A4 优化结果为空，请重试")
+
+    return {
+        "reply_message": updates.get("reply_message") or "简历已优化为 A4 单页",
+        "triggered_agents": updates.get("triggered_agents") or ["a4_optimize"],
+        "resume_html": final.resume_html.model_dump(),
+        "resume_content_json": final.resume_content_json.model_dump() if final.resume_content_json else None,
+        "render_config": final.render_config.model_dump(),
+        "language": (
+            final.resume_content_json.meta.language
+            if final.resume_content_json
+            else final.render_config.language
+        ),
+    }
+
+
 @router.post("/ensure-render")
 async def ensure_resume_render(req: EnsureRenderRequest, request: Request, background_tasks: BackgroundTasks):
     """若已有 resume_content_json 但尚无 HTML，运行 render_agent 生成预览。"""
@@ -118,7 +194,9 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
 
     try:
         async with llm_queue_slot(req.session_id, LlmTask.RESUME_RENDER):
-            updates = await render_node_async(state)
+            # Preview: fit via spacing/font only — do not rewrite skills/awards text.
+            # Content shortening is reserved for the explicit Optimize A4 action.
+            updates = await render_node_async(state, allow_content_fit=False)
     except SessionBusyError as exc:
         raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as exc:
@@ -1065,7 +1143,7 @@ class TranslateResumeRequest(BaseModel):
 class ModuleActionRequest(BaseModel):
     session_id: str
     module_id: str
-    module_type: str = Field(description="skill | internship | project | award | paper | custom | education")
+    module_type: str = Field(description="skill | work | internship | project | award | paper | custom | education")
     title: str = ""
     content: str = ""
     school: str = ""
@@ -1516,8 +1594,8 @@ async def polish_resume_module(req: ModuleActionRequest, request: Request, backg
     if user:
         await bind_session_owner(req.session_id, user)
 
-    if req.module_type not in ("internship", "project"):
-        raise HTTPException(status_code=422, detail="仅实习/工作经历与项目经历支持单条润色")
+    if req.module_type not in ("work", "internship", "project"):
+        raise HTTPException(status_code=422, detail="仅工作经历、实习经历与项目经历支持单条润色")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)

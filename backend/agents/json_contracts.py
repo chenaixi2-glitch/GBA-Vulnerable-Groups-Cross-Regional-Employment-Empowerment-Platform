@@ -93,7 +93,7 @@ class QuestionOutput(BaseModel):
 class ExperienceRemovalOutput(BaseModel):
     id: str = ""
     fact_id: str = ""
-    section_type: str = ""  # internship | project | award | paper | skill | education
+    section_type: str = ""  # work | internship | project | award | paper | skill | education
     title: str = ""
     reason: str = ""
     priority: str = "recommended"  # recommended | optional
@@ -169,10 +169,10 @@ def normalize_resume_generation_payload(data: Any) -> Any:
         return data
     payload = dict(data)
 
-    # Mis-nest: {"summary": {"skills": [...], "internships": []}, ...}
+    # Mis-nest: {"summary": {"skills": [...], "works": [], "internships": []}, ...}
     summary = payload.get("summary")
     if isinstance(summary, dict):
-        for key in ("skills", "internships", "projects", "awards", "papers", "language", "section_order"):
+        for key in ("skills", "works", "internships", "projects", "awards", "papers", "language", "section_order"):
             if key in summary and (key not in payload or payload.get(key) in (None, "", [], {})):
                 payload[key] = summary.get(key)
         payload["summary"] = (
@@ -200,6 +200,7 @@ def normalize_resume_generation_payload(data: Any) -> Any:
 
     for key, prefix in (
         ("skills", "skill"),
+        ("works", "work"),
         ("internships", "internship"),
         ("projects", "project"),
         ("awards", "award"),
@@ -244,6 +245,7 @@ class ResumeGenerationOutput(BaseModel):
     profile: ResumeProfileOutput = Field(default_factory=ResumeProfileOutput)
     summary: str = ""
     skills: list[ResumeSectionItemOutput] = Field(default_factory=list)
+    works: list[ResumeSectionItemOutput] = Field(default_factory=list)
     internships: list[ResumeSectionItemOutput] = Field(default_factory=list)
     projects: list[ResumeSectionItemOutput] = Field(default_factory=list)
     awards: list[ResumeSectionItemOutput] = Field(default_factory=list)

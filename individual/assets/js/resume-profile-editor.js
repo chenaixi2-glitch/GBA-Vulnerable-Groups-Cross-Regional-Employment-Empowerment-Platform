@@ -25,7 +25,7 @@ const ProfileEditor = {
     /** Module/resume translate UI omitted — output fixed to English; keep markup paths but do not show. */
     moduleTranslateEnabled: false,
 
-    SECTION_ORDER: ['education', 'skill', 'internship', 'project', 'award', 'paper', 'custom'],
+    SECTION_ORDER: ['education', 'skill', 'work', 'internship', 'project', 'award', 'paper', 'custom'],
 
     getSectionConfig() {
         return {
@@ -39,10 +39,15 @@ const ProfileEditor = {
                 icon: 'fa-tools',
                 addLabel: profileUiText('resume.profileEditor.addSkill', 'Add skill'),
             },
-            internship: {
-                label: profileUiText('resume.profileEditor.sectionWork', 'Work / Internship'),
+            work: {
+                label: profileUiText('resume.profileEditor.sectionWork', 'Work Experience'),
                 icon: 'fa-briefcase',
-                addLabel: profileUiText('resume.profileEditor.addExperience', 'Add experience'),
+                addLabel: profileUiText('resume.profileEditor.addWork', 'Add work experience'),
+            },
+            internship: {
+                label: profileUiText('resume.profileEditor.sectionInternship', 'Internships'),
+                icon: 'fa-user-graduate',
+                addLabel: profileUiText('resume.profileEditor.addInternship', 'Add internship'),
             },
             project: {
                 label: profileUiText('resume.profileEditor.sectionProjects', 'Projects'),
@@ -101,6 +106,9 @@ const ProfileEditor = {
         ensureSection('education', () => {
             if (!(this.draft.education || []).length) this.addEducation(true);
         });
+        ensureSection('works', () => {
+            if (!this.hasModuleType('work')) this.addModule('work', true);
+        });
         ensureSection('internships', () => {
             if (!this.hasModuleType('internship')) this.addModule('internship', true);
         });
@@ -114,7 +122,10 @@ const ProfileEditor = {
             if (!this.hasModuleType('award')) this.addModule('award', true);
         });
         ensureSection('experience_any', () => {
-            if (!this.hasModuleType('internship')) this.addModule('internship', true);
+            if (!this.hasModuleType('work') && !this.hasModuleType('internship')
+                && !this.hasModuleType('project') && !this.hasModuleType('custom')) {
+                this.addModule('work', true);
+            }
         });
         ensureSection('volunteer', () => {
             if (!this.hasModuleType('custom')) this.addModule('custom', true);
@@ -980,6 +991,7 @@ const ProfileEditor = {
             });
         };
         pushSection(resumeContentJson.skills, 'skill');
+        pushSection(resumeContentJson.works, 'work');
         pushSection(resumeContentJson.internships, 'internship');
         pushSection(resumeContentJson.projects, 'project');
         pushSection(resumeContentJson.awards, 'award');
@@ -1113,7 +1125,7 @@ const ProfileEditor = {
     },
 
     isPolishableModuleType(type) {
-        return type === 'internship' || type === 'project';
+        return type === 'work' || type === 'internship' || type === 'project';
     },
 
     renderModuleActionButtons(moduleId, moduleType, options = {}) {

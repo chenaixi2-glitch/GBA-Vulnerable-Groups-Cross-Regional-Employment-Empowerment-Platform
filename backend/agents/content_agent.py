@@ -101,12 +101,14 @@ from log import get_logger, elapsed_ms, log_stage_timing
 logger = get_logger("agent")
 
 _MODULE_SECTIONS: tuple[tuple[str, str, str], ...] = (
-    ("internships", "internship", "实习/工作经历"),
+    ("works", "work", "工作经历"),
+    ("internships", "internship", "实习经历"),
     ("projects", "project", "项目经历"),
 )
 
 _MODULE_TYPE_TO_SECTION: dict[str, str] = {
     "skill": "skills",
+    "work": "works",
     "internship": "internships",
     "project": "projects",
     "award": "awards",
@@ -115,7 +117,8 @@ _MODULE_TYPE_TO_SECTION: dict[str, str] = {
 }
 
 _SECTION_LABELS: dict[str, str] = {
-    "internship": "实习/工作经历",
+    "work": "工作经历",
+    "internship": "实习经历",
     "project": "项目经历",
 }
 
@@ -574,6 +577,7 @@ def _build_resume_from_parsed(
         profile=resume_profile,
         summary=parsed.summary,
         skills=_parse_items(parsed.skills),
+        works=_parse_items(getattr(parsed, "works", None) or []),
         internships=_parse_items(parsed.internships),
         projects=_parse_items(parsed.projects),
         awards=_parse_items(parsed.awards),
@@ -1029,7 +1033,7 @@ async def _generate_resume_from_profile_async(
     skeleton_instruction = (
         f"{edit_instruction}\n\n"
         "【分步生成-第1步】仅生成 profile、summary、skills、awards、papers、section_order；"
-        "internships 与 projects 必须返回空数组 []。"
+        "works、internships 与 projects 必须返回空数组 []。"
     ).strip()
     # Use compact skeleton prompt — full RESUME_GENERATION_PROMPT often overruns output budgets.
     prompt = RESUME_SKELETON_PROMPT.format(
@@ -1048,6 +1052,7 @@ async def _generate_resume_from_profile_async(
         session_id=state.session_id,
     )
     # Defense: never keep leaked experience bodies from the skeleton step.
+    parsed.works = []
     parsed.internships = []
     parsed.projects = []
     parsed = _backfill_profile_from_candidate(parsed, state)
@@ -1219,6 +1224,7 @@ def _resume_content_to_generation_output(resume: ResumeContent) -> ResumeGenerat
         ),
         summary=resume.summary,
         skills=_section_items_to_output(resume.skills),
+        works=_section_items_to_output(resume.works),
         internships=_section_items_to_output(resume.internships),
         projects=_section_items_to_output(resume.projects),
         awards=_section_items_to_output(resume.awards),
@@ -1344,12 +1350,16 @@ async def _incremental_polish_from_existing_async(
 
     experience_facts: list[Fact] = []
     for fact in facts_for_ids(state, fact_ids):
-        if fact.type in ("internship", "project"):
+        if fact.type in ("work", "internship", "project"):
             experience_facts.append(fact)
     # Include brand-new clarified experience facts even if id list was section-only
     if needs_experience_polish(fact_ids, sections, state):
         seen = {f.id for f in experience_facts}
-        for fact_type, section_key in (("internship", "internships"), ("project", "projects")):
+        for fact_type, section_key in (
+            ("work", "works"),
+            ("internship", "internships"),
+            ("project", "projects"),
+        ):
             if section_key not in sections and not any(f.type == fact_type for f in experience_facts):
                 continue
             for fact in facts_of_type(state, fact_type):
@@ -1687,12 +1697,19 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
             }
     elif intent == "content_edit" and state.resume_content_json:
         lang = guard_lang
+        edit_resume = state.resume_content_json
+        # A4 optimize: compact skills/awards before LLM so length pressure is reduced
+        # before any experience shortening; renderer then tightens typography.
+        if _wants_a4_skills_awards_compact(state.user_message):
+            edit_resume, pre_compact = compact_skills_and_awards(edit_resume.model_copy(deep=True))
+            if pre_compact:
+                logger.info("A4 optimize: compacted skills/awards before content_edit LLM")
         prompt = RESUME_SECTION_UPDATE_PROMPT.format(
             RESUME_A4_ONE_PAGE_CONSTRAINTS=resume_constraints_for_state(state),
             RESUME_EXPERIENCE_POLISH_GUIDELINES=RESUME_EXPERIENCE_POLISH_GUIDELINES,
             target_language_label=language_label(lang),
             resume_output_language_instruction=resume_output_language_instruction(lang),
-            current_resume_json=state.resume_content_json.model_dump_json(indent=2),
+            current_resume_json=edit_resume.model_dump_json(indent=2),
             job_json=_job_json_for_prompt(state, compact=True),
             edit_instruction=state.user_message,
         )
@@ -1806,6 +1823,7 @@ async def content_node_async(state: CopilotState) -> dict[str, Any]:
                 "language": resume_content.meta.language,
                 "skill_count": len(resume_content.skills),
                 "project_count": len(resume_content.projects),
+                "work_count": len(resume_content.works),
                 "internship_count": len(resume_content.internships),
                 "content_hash": resume_content.meta.content_hash,
                 "modular_generation": should_use_modular_generation(

@@ -79,6 +79,7 @@ const AI_TASK_LABELS_EN = {
     resume_edit: 'resume editing',
     resume_translate: 'resume translation',
     resume_render: 'resume rendering',
+    resume_optimize_a4: 'A4 resume optimization',
     resume_module_translate: 'resume module translation',
     resume_module_polish: 'resume module polishing',
     interview_custom: 'custom interview answer generation',
@@ -1232,8 +1233,9 @@ class MockAPIService {
         ];
         const sections = [
             [L('factTypeSkill', 'Skills'), content.skills],
-            [L('factTypeProject', 'Projects'), content.projects],
+            [L('factTypeWork', 'Work Experience'), content.works],
             [L('factTypeInternship', 'Internships'), content.internships],
+            [L('factTypeProject', 'Projects'), content.projects],
             [L('factTypeAward', 'Awards'), content.awards],
             [L('factTypePaper', 'Publications'), content.papers],
         ];
@@ -2873,17 +2875,34 @@ class APIClient {
     }
 
     /**
-     * Optimize resume content via chat (A4 one-page constraint)
+     * Optimize resume for one A4 page via dedicated pipeline
+     * (Skills compact → page check → typography → experience compress).
+     * Does not go through chat / content_agent.
      */
-    async optimizeResume(instruction = 'Optimize my resume for the target job. Polish experience entries to highlight role-relevant achievements, add quantified results only when supported by my profile facts, follow industry-standard conventions, and never fabricate numbers. Shorten content to fit one A4 page while keeping key achievements.', targetContext = null) {
+    async optimizeResume(targetContext = null) {
         try {
+            if (!this.sessionId) {
+                throw new Error(apiT('errors.noActiveSession', 'No active session'));
+            }
             await this.syncTargetJobContext(targetContext);
-            const fullInstruction = this._appendTargetContextToInstruction(instruction, targetContext);
-            const response = await this.chat(fullInstruction, [], { language: this.getChatLanguage() });
-            return response;
+            await this.ensureBackendAvailable();
+            if (this.useMockMode) {
+                this.state.hasResume = true;
+                return {
+                    reply_message: apiT('mock.optimizedA4Demo', 'Resume optimized for one A4 page (demo mode).'),
+                    triggered_agents: ['a4_optimize'],
+                    resume_content_json: this.mockService.profilePayload(),
+                    resume_html: { html: this.mockService.mockResumeHtmlForLanguage(this.getChatLanguage()), version: 2 },
+                    language: this.getChatLanguage(),
+                };
+            }
+            const response = await this.client.post('/resume/optimize-a4', {
+                session_id: this.sessionId,
+            });
+            return response.data;
         } catch (error) {
             console.error('Resume optimization error:', error);
-            throw error;
+            throw this.handleError(error);
         }
     }
 

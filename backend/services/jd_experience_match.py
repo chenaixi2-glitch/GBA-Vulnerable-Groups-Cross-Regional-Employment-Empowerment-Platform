@@ -16,7 +16,7 @@ from log import get_logger
 
 logger = get_logger("agent")
 
-_EXPERIENCE_TYPES = ("internship", "project")
+_EXPERIENCE_TYPES = ("work", "internship", "project")
 _EMBED_BATCH_SIZE = 8
 
 

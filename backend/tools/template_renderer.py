@@ -176,6 +176,12 @@ def _build_template_variables(content: "ResumeContent", config: "RenderConfig") 
                 {_render_inline_items(content.skills, 'skill')}
             </section>
         """ if content.skills else "",
+        "works": f"""
+            <section class="section section-works">
+                <h2>{labels["works"]}</h2>
+                {_render_items(content.works, 'work')}
+            </section>
+        """ if content.works else "",
         "internships": f"""
             <section class="section section-internships">
                 <h2>{labels["internships"]}</h2>
@@ -342,6 +348,12 @@ def _build_zh_template_variables(content: "ResumeContent", config: "RenderConfig
                 {education_html}
             </section>
         """ if education_html else "",
+        "works": f"""
+            <section class="section section-works">
+                <h2>{labels["works"]}</h2>
+                {_render_zh_items(content.works)}
+            </section>
+        """ if content.works else "",
         "internships": f"""
             <section class="section section-internships">
                 <h2>{labels["internships"]}</h2>

@@ -64,6 +64,15 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
             "updated_at": ""
         }}
     ],
+    "works": [
+        {{
+            "id": "work_1",
+            "title": "公司名称 — 岗位名称（时间）",
+            "content": "STAR 格式描述：情境、任务、行动、结果。仅使用画像中已有的量化数据增强说服力，无数据时用客观描述。",
+            "source_refs": [],
+            "updated_at": ""
+        }}
+    ],
     "internships": [
         {{
             "id": "intern_1",
@@ -93,18 +102,19 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
     ],
     "papers": [],
     "language": "{target_language}",
-    "section_order": ["根据目标岗位与候选人背景，列出要展示的版块 id，如 summary、education、internships、projects、skills、awards；英文/葡语须含 profile，有教育内容时必须单独列出 education（不得并入 profile）"]
+    "section_order": ["根据目标岗位与候选人背景，列出要展示的版块 id，如 summary、education、works、internships、projects、skills、awards；英文/葡语须含 profile，有教育内容时必须单独列出 education（不得并入 profile）"]
 }}
 
 注意：
 1. 不得捏造用户未提供的事实；量化数据必须来自候选人画像，缺数据时用客观描述替代，禁止编造数字
 2. 根据 JD 的技术栈和关键词优化经历排序与措辞，使每段经历更贴合目标岗位
 3. section_order 由你根据岗位匹配度决定正文版块先后；仅列出有内容的版块；education 与 profile 必须分开列出。英文/葡语/繁中：profile（姓名与联系方式）必须位于 section_order 第一位，禁止把 skills/awards 排到 profile 之前
-4. 项目和实习描述使用 STAR 格式，在画像有据时补充量化成果，突出与目标岗位相关的技能与产出
+4. 工作、实习与项目描述使用 STAR 格式，在画像有据时补充量化成果，突出与目标岗位相关的技能与产出
 5. Skills 保持列表式、禁止段落润色：按类别合并为 ≤4 组；title=分类名；content=逗号分隔条目（技能名，可选带熟练度，如「Python（熟练）」/「Python (Proficient)」）。禁止使用场景长句或职责描述。可从画像中补入用户确实具备且 JD 需要的技能；禁止添加画像未体现的技能；画像已有简洁写法时只做归类、按 JD 排序与必要补全，不得扩写成段落
 6. 篇幅须严格符合上文 A4 页数约束，宁可精简内容也不要超长
 7. 所有正文字段须统一使用目标语言，禁止中英混用
-8. 即使部分字段为空，也必须返回合法 JSON 对象
+8. works 仅放正式/兼职工作；internships 仅放实习；禁止把同一条经历同时写入两个版块
+9. 即使部分字段为空，也必须返回合法 JSON 对象
 """
 
 RESUME_SKELETON_PROMPT = """你是简历内容生成专家。这是分步生成的第 1 步：只生成轻量骨架 JSON。
@@ -115,7 +125,7 @@ RESUME_SKELETON_PROMPT = """你是简历内容生成专家。这是分步生成�
 
 硬性要求（输出必须极短，完成 token 预算约 4096，禁止写满）：
 - 只生成：profile、summary、skills、awards、papers、language、section_order
-- internships 与 projects 必须是空数组 []，不要写任何经历正文（后续步骤会单独润色）
+- works、internships 与 projects 必须是空数组 []，不要写任何经历正文（后续步骤会单独润色）
 - summary 最多 2 句
 - Skills（列表式，禁止段落润色）：
   - 最多 4 组；title=分类名（如 Languages / Tools）；content=逗号分隔条目
@@ -146,12 +156,13 @@ RESUME_SKELETON_PROMPT = """你是简历内容生成专家。这是分步生成�
   }},
   "summary": "",
   "skills": [{{"id": "skill_1", "title": "", "content": "", "source_refs": [], "updated_at": ""}}],
+  "works": [],
   "internships": [],
   "projects": [],
   "awards": [],
   "papers": [],
   "language": "{target_language}",
-  "section_order": ["summary", "education", "skills", "internships", "projects"]
+  "section_order": ["summary", "education", "skills", "works", "internships", "projects"]
 }}
 """
 

@@ -24,6 +24,7 @@ function hasUsableResume(resume) {
 
   if (Array.isArray(content.skills) && content.skills.length) return true;
   if (Array.isArray(content.facts) && content.facts.length) return true;
+  if (Array.isArray(content.works) && content.works.length) return true;
   if (Array.isArray(content.internships) && content.internships.length) return true;
   if (Array.isArray(content.education) && content.education.length) return true;
   if (Array.isArray(content.experience) && content.experience.length) return true;

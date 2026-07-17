@@ -14,6 +14,10 @@ NON_TRANSLATABLE_FIELDS = frozenset({
 # Default field order per module type (matches profile extraction prompt).
 MODULE_FIELD_ORDER: dict[str, list[str]] = {
     "education": ["school", "major", "degree", "start_date", "end_date"],
+    "work": [
+        "company", "role", "title", "start_date", "end_date",
+        "tech_stack", "responsibilities", "achievements",
+    ],
     "internship": [
         "company", "role", "title", "start_date", "end_date",
         "tech_stack", "responsibilities", "achievements",
@@ -28,6 +32,13 @@ MODULE_FIELD_ORDER: dict[str, list[str]] = {
     "custom": ["title", "content"],
 }
 
+# Employment entries share company/role field layout (work + internship).
+_EMPLOYMENT_TYPES = frozenset({"work", "internship"})
+
+
+def is_employment_type(module_type: str) -> bool:
+    return module_type in _EMPLOYMENT_TYPES
+
 
 def _empty_fields(module_type: str) -> dict[str, Any]:
     order = MODULE_FIELD_ORDER.get(module_type, MODULE_FIELD_ORDER["custom"])
@@ -38,21 +49,21 @@ def _empty_fields(module_type: str) -> dict[str, Any]:
 
 
 def normalize_experience_fields(module_type: str, fields: dict[str, Any]) -> dict[str, Any]:
-    """Normalize internship/project fields after LLM extraction.
+    """Normalize work/internship/project fields after LLM extraction.
 
     Profile extraction often puts the job title in ``title`` and leaves ``role``
     empty. The editor and resume export only display ``role``, so copy ``title``
     into ``role`` when company is already set and role is missing.
     """
     out = dict(fields or {})
-    if module_type not in ("internship", "project"):
+    if module_type not in ("work", "internship", "project"):
         return out
 
     company = str(out.get("company") or "").strip()
     role = str(out.get("role") or "").strip()
     title = str(out.get("title") or out.get("name") or "").strip()
 
-    if module_type == "internship":
+    if is_employment_type(module_type):
         if not role and title and company and title != company:
             out["role"] = title
         elif not company and title and not role:
@@ -93,22 +104,25 @@ def parse_fact_content(module_type: str, content: str, *, title: str = "") -> di
                 for key, value in parsed.items():
                     if key in fields or key not in ("source_refs", "updated_at"):
                         fields[key] = _coerce_field_value(key, value)
-                if module_type in ("internship", "project") and fields.get("content") and not fields.get("responsibilities"):
+                if module_type in ("work", "internship", "project") and fields.get("content") and not fields.get("responsibilities"):
                     fields["responsibilities"] = fields.pop("content")
             elif isinstance(parsed, list) and parsed and isinstance(parsed[0], dict):
                 fields.update({k: _coerce_field_value(k, v) for k, v in parsed[0].items()})
         except (json.JSONDecodeError, TypeError):
             if module_type == "skill":
                 fields["skill"] = text
-            elif module_type in ("internship", "project"):
-                fields["company" if module_type == "internship" else "title"] = parsed_title or text.split("\n", 1)[0]
+            elif is_employment_type(module_type):
+                fields["company"] = parsed_title or text.split("\n", 1)[0]
+                fields["responsibilities"] = text.split("\n", 1)[1].strip() if "\n" in text else text
+            elif module_type == "project":
+                fields["title"] = parsed_title or text.split("\n", 1)[0]
                 fields["responsibilities"] = text.split("\n", 1)[1].strip() if "\n" in text else text
             else:
                 fields["content"] = text
     elif parsed_title:
         if module_type == "skill":
             fields["skill"] = parsed_title
-        elif module_type == "internship":
+        elif is_employment_type(module_type):
             fields["company"] = parsed_title
         elif module_type == "project":
             fields["title"] = parsed_title
@@ -174,11 +188,11 @@ def enrich_title_with_dates(title: str, fields: dict[str, Any] | None) -> str:
 def derive_title_and_content(module_type: str, fields: dict[str, Any]) -> tuple[str, str]:
     """Map structured fields to resume SectionItem title/content.
 
-    Internship/project titles follow: Company — Role (start – end).
-    Dates come from editor/profile fields so PDF preview shows internship time.
+    Work/internship/project titles follow: Company — Role (start – end).
+    Dates come from editor/profile fields so PDF preview shows employment time.
     """
     fields = normalize_experience_fields(module_type, fields)
-    if module_type == "internship":
+    if is_employment_type(module_type):
         company = str(fields.get("company") or "").strip()
         role = str(fields.get("role") or "").strip()
         # Fallback: job title may still only exist in title after older facts.
@@ -309,7 +323,7 @@ def apply_polish_to_fields(
         polished_title
         and ("—" in polished_title or "–" in polished_title or "(" in polished_title)
     )
-    if module_type == "internship":
+    if is_employment_type(module_type):
         if polished_title and not composite:
             merged["company"] = polished_title
         elif polished_title and not merged.get("company"):

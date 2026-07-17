@@ -33,17 +33,18 @@ const FORMAT_CHECK_FIELD_TARGETS = {
     resident_type: '#profile-resident-type',
     experience_any: '#profile-editor-body',
     education: '[data-section-type="education"]',
+    works: '[data-section-type="work"]',
     internships: '[data-section-type="internship"]',
     projects: '[data-section-type="project"]',
     skills: '[data-section-type="skill"]',
     awards: '[data-section-type="award"]',
     summary: '#profile-summary',
     volunteer: '[data-section-type="custom"]',
-    metrics: '[data-section-type="internship"]',
+    metrics: '[data-section-type="work"], [data-section-type="internship"]',
     language_certs: '[data-section-type="skill"]',
     employer_type: '#profile-supplement-section',
     page_limit: '#profile-editor-body',
-    wording: '[data-section-type="internship"]',
+    wording: '[data-section-type="work"], [data-section-type="internship"]',
 };
 
 const FORMAT_CHECK_HINT_ROW_BG = {
@@ -66,8 +67,9 @@ const CHECKLIST_ITEM_FALLBACKS = {
     zh_political: { label: 'Political status', message: 'Some employers may ask for political status', suggestion: 'Party member / League member / Non-party' },
     zh_political_strict: { label: 'Political status', message: 'SOE/public-sector roles often require political status', suggestion: 'Party member / League member / Non-party' },
     zh_education: { label: 'Education', message: 'Education follows personal info on Chinese resumes', suggestion: 'School, major, degree, dates' },
-    zh_experience: { label: 'Work / Internship', message: 'Work or internship experience is optional but strengthens your profile', suggestion: 'Reverse chronological order with duties and results' },
-    zh_experience_any: { label: 'Experience (at least one)', message: 'At least one of: internship, work, campus, or volunteer experience is required', suggestion: 'Add work/internship, project (campus), or other (volunteer) entries' },
+    zh_experience: { label: 'Internships', message: 'Internship experience is optional but strengthens your profile', suggestion: 'Reverse chronological order with duties and results' },
+    zh_work: { label: 'Work Experience', message: 'Work experience is optional but strengthens your profile', suggestion: 'Reverse chronological order with duties and results' },
+    zh_experience_any: { label: 'Experience (at least one)', message: 'At least one of: internship, work, campus, or volunteer experience is required', suggestion: 'Add work, internship, project (campus), or other (volunteer) entries' },
     zh_projects: { label: 'Projects', message: 'Project experience is strongly recommended for tech roles', suggestion: 'Highlight stack and your contribution' },
     zh_skills: { label: 'Skills / Certificates', message: 'List skills and certifications', suggestion: 'e.g. CET-6, Computer Level 2, Python' },
     zh_awards: { label: 'Awards', message: 'Honors strengthen your profile', suggestion: 'List 2–4 key awards' },
@@ -91,8 +93,9 @@ const CHECKLIST_ITEM_FALLBACKS = {
     en_forbid_dob: { label: 'Date of birth', message: 'Date of birth must not appear on Western English resumes', suggestion: 'Remove date of birth from the resume' },
     en_summary: { label: 'Professional Summary', message: 'A 3–4 line Professional Summary is recommended', suggestion: 'Summarize core skills and results; avoid vague traits like “hardworking”' },
     en_summary_long: { label: 'Summary too long', message: 'Keep the summary to 3–4 lines', suggestion: 'Trim to key selling points and keep the resume within the page limit' },
-    en_experience: { label: 'Work Experience', message: 'Work or internship experience is optional but strengthens your profile', suggestion: 'Start bullets with action verbs and quantify results' },
-    en_experience_any: { label: 'Experience (at least one)', message: 'At least one of: internship, work, campus, or volunteer experience is required', suggestion: 'Add work/internship, project (campus), or other (volunteer) entries' },
+    en_work: { label: 'Work Experience', message: 'Work experience is optional but strengthens your profile', suggestion: 'Start bullets with action verbs and quantify results' },
+    en_experience: { label: 'Internships', message: 'Internship experience is optional but strengthens your profile', suggestion: 'Start bullets with action verbs and quantify results' },
+    en_experience_any: { label: 'Experience (at least one)', message: 'At least one of: internship, work, campus, or volunteer experience is required', suggestion: 'Add work, internship, project (campus), or other (volunteer) entries' },
     en_quantified: { label: 'Quantified results', message: 'Experience bullets should use action verbs and metrics', suggestion: 'Action verb + task + measurable result' },
     en_education: { label: 'Education', message: 'Education follows work experience', suggestion: 'Degree in English, e.g. B.S. in Computer Science' },
     en_skills: { label: 'Skills', message: 'Skills section after experience, compact list', suggestion: 'Group by category, comma-separated' },
@@ -134,7 +137,8 @@ const CHECKLIST_FIELD_I18N = {
     resident_type: { label: ['resume.checklist.residentType', 'Resident type'], message: ['resume.checklist.residentTypeMsg', 'Cross-border resumes require resident status'] },
     experience_any: { label: ['resume.checklist.experienceAny', 'Experience (at least one)'], message: ['resume.checklist.experienceAnyMsg', 'At least one of internship, work, campus, or volunteer experience is required'] },
     education: { label: ['resume.checklist.education', 'Education'], message: ['resume.checklist.educationMsg', 'Education section is required'] },
-    internships: { label: ['resume.checklist.work', 'Work / Internship'], message: ['resume.checklist.workMsg', 'Work or internship experience is required'] },
+    works: { label: ['resume.checklist.works', 'Work Experience'], message: ['resume.checklist.worksMsg', 'Work experience strengthens your profile'] },
+    internships: { label: ['resume.checklist.internships', 'Internships'], message: ['resume.checklist.internshipsMsg', 'Internship experience strengthens your profile'] },
     projects: { label: ['resume.checklist.projects', 'Projects'], message: ['resume.checklist.projectsMsg', 'Project experience is recommended for tech roles'] },
     skills: { label: ['resume.checklist.skills', 'Skills / Certificates'], message: ['resume.checklist.skillsMsg', 'List skills and certifications'] },
     awards: { label: ['resume.checklist.awards', 'Awards'], message: ['resume.checklist.awardsMsg', 'Honors and awards strengthen your profile'] },
@@ -506,7 +510,7 @@ function applyFormatCheckToProfileEditor(checklist) {
 function draftHasAnyExperienceTrack(draft) {
     const modules = draft?.modules || [];
     const hasContent = (module) => String(module.content || module.title || '').trim();
-    return modules.some((m) => m.type === 'internship' && hasContent(m))
+    return modules.some((m) => (m.type === 'work' || m.type === 'internship') && hasContent(m))
         || modules.some((m) => m.type === 'project' && hasContent(m))
         || modules.some((m) => m.type === 'custom' && hasContent(m));
 }

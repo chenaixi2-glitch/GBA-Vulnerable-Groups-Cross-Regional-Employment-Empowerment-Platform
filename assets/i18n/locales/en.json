@@ -35,6 +35,7 @@
       "resume_edit": "resume editing",
       "resume_translate": "resume translation",
       "resume_render": "resume rendering",
+      "resume_optimize_a4": "A4 resume optimization",
       "resume_module_translate": "resume module translation",
       "resume_module_polish": "resume module polishing",
       "interview_custom": "custom interview answer generation",

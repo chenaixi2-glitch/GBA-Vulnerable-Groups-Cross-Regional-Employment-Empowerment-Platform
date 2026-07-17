@@ -19,6 +19,15 @@ const ResumeProfileFields = {
             { key: 'responsibilities', labelKey: 'fieldResponsibilities', widget: 'textarea', rows: 4, fullWidth: true },
             { key: 'achievements', labelKey: 'fieldAchievements', widget: 'textarea', rows: 3, fullWidth: true },
         ],
+        work: [
+            { key: 'company', labelKey: 'fieldCompany', widget: 'text', fullWidth: true },
+            { key: 'role', labelKey: 'fieldRole', widget: 'text' },
+            { key: 'start_date', labelKey: 'startDate', widget: 'text' },
+            { key: 'end_date', labelKey: 'endDate', widget: 'text' },
+            { key: 'tech_stack', labelKey: 'fieldTechStack', widget: 'tags', fullWidth: true },
+            { key: 'responsibilities', labelKey: 'fieldResponsibilities', widget: 'textarea', rows: 4, fullWidth: true },
+            { key: 'achievements', labelKey: 'fieldAchievements', widget: 'textarea', rows: 3, fullWidth: true },
+        ],
         project: [
             { key: 'title', labelKey: 'fieldProjectTitle', widget: 'text', fullWidth: true },
             { key: 'role', labelKey: 'fieldRole', widget: 'text' },
@@ -148,6 +157,10 @@ const ResumeProfileFields = {
         return typeof value === 'string' ? value : String(value);
     },
 
+    isEmploymentType(type) {
+        return type === 'work' || type === 'internship';
+    },
+
     parseFactContent(type, content, title = '') {
         const fields = this.defaultFieldsForType(type);
         const text = (content || '').trim();
@@ -160,7 +173,7 @@ const ResumeProfileFields = {
                     Object.keys(parsed).forEach((key) => {
                         fields[key] = this.coerceFieldValue(key, parsed[key]);
                     });
-                    if ((type === 'internship' || type === 'project') && fields.content && !fields.responsibilities) {
+                    if ((this.isEmploymentType(type) || type === 'project') && fields.content && !fields.responsibilities) {
                         fields.responsibilities = fields.content;
                         delete fields.content;
                     }
@@ -168,7 +181,7 @@ const ResumeProfileFields = {
             } catch (_) {
                 if (type === 'skill') {
                     fields.skill = text;
-                } else if (type === 'internship') {
+                } else if (this.isEmploymentType(type)) {
                     fields.company = parsedTitle || text.split('\n', 1)[0];
                     fields.responsibilities = text.includes('\n') ? text.split('\n').slice(1).join('\n').trim() : text;
                 } else if (type === 'project') {
@@ -180,15 +193,15 @@ const ResumeProfileFields = {
             }
         } else if (parsedTitle) {
             if (type === 'skill') fields.skill = parsedTitle;
-            else if (type === 'internship') fields.company = parsedTitle;
+            else if (this.isEmploymentType(type)) fields.company = parsedTitle;
             else if (type === 'project') fields.title = parsedTitle;
             else fields.title = parsedTitle;
         }
 
-        if (type === 'internship' && !fields.company && fields.title && !fields.role) {
+        if (this.isEmploymentType(type) && !fields.company && fields.title && !fields.role) {
             fields.company = fields.title;
         }
-        if (type === 'internship' && fields.company && fields.title
+        if (this.isEmploymentType(type) && fields.company && fields.title
             && !fields.role && fields.title !== fields.company) {
             // Profile LLM often puts job title in `title` and leaves `role` empty.
             fields.role = fields.title;
@@ -252,7 +265,7 @@ const ResumeProfileFields = {
             }
             return title ? `${title} (${range})` : range;
         };
-        if (type === 'internship') {
+        if (this.isEmploymentType(type)) {
             const company = String(fields.company || '').trim();
             let role = String(fields.role || '').trim();
             const titleField = String(fields.title || '').trim();
@@ -398,7 +411,7 @@ const ResumeProfileFields = {
             };
         }
         const merged = { ...currentFields };
-        if (type === 'internship') {
+        if (this.isEmploymentType(type)) {
             if (result.title) merged.company = result.title;
             if (result.content) merged.responsibilities = result.content;
         } else if (type === 'project') {

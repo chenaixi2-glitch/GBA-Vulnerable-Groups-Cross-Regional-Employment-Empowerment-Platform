@@ -5,7 +5,8 @@
     const TYPE_LABELS = {
         education: 'Education',
         skill: 'Skill',
-        internship: 'Experience',
+        work: 'Work Experience',
+        internship: 'Internship',
         project: 'Project',
         award: 'Award',
         paper: 'Paper',
@@ -15,7 +16,8 @@
     const TYPE_LABELS_ZH = {
         education: '教育',
         skill: '技能',
-        internship: '实习/工作',
+        work: '工作',
+        internship: '实习',
         project: '项目',
         award: '奖项',
         paper: '论文',

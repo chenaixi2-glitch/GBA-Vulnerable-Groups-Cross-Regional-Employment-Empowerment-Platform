@@ -9,7 +9,7 @@ from typing import Any
 
 from workflow.state import CandidateProfile, Fact, Gap, Question
 
-_EXPERIENCE_TYPES = frozenset({"internship", "project"})
+_EXPERIENCE_TYPES = frozenset({"work", "internship", "project"})
 _QUANT_PATTERNS = [
     re.compile(p, re.IGNORECASE)
     for p in (
@@ -203,7 +203,13 @@ def supplement_quantification_gaps_and_questions(
                 resolution_source="quantification_probe",
             ))
 
-        target_field = "internships" if (fact.type or "").lower() == "internship" else "projects"
+        fact_type = (fact.type or "").lower()
+        if fact_type == "work":
+            target_field = "works"
+        elif fact_type == "internship":
+            target_field = "internships"
+        else:
+            target_field = "projects"
         questions.append(Question(
             id=f"q_quant_{uuid.uuid4().hex[:10]}",
             question=q_tpl.format(label=label),

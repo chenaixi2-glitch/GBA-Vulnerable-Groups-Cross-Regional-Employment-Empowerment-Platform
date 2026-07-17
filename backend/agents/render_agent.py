@@ -8,7 +8,11 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
-from agents.content_agent import _merge_profile_extras_from_candidate, compress_resume_for_page_limit_async
+from agents.content_agent import (
+    _merge_profile_extras_from_candidate,
+    _wants_a4_skills_awards_compact,
+    compress_resume_for_page_limit_async,
+)
 from agents.json_contracts import RenderInstructionOutput
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.render_instruction import RENDER_INSTRUCTION_PROMPT
@@ -80,14 +84,33 @@ async def _fit_resume_to_page_limit_async(
     state: CopilotState,
     resume_content,
     render_config: RenderConfig,
+    *,
+    allow_content_fit: bool = True,
 ) -> tuple[Any, str, RenderConfig, int | None, int, int, bool]:
-    """Render HTML; adjust typography, then compact skills/awards, then LLM-compress if needed."""
+    """Render HTML and fit to page limit.
+
+    When ``allow_content_fit`` is True (Optimize A4):
+      1) compact skills/awards text
+      2) tighten typography/spacing
+      3) LLM-compress (e.g. experience) if still over
+    Preview/export pass ``allow_content_fit=False`` → typography only, editor text unchanged.
+    """
     fit_t0 = time.perf_counter()
     page_limit = render_config.page_limit or resolve_page_limit(state)
     compress_attempts = 0
     typography_steps = 0
-    layout_compact_attempted = False
     layout_compact_applied = False
+
+    # Skills/Awards compact must run before typography so spacing is measured on compacted text.
+    if allow_content_fit:
+        compact_content, changed = compact_skills_and_awards(resume_content)
+        if changed:
+            logger.info(
+                "A4 fit: compacting items within skills/awards before typography (page_limit=%d)",
+                page_limit,
+            )
+            resume_content = compact_content
+            layout_compact_applied = True
 
     while True:
         render_config, html_str, page_count, steps_used = fit_typography_to_page_limit(
@@ -101,19 +124,14 @@ async def _fit_resume_to_page_limit_async(
         if page_count is None or page_count <= page_limit:
             break
 
-        # Priority: compact items within skills / within awards before LLM compression
-        if not layout_compact_attempted:
-            layout_compact_attempted = True
-            compact_content, changed = compact_skills_and_awards(resume_content)
-            if changed:
-                logger.info(
-                    "Resume PDF is %d pages (limit %d) — compacting items within skills/awards",
-                    page_count,
-                    page_limit,
-                )
-                resume_content = compact_content
-                layout_compact_applied = True
-                continue
+        # Preview/export: spacing & font only — never rewrite body text.
+        if not allow_content_fit:
+            logger.info(
+                "Resume PDF is %d pages (limit %d) — content fit disabled, keeping editor text",
+                page_count,
+                page_limit,
+            )
+            break
 
         if compress_attempts >= _MAX_PAGE_FIT_ATTEMPTS:
             break
@@ -154,6 +172,7 @@ async def _fit_resume_to_page_limit_async(
         compress_attempts=compress_attempts,
         typography_steps=typography_steps,
         layout_compact=layout_compact_applied,
+        allow_content_fit=allow_content_fit,
     )
 
     return (
@@ -167,9 +186,28 @@ async def _fit_resume_to_page_limit_async(
     )
 
 
-async def render_node_async(state: CopilotState) -> dict[str, Any]:
-    """Resume Render Agent 异步节点函数。"""
-    logger.info("Resume Render Agent started for session %s", state.session_id)
+async def render_node_async(
+    state: CopilotState,
+    *,
+    allow_content_fit: bool | None = None,
+) -> dict[str, Any]:
+    """Resume Render Agent 异步节点函数。
+
+    Content rewriting (skills/awards compact + LLM compress) only runs when
+    ``allow_content_fit`` is True. Preview/export pass False. Graph default is
+    True only for explicit A4/one-page optimize content_edit requests.
+    """
+    if allow_content_fit is None:
+        allow_content_fit = (
+            state.current_intent == "content_edit"
+            and _wants_a4_skills_awards_compact(state.user_message or "")
+        )
+
+    logger.info(
+        "Resume Render Agent started for session %s (allow_content_fit=%s)",
+        state.session_id,
+        allow_content_fit,
+    )
 
     intent = state.current_intent
     render_config = state.render_config
@@ -237,6 +275,7 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
         state,
         resume_content,
         render_config,
+        allow_content_fit=allow_content_fit,
     )
     checksum = hashlib.sha256(html_str.encode()).hexdigest()[:16]
 
@@ -250,13 +289,14 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
     )
 
     logger.info(
-        "HTML rendered v%d (checksum=%s, pdf_pages=%s, compress_attempts=%d, typography_steps=%d, layout_compact=%s)",
+        "HTML rendered v%d (checksum=%s, pdf_pages=%s, compress_attempts=%d, typography_steps=%d, layout_compact=%s, allow_content_fit=%s)",
         resume_html.version,
         checksum,
         page_count,
         compress_attempts,
         typography_steps,
         layout_compact_applied,
+        allow_content_fit,
     )
 
     content_changed = compress_attempts > 0 or layout_compact_applied
@@ -279,6 +319,11 @@ async def render_node_async(state: CopilotState) -> dict[str, Any]:
             msg = f"简历已渲染并{detail}至 {page_count} 页（上限 {page_limit} 页，{layout_label}）。"
         else:
             msg = f"简历已渲染；PDF 仍为 {page_count or '?'} 页，超出 {page_limit} 页上限，建议手动优化。"
+    elif not allow_content_fit and page_count is not None and page_count > page_limit:
+        msg = (
+            f"简历已渲染（PDF {page_count} 页，超出 {page_limit} 页上限，{layout_label}）；"
+            f"已优先调整字号与边距，正文未改写。如需压至一页请点击「优化（A4）」。"
+        )
     elif typography_steps > 0 and page_count is not None:
         msg = f"简历已渲染（PDF {page_count} 页，{layout_label}，已自动调整字号与边距）。"
     elif page_count is not None:

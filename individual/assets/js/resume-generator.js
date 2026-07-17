@@ -80,7 +80,8 @@ function parsedFactTypeLabel(type) {
     const map = {
         education: ['factTypeEducation', 'Education'],
         skill: ['factTypeSkill', 'Skills'],
-        internship: ['factTypeInternship', 'Internship / Work'],
+        work: ['factTypeWork', 'Work Experience'],
+        internship: ['factTypeInternship', 'Internships'],
         project: ['factTypeProject', 'Project'],
         award: ['factTypeAward', 'Award'],
         paper: ['factTypePaper', 'Publication'],
@@ -2228,8 +2229,9 @@ async function onResumeLanguageSelected(language) {
 window.onResumeLanguageSelected = onResumeLanguageSelected;
 
 /**
- * Optimize resume content (A4 one-page).
- * Gap analysis / clarification already ran before first generate — do not re-ask here.
+ * Optimize resume content (A4 one-page) via dedicated pipeline.
+ * Order: Skills/Awards compact → page check → typography → experience compress.
+ * Does not use chat / content_agent.
  */
 async function optimizeResume() {
     if (!resumeGenerated) {
@@ -2243,23 +2245,13 @@ async function optimizeResume() {
         const targetContext = typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null;
         await apiClient.syncTargetJobContext(targetContext);
 
+        if (typeof ProfileEditor !== 'undefined' && typeof ProfileEditor.persistDraft === 'function') {
+            await ProfileEditor.persistDraft();
+        }
+
         Utils.showLoading(uiT('resume.toast.optimizingA4', 'Optimizing resume for one A4 page — usually about 2–3 minutes…'));
         const beforeSnapshot = await captureCurrentResumeSnapshot();
-        const quantClause = typeof buildQuantificationEditClause === 'function'
-            ? buildQuantificationEditClause('')
-            : 'Add quantified results only when supported by my profile facts; never fabricate numbers.';
-        const optimizeInstruction = (
-            'Optimize my resume for the target job so it fits on one A4 page. '
-            + 'PRIORITY when over length: inside the Skills section and inside the Awards section separately, '
-            + 'put each entry on one line when possible (e.g. "Languages: Python, SQL"), merge multi-line/'
-            + 'bullet lists into comma-separated text, drop filler phrases, and shorten wording; '
-            + 'do NOT merge the Skills section with the Awards section. '
-            + 'Only then shorten experience bullets if still needed. '
-            + 'Polish experience entries to highlight role-relevant achievements, follow industry-standard conventions, '
-            + 'and keep key achievements. '
-            + quantClause
-        );
-        const response = await apiClient.optimizeResume(optimizeInstruction, targetContext);
+        const response = await apiClient.optimizeResume(targetContext);
 
         let optimizedHtml = response.resume_html?.html || '';
         if (response.resume_content_json) {

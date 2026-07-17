@@ -67,7 +67,7 @@ def build_skeleton_profile_dict(state: CopilotState) -> dict[str, Any]:
     experience_index = [
         {"id": f.id, "type": f.type, "title_hint": _experience_title_hint(f)}
         for f in profile.facts
-        if f.type in {"internship", "project"}
+        if f.type in {"work", "internship", "project"}
     ]
     return {
         "profile_basic": profile.profile_basic.model_dump(),

@@ -30,7 +30,7 @@ class Material(BaseModel):
 
 class Fact(BaseModel):
     id: str
-    type: str  # skill / project / internship / award / paper
+    type: str  # skill / project / work / internship / award / paper
     content: str
     source_refs: list[str] = Field(default_factory=list)
     updated_at: str = ""
@@ -84,6 +84,7 @@ class ResumeContent(BaseModel):
     profile: ResumeProfile = Field(default_factory=ResumeProfile)
     summary: str = ""
     skills: list[SectionItem] = Field(default_factory=list)
+    works: list[SectionItem] = Field(default_factory=list)
     internships: list[SectionItem] = Field(default_factory=list)
     projects: list[SectionItem] = Field(default_factory=list)
     awards: list[SectionItem] = Field(default_factory=list)
@@ -108,7 +109,7 @@ class RenderConfig(BaseModel):
     page_margin: PageMargin = Field(default_factory=PageMargin)
     section_order: list[str] = Field(
         default_factory=lambda: [
-            "profile", "summary", "education", "internships", "projects", "skills", "awards",
+            "profile", "summary", "education", "works", "internships", "projects", "skills", "awards",
         ]
     )
     dense_mode: bool = True

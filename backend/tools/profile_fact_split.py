@@ -11,8 +11,8 @@ from agents.json_contracts import ProfileFactOutput
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff\u3400-\u4dbf]")
 _LATIN_WORD_RE = re.compile(r"[a-zA-Z]{3,}")
-_EXPERIENCE_TYPES = frozenset({"internship", "project", "award", "paper"})
-_NESTED_ENTRY_KEYS = ("experiences", "items", "entries", "jobs", "projects", "internships")
+_EXPERIENCE_TYPES = frozenset({"work", "internship", "project", "award", "paper"})
+_NESTED_ENTRY_KEYS = ("experiences", "items", "entries", "jobs", "projects", "works", "internships")
 _EXPERIENCE_BLOCK_RE = re.compile(
     r"(?m)^(?=[^\n].*(?:\d{4}[\./\-年]\d{1,2}|Present|至今|—|-\s*[A-Z]))"
 )
