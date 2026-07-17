@@ -165,3 +165,52 @@ class TestExportEdgeCases:
         with zipfile.ZipFile(BytesIO(docx)) as zf:
             xml = zf.read("word/document.xml").decode("utf-8")
             assert "Test User" in xml
+
+    def test_docx_headings_and_links_use_black_not_theme_blue(self):
+        """Word Heading styles / hyperlinks default to blue; resume should match PDF #111."""
+        html = (
+            "<h1>Test User</h1>"
+            '<h2>Skills</h2>'
+            '<p>See <a href="https://example.com">portfolio</a></p>'
+        )
+        docx = html_to_docx_bytes(html)
+        with zipfile.ZipFile(BytesIO(docx)) as zf:
+            xml = zf.read("word/document.xml").decode("utf-8")
+        assert "0000EE" not in xml
+        assert 'w:val="111111"' in xml or "111111" in xml
+        assert "Test User" in xml and "Skills" in xml
+        assert "portfolio" in xml
+
+    def test_docx_education_body_not_merged_into_blue_heading(self):
+        """Template uses <h2>+<div>; HtmlToDocx must not glue education into Heading 2."""
+        from docx import Document
+
+        html = """
+        <section class="section section-education">
+            <h2>教育经历</h2>
+            <div class="zh-edu-entry"><div class="zh-edu-head">香港大学 · 金融学 · 2020-2024</div></div>
+        </section>
+        <section class="section section-projects">
+            <h2>项目经历</h2>
+            <div class="zh-entry">
+                <div class="zh-entry-head">合规助手</div>
+                <div class="zh-entry-body"><p>使用 Python 构建内部 FAQ。</p></div>
+            </div>
+        </section>
+        """
+        docx = html_to_docx_bytes(html)
+        doc = Document(BytesIO(docx))
+        texts = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+        styles = [p.style.name for p in doc.paragraphs if p.text.strip()]
+        assert "教育经历" in texts
+        assert any("香港大学" in t for t in texts)
+        # Title and school must be separate paragraphs (not "教育经历香港大学...")
+        assert not any(t.startswith("教育经历") and "香港大学" in t for t in texts)
+        assert all(not name.startswith("Heading") for name in styles)
+        with zipfile.ZipFile(BytesIO(docx)) as zf:
+            xml = zf.read("word/document.xml").decode("utf-8")
+            styles_xml = zf.read("word/styles.xml").decode("utf-8")
+        assert "0000EE" not in xml
+        assert "themeColor" not in xml
+        # Heading style defs should not keep accent theme if referenced
+        assert 'w:val="111111"' in xml or "111111" in styles_xml

@@ -1,4 +1,4 @@
-"""Tests for education edit/delete → resume PDF preview sync."""
+"""Tests for education/module edit → resume PDF preview sync."""
 
 from __future__ import annotations
 
@@ -15,6 +15,22 @@ from workflow.state import (
     ResumeProfile,
     SectionItem,
 )
+
+
+def _internship_draft_module() -> dict:
+    return {
+        "id": "fact_1",
+        "type": "internship",
+        "title": "ACME",
+        "content": "Built APIs",
+        "fields": {
+            "company": "ACME",
+            "role": "Intern",
+            "start_date": "2023-01",
+            "end_date": "2023-06",
+            "responsibilities": "Built APIs",
+        },
+    }
 
 
 def _state_with_two_schools(*, html: str = "<html>old</html>") -> CopilotState:
@@ -59,7 +75,12 @@ def _state_with_two_schools(*, html: str = "<html>old</html>") -> CopilotState:
                 ],
             ),
             internships=[
-                SectionItem(id="fact_1", title="ACME", content="Built APIs", source_refs=["fact_1"]),
+                SectionItem(
+                    id="fact_1",
+                    title="ACME — Intern (2023-01 – 2023-06)",
+                    content="Built APIs",
+                    source_refs=["fact_1"],
+                ),
             ],
         ),
         resume_html=ResumeHtml(html=html),
@@ -93,7 +114,7 @@ def test_deleting_education_updates_content_and_clears_html():
                 "end_date": "2022",
             },
         }],
-        "modules": [],
+        "modules": [_internship_draft_module()],
     }
 
     updated, changed = apply_draft_sections_to_resume_state(state, draft)
@@ -102,6 +123,7 @@ def test_deleting_education_updates_content_and_clears_html():
     assert len(updated.resume_content_json.profile.education) == 1
     assert updated.resume_content_json.profile.education[0].school == "学校A"
     assert updated.resume_html.html == ""
+    assert len(updated.resume_content_json.internships) == 1
 
 
 def test_unchanged_education_keeps_cached_html():
@@ -126,7 +148,7 @@ def test_unchanged_education_keeps_cached_html():
                 "end_date": "2024",
             },
         ],
-        "modules": [],
+        "modules": [_internship_draft_module()],
     }
 
     updated, changed = apply_draft_sections_to_resume_state(state, draft)
@@ -134,3 +156,49 @@ def test_unchanged_education_keeps_cached_html():
     assert changed is False
     assert updated.resume_html.html == "<html>keep</html>"
     assert len(updated.resume_content_json.profile.education) == 2
+
+
+def test_editing_internship_updates_content_dates_and_clears_html():
+    state = _state_with_two_schools(html="<html>stale</html>")
+    draft = {
+        "profile_basic": {"name": "张三", "email": "", "phone": "", "city": "", "extras": {}},
+        "education": [
+            {
+                "id": "edu_a",
+                "school": "学校A",
+                "major": "CS",
+                "degree": "Bachelor",
+                "start_date": "2018",
+                "end_date": "2022",
+            },
+            {
+                "id": "edu_b",
+                "school": "学校B",
+                "major": "EE",
+                "degree": "Master",
+                "start_date": "2022",
+                "end_date": "2024",
+            },
+        ],
+        "modules": [{
+            "id": "fact_1",
+            "type": "internship",
+            "title": "ACME",
+            "content": "Built APIs",
+            "fields": {
+                "company": "ACME Corp",
+                "role": "Backend Intern",
+                "start_date": "2024-01",
+                "end_date": "2024-08",
+                "responsibilities": "Shipped v2 APIs",
+            },
+        }],
+    }
+
+    updated, changed = apply_draft_sections_to_resume_state(state, draft)
+
+    assert changed is True
+    assert updated.resume_html.html == ""
+    item = updated.resume_content_json.internships[0]
+    assert item.title == "ACME Corp — Backend Intern (2024-01 – 2024-08)"
+    assert "Shipped v2 APIs" in item.content

@@ -30,12 +30,27 @@
             font-family: 'Noto Sans SC', sans-serif;
             scroll-behavior: smooth;
         }
+
+        html {
+            scroll-padding-top: calc(var(--corp-nav-h, 7.5rem) + 0.5rem);
+        }
         
         .hero-section {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            height: 100vh;
+            min-height: 100vh;
+            height: auto;
             position: relative;
             overflow: hidden;
+            box-sizing: border-box;
+            /* 为 fixed 多行页眉留空，避免挡住 Corporate User Dashboard */
+            padding-top: calc(var(--corp-nav-h, 7.5rem) + 1.25rem);
+            padding-bottom: 3rem;
+        }
+
+        #dashboard,
+        #ai-features,
+        #jobs {
+            scroll-margin-top: calc(var(--corp-nav-h, 7.5rem) + 0.75rem);
         }
         
         .hero-wave {
@@ -167,7 +182,6 @@
         /* Responsive Design */
         @media (max-width: 768px) {
             .hero-section {
-                height: auto;
                 min-height: 100vh;
             }
             
@@ -488,80 +502,57 @@
     </style>
 </head>
 <body data-page="corporate">
-    <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md fixed w-full z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center gap-0">
-                <!-- Logo -->
-                <div class="flex items-center shrink-0 mr-6">
-                    <a href="../index.html" class="flex items-center">
-                        <i class="fas fa-handshake text-2xl text-green-600 mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800" data-i18n="home.brandName">GBA Platform</span>
-                    </a>
-                </div>
-
-                <!-- Nav links (desktop) -->
-                <div class="hidden md:flex items-center space-x-6 shrink-0">
-                    <a href="#dashboard" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm" data-i18n="corpPortal.navDashboard">Dashboard</a>
-                    <a href="#ai-features" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm" data-i18n="corpPortal.navHrTools">HR Tools</a>
-                    <a href="#jobs" class="text-gray-600 hover:text-green-600 transition-colors font-medium text-sm" data-i18n="corpPortal.navMyJobs">My Jobs</a>
-                </div>
-
-                <!-- Inline scrolling ticker (fills middle space) -->
-                <div class="hidden md:flex flex-1 overflow-hidden mx-4 items-center" style="height:24px;" id="nav-ticker-wrap">
-                    <div class="w-1 h-4 bg-gray-200 rounded-full mr-3 shrink-0"></div>
-                    <div class="overflow-hidden flex-1" style="mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);">
-                        <div id="nav-ticker-track" class="nav-ticker whitespace-nowrap" style="animation:navTicker 38s linear infinite;">
-                            <span class="nav-ticker-item"><i class="fas fa-circle text-green-400" style="font-size:6px;vertical-align:middle;"></i>&nbsp;<span data-i18n="corpPortal.tickerDiversity">85% Diversity Rate — exceeding GBA benchmark</span>&ensp;&ensp;</span>
-                            <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-bolt text-yellow-400"></i>&nbsp;<span data-i18n="corpPortal.tickerAiMatch">AI Matching: 89 new candidate matches today</span>&ensp;&ensp;</span>
-                            <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-map-marker-alt text-blue-400"></i>&nbsp;<span data-i18n="corpPortal.tickerCities">Covering 11 GBA cities: HK · Macau · Shenzhen · Guangzhou · Foshan · Dongguan</span>&ensp;&ensp;</span>
-                            <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-users text-purple-400"></i>&nbsp;<span data-i18n="corpPortal.tickerInclusive">Inclusive hiring: disabilities, elderly 45+, career returners</span>&ensp;&ensp;</span>
-                            <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-circle text-green-400" style="font-size:6px;vertical-align:middle;"></i>&nbsp;<span data-i18n="corpPortal.tickerDiversity">85% Diversity Rate — exceeding GBA benchmark</span>&ensp;&ensp;</span>
-                            <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-bolt text-yellow-400"></i>&nbsp;<span data-i18n="corpPortal.tickerAiMatch">AI Matching: 89 new candidate matches today</span>&ensp;&ensp;</span>
-                            <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-map-marker-alt text-blue-400"></i>&nbsp;<span data-i18n="corpPortal.tickerCities">Covering 11 GBA cities: HK · Macau · Shenzhen · Guangzhou · Foshan · Dongguan</span>&ensp;&ensp;</span>
-                            <span class="nav-ticker-sep">·</span>
-                            <span class="nav-ticker-item">&ensp;<i class="fas fa-users text-purple-400"></i>&nbsp;<span data-i18n="corpPortal.tickerInclusive">Inclusive hiring: disabilities, elderly 45+, career returners</span>&ensp;&ensp;</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right: Language + Account -->
-                <div class="flex items-center space-x-4 shrink-0 ml-auto md:ml-0">
-                    <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium text-sm whitespace-nowrap transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
+    <!-- Navigation Bar：可换行动态排版，不强制单行 -->
+    <nav id="corp-top-nav" class="bg-white shadow-md fixed top-0 left-0 right-0 w-full z-50">
+        <div class="container mx-auto px-4 py-3 flex flex-col gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <a href="../index.html" class="flex items-center gap-2 min-w-0">
+                    <i class="fas fa-handshake text-2xl text-green-600 shrink-0"></i>
+                    <span class="text-lg font-bold text-gray-800" data-i18n="home.brandName">GBA Platform</span>
+                </a>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                     <div id="portal-auth-guest" class="flex items-center space-x-2">
                         <a href="auth.html" class="text-sm text-gray-600 hover:text-green-600 font-medium" data-i18n="portal.login">Log in</a>
                         <a href="auth.html?tab=register" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium" data-i18n="portal.signup">Sign up</a>
                     </div>
-                    <div id="portal-auth-user" class="hidden flex items-center space-x-2">
-                        <div class="text-right hidden lg:block">
-                            <div id="portal-user-name" class="text-sm font-medium text-gray-800"></div>
-                            <div id="portal-user-email" class="text-xs text-gray-500"></div>
+                    <div id="portal-auth-user" class="hidden flex flex-wrap items-center gap-2 sm:gap-3">
+                        <div class="text-right max-w-[12rem]">
+                            <div id="portal-user-name" class="text-sm font-medium text-gray-800 truncate"></div>
+                            <div id="portal-user-email" class="text-xs text-gray-500 truncate"></div>
                         </div>
-                        <a href="company-profile.html" class="text-sm text-green-700 hover:text-green-800 font-medium hidden md:inline" data-i18n="corpPortal.companyProfile">Company profile</a>
+                        <a href="company-profile.html" class="text-sm text-green-700 hover:text-green-800 font-medium" data-i18n="corpPortal.companyProfile">Company profile</a>
                         <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600" data-i18n="corpPortal.logout">Log out</button>
                     </div>
                 </div>
-
-                <!-- Mobile menu button -->
-                <div class="md:hidden ml-3">
-                    <button id="mobile-menu-button" class="text-gray-600 hover:text-green-600 transition-colors">
-                        <i class="fas fa-bars text-2xl"></i>
-                    </button>
-                </div>
             </div>
-            
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2">
-                <a href="#dashboard" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navDashboard">Dashboard</a>
-                <a href="#ai-features" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navHrTools">HR Tools</a>
-                <a href="#jobs" class="block py-2 text-gray-600 hover:text-green-600 transition-colors" data-i18n="corpPortal.navMyJobs">My Jobs</a>
-                <a href="donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
+
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 border-t border-gray-100">
+                <a href="#dashboard" class="text-sm text-gray-600 hover:text-green-600 transition-colors font-medium" data-i18n="corpPortal.navDashboard">Dashboard</a>
+                <a href="#ai-features" class="text-sm text-gray-600 hover:text-green-600 transition-colors font-medium" data-i18n="corpPortal.navHrTools">HR Tools</a>
+                <a href="#jobs" class="text-sm text-gray-600 hover:text-green-600 transition-colors font-medium" data-i18n="corpPortal.navMyJobs">My Jobs</a>
+                <a href="donation-legal.html" class="text-sm text-amber-700 hover:text-amber-800 font-medium transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
+            </div>
+
+            <div class="overflow-hidden items-center min-w-0" style="height:22px;" id="nav-ticker-wrap">
+                <div class="overflow-hidden w-full" style="mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);">
+                    <div id="nav-ticker-track" class="nav-ticker whitespace-nowrap" style="animation:navTicker 38s linear infinite;">
+                        <span class="nav-ticker-item"><i class="fas fa-circle text-green-400" style="font-size:6px;vertical-align:middle;"></i>&nbsp;<span data-i18n="corpPortal.tickerDiversity">85% Diversity Rate — exceeding GBA benchmark</span>&ensp;&ensp;</span>
+                        <span class="nav-ticker-sep">·</span>
+                        <span class="nav-ticker-item">&ensp;<i class="fas fa-bolt text-yellow-400"></i>&nbsp;<span data-i18n="corpPortal.tickerAiMatch">AI Matching: 89 new candidate matches today</span>&ensp;&ensp;</span>
+                        <span class="nav-ticker-sep">·</span>
+                        <span class="nav-ticker-item">&ensp;<i class="fas fa-map-marker-alt text-blue-400"></i>&nbsp;<span data-i18n="corpPortal.tickerCities">Covering 11 GBA cities: HK · Macau · Shenzhen · Guangzhou · Foshan · Dongguan</span>&ensp;&ensp;</span>
+                        <span class="nav-ticker-sep">·</span>
+                        <span class="nav-ticker-item">&ensp;<i class="fas fa-users text-purple-400"></i>&nbsp;<span data-i18n="corpPortal.tickerInclusive">Inclusive hiring: disabilities, elderly 45+, career returners</span>&ensp;&ensp;</span>
+                        <span class="nav-ticker-sep">·</span>
+                        <span class="nav-ticker-item">&ensp;<i class="fas fa-circle text-green-400" style="font-size:6px;vertical-align:middle;"></i>&nbsp;<span data-i18n="corpPortal.tickerDiversity">85% Diversity Rate — exceeding GBA benchmark</span>&ensp;&ensp;</span>
+                        <span class="nav-ticker-sep">·</span>
+                        <span class="nav-ticker-item">&ensp;<i class="fas fa-bolt text-yellow-400"></i>&nbsp;<span data-i18n="corpPortal.tickerAiMatch">AI Matching: 89 new candidate matches today</span>&ensp;&ensp;</span>
+                        <span class="nav-ticker-sep">·</span>
+                        <span class="nav-ticker-item">&ensp;<i class="fas fa-map-marker-alt text-blue-400"></i>&nbsp;<span data-i18n="corpPortal.tickerCities">Covering 11 GBA cities: HK · Macau · Shenzhen · Guangzhou · Foshan · Dongguan</span>&ensp;&ensp;</span>
+                        <span class="nav-ticker-sep">·</span>
+                        <span class="nav-ticker-item">&ensp;<i class="fas fa-users text-purple-400"></i>&nbsp;<span data-i18n="corpPortal.tickerInclusive">Inclusive hiring: disabilities, elderly 45+, career returners</span>&ensp;&ensp;</span>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -584,8 +575,8 @@
                 </a>
             </div>
             <p class="text-white/90 text-sm mt-6 max-w-2xl mx-auto">
-                <span data-i18n="corpPortal.heroToolsLead">AI-powered tools — Resume Screening, Interview Preparation &amp; Learning Path — available in</span>
-                <a href="#ai-features" class="underline underline-offset-2 decoration-white/50 font-semibold hover:text-white" data-i18n="corpPortal.heroHrToolsLink">HR Tools</a><span data-i18n="corpPortal.heroToolsMid">, same intelligence layer as </span><a href="../individual/portal.html" class="underline decoration-white/40 hover:text-white" data-i18n="corpPortal.heroCandidatePortalLink">the candidate portal</a><span data-i18n="corpPortal.heroToolsEnd">.</span>
+                <span data-i18n="corpPortal.heroToolsLead">Employer tools — Candidate Screening, Interview Kits &amp; Talent Matching — available in</span>
+                <a href="#ai-features" class="underline underline-offset-2 decoration-white/50 font-semibold hover:text-white" data-i18n="corpPortal.heroHrToolsLink">HR Tools</a><span data-i18n="corpPortal.heroToolsEnd">.</span>
             </p>
             
             <div class="mt-12 flex flex-wrap justify-center gap-4">
@@ -787,34 +778,34 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                <!-- Tool 1: Resume Generator -->
+                <!-- Tool 1: Candidate Screening -->
                 <div class="hr-tool-card bg-white rounded-2xl shadow-sm border border-gray-100 p-7 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
-                        <i class="fas fa-file-lines"></i>
+                        <i class="fas fa-user-check"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolResumeTitle">Smart Resume Generator</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolResumeDesc">Upload and analyse candidate CVs with AI-powered JD alignment, skills gap detection, and blind-screening export for inclusive hiring.</p>
-                    <a href="../individual/demo-resume-generator.html" class="hr-tool-start"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolResumeTitle">Candidate Screening</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolResumeDesc">Rank applicants against your JD, surface skill gaps, and enable blind screening so shortlists focus on capability—not demographics.</p>
+                    <a href="#" class="hr-tool-start" data-corp-modal="screening-modal"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
-                <!-- Tool 2: Interview Prep -->
+                <!-- Tool 2: HR Interview Tools -->
                 <div class="hr-tool-card bg-white rounded-2xl shadow-sm border border-gray-100 p-7 hover:border-violet-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-600 to-purple-500 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
-                        <i class="fas fa-comments"></i>
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolInterviewTitle">Interview Preparation</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolInterviewDesc">Generate structured question packs, calibrate tone &amp; scoring rubrics, and simulate inclusive interview panels for your hiring managers.</p>
-                    <a href="../individual/demo-interview.html" class="hr-tool-start" data-require-premium-access><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolInterviewTitle">HR Interview Kits</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolInterviewDesc">Build structured question packs, scoring rubrics and inclusive panel guides for hiring managers—not candidate mock interviews.</p>
+                    <a href="#" class="hr-tool-start" data-require-premium-access data-corp-modal="interview-tools-modal"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
-                <!-- Tool 3: Learning Path -->
+                <!-- Tool 3: Talent Matching -->
                 <div class="hr-tool-card bg-white rounded-2xl shadow-sm border border-gray-100 p-7 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-500 text-white flex items-center justify-center text-2xl mb-5 shadow-md">
-                        <i class="fas fa-route"></i>
+                        <i class="fas fa-people-arrows"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolLearningTitle">Personalized Learning Path</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolLearningDescLong">Preview role-specific upskilling curricula generated for candidates from their declared experience—helping you close talent gaps faster.</p>
-                    <a href="../individual/demo-learning-path.html" class="hr-tool-start"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
+                    <h3 class="text-lg font-bold mb-2 text-gray-900" data-i18n="corpPortal.toolLearningTitle">AI Talent Matching</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5" data-i18n="corpPortal.toolLearningDescLong">Match open roles to qualified GBA candidates by skills, location and experience—with optional blind recruitment filters.</p>
+                    <a href="#" class="hr-tool-start" data-corp-modal="talent-modal"><span data-i18n="corpPortal.start">Start</span> <i class="fas fa-arrow-right text-sm"></i></a>
                 </div>
 
                 <!-- Tool 4: Accessible Workplace Audit -->
@@ -1482,6 +1473,9 @@
     <script>
         // Execute after page loads
         document.addEventListener('DOMContentLoaded', function() {
+            syncCorpNavOffset();
+            window.addEventListener('resize', syncCorpNavOffset);
+
             // Initialize 3D background
             initThreeJsBackground();
             
@@ -1607,11 +1601,18 @@
         
         function initAccessibility() {}
         
-        // Initialize mobile menu
+        // Keep hero / anchors clear of the fixed multi-row nav
+        function syncCorpNavOffset() {
+            var nav = document.getElementById('corp-top-nav');
+            if (!nav) return;
+            document.documentElement.style.setProperty('--corp-nav-h', nav.offsetHeight + 'px');
+        }
+
+        // Initialize mobile menu (no-op: nav now uses wrap layout)
         function initMobileMenu() {
             const mobileMenuButton = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-menu');
-            
+            if (!mobileMenuButton || !mobileMenu) return;
             mobileMenuButton.addEventListener('click', () => {
                 mobileMenu.classList.toggle('hidden');
             });
@@ -1634,7 +1635,25 @@
         
         // Initialize modal boxes
         function initModals() {
-            // Modal functionality is handled by the openModal and closeModal functions
+            document.querySelectorAll('[data-corp-modal]').forEach(function (el) {
+                el.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    var modalId = el.getAttribute('data-corp-modal');
+                    if (!modalId) return;
+
+                    if (el.hasAttribute('data-require-premium-access') && window.PlatformAccess) {
+                        try {
+                            var access = await PlatformAccess.fetchAccess();
+                            var loggedIn = !!(access && access.reason !== 'not_logged_in');
+                            if (loggedIn && !access.has_premium_access) {
+                                PlatformAccess.showAccessModal(access, { premium: true });
+                                return;
+                            }
+                        } catch (err) { /* allow open if access check fails */ }
+                    }
+                    openModal(modalId);
+                });
+            });
         }
         
         // Modal functions
@@ -2190,7 +2209,7 @@
             }
             PortalAuth.initPortalAuth({ portal: 'corporate', requireAuth: false });
             PlatformAccess.guardFeatureLinks('[data-require-access]');
-            PlatformAccess.guardPremiumFeatureLinks('[data-require-premium-access]');
+            PlatformAccess.guardPremiumFeatureLinks('[data-require-premium-access]:not([data-corp-modal])');
             try {
                 const access = await PlatformAccess.fetchAccess();
                 renderPortalAccessBanner(access);

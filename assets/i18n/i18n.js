@@ -135,7 +135,9 @@
         '请输入有效的捐款金额（大于 0，不限上限）': 'Please enter a valid donation amount (greater than 0).',
         '单次捐款金额超出上限': 'Donation amount exceeds the maximum limit.',
         '用户不存在': 'User not found.',
-        '请先完善个人资料（年龄、性别、收入等）': 'Please complete your profile (age, gender, income, etc.) first.'
+        '请先完善个人资料（年龄、性别、收入等）': 'Please complete your profile (age, gender, income, etc.) first.',
+        'Please save a resume before applying.': 'Please save a resume before applying.',
+        '请先保存简历后再投递。': 'Please save a resume before applying.'
     };
 
     function getLang() {

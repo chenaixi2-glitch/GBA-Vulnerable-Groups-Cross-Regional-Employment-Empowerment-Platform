@@ -8,7 +8,7 @@ from api.draft_utils import draft_to_profile, profile_to_draft
 from tools.module_field_schema import (
     build_translation_module_json,
     derive_title_and_content,
-    fields_to_fact_content,
+    enrich_title_with_dates,
     merge_translated_fields,
     parse_fact_content,
     translatable_fields,
@@ -72,6 +72,7 @@ def test_draft_roundtrip_structured_internship():
     parsed = json.loads(profile.facts[0].content)
     assert parsed["company"] == "ACME"
     assert parsed["role"] == "Intern"
+    assert parsed["start_date"] == "2023-01"
 
 
 def test_translatable_fields_skip_dates():
@@ -112,11 +113,55 @@ def test_merge_translated_fields_includes_unknown_keys():
     original = {"company": "ACME", "location": "Hong Kong", "start_date": "2023-01"}
     translated = {"company": "ACME Corp", "location": "香港"}
     merged = merge_translated_fields(original, translated)
+    assert merged["company"] == "ACME Corp"
+    assert merged["location"] == "香港"
+    assert merged["start_date"] == "2023-01"
+
+
 def test_derive_title_and_content_from_internship_fields():
     title, content = derive_title_and_content("internship", {
         "company": "ACME",
         "role": "Intern",
         "responsibilities": "Built APIs",
     })
-    assert title == "ACME"
+    assert title == "ACME — Intern"
     assert "Built APIs" in content
+    assert "Intern" not in content  # role is in the title head
+
+
+def test_parse_fact_promotes_title_to_role_when_role_empty():
+    """Profile LLM often stores job title in `title` and leaves `role` blank."""
+    fields = parse_fact_content(
+        "internship",
+        json.dumps({
+            "title": "Web3 Product Development",
+            "company": "VSystems",
+            "role": "",
+            "start_date": "2026-03",
+            "end_date": "2025-05",
+            "responsibilities": "Built coupon module",
+        }),
+    )
+    assert fields["company"] == "VSystems"
+    assert fields["role"] == "Web3 Product Development"
+    title, _ = derive_title_and_content("internship", fields)
+    assert "Web3 Product Development" in title
+    assert "VSystems" in title
+
+
+def test_derive_title_includes_internship_dates():
+    title, content = derive_title_and_content("internship", {
+        "company": "ACME",
+        "role": "Intern",
+        "start_date": "2023-01",
+        "end_date": "2023-06",
+        "responsibilities": "Built APIs",
+    })
+    assert title == "ACME — Intern (2023-01 – 2023-06)"
+    assert "Built APIs" in content
+
+
+def test_enrich_title_with_dates_skips_when_already_present():
+    fields = {"start_date": "2023-01", "end_date": "2023-06"}
+    assert enrich_title_with_dates("ACME (2023-01 – 2023-06)", fields) == "ACME (2023-01 – 2023-06)"
+    assert enrich_title_with_dates("ACME", fields) == "ACME (2023-01 – 2023-06)"

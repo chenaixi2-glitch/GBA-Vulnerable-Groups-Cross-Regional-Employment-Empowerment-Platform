@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 # Fields that should not be sent to LLM translation (dates, ids, tech names).
@@ -34,6 +35,37 @@ def _empty_fields(module_type: str) -> dict[str, Any]:
     for key in order:
         empty[key] = [] if key == "tech_stack" else ""
     return empty
+
+
+def normalize_experience_fields(module_type: str, fields: dict[str, Any]) -> dict[str, Any]:
+    """Normalize internship/project fields after LLM extraction.
+
+    Profile extraction often puts the job title in ``title`` and leaves ``role``
+    empty. The editor and resume export only display ``role``, so copy ``title``
+    into ``role`` when company is already set and role is missing.
+    """
+    out = dict(fields or {})
+    if module_type not in ("internship", "project"):
+        return out
+
+    company = str(out.get("company") or "").strip()
+    role = str(out.get("role") or "").strip()
+    title = str(out.get("title") or out.get("name") or "").strip()
+
+    if module_type == "internship":
+        if not role and title and company and title != company:
+            out["role"] = title
+        elif not company and title and not role:
+            # Legacy: company-only extraction stored the employer in title.
+            out["company"] = title
+        elif not company and title and role and title != role:
+            out["company"] = title
+    elif module_type == "project":
+        if not title and company:
+            out["title"] = company
+        # role stays as-is for projects (person's role on the project)
+
+    return out
 
 
 def _coerce_field_value(key: str, value: Any) -> Any:
@@ -83,12 +115,7 @@ def parse_fact_content(module_type: str, content: str, *, title: str = "") -> di
         else:
             fields["title"] = parsed_title
 
-    if module_type == "internship" and not fields.get("company") and fields.get("title"):
-        fields["company"] = fields["title"]
-    if module_type == "project" and not fields.get("title") and fields.get("company"):
-        fields["title"] = fields["company"]
-
-    return fields
+    return normalize_experience_fields(module_type, fields)
 
 
 def fields_to_fact_content(module_type: str, fields: dict[str, Any]) -> str:
@@ -110,24 +137,84 @@ def fields_to_fact_content(module_type: str, fields: dict[str, Any]) -> str:
     return json.dumps(clean, ensure_ascii=False)
 
 
+def format_date_range(start: Any = None, end: Any = None) -> str:
+    """Normalize start/end into a display date range for resume titles."""
+    start_s = str(start or "").strip()
+    end_s = str(end or "").strip()
+    if start_s and end_s:
+        return f"{start_s} – {end_s}"
+    return start_s or end_s
+
+
+def title_already_has_dates(title: str, fields: dict[str, Any] | None) -> bool:
+    """True when title already includes the structured start/end dates."""
+    text = str(title or "")
+    fields = fields or {}
+    start = str(fields.get("start_date") or fields.get("date") or "").strip()
+    end = str(fields.get("end_date") or "").strip()
+    if start and start in text:
+        return True
+    if end and end in text:
+        return True
+    return False
+
+
+def enrich_title_with_dates(title: str, fields: dict[str, Any] | None) -> str:
+    """Append (start – end) when structured dates exist and title lacks them."""
+    fields = fields or {}
+    date_range = format_date_range(fields.get("start_date") or fields.get("date"), fields.get("end_date"))
+    head = str(title or "").strip()
+    if not date_range:
+        return head
+    if title_already_has_dates(head, fields):
+        return head
+    return f"{head} ({date_range})" if head else date_range
+
+
 def derive_title_and_content(module_type: str, fields: dict[str, Any]) -> tuple[str, str]:
-    """Map structured fields to resume SectionItem title/content."""
+    """Map structured fields to resume SectionItem title/content.
+
+    Internship/project titles follow: Company — Role (start – end).
+    Dates come from editor/profile fields so PDF preview shows internship time.
+    """
+    fields = normalize_experience_fields(module_type, fields)
     if module_type == "internship":
-        title = str(fields.get("company") or fields.get("title") or "").strip()
+        company = str(fields.get("company") or "").strip()
+        role = str(fields.get("role") or "").strip()
+        # Fallback: job title may still only exist in title after older facts.
+        title_field = str(fields.get("title") or "").strip()
+        if not role and title_field and title_field != company:
+            role = title_field
+        if not company and title_field and title_field != role:
+            company = title_field
+        if company and role:
+            head = f"{company} — {role}"
+        else:
+            head = company or role
+        title = enrich_title_with_dates(head, fields)
         parts = [
-            str(fields.get("role") or "").strip(),
             str(fields.get("responsibilities") or "").strip(),
             str(fields.get("achievements") or "").strip(),
         ]
+        # Keep role in body only when it was not folded into the title head.
+        if role and not company:
+            parts.insert(0, role)
         content = "\n\n".join(p for p in parts if p)
         return title, content
     if module_type == "project":
-        title = str(fields.get("title") or fields.get("name") or "").strip()
+        name = str(fields.get("title") or fields.get("name") or "").strip()
+        role = str(fields.get("role") or "").strip()
+        if name and role:
+            head = f"{name} — {role}"
+        else:
+            head = name or role
+        title = enrich_title_with_dates(head, fields)
         parts = [
-            str(fields.get("role") or "").strip(),
             str(fields.get("responsibilities") or "").strip(),
             str(fields.get("achievements") or "").strip(),
         ]
+        if role and not name:
+            parts.insert(0, role)
         content = "\n\n".join(p for p in parts if p)
         return title, content
     if module_type == "skill":
@@ -136,6 +223,7 @@ def derive_title_and_content(module_type: str, fields: dict[str, Any]) -> tuple[
         context = str(fields.get("context") or fields.get("content") or "").strip()
         return skill, level or context
     title = str(fields.get("title") or fields.get("company") or fields.get("skill") or "").strip()
+    title = enrich_title_with_dates(title, fields)
     content = str(fields.get("content") or fields.get("description") or fields.get("responsibilities") or "").strip()
     return title, content
 
@@ -209,18 +297,35 @@ def apply_polish_to_fields(
     title: str,
     content: str,
 ) -> dict[str, Any]:
-    """Map polished title/content back into structured fields."""
+    """Map polished title/content back into structured fields.
+
+    Display titles may include role/dates (e.g. "ACME — Intern (2023-01 – 2023-06)");
+    do not overwrite structured company/title with that composite string.
+    """
     merged = dict(fields or {})
     polished_title = (title or "").strip()
     polished_content = (content or "").strip()
+    composite = bool(
+        polished_title
+        and ("—" in polished_title or "–" in polished_title or "(" in polished_title)
+    )
     if module_type == "internship":
-        if polished_title:
+        if polished_title and not composite:
             merged["company"] = polished_title
+        elif polished_title and not merged.get("company"):
+            # Fallback: take text before em-dash / parenthesis as company.
+            head = re.split(r"\s*[—–(]", polished_title, maxsplit=1)[0].strip()
+            if head:
+                merged["company"] = head
         if polished_content:
             merged["responsibilities"] = polished_content
     elif module_type == "project":
-        if polished_title:
+        if polished_title and not composite:
             merged["title"] = polished_title
+        elif polished_title and not merged.get("title"):
+            head = re.split(r"\s*[—–(]", polished_title, maxsplit=1)[0].strip()
+            if head:
+                merged["title"] = head
         if polished_content:
             merged["responsibilities"] = polished_content
     else:

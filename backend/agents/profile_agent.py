@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -11,6 +12,7 @@ from agents.json_contracts import ProfileExtractionOutput, ProfilePatchOutput, P
 from models.llm import get_llm, ainvoke_json_with_schema
 from prompts.profile_extraction import PROFILE_EXTRACTION_PROMPT
 from prompts.profile_clarification_patch import PROFILE_CLARIFICATION_PATCH_PROMPT
+from tools.module_field_schema import fields_to_fact_content, parse_fact_content
 from tools.output_language import (
     apply_interview_feedback_language,
     apply_interview_question_language,
@@ -81,24 +83,72 @@ def _extract_clarifications_block(user_message: str) -> str:
     return user_message[user_message.index("CLARIFICATIONS"):].strip()
 
 
+def _normalize_fact_content(fact_type: str, content: str) -> str:
+    """Ensure internship job titles land in role (not only title)."""
+    fields = parse_fact_content(fact_type, content)
+    return fields_to_fact_content(fact_type, fields) or content
+
+
+def _merge_fact_content(existing_content: str, incoming_content: str) -> str:
+    """Deep-merge structured fact JSON so patches do not wipe role/title/dates."""
+    try:
+        old = json.loads(existing_content) if (existing_content or "").strip().startswith("{") else {}
+    except (json.JSONDecodeError, TypeError):
+        old = {}
+    try:
+        new = json.loads(incoming_content) if (incoming_content or "").strip().startswith("{") else {}
+    except (json.JSONDecodeError, TypeError):
+        new = {}
+    if not isinstance(old, dict):
+        old = {}
+    if not isinstance(new, dict) or not new:
+        return incoming_content or existing_content
+    merged = dict(old)
+    for key, value in new.items():
+        if value is None:
+            continue
+        if isinstance(value, str) and not value.strip():
+            # Keep existing non-empty values when patch sends blanks.
+            if str(merged.get(key) or "").strip():
+                continue
+        if isinstance(value, list) and not value and merged.get(key):
+            continue
+        merged[key] = value
+    return json.dumps(merged, ensure_ascii=False)
+
+
 def _merge_fact_updates(existing_facts: list[Fact], updates: list[Any], *, now: str) -> list[Fact]:
     merged = list(existing_facts)
     for fd in updates:
-        fact = Fact(
-            id=fd.id or f"fact_{uuid.uuid4().hex[:8]}",
-            type=fd.type,
-            content=fd.content,
-            source_refs=fd.source_refs or ["user_clarification"],
-            updated_at=now,
-        )
+        fact_id = fd.id or f"fact_{uuid.uuid4().hex[:8]}"
         found = False
         for index, existing in enumerate(merged):
-            if existing.id == fact.id:
-                merged[index] = fact
-                found = True
-                break
+            if existing.id != fact_id:
+                continue
+            fact_type = fd.type or existing.type
+            content = _normalize_fact_content(
+                fact_type,
+                _merge_fact_content(existing.content, fd.content),
+            )
+            merged[index] = Fact(
+                id=fact_id,
+                type=fact_type,
+                content=content,
+                source_refs=fd.source_refs or existing.source_refs or ["user_clarification"],
+                updated_at=now,
+            )
+            found = True
+            break
         if not found:
-            merged.append(fact)
+            fact_type = fd.type
+            content = _normalize_fact_content(fact_type, fd.content)
+            merged.append(Fact(
+                id=fact_id,
+                type=fact_type,
+                content=content,
+                source_refs=fd.source_refs or ["user_clarification"],
+                updated_at=now,
+            ))
     return merged
 
 
@@ -293,18 +343,23 @@ async def profile_node_async(state: CopilotState) -> dict[str, Any]:
     existing_facts = [] if replace_mode else list(existing.facts) if existing else []
     new_facts_data = parsed.facts
     for fd in new_facts_data:
+        content = _normalize_fact_content(fd.type, fd.content)
         fact = Fact(
             id=fd.id or f"fact_{uuid.uuid4().hex[:8]}",
             type=fd.type,
-            content=fd.content,
+            content=content,
             source_refs=fd.source_refs or [material_id],
             updated_at=now,
         )
-        # 检查是否已存在相同 id 的事实，如果有则更新
+        # 检查是否已存在相同 id 的事实，如果有则更新（字段级合并，避免清空岗位名）
         found = False
         for i, ef in enumerate(existing_facts):
             if ef.id == fact.id:
-                existing_facts[i] = fact
+                merged_content = _normalize_fact_content(
+                    fact.type,
+                    _merge_fact_content(ef.content, fact.content),
+                )
+                existing_facts[i] = fact.model_copy(update={"content": merged_content})
                 found = True
                 break
         if not found:

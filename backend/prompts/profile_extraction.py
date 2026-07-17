@@ -59,6 +59,8 @@ PROFILE_EXTRACTION_PROMPT = """你是一个候选人画像构建专家。请从�
 4. education 的 content JSON 格式：{{"school":"","major":"","degree":"","start_date":"","end_date":""}}，每所学校一条
 5. skill 的 content：单个技能名称或 {{"skill":"","level":"","context":""}}，每个技能一条 fact
 6. internship / project 的 content JSON：{{"title":"","company":"","role":"","start_date":"","end_date":"","tech_stack":[],"responsibilities":"","achievements":""}}，每段经历一条
+   - **internship**：company=公司名；**role=岗位名称（必填，如 Intern / 数据分析师 / Web3 Product Development）**；start_date/end_date=起止时间（单独字段，禁止塞进 company）；title 可与 role 相同或留空，**禁止只写 title 而把 role 留空**
+   - **project**：title=项目名；role=本人角色（如 Leader）；日期同样用 start_date/end_date
 7. award / paper 同理，每项一条
 8. 签证类型、居留身份、年龄、性别、籍贯、政治面貌、住址、个人总结等**个人信息补充字段必须写入 profile_basic.extras**，禁止放入 facts（尤其不得标为 award / skill / custom）
 9. 若材料出现 "Visa Status: Student Visa" 或「签证类型：学生签证」，应写入 extras.visa_type="Student Visa"（或对应中文值），不要创建 fact

@@ -47,7 +47,7 @@
                     Application workflow
                 </span>
                 <h1 id="role-title" class="text-3xl md:text-4xl font-bold mb-4" data-i18n="apply.title">Apply for this role</h1>
-                <p id="role-summary" class="text-slate-600 text-lg mb-8" data-i18n="apply.summary">Complete a short skills-first application. Sensitive information can stay hidden until you choose to share it.</p>
+                <p id="role-summary" class="text-slate-600 text-lg mb-8" data-i18n="apply.summary">Confirm the role, optionally add a short note, then submit with your saved resume.</p>
 
                 <div class="grid md:grid-cols-3 gap-4 mb-8">
                     <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
@@ -57,8 +57,8 @@
                     </div>
                     <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
                         <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold mb-3">2</div>
-                        <h3 class="font-semibold mb-1" data-i18n="apply.step2Title">Attach profile</h3>
-                        <p class="text-sm text-slate-600" data-i18n="apply.step2Desc">Use a blind-screening resume or paste key skills.</p>
+                        <h3 class="font-semibold mb-1" data-i18n="apply.step2Title">Use saved resume</h3>
+                        <p class="text-sm text-slate-600" data-i18n="apply.step2Desc">Your account resume is attached automatically.</p>
                     </div>
                     <div class="step-card border border-slate-100 rounded-2xl p-4 bg-slate-50">
                         <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold mb-3">3</div>
@@ -67,40 +67,16 @@
                     </div>
                 </div>
 
+                <div id="resume-status" class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600" data-i18n="apply.resumeChecking">
+                    Checking saved resume…
+                </div>
+
                 <form id="application-form" class="space-y-5">
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <label class="block">
-                            <span class="text-sm font-medium text-slate-700" data-i18n="apply.displayName">Display name</span>
-                            <input required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" data-i18n-placeholder="apply.displayNamePh" placeholder="Your preferred name">
-                        </label>
-                        <label class="block">
-                            <span class="text-sm font-medium text-slate-700" data-i18n="apply.email">Email</span>
-                            <input type="email" required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" data-i18n-placeholder="apply.emailPh" placeholder="you@example.com">
-                        </label>
-                    </div>
                     <label class="block">
-                        <span class="text-sm font-medium text-slate-700" data-i18n="apply.topSkills">Top skills</span>
-                        <input class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" data-i18n-placeholder="apply.topSkillsPh" placeholder="Customer service, Excel, Cantonese">
-                    </label>
-                    <label class="block">
-                        <span class="text-sm font-medium text-slate-700" data-i18n="apply.motivation">Short motivation</span>
+                        <span class="text-sm font-medium text-slate-700"><span data-i18n="apply.motivation">Short motivation</span> <span class="text-slate-400 font-normal" data-i18n="apply.optional">(optional)</span></span>
                         <textarea id="cover_message" rows="5" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" data-i18n-placeholder="apply.motivationPh" placeholder="Share why this role fits your work preferences, skills and schedule."></textarea>
                     </label>
-                    <div class="flex flex-wrap gap-3">
-                        <label class="inline-flex items-center gap-2 rounded-full bg-orange-50 text-orange-700 px-4 py-2 text-sm">
-                            <input type="checkbox" checked>
-                            <span data-i18n="apply.blindScreening">Use blind-screening profile</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 rounded-full bg-amber-50 text-amber-700 px-4 py-2 text-sm">
-                            <input type="checkbox">
-                            <span data-i18n="apply.accessibilitySupport">Request accessibility support</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 px-4 py-2 text-sm">
-                            <input type="checkbox">
-                            <span data-i18n="apply.remoteInterview">Prefer remote interview</span>
-                        </label>
-                    </div>
-                    <button type="submit" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 hover:-translate-y-0.5 transition-all">
+                    <button type="submit" id="apply-submit-btn" disabled class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
                         <span data-i18n="apply.submit">Submit application</span>
                         <i class="fas fa-paper-plane"></i>
                     </button>
@@ -195,6 +171,68 @@
         const params = new URLSearchParams(location.search);
         const jobId = params.get('jobId');
         let currentJob = null;
+        let hasSavedResume = false;
+
+        function setApplyEnabled(enabled) {
+            hasSavedResume = Boolean(enabled);
+            var btn = document.getElementById('apply-submit-btn');
+            if (btn) btn.disabled = !hasSavedResume;
+        }
+
+        function resumeUploadUrl() {
+            var q = jobId ? ('?returnTo=' + encodeURIComponent('apply.html?jobId=' + jobId)) : '';
+            return 'demo-resume-generator.html' + q;
+        }
+
+        async function loadResumeStatus() {
+            const el = document.getElementById('resume-status');
+            if (!el) return;
+            if (!PlatformAPI.getToken()) {
+                setApplyEnabled(false);
+                el.className = 'mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800';
+                el.innerHTML = applyT('apply.resumeLoginHint', 'Please <a href="auth.html" class="underline font-semibold">log in</a> and save a resume before applying.');
+                return;
+            }
+            try {
+                const res = await PlatformAPI.ResumesAPI.getMine();
+                const resume = res && res.data && res.data.resume;
+                const usable = !!(resume && (
+                    (resume.skills_text && String(resume.skills_text).trim()) ||
+                    (resume.content_json && typeof resume.content_json === 'object' && (
+                        (Array.isArray(resume.content_json.skills) && resume.content_json.skills.length) ||
+                        (Array.isArray(resume.content_json.facts) && resume.content_json.facts.length) ||
+                        (Array.isArray(resume.content_json.internships) && resume.content_json.internships.length) ||
+                        (Array.isArray(resume.content_json.education) && resume.content_json.education.length) ||
+                        (Array.isArray(resume.content_json.experience) && resume.content_json.experience.length) ||
+                        (resume.content_json.summary && String(resume.content_json.summary).trim()) ||
+                        (resume.content_json.profile_basic && Object.keys(resume.content_json.profile_basic).length) ||
+                        resume.content_json.candidate_profile ||
+                        resume.content_json.profile
+                    ))
+                ));
+                if (usable) {
+                    setApplyEnabled(true);
+                    el.className = 'mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800';
+                    el.textContent = applyT('apply.resumeReady', 'Your saved resume will be attached automatically.');
+                } else {
+                    setApplyEnabled(false);
+                    el.className = 'mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800';
+                    el.innerHTML = applyT(
+                        'apply.resumeMissing',
+                        'A saved resume is required. Please <a href="{href}" class="underline font-semibold">upload or create a resume</a> first.',
+                        { href: resumeUploadUrl() }
+                    );
+                }
+            } catch (e) {
+                setApplyEnabled(false);
+                el.className = 'mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800';
+                el.innerHTML = applyT(
+                    'apply.resumeMissing',
+                    'A saved resume is required. Please <a href="{href}" class="underline font-semibold">upload or create a resume</a> first.',
+                    { href: resumeUploadUrl() }
+                );
+            }
+        }
 
         async function loadJob() {
             if (!jobId) {
@@ -211,6 +249,7 @@
                     document.getElementById('role-title').textContent = applyT('apply.externalJobTitle', 'External job: {title}', { title: job.title });
                     document.getElementById('role-summary').textContent = applyT('apply.externalJobDesc', 'This job is from a partner site. Please apply on the original website.');
                     document.getElementById('application-form').classList.add('hidden');
+                    document.getElementById('resume-status').classList.add('hidden');
                     const msg = document.getElementById('application-msg');
                     msg.className = 'text-blue-700 font-medium';
                     msg.classList.remove('hidden');
@@ -250,6 +289,16 @@
                 msg.classList.remove('hidden');
                 return;
             }
+            if (!hasSavedResume) {
+                msg.innerHTML = applyT(
+                    'apply.resumeRequired',
+                    'A saved resume is required before applying. <a href="{href}" class="underline font-semibold">Upload or create a resume</a>.',
+                    { href: resumeUploadUrl() }
+                );
+                msg.className = 'text-red-600 font-medium';
+                msg.classList.remove('hidden');
+                return;
+            }
             try {
                 const res = await PlatformAPI.JobsAPI.apply(jobId, {
                     cover_message: document.getElementById('cover_message').value.trim(),
@@ -275,7 +324,10 @@
         });
 
         document.addEventListener('DOMContentLoaded', function () {
-            var boot = function () { loadJob(); };
+            var boot = function () {
+                loadJob();
+                loadResumeStatus();
+            };
             if (window.GBAI18n && GBAI18n.initLanguage) {
                 GBAI18n.initLanguage().then(boot);
             } else {

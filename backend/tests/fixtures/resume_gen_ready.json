@@ -1,58 +1,72 @@
 {
   "dumped_from": "sess_1783506159650_mmzt6hi8d",
-  "dumped_at": "2026-07-15T19:36:03",
+  "dumped_at": "2026-07-17T21:22:19",
   "source": "mysql",
   "state": {
     "session_id": "sess_1783506159650_mmzt6hi8d",
     "job": {
-      "id": "job_e6a4fe91b910",
-      "source": "Job Title: AI Developer\n\nResponsibilities:\n- Design, develop, and implement AI models and solutions using Python and LLM APIs.\n- Collaborate with cross-functional teams to define project requirements and integrate AI features into existing systems.\n- Conduct data preprocessing, model training, and evaluation to ensure accuracy and efficiency.\n- Optimize AI algorithms and fine-tune models based on performance metrics and business needs.\n- Document code and technical specifications to support team collaboration and future development.\n\nRequirements:\n- Bachelor's or Master's degree in Computer Science, Engineering, or a related field.\n- Proficiency in Python programming and experience with LLM APIs.\n- Strong understanding of machine learning concepts and AI application development.\n- Experience with data analysis and manipulation using SQL.\n- Excellent problem-solving skills and ability to work in a fast-paced environment.\n\nPreferred Qualifications:\n- Familiarity with web development technologies (HTML/CSS/JavaScript).\n- Experience in product development or data analysis roles.\n- Knowledge of compliance and regulatory frameworks.\n\nAdditional Information:\n- Candidates should demonstrate experience in AI-driven project implementation and cross-team coordination.\n- Proficiency in English and Mandarin required.\n\nNote: This position may involve occasional cross-regional collaboration within the Greater Bay Area.",
-      "parsed_at": "2026-07-15T11:08:09.185258+00:00",
+      "id": "job_33278f79502e",
+      "source": "Job Title: Software Engineer: AI and Web3 Application Development\n\nWe are seeking a highly motivated Software Engineer to join our innovative team. The ideal candidate will have a strong foundation in Python and experience with AI/ML APIs, particularly in the context of Web3 applications. You will be involved in the full lifecycle of product development, from requirements gathering to deployment.\n\nResponsibilities:\n- Design, develop, and implement features for Web3 applications using Python.\n- Integrate AI/LLM APIs to enhance application functionality.\n- Collaborate with cross-functional teams to define, build, and ship new features.\n- Perform data cleansing, standardization, and analysis to support application requirements.\n- Write clean, maintainable, and well-documented code.\n- Troubleshoot and debug existing systems.\n\nRequirements:\n- Bachelor's or Master's degree in Computer Science, Engineering, or a related field.\n- Proficiency in Python programming.\n- Experience with API integration and data handling.\n- Familiarity with Web3 technologies and blockchain concepts.\n- Strong problem-solving skills and attention to detail.\n- Ability to work in a fast-paced environment and manage multiple priorities.\n\nNice-to-Have:\n- Experience with front-end technologies (HTML, CSS, JavaScript).\n- Knowledge of database systems (SQL).\n- Experience with cloud platforms and DevOps tools.\n\nJoin us to contribute to cutting-edge projects at the intersection of AI, Web3, and traditional finance. This role offers opportunities to work with diverse teams and tackle challenging problems in a dynamic setting.",
+      "parsed_at": "2026-07-17T13:06:27.184443+00:00",
       "version": 1,
       "industry": "Internet",
-      "title": "AI Developer",
+      "title": "Software Engineer: AI and Web3 Application Development",
       "tech_stack": [
         "Python",
-        "LLM APIs",
-        "SQL"
+        "AI/ML APIs",
+        "Web3 technologies",
+        "Blockchain concepts",
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "SQL",
+        "Cloud platforms",
+        "DevOps tools"
       ],
       "keywords": [
         "AI",
-        "Machine Learning",
-        "Model Development",
-        "Data Preprocessing"
+        "Web3",
+        "Python",
+        "API integration",
+        "data handling",
+        "blockchain"
       ],
       "hard_skills": [
         "Python programming",
-        "LLM APIs",
-        "Machine learning concepts",
-        "Data analysis",
-        "SQL"
+        "API integration",
+        "data handling",
+        "Web3 technologies",
+        "blockchain concepts",
+        "cloud platforms",
+        "DevOps tools",
+        "front-end technologies",
+        "database systems"
       ],
       "soft_skills": [
-        "Problem-solving",
-        "Collaboration",
-        "Cross-functional teamwork",
-        "Fast-paced environment adaptation"
+        "problem-solving skills",
+        "attention to detail",
+        "ability to work in a fast-paced environment",
+        "manage multiple priorities"
       ],
       "responsibilities": [
-        "Design, develop, and implement AI models and solutions using Python and LLM APIs.",
-        "Collaborate with cross-functional teams to define project requirements and integrate AI features into existing systems.",
-        "Conduct data preprocessing, model training, and evaluation to ensure accuracy and efficiency.",
-        "Optimize AI algorithms and fine-tune models based on performance metrics and business needs.",
-        "Document code and technical specifications to support team collaboration and future development."
+        "Design, develop, and implement features for Web3 applications using Python",
+        "Integrate AI/LLM APIs to enhance application functionality",
+        "Collaborate with cross-functional teams to define, build, and ship new features",
+        "Perform data cleansing, standardization, and analysis to support application requirements",
+        "Write clean, maintainable, and well-documented code",
+        "Troubleshoot and debug existing systems"
       ],
-      "education_requirement": "Bachelor's or Master's degree in Computer Science, Engineering, or a related field.",
-      "experience_requirement": "Proficiency in Python programming and experience with LLM APIs; strong understanding of machine learning concepts and AI application development; experience with data analysis and manipulation using SQL.",
+      "education_requirement": "Bachelor's or Master's degree in Computer Science, Engineering, or a related field",
+      "experience_requirement": "Proficiency in Python programming; Familiarity with Web3 technologies and blockchain concepts; Experience with API integration and data handling",
       "implicit_preferences": [
-        "Experience in AI-driven project implementation and cross-team coordination.",
-        "Familiarity with web development technologies (HTML/CSS/JavaScript).",
-        "Experience in product development or data analysis roles.",
-        "Knowledge of compliance and regulatory frameworks."
+        "Experience with front-end technologies",
+        "Knowledge of database systems",
+        "Experience with cloud platforms and DevOps tools"
       ],
       "bonus_items": [
-        "Proficiency in English and Mandarin.",
-        "Occasional cross-regional collaboration within the Greater Bay Area."
+        "Experience with front-end technologies (HTML, CSS, JavaScript)",
+        "Knowledge of database systems (SQL)",
+        "Experience with cloud platforms and DevOps tools"
       ]
     },
     "candidate_profile": {
@@ -63,15 +77,17 @@
         "city": "",
         "school": "The University of Hong Kong",
         "extras": {
-          "visa_type": "Student Visa"
+          "visa_type": "Student Visa",
+          "summary": "Highly motivated Software Engineer with Master's in Electronic Commerce and Internet Computing, specializing in Python and Web3 technologies. Experienced in integrating AI/ML APIs and developing blockchain-based applications to enhance product functionality and user engagement.",
+          "has_photo": "false"
         }
       },
       "materials": [
         {
-          "material_id": "mat_38df07ec7cca",
+          "material_id": "mat_4d05e1c3fdc2",
           "type": "message",
           "content": "用户本轮没有额外文字说明，请优先基于附件内容完成解析。\n\n以下是用户上传附件解析出的文本，请把它们视作本轮输入的一部分。若用户文字与附件内容冲突，以用户文字中的明确要求为准；若需要抽取候选人信息或岗位信息，请优先使用附件中的原始内容，不要忽略文件名提供的上下文。本说明文字为中文仅作系统提示，不得据此将英文简历内容翻译成中文。\n\n[附件 1] 文件名: Ashe_web3_AI.pdf\n以下为附件解析文本:\nChen Aixi (Ashe)\n+85269438705 | u3665026@connect.hku.hk | VisaStatus: StudentVisa | NoticePeriod: Immediate\nSUMMARY\nHKUECICpostgraduatewithinterdisciplinaryexperienceinLLMapplication,Web3productimplementation,data\nanalysis,andfinancialcomplianceresearch. Skilledinrequirementsorting,businessprocessdecomposition,data\ncalibration,andcross-teamcoordination.\nEDUCATION\nTheUniversityofHongKong,MasterofElectronicCommerceandInternet Sept. 2025–Present\nComputing (ExpectedNov. 2026)\nSunYat-senUniversity,BachelorofEconomics(GPA3.5/4.0) Sept. 2021–Jun. 2025\nINTERNSHIP\nVSystems,Web3ProductDevelopment Mar. 2026–May2025\n• DecoupledandimplementedtheWeb3couponmodule,completedAPIintegration,datastandardization,field\nmappinganddirtydatacleansingtoprovideunifieddownstreaminterfaces.\n• Ledbusinessprocesssorting,interfacedefinitionandfrontend-backendintegration,anddeliveredfull-cycle\nproductimplementationefficientlywithCursor.\nTianYiMa,BigDataR&DEngineer(AIDirection) Jun. 2025–Aug. 2025\n• StudiedCVpapersonurbanrobotandtelecomdigitrecognition,andsortedoutmodeloptimizationlogicand\nkeyvariablesaffectingaccuracy.\n• Deliveredstructuredtechnicalobservationreportsandassistedtheteaminsummarizingtechnicalschemesand\nmethodology.\nShenzhenStockExchange,ComplianceResearch Feb. 2025–Apr. 2025\n• Collected,organizedandcross-verifiedpoliciesandmarketinformationforREITs,anddeliveredindustry\nanalysismaterialsandPPTframeworks.\n• IdentifiedcompliancerisksandindustrytrendsofREITsbusiness,formedstandardizedresearchresults,and\nsupporteddecision-makingandreportinginfixedincomefield.\nChinaTelecom,DataAnalyst Jun. 2024–Aug. 2024\n• Processedbusinessdataincludingdatasorting,caliberalignment,indicatorstatisticsanddataanomaly\ndetectionbasedonbusinessrequirements.\n• Organizeddataflow,builtreusabledataextractionlogic,standardizedreportsandledgerstosupportbusiness\nreview.\nPROJECT\nGBAVulnerableGroupsCross-RegionalEmploymentEmpowermentPlatform, Feb. 2026–Present\nLeader&AISpecialist (ExpectedAug. 2026)\n• DesignedanAIrecruitmentplatformwithmodulesincludingresumeoptimization,LLMQ&A,jobmatchingand\nuser/admindashboards.\n• Completedrequirementdecompositionandfunctionplanning,andrealizedautomatedrecommendationvia\nPythonandLLMAPI.\nSKILLS\nLanguage: Mandarin(Native),English(Fluent),Cantonese(Beginner)\nTechnicalSkills: Python(Proficient),SQL(Proficient),Word/Excel/PowerPoint(Proficient),\nHTML/CSS/JavaScript(Familiar),Java(Familiar)\nSoftwareProficiency: AdobePhotoshop(PS),AdobeIllustrator(AI),AdobePremiere(PR),OpenAI\nPROFESSIONAL QUALIFICATION\nIELTS6.5IssuedbyBritishCouncil,IDP&CambridgeAssessmentEnglish\nUIDesignerCertificateIssuedbyEducationandExaminationCenterofMIIT,China",
-          "uploaded_at": "2026-07-15T11:05:34.273819+00:00",
+          "uploaded_at": "2026-07-17T12:56:09.880101+00:00",
           "language": "en"
         }
       ],
@@ -79,191 +95,164 @@
         {
           "id": "fact_education_1",
           "type": "education",
-          "content": "{\"school\": \"The University of Hong Kong\", \"major\": \"Master of Electronic Commerce and Internet Computing\", \"degree\": \"Master\", \"start_date\": \"Sept. 2025\", \"end_date\": \"Expected Nov. 2026\"}",
+          "content": "{\"school\": \"The University of Hong Kong\", \"major\": \"Electronic Commerce and Internet Computing\", \"degree\": \"Master\", \"start_date\": \"Sep 2025\", \"end_date\": \"Nov 2026\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
           "id": "fact_education_2",
           "type": "education",
-          "content": "{\"school\": \"Sun Yat-sen University\", \"major\": \"Economics\", \"degree\": \"Bachelor\", \"start_date\": \"Sept. 2021\", \"end_date\": \"Jun. 2025\"}",
+          "content": "{\"school\": \"Sun Yat-sen University\", \"major\": \"Economics\", \"degree\": \"Bachelor\", \"start_date\": \"Sep 2021\", \"end_date\": \"Jun 2025\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_1",
+          "id": "skill_1",
           "type": "skill",
-          "content": "{\"skill\": \"Python\", \"level\": \"Proficient\"}",
+          "content": "{\"skill\": \"Python programming for AI/ML API integration and Web3 application development.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_2",
+          "id": "skill_2",
           "type": "skill",
-          "content": "{\"skill\": \"SQL\", \"level\": \"Proficient\"}",
+          "content": "{\"skill\": \"Integration of third-party APIs to enhance application features and data handling.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_3",
+          "id": "skill_3",
           "type": "skill",
-          "content": "{\"skill\": \"Word/Excel/PowerPoint\", \"level\": \"Proficient\"}",
+          "content": "{\"skill\": \"Data cleansing and standardization to support application requirements.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_4",
+          "id": "skill_4",
           "type": "skill",
-          "content": "{\"skill\": \"HTML/CSS/JavaScript\", \"level\": \"Familiar\"}",
+          "content": "{\"skill\": \"Familiarity with blockchain concepts and Web3 development frameworks.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_5",
+          "id": "skill_5",
           "type": "skill",
-          "content": "{\"skill\": \"Java\", \"level\": \"Familiar\"}",
+          "content": "{\"skill\": \"Experience with cloud platforms for deploying and scaling Web3 applications.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_6",
+          "id": "skill_6",
           "type": "skill",
-          "content": "{\"skill\": \"Mandarin\", \"level\": \"Native\"}",
+          "content": "{\"skill\": \"Knowledge of HTML\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_7",
+          "id": "mod_1784294296002_xn7hw",
           "type": "skill",
-          "content": "{\"skill\": \"English\", \"level\": \"Fluent\"}",
+          "content": "{\"skill\": \"CSS\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_8",
+          "id": "mod_1784294296002_dbtxn",
           "type": "skill",
-          "content": "{\"skill\": \"Cantonese\", \"level\": \"Beginner\"}",
+          "content": "{\"skill\": \"and JavaScript for building user interfaces.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_skill_9",
+          "id": "skill_7",
           "type": "skill",
-          "content": "{\"skill\": \"Adobe Photoshop\"}",
+          "content": "{\"skill\": \"Understanding of database systems including SQL.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
-        },
-        {
-          "id": "fact_skill_10",
-          "type": "skill",
-          "content": "{\"skill\": \"Adobe Illustrator\"}",
-          "source_refs": [
-            "user_draft"
-          ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
-        },
-        {
-          "id": "fact_skill_11",
-          "type": "skill",
-          "content": "{\"skill\": \"Adobe Premiere\"}",
-          "source_refs": [
-            "user_draft"
-          ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
-        },
-        {
-          "id": "fact_skill_12",
-          "type": "skill",
-          "content": "{\"skill\": \"OpenAI\"}",
-          "source_refs": [
-            "user_draft"
-          ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
           "id": "fact_internship_1",
           "type": "internship",
-          "content": "{\"company\": \"VSystems\", \"start_date\": \"Mar. 2025\", \"end_date\": \"May 2025\", \"responsibilities\": \"Decoupled and implemented the Web3 coupon module, completed API integration, data standardization, field mapping and dirty data cleansing to provide unified downstream interfaces. Led business process sorting, interface definition and frontend-backend integration, and delivered full-cycle product implementation efficiently with Cursor.\", \"title\": \"Web3 Product Development\"}",
+          "content": "{\"company\": \"VSystems (Mar 2026 – May 2025)\", \"responsibilities\": \"- Spearheaded frontend-backend integration using Python and Cursor, delivering full-cycle product implementation.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
           "id": "fact_internship_2",
           "type": "internship",
-          "content": "{\"company\": \"TianYiMa\", \"start_date\": \"Jun. 2025\", \"end_date\": \"Aug. 2025\", \"responsibilities\": \"Studied CV papers on urban robot and telecom digit recognition, and sorted out model optimization logic and key variables affecting accuracy. Delivered structured technical observation reports and assisted the team in summarizing technical schemes and methodology.\", \"title\": \"Big Data R&D Engineer (AI Direction)\"}",
+          "content": "{\"company\": \"Tian Yi Ma (Jun 2025 – Aug 2025)\", \"responsibilities\": \"- Assisted the team in evaluating technical schemes, documenting methodologies for ~5–10 scenarios.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
           "id": "fact_internship_3",
           "type": "internship",
-          "content": "{\"company\": \"Shenzhen Stock Exchange\", \"start_date\": \"Feb. 2025\", \"end_date\": \"Apr. 2025\", \"responsibilities\": \"Collected, organized and cross-verified policies and market information for REITs, and delivered industry analysis materials and PPT frameworks. Identified compliance risks and industry trends of REITs business, formed standardized research results, and supported decision-making and reporting in fixed income field.\", \"title\": \"Compliance Research\"}",
+          "content": "{\"company\": \"Shenzhen Stock Exchange (Feb 2025 – Apr 2025)\", \"responsibilities\": \"- Contributed to compliance risk assessments by flagging industry trends and ensuring research outputs met regulatory standards.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
           "id": "fact_internship_4",
           "type": "internship",
-          "content": "{\"company\": \"China Telecom\", \"start_date\": \"Jun. 2024\", \"end_date\": \"Aug. 2024\", \"responsibilities\": \"Processed business data including data sorting, calibralignment, indicator statistics and data anomaly detection based on business requirements. Organized data flow, built reusable data extraction logic, standardized reports and ledgers to support business review.\", \"title\": \"Data Analyst\"}",
+          "content": "{\"company\": \"China Telecom (Jun 2024 – Aug 2024)\", \"responsibilities\": \"- Standardized ~2–4 reports and ledgers to improve business decision-making efficiency.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
           "id": "fact_project_1",
           "type": "project",
-          "content": "{\"title\": \"GBAVulnerableGroupsCross-RegionalEmploymentEmpowermentPlatform\", \"role\": \"Leader&AISpecialist\", \"start_date\": \"Feb. 2026\", \"end_date\": \"Expected Aug. 2026\", \"tech_stack\": [\"Python\", \"LLM API\"], \"responsibilities\": \"Designed an AI recruitment platform with modules including resume optimization, LLM Q&A, job matching and user/admindashboards. Completed requirement decomposition and function planning, and realized automated recommendation via Python and LLM API.\"}",
+          "content": "{\"title\": \"GBAVulnerable GroupsCross-RegionalEmploymentEmpowermentPlatform — Leader&AISpecialist (Feb 2026 – Aug 2026)\", \"responsibilities\": \"- Integrated ~3–5 APIs to enhance platform capabilities and streamline data handling.\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_qualification_1",
+          "id": "award_1",
           "type": "award",
-          "content": "{\"name\": \"IELTS 6.5\", \"authority\": \"British Council,IDP&Cambridge Assessment English\"}",
+          "content": "{\"content\": \"IELTS 6.5\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         },
         {
-          "id": "fact_qualification_2",
+          "id": "award_2",
           "type": "award",
-          "content": "{\"name\": \"UIDesignerCertificate\", \"authority\": \"Education and Examination Center of MIIT, China\"}",
+          "content": "{\"content\": \"UIDesignerCertificate\"}",
           "source_refs": [
             "user_draft"
           ],
-          "updated_at": "2026-07-15T11:12:46.370980+00:00"
+          "updated_at": "2026-07-17T13:19:43.596355+00:00"
         }
       ],
       "language": ""
@@ -279,109 +268,188 @@
         "address": "",
         "education": [
           {
-            "id": "edu_1",
-            "school": "The University of Hong Kong",
-            "major": "",
-            "degree": "",
-            "start_date": "",
-            "end_date": ""
-          },
-          {
             "id": "fact_education_1",
             "school": "The University of Hong Kong",
-            "major": "Master of Electronic Commerce and Internet Computing",
+            "major": "Electronic Commerce and Internet Computing",
             "degree": "Master",
-            "start_date": "Sept. 2025",
-            "end_date": "Expected Nov. 2026"
+            "start_date": "Sep 2025",
+            "end_date": "Nov 2026"
           },
           {
             "id": "fact_education_2",
             "school": "Sun Yat-sen University",
             "major": "Economics",
             "degree": "Bachelor",
-            "start_date": "Sept. 2021",
-            "end_date": "Jun. 2025"
+            "start_date": "Sep 2021",
+            "end_date": "Jun 2025"
           }
         ],
         "extras": {
           "visa_type": "Student Visa",
+          "summary": "HKUECIC postgraduate with interdisciplinary experience in LLM application, Web3 product implementation, data analysis, and financial compliance research. Skilled in requirements sorting, business process decomposition, data calibration, and cross-team coordination.",
           "has_photo": "false"
         }
       },
-      "summary": "",
+      "summary": "Highly motivated Software Engineer with Master's in Electronic Commerce and Internet Computing, specializing in Python and Web3 technologies. Experienced in integrating AI/ML APIs and developing blockchain-based applications to enhance product functionality and user engagement.",
       "skills": [
         {
-          "id": "",
-          "title": "Python programming",
+          "id": "skill_1",
+          "title": "Python programming for AI/ML API integration and Web3 application development.",
           "content": "",
-          "source_refs": [],
-          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+          "source_refs": [
+            "skill_1"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
         },
         {
           "id": "skill_2",
-          "title": "updated_at",
-          "content": "updated_at",
-          "source_refs": [],
-          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+          "title": "Integration of third-party APIs to enhance application features and data handling.",
+          "content": "",
+          "source_refs": [
+            "skill_2"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
+        },
+        {
+          "id": "skill_3",
+          "title": "Data cleansing and standardization to support application requirements.",
+          "content": "",
+          "source_refs": [
+            "skill_3"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
+        },
+        {
+          "id": "skill_4",
+          "title": "Familiarity with blockchain concepts and Web3 development frameworks.",
+          "content": "",
+          "source_refs": [
+            "skill_4"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
+        },
+        {
+          "id": "skill_5",
+          "title": "Experience with cloud platforms for deploying and scaling Web3 applications.",
+          "content": "",
+          "source_refs": [
+            "skill_5"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
+        },
+        {
+          "id": "skill_6",
+          "title": "Knowledge of HTML",
+          "content": "",
+          "source_refs": [
+            "skill_6"
+          ],
+          "updated_at": "2026-07-17T13:18:16.062399+00:00"
+        },
+        {
+          "id": "mod_1784294296002_xn7hw",
+          "title": "CSS",
+          "content": "",
+          "source_refs": [
+            "mod_1784294296002_xn7hw"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
+        },
+        {
+          "id": "mod_1784294296002_dbtxn",
+          "title": "and JavaScript for building user interfaces.",
+          "content": "",
+          "source_refs": [
+            "mod_1784294296002_dbtxn"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
+        },
+        {
+          "id": "skill_7",
+          "title": "Understanding of database systems including SQL.",
+          "content": "",
+          "source_refs": [
+            "skill_7"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
         }
       ],
       "internships": [
         {
           "id": "fact_internship_1",
-          "title": "VSystems",
-          "content": "- Developed and integrated the Web3 coupon module using Python.\n- Standardized data and cleansed dirty data to ensure unified downstream interfaces.\n- Collaborated with frontend and backend teams to deliver full-cycle product implementation.",
+          "title": "VSystems (Mar 2026 – May 2025)",
+          "content": "- Spearheaded frontend-backend integration using Python and Cursor, delivering full-cycle product implementation.",
           "source_refs": [
             "fact_internship_1"
           ],
-          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
         },
         {
           "id": "fact_internship_2",
-          "title": "TianYiMa",
-          "content": "- Researched cutting-edge AI papers on urban robotics and telecom digit recognition.\n- Analyzed model optimization strategies and identified key variables influencing accuracy.\n- Authored technical reports and contributed to team methodology refinement.",
+          "title": "Tian Yi Ma (Jun 2025 – Aug 2025)",
+          "content": "- Assisted the team in evaluating technical schemes, documenting methodologies for ~5–10 scenarios.",
           "source_refs": [
             "fact_internship_2"
           ],
-          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
         },
         {
           "id": "fact_internship_3",
-          "title": "Compliance Research Intern",
-          "content": "- Researched REIT compliance policies and market trends to support fixed income decision-making.\n- Organized and verified industry data to deliver analysis materials and PPT frameworks.\n- Identified compliance risks and industry trends for REIT business.",
+          "title": "Shenzhen Stock Exchange (Feb 2025 – Apr 2025)",
+          "content": "- Contributed to compliance risk assessments by flagging industry trends and ensuring research outputs met regulatory standards.",
           "source_refs": [
             "fact_internship_3"
           ],
-          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
         },
         {
           "id": "fact_internship_4",
-          "title": "China Telecom",
-          "content": "- Processed business data through sorting, alignment, and anomaly detection based on requirements.\n- Developed reusable data extraction logic and standardized reports to support business reviews.\n- Organized data flow to improve efficiency and accuracy in data handling.",
+          "title": "China Telecom (Jun 2024 – Aug 2024)",
+          "content": "- Standardized ~2–4 reports and ledgers to improve business decision-making efficiency.",
           "source_refs": [
             "fact_internship_4"
           ],
-          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
         }
       ],
       "projects": [
         {
           "id": "fact_project_1",
-          "title": "GBAVulnerableGroupsCross-RegionalEmploymentEmpowermentPlatform",
-          "content": "- Led development of an AI-powered recruitment platform, optimizing resume parsing and job matching algorithms.\n- Integrated LLM APIs to create interactive Q&A features and automated candidate recommendations.\n- Designed user/admin dashboards and implemented backend functionality using Python.",
+          "title": "GBAVulnerable GroupsCross-RegionalEmploymentEmpowermentPlatform — Leader&AISpecialist (Feb 2026 – Aug 2026)",
+          "content": "- Integrated ~3–5 APIs to enhance platform capabilities and streamline data handling.",
           "source_refs": [
             "fact_project_1"
           ],
-          "updated_at": "2026-07-15T11:35:28.945885+00:00"
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
         }
       ],
-      "awards": [],
+      "awards": [
+        {
+          "id": "award_1",
+          "title": "",
+          "content": "IELTS 6.5",
+          "source_refs": [
+            "award_1"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
+        },
+        {
+          "id": "award_2",
+          "title": "",
+          "content": "UIDesignerCertificate",
+          "source_refs": [
+            "award_2"
+          ],
+          "updated_at": "2026-07-17T13:18:16.096924+00:00"
+        }
+      ],
       "papers": [],
       "meta": {
-        "target_role": "AI Developer",
+        "target_role": "Software Engineer: AI and Web3 Application Development",
         "language": "en",
-        "version": 4,
-        "last_updated_at": "2026-07-15T11:35:28.945885+00:00",
-        "content_hash": "0300d23c262edc15"
+        "version": 3,
+        "last_updated_at": "2026-07-17T13:18:15.118450+00:00",
+        "content_hash": "ea36e2d09fee7417"
       }
     },
     "render_config": {
@@ -389,29 +457,31 @@
       "theme": "light",
       "language": "en",
       "font_family": "Inter",
-      "font_size": 12,
-      "line_height": 1.35,
+      "font_size": 14,
+      "line_height": 1.43,
       "page_margin": {
-        "top": 18,
-        "right": 18,
-        "bottom": 18,
-        "left": 18
+        "top": 22,
+        "right": 22,
+        "bottom": 22,
+        "left": 22
       },
       "section_order": [
         "profile",
+        "summary",
+        "education",
         "internships",
         "projects",
         "skills",
-        "education"
+        "awards"
       ],
-      "dense_mode": true,
+      "dense_mode": false,
       "accent_style": "minimal",
       "visibility_map": {},
       "layout_mode": "single-column",
-      "spacing_scale": "compact",
+      "spacing_scale": "relaxed",
       "page_limit": 1,
       "typography_fit_mode": "auto",
-      "version": 2,
+      "version": 6,
       "last_render_reason": "A4 single page排版（English，entry）"
     },
     "resume_html": {
@@ -429,6 +499,7 @@
     "learning_path_resources": [],
     "learning_path_estimated_hours": 0,
     "learning_path_daily_hours": 0.0,
+    "learning_path_timeline_unit": "week",
     "last_answer_evaluation": null,
     "interview_qa": [],
     "interactive_interview": {
@@ -454,7 +525,10 @@
       "pending_feedbacks": [],
       "poll_sequence": 0,
       "end_reason": "",
-      "closing_message": ""
+      "closing_message": "",
+      "history_summary": "",
+      "history_compressed_qa_count": 0,
+      "history_compressed_question_ids": []
     },
     "conversation_events": [],
     "meta": {

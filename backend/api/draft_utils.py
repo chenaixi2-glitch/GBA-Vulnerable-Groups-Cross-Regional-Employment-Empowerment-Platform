@@ -14,6 +14,7 @@ from workflow.state import (
     Fact,
     ProfileBasic,
     ResumeHtml,
+    SectionItem,
 )
 
 
@@ -32,6 +33,23 @@ MODULE_TYPE_LABELS = {
     "paper": "Publications",
     "custom": "Custom Section",
 }
+
+_MODULE_TYPE_TO_SECTION: dict[str, str] = {
+    "skill": "skills",
+    "internship": "internships",
+    "project": "projects",
+    "award": "awards",
+    "paper": "papers",
+    "custom": "skills",
+}
+
+_RESUME_MODULE_SECTIONS: tuple[str, ...] = (
+    "skills",
+    "internships",
+    "projects",
+    "awards",
+    "papers",
+)
 
 
 def _education_entry_to_content(entry: dict[str, Any]) -> str:
@@ -249,6 +267,56 @@ def _education_list_from_draft(draft: dict[str, Any]) -> list[Education]:
     return education
 
 
+def _module_sections_from_draft(
+    draft: dict[str, Any],
+    *,
+    existing: Any | None = None,
+) -> dict[str, list[SectionItem]]:
+    """Build resume section lists from editor draft modules (source of truth)."""
+    sections: dict[str, list[SectionItem]] = {key: [] for key in _RESUME_MODULE_SECTIONS}
+    now = datetime.now(timezone.utc).isoformat()
+    existing_by_id: dict[str, SectionItem] = {}
+    if existing is not None:
+        for key in _RESUME_MODULE_SECTIONS:
+            for item in getattr(existing, key, None) or []:
+                if getattr(item, "id", None):
+                    existing_by_id[str(item.id)] = item
+
+    for module in draft.get("modules") or []:
+        if not isinstance(module, dict):
+            continue
+        mod_type = str(module.get("type") or "custom")
+        if mod_type == "custom":
+            mod_type = "skill"
+        section_key = _MODULE_TYPE_TO_SECTION.get(mod_type)
+        if not section_key:
+            continue
+
+        fields = _module_draft_fields(module)
+        title, content = derive_title_and_content(mod_type, fields)
+        if not title:
+            title = str(module.get("title") or "").strip()
+        if not content:
+            content = str(module.get("content") or "").strip()
+        if not title and not content:
+            continue
+
+        module_id = str(module.get("id") or f"mod_{uuid.uuid4().hex[:8]}")
+        prev = existing_by_id.get(module_id)
+        if prev is not None and prev.title == title and prev.content == content:
+            sections[section_key].append(prev)
+            continue
+
+        sections[section_key].append(SectionItem(
+            id=module_id,
+            title=title,
+            content=content,
+            source_refs=list(prev.source_refs) if prev is not None and prev.source_refs else [module_id],
+            updated_at=now,
+        ))
+    return sections
+
+
 def _invalidate_resume_html(data: dict[str, Any], state: CopilotState) -> None:
     if not (state.resume_html and state.resume_html.html):
         return
@@ -266,9 +334,10 @@ def apply_draft_sections_to_resume_state(
     state: CopilotState,
     draft: dict[str, Any] | None,
 ) -> tuple[CopilotState, bool]:
-    """Sync editor draft sections (education, contact) into resume_content_json.
+    """Sync editor draft (education, contact, modules) into resume_content_json.
 
-    Draft is authoritative for education list so deletions/edits show up in PDF preview.
+    Draft is authoritative so deletions/edits — including internship dates and
+    body text — invalidate cached HTML and show up in PDF preview.
     Returns (updated_state, content_changed).
     """
     if not state.resume_content_json or not draft:
@@ -286,8 +355,10 @@ def apply_draft_sections_to_resume_state(
         if value:
             profile_updates[key] = value
 
+    section_updates = _module_sections_from_draft(draft, existing=resume)
     resume = resume.model_copy(update={
         "profile": resume.profile.model_copy(update=profile_updates),
+        **section_updates,
     })
 
     changed = before != resume.model_dump()

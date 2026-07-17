@@ -185,7 +185,17 @@ const ResumeProfileFields = {
             else fields.title = parsedTitle;
         }
 
-        if (type === 'internship' && !fields.company && fields.title) fields.company = fields.title;
+        if (type === 'internship' && !fields.company && fields.title && !fields.role) {
+            fields.company = fields.title;
+        }
+        if (type === 'internship' && fields.company && fields.title
+            && !fields.role && fields.title !== fields.company) {
+            // Profile LLM often puts job title in `title` and leaves `role` empty.
+            fields.role = fields.title;
+        }
+        if (type === 'project' && !fields.title && fields.company) {
+            fields.title = fields.company;
+        }
         return fields;
     },
 
@@ -195,7 +205,8 @@ const ResumeProfileFields = {
             Object.keys(entry.fields).forEach((key) => {
                 merged[key] = this.coerceFieldValue(key, entry.fields[key]);
             });
-            return merged;
+            // Reuse parseFactContent normalization (title → role).
+            return this.parseFactContent(type, JSON.stringify(merged));
         }
         if (type === 'education') {
             return {
@@ -224,19 +235,45 @@ const ResumeProfileFields = {
     },
 
     deriveTitleContent(type, fields) {
+        const formatRange = (start, end) => {
+            const s = String(start || '').trim();
+            const e = String(end || '').trim();
+            if (s && e) return `${s} – ${e}`;
+            return s || e;
+        };
+        const withDates = (head, f) => {
+            const range = formatRange(f.start_date || f.date, f.end_date);
+            const title = String(head || '').trim();
+            if (!range) return title;
+            if ((f.start_date && title.includes(String(f.start_date)))
+                || (f.end_date && title.includes(String(f.end_date)))
+                || (f.date && title.includes(String(f.date)))) {
+                return title;
+            }
+            return title ? `${title} (${range})` : range;
+        };
         if (type === 'internship') {
-            const title = String(fields.company || fields.title || '').trim();
-            const parts = [fields.role, fields.responsibilities, fields.achievements]
+            const company = String(fields.company || '').trim();
+            let role = String(fields.role || '').trim();
+            const titleField = String(fields.title || '').trim();
+            if (!role && titleField && titleField !== company) role = titleField;
+            const companyName = company || (titleField && titleField !== role ? titleField : '');
+            const head = companyName && role ? `${companyName} — ${role}` : (companyName || role);
+            const parts = [fields.responsibilities, fields.achievements]
                 .map((p) => String(p || '').trim())
                 .filter(Boolean);
-            return { title, content: parts.join('\n\n') };
+            if (role && !companyName) parts.unshift(role);
+            return { title: withDates(head, fields), content: parts.join('\n\n') };
         }
         if (type === 'project') {
-            const title = String(fields.title || fields.name || '').trim();
-            const parts = [fields.role, fields.responsibilities, fields.achievements]
+            const name = String(fields.title || fields.name || '').trim();
+            const role = String(fields.role || '').trim();
+            const head = name && role ? `${name} — ${role}` : (name || role);
+            const parts = [fields.responsibilities, fields.achievements]
                 .map((p) => String(p || '').trim())
                 .filter(Boolean);
-            return { title, content: parts.join('\n\n') };
+            if (role && !name) parts.unshift(role);
+            return { title: withDates(head, fields), content: parts.join('\n\n') };
         }
         if (type === 'skill') {
             return {
@@ -245,7 +282,7 @@ const ResumeProfileFields = {
             };
         }
         return {
-            title: String(fields.title || fields.company || fields.skill || '').trim(),
+            title: withDates(String(fields.title || fields.company || fields.skill || '').trim(), fields),
             content: String(fields.content || fields.description || fields.responsibilities || '').trim(),
         };
     },

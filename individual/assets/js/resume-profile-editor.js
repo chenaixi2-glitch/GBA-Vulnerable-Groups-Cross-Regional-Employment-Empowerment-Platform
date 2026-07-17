@@ -22,6 +22,8 @@ const ProfileEditor = {
     polishingFactIds: [],
     translatingModuleIds: [],
     rePolishingModuleIds: [],
+    /** Module/resume translate UI omitted — output fixed to English; keep markup paths but do not show. */
+    moduleTranslateEnabled: false,
 
     SECTION_ORDER: ['education', 'skill', 'internship', 'project', 'award', 'paper', 'custom'],
 
@@ -169,6 +171,7 @@ const ProfileEditor = {
                 }
                 const translateBtn = e.target.closest('[data-translate-module]');
                 if (translateBtn) {
+                    if (!this.moduleTranslateEnabled) return;
                     this.translateModule(translateBtn.dataset.translateModule, translateBtn.dataset.moduleKind || 'module');
                     return;
                 }
@@ -996,7 +999,7 @@ const ProfileEditor = {
     },
 
     syncDraftFromResumeContent(resumeContentJson, options = {}) {
-        const { beforeSnapshot = null, polishingFactIds = [] } = options;
+        const { beforeSnapshot = null, polishingFactIds = [], highlightTranslations = false } = options;
         const mapped = this.resumeContentJsonToDraft(resumeContentJson);
         if (!mapped) return 0;
 
@@ -1019,7 +1022,13 @@ const ProfileEditor = {
         if (typeof refreshLanguageChecklist === 'function') {
             refreshLanguageChecklist(this.getResumeLang());
         }
-        const changed = this.applyTranslationHighlights(beforeSnapshot, this.draft);
+        // Only mark "Translated — review" for real translate flows — not generate/optimize field diffs.
+        let changed = 0;
+        if (highlightTranslations && this.moduleTranslateEnabled) {
+            changed = this.applyTranslationHighlights(beforeSnapshot, this.draft);
+        } else {
+            this.clearTranslationHighlights();
+        }
         // While modules are polishing, skip autosave so placeholder/busy UI never overwrites server draft.
         if (!(this.polishingFactIds || []).length) {
             this.scheduleSave(true);
@@ -1122,11 +1131,14 @@ const ProfileEditor = {
             <button type="button" data-polish-module="${moduleId}" class="text-xs px-2 py-1 rounded border border-amber-300 text-amber-800 hover:bg-amber-50 disabled:opacity-50" ${busy ? 'disabled' : ''}>
                 <i class="fas fa-magic mr-1"></i>${this.escapeHtml(polishLabel)}
             </button>` : '';
-        return `
-            <div class="flex items-center gap-1 flex-wrap">
+        const translateBtn = this.moduleTranslateEnabled ? `
                 <button type="button" data-translate-module="${moduleId}" data-module-kind="module" class="text-xs px-2 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50" ${busy ? 'disabled' : ''}>
                     <i class="fas fa-language mr-1"></i>${this.escapeHtml(translateLabel)}
-                </button>
+                </button>` : '';
+        if (!translateBtn && !polishBtn) return '';
+        return `
+            <div class="flex items-center gap-1 flex-wrap">
+                ${translateBtn}
                 ${polishBtn}
             </div>`;
     },
@@ -1164,6 +1176,7 @@ const ProfileEditor = {
     },
 
     async translateModule(moduleId, kind = 'module') {
+        if (!this.moduleTranslateEnabled) return;
         if (typeof guardAiTaskRetry === 'function' && !guardAiTaskRetry()) return;
         if (typeof beginAiTaskAttempt === 'function') beginAiTaskAttempt();
         if (this.translatingModuleIds.includes(moduleId)) return;
@@ -1281,7 +1294,7 @@ const ProfileEditor = {
     renderEducationCard(entry) {
         const isTranslating = (this.translatingModuleIds || []).includes(entry.id);
         const fields = ResumeProfileFields.getEntryFields('education', entry);
-        const actionButtons = this.canShowModuleActions() ? `
+        const actionButtons = (this.canShowModuleActions() && this.moduleTranslateEnabled) ? `
             <div class="flex items-center gap-1">
                 <button type="button" data-translate-module="${entry.id}" data-module-kind="education" class="text-xs px-2 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50" ${isTranslating ? 'disabled' : ''}>
                     <i class="fas fa-language mr-1"></i>${this.escapeHtml(isTranslating

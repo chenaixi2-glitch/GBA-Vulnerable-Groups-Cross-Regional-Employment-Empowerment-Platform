@@ -175,6 +175,113 @@ def count_pdf_pages_from_html(html: str) -> int | None:
         return None
 
 
+# Match PDF body text (#111); Word Heading styles default to theme blue.
+_DOCX_TEXT_COLOR = "111111"
+_DOCX_INLINE_TAGS = frozenset({"a", "strong", "b", "em", "i", "u", "span", "br", "code", "font", "small"})
+_DOCX_BLOCK_TAGS = frozenset({"div", "section", "header", "footer", "article", "main", "aside"})
+
+
+def _clear_color_theme_attrs(color_el) -> None:
+    from docx.oxml.ns import qn
+
+    color_el.set(qn("w:val"), _DOCX_TEXT_COLOR)
+    for attr in ("themeColor", "themeTint", "themeShade"):
+        key = qn(f"w:{attr}")
+        if key in color_el.attrib:
+            del color_el.attrib[key]
+
+
+def _prepare_html_for_docx(html: str) -> str:
+    """Flatten resume HTML so HtmlToDocx does not glue body text into blue Heading runs.
+
+    HtmlToDocx keeps the current paragraph after </h2>, and resume templates put
+    education / experience in <div>s — so body text inherits Heading (theme blue).
+    Convert headings and leaf blocks into explicit <p> tags first.
+    """
+    from bs4 import BeautifulSoup, NavigableString
+
+    soup = BeautifulSoup(html or "", "html.parser")
+    for tag in soup.find_all(["style", "script", "img"]):
+        tag.decompose()
+
+    def _phrasing_only(tag) -> bool:
+        for child in tag.children:
+            if isinstance(child, NavigableString):
+                continue
+            name = getattr(child, "name", None)
+            if name in _DOCX_INLINE_TAGS and _phrasing_only(child):
+                continue
+            return False
+        return True
+
+    for level in range(1, 7):
+        for heading in soup.find_all(f"h{level}"):
+            paragraph = soup.new_tag("p")
+            strong = soup.new_tag("strong")
+            strong.string = heading.get_text()
+            paragraph.append(strong)
+            heading.replace_with(paragraph)
+
+    for tag in reversed(soup.find_all(list(_DOCX_BLOCK_TAGS | {"span"}))):
+        if tag.name is None:
+            continue
+        if not tag.get_text(strip=True):
+            tag.unwrap()
+            continue
+        if _phrasing_only(tag):
+            tag.name = "p"
+
+    body = soup.body or soup
+    return str(body)
+
+
+def _normalize_docx_text_color(doc) -> None:
+    """Force resume DOCX text to near-black so it matches PDF (not Word theme blue)."""
+    from docx.oxml.ns import qn
+    from docx.shared import RGBColor
+
+    rgb = RGBColor(0x11, 0x11, 0x11)
+
+    for style in doc.styles:
+        try:
+            if style.font is not None:
+                style.font.color.rgb = rgb
+        except (AttributeError, ValueError, KeyError, TypeError):
+            pass
+        element = getattr(style, "element", None)
+        if element is not None:
+            for color_el in element.iter(qn("w:color")):
+                _clear_color_theme_attrs(color_el)
+
+    for color_el in doc.element.iter(qn("w:color")):
+        _clear_color_theme_attrs(color_el)
+
+    def _paint_paragraphs(paragraphs) -> None:
+        for para in paragraphs:
+            # Never leave body content on Word Heading styles (theme accent = blue).
+            if para.style and para.style.name and para.style.name.startswith("Heading"):
+                para.style = doc.styles["Normal"]
+            for run in para.runs:
+                run.font.color.rgb = rgb
+
+    _paint_paragraphs(doc.paragraphs)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                _paint_paragraphs(cell.paragraphs)
+
+
+def _add_docx_section_title(doc, text: str) -> None:
+    """Add a section title as bold Normal text (avoid Word Heading theme blue)."""
+    from docx.shared import Pt, RGBColor
+
+    paragraph = doc.add_paragraph()
+    run = paragraph.add_run(text)
+    run.bold = True
+    run.font.size = Pt(14)
+    run.font.color.rgb = RGBColor(0x11, 0x11, 0x11)
+
+
 def html_to_docx_bytes(html: str) -> bytes:
     """Convert rendered resume HTML to a Word document."""
     from docx import Document
@@ -183,8 +290,10 @@ def html_to_docx_bytes(html: str) -> bytes:
     if not html or not html.strip():
         raise ValueError("Empty HTML")
 
+    prepared = _prepare_html_for_docx(html)
     doc = Document()
-    HtmlToDocx().add_html_to_document(html, doc)
+    HtmlToDocx().add_html_to_document(prepared, doc)
+    _normalize_docx_text_color(doc)
     buffer = io.BytesIO()
     doc.save(buffer)
     return buffer.getvalue()
@@ -193,7 +302,7 @@ def html_to_docx_bytes(html: str) -> bytes:
 def resume_content_to_docx_bytes(content: "ResumeContent") -> bytes:
     """Build a Word document from structured resume content."""
     from docx import Document
-    from docx.shared import Pt
+    from docx.shared import Pt, RGBColor
 
     lang = normalize_language(content.meta.language)
     labels = SECTION_LABELS.get(lang, SECTION_LABELS["zh"])
@@ -201,10 +310,14 @@ def resume_content_to_docx_bytes(content: "ResumeContent") -> bytes:
     normal = doc.styles["Normal"]
     normal.font.name = "Source Han Sans"
     normal.font.size = Pt(11)
+    normal.font.color.rgb = RGBColor(0x11, 0x11, 0x11)
 
     profile = content.profile
-    title = doc.add_heading(profile.name or "Resume", level=0)
-    title.runs[0].font.size = Pt(18)
+    name_para = doc.add_paragraph()
+    name_run = name_para.add_run(profile.name or "Resume")
+    name_run.bold = True
+    name_run.font.size = Pt(18)
+    name_run.font.color.rgb = RGBColor(0x11, 0x11, 0x11)
 
     contact_parts = [
         profile.email,
@@ -226,7 +339,7 @@ def resume_content_to_docx_bytes(content: "ResumeContent") -> bytes:
             doc.add_paragraph(line)
 
     if content.summary:
-        doc.add_heading(labels["summary"], level=1)
+        _add_docx_section_title(doc, labels["summary"])
         doc.add_paragraph(content.summary)
 
     sections = [
@@ -239,7 +352,7 @@ def resume_content_to_docx_bytes(content: "ResumeContent") -> bytes:
     for key, items in sections:
         if not items:
             continue
-        doc.add_heading(labels.get(key, key), level=1)
+        _add_docx_section_title(doc, labels.get(key, key))
         for item in items:
             p = doc.add_paragraph()
             run = p.add_run(item.title)
@@ -247,6 +360,7 @@ def resume_content_to_docx_bytes(content: "ResumeContent") -> bytes:
             if item.content:
                 doc.add_paragraph(item.content)
 
+    _normalize_docx_text_color(doc)
     buffer = io.BytesIO()
     doc.save(buffer)
     return buffer.getvalue()

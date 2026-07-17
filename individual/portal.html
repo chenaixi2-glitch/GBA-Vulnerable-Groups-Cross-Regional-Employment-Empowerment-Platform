@@ -77,48 +77,46 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen" data-page="individual">
-    <!-- Navigation Header -->
+    <!-- Navigation Header：可换行动态排版，不强制单行 -->
     <header class="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <a href="../index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <a href="../index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity min-w-0">
+                    <div class="w-10 h-10 shrink-0 bg-gradient-to-br from-blue-600 to-green-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
                         GBA
                     </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-gray-900" data-i18n="portal.brandTitle">Employment Empowerment Platform</h1>
+                    <div class="min-w-0">
+                        <h1 class="text-base sm:text-lg font-bold text-gray-900 leading-snug" data-i18n="portal.brandTitle">Employment Empowerment Platform</h1>
                         <p class="text-sm text-gray-500" data-i18n="portal.brandSubtitle">Individual Portal</p>
                     </div>
                 </a>
-            </div>
-            
-            <nav class="hidden md:flex items-center gap-6">
-                <a href="#dashboard" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-i18n="portal.navDashboard">Dashboard</a>
-                <a href="demo-resume-generator.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navResume">Resume Generator</a>
-                <a href="demo-interview.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navInterview">Interview Prep</a>
-                <a href="demo-learning-path.html" class="text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navLearning">Learning Path</a>
-                <a href="donation-legal.html" class="text-amber-700 hover:text-amber-800 font-medium transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
-            </nav>
-            
-            <div class="flex items-center gap-3">
-                <div id="header-lang-slot"></div>
-                <div id="portal-auth-guest" class="flex items-center gap-2">
-                    <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5" data-i18n="portal.login">Log in</a>
-                    <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg" data-i18n="portal.signup">Sign up</a>
-                </div>
-                <div id="portal-auth-user" class="hidden flex items-center gap-3">
-                    <a href="profile.html" class="text-sm text-blue-700 hover:text-blue-800 font-medium hidden sm:inline" data-i18n="portal.profile">Profile</a>
-                    <div class="text-right hidden sm:block">
-                        <div id="portal-user-name" class="text-sm font-medium text-gray-900"></div>
-                        <div id="portal-user-email" class="text-xs text-gray-500"></div>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div id="header-lang-slot"></div>
+                    <div id="portal-auth-guest" class="flex items-center gap-2">
+                        <a href="auth.html" class="text-sm font-medium text-gray-600 hover:text-blue-600 px-2 sm:px-3 py-1.5" data-i18n="portal.login">Log in</a>
+                        <a href="auth.html?tab=register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg" data-i18n="portal.signup">Sign up</a>
                     </div>
-                    <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600 px-2 py-1" data-i18n="portal.logout">Log out</button>
+                    <div id="portal-auth-user" class="hidden flex flex-wrap items-center gap-2 sm:gap-3">
+                        <a href="profile.html" class="text-sm text-blue-700 hover:text-blue-800 font-medium" data-i18n="portal.profile">Profile</a>
+                        <div class="text-right max-w-[12rem]">
+                            <div id="portal-user-name" class="text-sm font-medium text-gray-900 truncate"></div>
+                            <div id="portal-user-email" class="text-xs text-gray-500 truncate"></div>
+                        </div>
+                        <button id="portal-logout-btn" type="button" class="text-sm text-gray-600 hover:text-red-600 px-2 py-1" data-i18n="portal.logout">Log out</button>
+                    </div>
+                    <button id="session-info-btn" class="text-sm text-gray-600 hover:text-blue-600 hidden">
+                        <i class="fas fa-user-circle mr-1"></i>
+                        <span id="session-id-display" data-i18n="portal.notConnected">Not Connected</span>
+                    </button>
                 </div>
-                <button id="session-info-btn" class="text-sm text-gray-600 hover:text-blue-600 hidden">
-                    <i class="fas fa-user-circle mr-1"></i>
-                    <span id="session-id-display" data-i18n="portal.notConnected">Not Connected</span>
-                </button>
             </div>
+            <nav class="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 border-t border-gray-100">
+                <a href="#dashboard" class="text-sm sm:text-base text-gray-700 hover:text-blue-600 font-medium transition-colors" data-i18n="portal.navDashboard">Dashboard</a>
+                <a href="demo-resume-generator.html" class="text-sm sm:text-base text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navResume">Resume Generator</a>
+                <a href="demo-interview.html" class="text-sm sm:text-base text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navInterview">Interview Prep</a>
+                <a href="demo-learning-path.html" class="text-sm sm:text-base text-gray-700 hover:text-blue-600 font-medium transition-colors" data-require-access data-i18n="portal.navLearning">Learning Path</a>
+                <a href="donation-legal.html" class="text-sm sm:text-base text-amber-700 hover:text-amber-800 font-medium transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
+            </nav>
         </div>
     </header>
 

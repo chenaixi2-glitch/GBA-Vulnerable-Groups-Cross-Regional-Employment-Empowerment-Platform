@@ -58,8 +58,8 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
     "skills": [
         {{
             "id": "skill_1",
-            "title": "技能分类名称",
-            "content": "具体技能描述",
+            "title": "分类名（如 Languages / 编程语言）",
+            "content": "Python（熟练）, SQL, Excel",
             "source_refs": [],
             "updated_at": ""
         }}
@@ -101,7 +101,7 @@ RESUME_GENERATION_PROMPT = """你是一个专业的简历内容生成专家。�
 2. 根据 JD 的技术栈和关键词优化经历排序与措辞，使每段经历更贴合目标岗位
 3. section_order 由你根据岗位匹配度决定正文版块先后；仅列出有内容的版块；education 与 profile 必须分开列出。英文/葡语/繁中：profile（姓名与联系方式）必须位于 section_order 第一位，禁止把 skills/awards 排到 profile 之前
 4. 项目和实习描述使用 STAR 格式，在画像有据时补充量化成果，突出与目标岗位相关的技能与产出
-5. 技能根据 JD 要求的优先级排序
+5. Skills 保持列表式、禁止段落润色：按类别合并为 ≤4 组；title=分类名；content=逗号分隔条目（技能名，可选带熟练度，如「Python（熟练）」/「Python (Proficient)」）。禁止使用场景长句或职责描述。可从画像中补入用户确实具备且 JD 需要的技能；禁止添加画像未体现的技能；画像已有简洁写法时只做归类、按 JD 排序与必要补全，不得扩写成段落
 6. 篇幅须严格符合上文 A4 页数约束，宁可精简内容也不要超长
 7. 所有正文字段须统一使用目标语言，禁止中英混用
 8. 即使部分字段为空，也必须返回合法 JSON 对象
@@ -116,7 +116,12 @@ RESUME_SKELETON_PROMPT = """你是简历内容生成专家。这是分步生成�
 硬性要求（输出必须极短，完成 token 预算约 4096，禁止写满）：
 - 只生成：profile、summary、skills、awards、papers、language、section_order
 - internships 与 projects 必须是空数组 []，不要写任何经历正文（后续步骤会单独润色）
-- summary 最多 2 句；skills 最多 6 条，每条 content ≤ 40 字/词
+- summary 最多 2 句
+- Skills（列表式，禁止段落润色）：
+  - 最多 4 组；title=分类名（如 Languages / Tools）；content=逗号分隔条目
+  - 每条可以是技能名，或「技能名 + 熟练度」（如 Python（熟练）/ Python (Proficient)）；禁止使用场景长句或职责描述
+  - 可从画像补入用户确实具备且 JD 需要的技能；禁止添加画像未体现的技能
+  - 画像已是简洁写法时：归类 + 按 JD 排序 + 必要补全，不得扩写成段落
 - awards/papers 仅在画像确有时填写，否则 []
 - 不得捏造事实；禁止输出 Markdown 或解释
 
@@ -183,8 +188,9 @@ RESUME_SECTION_UPDATE_PROMPT = """你是简历内容编辑专家。请根据用�
 2. 若指令涉及经历润色，须结合目标岗位 JD 调整措辞与排序，按行业惯用标准补充有据可查的量化表述
 3. 保持未修改部分不变
 4. 优化或修改后仍须符合上文 A4 页数约束，必要时缩减文字或合并条目
-5. 修改后的内容须保持目标语言一致，禁止中英混用
-6. 即使指令不明确，也必须返回合法 JSON 对象
+5. 若改动 Skills：保持 title=分类、content=逗号分隔列表（可含熟练度）；禁止段落式润色；可补入画像中有且 JD 需要的技能，禁止虚构
+6. 修改后的内容须保持目标语言一致，禁止中英混用
+7. 即使指令不明确，也必须返回合法 JSON 对象
 """
 
 # Compact on purpose: verbose A4/polish guideline dumps make small models overrun max_tokens.
@@ -197,6 +203,7 @@ RESUME_MODULE_SECTION_PROMPT = """你是简历润色助手。把下列经历改�
 - 每条经历 content：最多 3 条 bullet；中文每条 ≤40 字；英文/葡语每条 ≤22 词
 - 必须相对输入事实做措辞改写与岗位对齐，禁止原样照抄输入 content
 - 禁止捏造公司名/项目名/未提供的岗位职责
+- title 必须保留输入事实中的公司/项目名、岗位名称（role）、起止时间（start_date/end_date）；格式：公司 — 岗位（开始 – 结束）；缺哪项就省略哪项，不得丢弃已有字段
 - 整份 JSON 必须完整可解析，预计 <800 tokens
 
 {quantification_instruction}
@@ -212,7 +219,7 @@ RESUME_MODULE_SECTION_PROMPT = """你是简历润色助手。把下列经历改�
   "items": [
     {{
       "id": "必须与输入 fact.id 完全一致",
-      "title": "公司或项目名",
+      "title": "公司名称 — 岗位名称（开始 – 结束）",
       "content": "- bullet1\\n- bullet2",
       "source_refs": ["同一 fact.id"],
       "updated_at": ""

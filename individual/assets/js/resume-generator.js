@@ -1125,6 +1125,7 @@ function applyResumeGenerationResult(response, lang, options = {}) {
         deferPreview = false,
         polishingFactIds = [],
         silent = false,
+        highlightTranslations = false,
     } = options;
 
     if (!deferPreview && response?.resume_html?.html) {
@@ -1154,6 +1155,7 @@ function applyResumeGenerationResult(response, lang, options = {}) {
         const changed = ProfileEditor.syncDraftFromResumeContent(response.resume_content_json, {
             beforeSnapshot: beforeDraftSnapshot,
             polishingFactIds,
+            highlightTranslations,
         });
         if (changed > 0 && !deferPreview && !silent) {
             setResumeView('edit', { scroll: false });
@@ -2166,7 +2168,11 @@ async function translateResume(targetLanguage) {
         const response = await apiClient.translateResume(targetLang, draft);
 
         const deferPreview = Boolean(response.preview_deferred);
-        const highlightCount = applyResumeGenerationResult(response, targetLang, { beforeDraftSnapshot, deferPreview });
+        const highlightCount = applyResumeGenerationResult(response, targetLang, {
+            beforeDraftSnapshot,
+            deferPreview,
+            highlightTranslations: true,
+        });
         if (response.resume_content_json) {
             pushResumeUndoSnapshot(beforeSnapshot);
         }

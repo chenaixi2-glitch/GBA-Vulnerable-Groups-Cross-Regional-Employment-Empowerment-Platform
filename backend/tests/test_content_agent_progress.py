@@ -203,9 +203,44 @@ def test_fallback_item_from_fact_uses_structured_fields():
     fact = Fact(
         id="fact_x",
         type="internship",
-        content='{"company":"Demo Co","role":"Analyst","responsibilities":"Month-end close"}',
+        content='{"company":"Demo Co","role":"Analyst","start_date":"2023-01","end_date":"2023-06","responsibilities":"Month-end close"}',
     )
     item = _fallback_item_from_fact(fact)
     assert item.id == "fact_x"
-    assert item.title == "Demo Co"
+    assert item.title == "Demo Co — Analyst (2023-01 – 2023-06)"
     assert "Month-end close" in item.content
+
+
+def test_coerce_section_item_appends_missing_dates():
+    from agents.content_agent import _coerce_section_item
+
+    fact = Fact(
+        id="fact_1",
+        type="internship",
+        content='{"company":"ACME","role":"Intern","start_date":"2023-01","end_date":"2023-06"}',
+    )
+    item = _coerce_section_item(
+        ResumeSectionItemOutput(id="fact_1", title="ACME — Intern", content="Built APIs"),
+        fact=fact,
+    )
+    assert item.title == "ACME — Intern (2023-01 – 2023-06)"
+    assert item.content == "Built APIs"
+def test_coerce_section_item_rebuilds_role_when_llm_returns_company_only():
+    """Polish used to ask for company-only titles; structured role must still appear."""
+    from agents.content_agent import _coerce_section_item
+
+    fact = Fact(
+        id="fact_1",
+        type="internship",
+        content=(
+            '{"company":"ACME","role":"Backend Intern",'
+            '"start_date":"2023-01","end_date":"2023-06",'
+            '"responsibilities":"Built APIs"}'
+        ),
+    )
+    item = _coerce_section_item(
+        ResumeSectionItemOutput(id="fact_1", title="ACME", content="- Built REST APIs"),
+        fact=fact,
+    )
+    assert item.title == "ACME — Backend Intern (2023-01 – 2023-06)"
+    assert "Built REST APIs" in item.content

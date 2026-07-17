@@ -30,6 +30,8 @@ RESUME_CLARIFICATION_PATCH_PROMPT = """你是简历内容增量更新专家。�
 - 若澄清不影响 skills，设 update_skills=false 且 skills 为空数组
 - 禁止编造用户未提供的量化数字或成就
 - skills 中每项保留已有 id（能对应时）；新增技能分配新 id（skill_<序号>）
+- Skills 保持列表式：title=分类名，content=逗号分隔条目（可含熟练度，如 Python（熟练））；禁止段落润色
+- 可补入画像中用户具备且 JD 需要的技能；禁止添加画像未体现的技能；不要把原有简洁条目扩写成描述
 
 返回格式：
 {{
@@ -39,8 +41,8 @@ RESUME_CLARIFICATION_PATCH_PROMPT = """你是简历内容增量更新专家。�
     "skills": [
         {{
             "id": "skill_1",
-            "title": "技能类别或技能名",
-            "content": "技能描述",
+            "title": "Languages",
+            "content": "Python (Proficient), SQL",
             "source_refs": []
         }}
     ]

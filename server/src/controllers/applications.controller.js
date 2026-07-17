@@ -15,6 +15,30 @@ function assertJobOwner(job, user) {
   }
 }
 
+function hasUsableResume(resume) {
+  if (!resume) return false;
+  if (resume.skills_text && String(resume.skills_text).trim()) return true;
+
+  const content = resume.content_json;
+  if (!content || typeof content !== 'object') return false;
+
+  if (Array.isArray(content.skills) && content.skills.length) return true;
+  if (Array.isArray(content.facts) && content.facts.length) return true;
+  if (Array.isArray(content.internships) && content.internships.length) return true;
+  if (Array.isArray(content.education) && content.education.length) return true;
+  if (Array.isArray(content.experience) && content.experience.length) return true;
+  if (content.summary && String(content.summary).trim()) return true;
+  if (content.profile_basic && Object.keys(content.profile_basic).length) return true;
+  if (content.candidate_profile && typeof content.candidate_profile === 'object') return true;
+  if (content.profile && typeof content.profile === 'object') {
+    const profile = content.profile;
+    if (profile.name || profile.email || (Array.isArray(profile.education) && profile.education.length)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function apply(req, res) {
   const jobId = parseInt(req.params.id, 10);
   const job = await JobModel.findById(jobId);
@@ -44,12 +68,16 @@ async function apply(req, res) {
   if (existing) throw ApiError.conflict('You have already applied to this job.');
 
   const resume = await ResumeModel.findByUserId(req.user.id);
+  if (!hasUsableResume(resume)) {
+    throw ApiError.badRequest('Please save a resume before applying.');
+  }
+
   const { score, reasons } = scoreJobResume(job, resume);
 
   const application = await ApplicationModel.createApplication({
     job_id: jobId,
     user_id: req.user.id,
-    resume_snapshot: resume?.content_json || req.body.resume_snapshot || null,
+    resume_snapshot: resume.content_json || req.body.resume_snapshot || null,
     match_score: score,
     match_reasons: reasons,
     cover_message: req.body.cover_message || null,

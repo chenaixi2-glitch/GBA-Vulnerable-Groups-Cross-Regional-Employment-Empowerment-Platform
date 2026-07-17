@@ -260,6 +260,12 @@ def _coerce_section_item(
     content = (getattr(item, "content", "") or "").strip()
     if not content or _is_polish_placeholder(content):
         return _fallback_item_from_fact(fact)
+    # Profile text-box fields (company, role, start/end dates) are authoritative for the
+    # display title. Polish LLMs often return company-only titles; rebuild from structured
+    # fact JSON so role and dates always appear in the resume/PDF.
+    fields = parse_fact_content(fact.type, fact.content or "")
+    derived_title, _ = derive_title_and_content(fact.type, fields)
+    title = derived_title or title
     return ResumeSectionItemOutput(
         id=fact.id,
         title=title,
@@ -969,6 +975,10 @@ async def polish_resume_module_async(
         title=polished_title,
         content=polished_content,
     )
+    # Keep company / role / dates from structured fields in the display title.
+    derived_title, _ = derive_title_and_content(module_type, merged_fields)
+    if derived_title:
+        polished_title = derived_title
     return {
         "module_id": getattr(polished, "id", None) or module_id,
         "title": polished_title,

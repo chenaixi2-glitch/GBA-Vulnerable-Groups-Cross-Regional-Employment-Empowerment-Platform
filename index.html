@@ -25,7 +25,7 @@
         }
         
         html {
-            scroll-padding-top: 5.5rem;
+            scroll-padding-top: 7.5rem;
         }
         
         body {
@@ -36,7 +36,7 @@
         .hero-section {
             background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
             min-height: 100vh;
-            padding-top: 5.5rem;
+            padding-top: 7.5rem;
             padding-bottom: 2rem;
             box-sizing: border-box;
             position: relative;
@@ -285,7 +285,7 @@
         @media (max-width: 768px) {
             .hero-section {
                 min-height: 100vh;
-                padding-top: 5rem;
+                padding-top: 8rem;
                 padding-bottom: 3rem;
             }
             
@@ -419,31 +419,19 @@
 </head>
 <body data-page="home">
     <div id="page-toast" role="status" aria-live="polite"></div>
-    <!-- Navigation Bar -->
+    <!-- Navigation Bar：可换行动态排版，不强制单行 -->
     <nav class="bg-white shadow-md fixed top-0 left-0 right-0 w-full z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex justify-between items-center gap-4">
-                <div class="flex items-center min-w-0">
-                    <a href="./#top-hero" class="flex items-center shrink-0" id="nav-brand-link">
-                        <i class="fas fa-handshake text-2xl text-blue-600 mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800 hidden sm:inline" data-i18n="home.brandName">GBA Platform</span>
-                        <span class="text-xl font-bold text-gray-800 sm:hidden" data-i18n="home.brandShort">GBA</span>
-                    </a>
-                </div>
-                
-                <div class="hidden md:flex items-center space-x-6 lg:space-x-8 flex-1 justify-center min-w-0">
-                    <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="nav-features">Features</a>
-                    <a href="#how-it-works" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="home.howItWorks">How It Works</a>
-                    <a href="#benefits" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="section-benefits-title">Benefits</a>
-                    <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap" data-i18n="nav-faq">FAQ</a>
-                    <a href="individual/demo-jobs-database.html?friendly=1" class="text-emerald-700 hover:text-emerald-900 transition-colors whitespace-nowrap font-medium" data-i18n="home.navFriendlyJobs">Inclusive jobs</a>
-                    <a href="individual/friendly-employers.html" class="text-emerald-700 hover:text-emerald-900 transition-colors whitespace-nowrap font-medium" data-i18n="home.navFriendlyEmployers">Inclusive employers</a>
-                </div>
-                
-                <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
-                    <a href="individual/donation-legal.html" class="hidden md:inline-flex items-center text-amber-700 hover:text-amber-800 font-medium text-sm whitespace-nowrap transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
-                    
-                    <div id="nav-auth-guest" class="hidden md:flex items-center gap-2">
+        <div class="container mx-auto px-4 py-3 flex flex-col gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <a href="./#top-hero" class="flex items-center shrink-0" id="nav-brand-link">
+                    <i class="fas fa-handshake text-2xl text-blue-600 mr-2"></i>
+                    <span class="text-lg sm:text-xl font-bold text-gray-800" data-i18n="home.brandName">GBA Platform</span>
+                </a>
+
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <a href="individual/donation-legal.html" class="inline-flex items-center text-amber-700 hover:text-amber-800 font-medium text-sm transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
+
+                    <div id="nav-auth-guest" class="flex flex-wrap items-center gap-2">
                         <button type="button" id="nav-login-btn" class="text-gray-600 hover:text-blue-600 font-medium px-2 py-1 rounded transition-colors">
                             <span data-i18n="home.login">Log in</span>
                         </button>
@@ -451,40 +439,34 @@
                             <span data-i18n="home.signup">Sign up</span>
                         </button>
                     </div>
-                    
-                    <div id="nav-auth-user" class="hidden md:flex items-center gap-2 lg:gap-3">
-                        <span id="nav-user-greeting" class="text-gray-700 text-sm max-w-[140px] truncate lg:max-w-[200px]"></span>
-                        <a id="nav-portal-link" href="individual/index.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap" data-i18n="home.myPortal">My portal</a>
+
+                    <div id="nav-auth-user" class="hidden flex flex-wrap items-center gap-2 sm:gap-3">
+                        <span id="nav-user-greeting" class="text-gray-700 text-sm max-w-[10rem] sm:max-w-[14rem] truncate"></span>
+                        <a id="nav-portal-link" href="individual/index.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm" data-i18n="home.myPortal">My portal</a>
                         <button type="button" id="nav-logout-btn" class="text-gray-600 hover:text-red-600 text-sm font-medium px-2" data-i18n="home.logOut">Log out</button>
                     </div>
-                    
-                    <button id="mobile-menu-button" type="button" class="md:hidden text-gray-600 hover:text-blue-600 transition-colors p-2" aria-expanded="false" aria-controls="mobile-menu">
-                        <i class="fas fa-bars text-2xl"></i>
-                    </button>
                 </div>
             </div>
-            
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2 border-t border-gray-100 mt-3">
-                <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-features">Features</a>
-                <a href="#how-it-works" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="home.howItWorks">How It Works</a>
-                <a href="#benefits" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="section-benefits-title">Benefits</a>
-                <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
-                <a href="individual/demo-jobs-database.html?friendly=1" class="block py-2 text-emerald-700 font-medium" data-i18n="home.navFriendlyJobs">Inclusive jobs</a>
-                <a href="individual/friendly-employers.html" class="block py-2 text-emerald-700 font-medium" data-i18n="home.navFriendlyEmployers">Inclusive employers</a>
-                <a href="individual/my-applications.html" class="block py-2 text-orange-700 font-medium" data-i18n="home.navMyApplications">My applications</a>
-                <a href="individual/donation-legal.html" class="block py-2 text-amber-700 hover:text-amber-800 font-medium"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
-                <div class="py-3 border-t border-gray-100 mt-2 space-y-2">
-                    <div id="nav-mobile-auth-guest">
-                        <button type="button" class="nav-mobile-login w-full text-left py-2 text-gray-600 hover:text-blue-600 font-medium" data-i18n="home.login">Log in</button>
-                        <button type="button" class="nav-mobile-signup w-full text-left py-2 text-blue-600 font-semibold" data-i18n="home.signup">Sign up</button>
-                    </div>
-                    <span id="nav-mobile-user-line" class="hidden block text-gray-700 text-sm py-1"></span>
-                    <a id="nav-mobile-portal-link" href="individual/index.html" class="hidden text-blue-600 font-medium py-2 block" data-i18n="home.goToPortal">Go to portal</a>
-                    <button type="button" id="nav-mobile-logout-btn" class="hidden w-full text-left py-2 text-gray-600 hover:text-red-600" data-i18n="home.logOut">Log out</button>
-                </div>
+
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 border-t border-gray-100 text-sm sm:text-base">
+                <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-features">Features</a>
+                <a href="#how-it-works" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="home.howItWorks">How It Works</a>
+                <a href="#benefits" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="section-benefits-title">Benefits</a>
+                <a href="#faq" class="text-gray-600 hover:text-blue-600 transition-colors" data-i18n="nav-faq">FAQ</a>
+                <a href="individual/demo-jobs-database.html?friendly=1" class="text-emerald-700 hover:text-emerald-900 transition-colors font-medium" data-i18n="home.navFriendlyJobs">Inclusive jobs</a>
+                <a href="individual/friendly-employers.html" class="text-emerald-700 hover:text-emerald-900 transition-colors font-medium" data-i18n="home.navFriendlyEmployers">Inclusive employers</a>
+                <a href="individual/my-applications.html" class="text-orange-700 hover:text-orange-900 transition-colors font-medium" data-i18n="home.navMyApplications">My applications</a>
             </div>
         </div>
+
+        <!-- 保留空壳供旧脚本安全取节点（桌面已用换行导航，不再展示折叠菜单） -->
+        <div id="mobile-menu" class="hidden" aria-hidden="true">
+            <div id="nav-mobile-auth-guest" class="hidden"></div>
+            <span id="nav-mobile-user-line" class="hidden"></span>
+            <a id="nav-mobile-portal-link" href="individual/index.html" class="hidden" data-i18n="home.goToPortal">Go to portal</a>
+            <button type="button" id="nav-mobile-logout-btn" class="hidden" data-i18n="home.logOut">Log out</button>
+        </div>
+        <button id="mobile-menu-button" type="button" class="hidden" aria-hidden="true" aria-expanded="false" aria-controls="mobile-menu"></button>
     </nav>
     
     <!-- Accessibility Button -->
@@ -1601,9 +1583,9 @@
             var portalA = document.getElementById('nav-portal-link');
 
             if (guestDesk)
-                guestDesk.className = logged ? 'hidden' : 'hidden md:flex items-center gap-2';
+                guestDesk.className = logged ? 'hidden' : 'flex flex-wrap items-center gap-2';
             if (userDesk)
-                userDesk.className = logged ? 'hidden md:flex items-center gap-2 lg:gap-3' : 'hidden';
+                userDesk.className = logged ? 'flex flex-wrap items-center gap-2 sm:gap-3' : 'hidden';
 
             if (greet && session)
                 greet.textContent = homeT('home.navGreeting', 'Hi, {name}', { name: session.displayName });
@@ -2019,6 +2001,7 @@
         function initMobileMenu() {
             var mobileMenuButton = document.getElementById('mobile-menu-button');
             var mobileMenu = document.getElementById('mobile-menu');
+            if (!mobileMenuButton || !mobileMenu) return;
             mobileMenuButton.addEventListener('click', function () {
                 mobileMenu.classList.toggle('hidden');
                 var isOpen = !mobileMenu.classList.contains('hidden');
