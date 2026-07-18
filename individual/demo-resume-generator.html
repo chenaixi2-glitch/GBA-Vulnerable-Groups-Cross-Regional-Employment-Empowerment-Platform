@@ -552,11 +552,18 @@
                             <button type="button" onclick="previewResumeFormat('html')" class="px-2 py-1.5 border border-purple-300 text-purple-800 rounded-lg hover:bg-purple-50 transition-colors text-xs" data-i18n="resume.previewHtml">HTML preview</button>
                             <button type="button" onclick="previewResumeFormat('docx')" class="px-2 py-1.5 border border-blue-300 text-blue-800 rounded-lg hover:bg-blue-50 transition-colors text-xs" data-i18n="resume.previewDocx">DOCX preview</button>
                             <button type="button" onclick="previewResumeFormat('markdown')" class="px-2 py-1.5 border border-teal-300 text-teal-800 rounded-lg hover:bg-teal-50 transition-colors text-xs" data-i18n="resume.previewMarkdown">Markdown preview</button>
-                            <button type="button" data-resume-translate="zh" onclick="translateResumeToChinese()" class="px-3 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm">
+                            <!-- Omitted: resume translate language buttons (keep markup; output fixed to English) -->
+                            <button type="button" data-resume-translate="zh" onclick="translateResumeToChinese()" class="hidden px-3 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm" aria-hidden="true" tabindex="-1">
                                 <i class="fas fa-language mr-1"></i><span class="resume-lang-label">Simplified Chinese</span>
                             </button>
-                            <button id="btn-translate-en" data-resume-translate="en" onclick="translateResumeToEnglish()" class="px-3 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm disabled:opacity-40">
+                            <button type="button" data-resume-translate="zh-TW" onclick="translateResumeToTraditionalChinese()" class="hidden px-3 py-2 border border-rose-300 text-rose-700 rounded-lg hover:bg-rose-50 transition-colors text-sm" aria-hidden="true" tabindex="-1">
+                                <i class="fas fa-language mr-1"></i><span class="resume-lang-label">Traditional Chinese</span>
+                            </button>
+                            <button id="btn-translate-en" data-resume-translate="en" onclick="translateResumeToEnglish()" class="hidden px-3 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm disabled:opacity-40" disabled aria-hidden="true" tabindex="-1">
                                 <i class="fas fa-language mr-1"></i><span class="resume-lang-label">English</span>
+                            </button>
+                            <button type="button" data-resume-translate="pt" onclick="translateResumeToPortuguese()" class="hidden px-3 py-2 border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors text-sm" aria-hidden="true" tabindex="-1">
+                                <i class="fas fa-language mr-1"></i><span class="resume-lang-label">Portuguese</span>
                             </button>
                             <button onclick="optimizeResume()" class="px-3 py-2 border border-amber-400 text-amber-800 rounded-lg hover:bg-amber-50 transition-colors text-sm">
                                 <i class="fas fa-compress-alt mr-1"></i><span data-i18n="resume.optimizeA4">Optimize (A4)</span>
@@ -704,7 +711,8 @@
                     </div>
 
                     <div id="resume-language-section" class="mb-6 p-4 border border-blue-100 bg-blue-50/40 rounded-lg">
-                        <div id="resume-language-picker">
+                        <!-- Omitted: resume content language picker (keep markup; output fixed to English) -->
+                        <div id="resume-language-picker" class="hidden" aria-hidden="true">
                         <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="resume.languageLabel">Resume Language</label>
                         <p class="text-xs text-gray-500 mb-2" data-i18n="resume.selectHint">After selection, we check missing items for that resume format.</p>
                         <p class="text-xs text-gray-500 mb-3" data-i18n="resume.languageActionHint">Complete Step 2 to generate a JD-tailored resume, then review and export in the editor.</p>
@@ -713,9 +721,17 @@
                                 class="px-3 py-2.5 border border-red-300 rounded-lg text-sm font-medium text-red-800 hover:bg-red-50 ring-2 ring-blue-500 bg-blue-50">
                                 <i class="fas fa-file-alt mr-1"></i><span class="resume-lang-label">Simplified Chinese</span>
                             </button>
+                            <button type="button" data-resume-lang="zh-TW" onclick="onResumeLanguageSelected('zh-TW')"
+                                class="px-3 py-2.5 border border-rose-300 rounded-lg text-sm font-medium text-rose-800 hover:bg-rose-50">
+                                <i class="fas fa-file-alt mr-1"></i><span class="resume-lang-label">Traditional Chinese</span>
+                            </button>
                             <button type="button" data-resume-lang="en" onclick="onResumeLanguageSelected('en')"
                                 class="px-3 py-2.5 border border-blue-300 rounded-lg text-sm font-medium text-blue-800 hover:bg-blue-50">
                                 <i class="fas fa-globe mr-1"></i><span class="resume-lang-label">English</span>
+                            </button>
+                            <button type="button" data-resume-lang="pt" onclick="onResumeLanguageSelected('pt')"
+                                class="px-3 py-2.5 border border-emerald-300 rounded-lg text-sm font-medium text-emerald-800 hover:bg-emerald-50">
+                                <i class="fas fa-globe-europe mr-1"></i><span class="resume-lang-label">Portuguese</span>
                             </button>
                         </div>
                         </div>

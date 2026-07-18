@@ -147,11 +147,13 @@ FONT_BY_LANGUAGE: dict[str, str] = {
     "pt": "Inter",
 }
 
-VALID_RESUME_LANGUAGES: frozenset[str] = frozenset({"zh", "en"})
+VALID_RESUME_LANGUAGES: frozenset[str] = frozenset({"zh", "zh-TW", "en", "pt"})
 
 LANGUAGE_LABELS: dict[str, str] = {
     "zh": "简体中文",
+    "zh-TW": "繁體中文",
     "en": "English",
+    "pt": "Português (Macau)",
 }
 
 EMPLOYER_TYPE_LABELS: dict[str, str] = {
@@ -198,38 +200,38 @@ def normalize_language(language: str | None) -> str:
         "english": "en",
         "英文": "en",
         "英语": "en",
-        # Legacy Portuguese / Traditional Chinese collapse into supported set
-        "pt": "en",
-        "pt-pt": "en",
-        "pt-mo": "en",
-        "portuguese": "en",
-        "português": "en",
-        "portugues": "en",
-        "葡语": "en",
-        "葡語": "en",
         "zh": "zh",
         "zh-cn": "zh",
         "zh-hans": "zh",
         "简体": "zh",
         "中文": "zh",
-        "zh-tw": "zh",
-        "zh-hant": "zh",
-        "zh-hk": "zh",
-        "繁体": "zh",
-        "繁體": "zh",
+        "zh-tw": "zh-TW",
+        "zh-hant": "zh-TW",
+        "繁体": "zh-TW",
+        "繁體": "zh-TW",
+        "pt": "pt",
+        "pt-pt": "pt",
+        "pt-mo": "pt",
+        "portuguese": "pt",
+        "português": "pt",
+        "portugues": "pt",
+        "葡语": "pt",
+        "葡語": "pt",
     }
     mapped = aliases.get(lang, raw if raw in VALID_RESUME_LANGUAGES else "en")
     return mapped if mapped in VALID_RESUME_LANGUAGES else "en"
 
 
 def is_cjk_resume_language(language: str) -> bool:
-    return normalize_language(language) == "zh"
+    return normalize_language(language) in ("zh", "zh-TW")
 
 
 def opposite_language(language: str) -> str:
     lang = normalize_language(language)
     if lang == "en":
         return "zh"
+    if lang == "pt":
+        return "en"
     return "en"
 
 
@@ -243,6 +245,10 @@ def jd_output_language_instruction(language: str) -> str:
     label = language_label(lang)
     if lang == "en":
         return f"Write the entire job description in English ({label}). Use standard English JD structure and wording."
+    if lang == "pt":
+        return f"Write the entire job description in Portuguese ({label}), suitable for Macau/GBA cross-border hiring."
+    if lang == "zh-TW":
+        return f"请使用繁体中文（{label}）撰写整份岗位描述，包括岗位名称、职责、任职要求、加分项。"
     return f"请使用简体中文（{label}）撰写整份岗位描述，包括岗位名称、职责、任职要求、加分项。"
 
 

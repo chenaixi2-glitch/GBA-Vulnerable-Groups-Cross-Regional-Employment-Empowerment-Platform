@@ -321,21 +321,30 @@
 
                 <textarea id="jd-text" rows="4" class="w-full border border-gray-300 rounded-lg p-3" data-i18n-placeholder="learningPath.jdPlaceholder" placeholder="Optional: paste full JD for more accurate gap analysis..."></textarea>
 
-                <div id="learning-path-language-section" class="mt-4 pt-4 border-t border-gray-100">
+                <!-- Omitted: learning-path content language picker (keep markup; output fixed to English) -->
+                <div id="learning-path-language-section" class="hidden mt-4 pt-4 border-t border-gray-100" aria-hidden="true">
                     <h4 class="font-semibold text-gray-900 mb-1 flex items-center gap-2 text-sm">
                         <i class="fas fa-language text-orange-600"></i>
                         <span data-i18n="learningPath.contentLanguageEarlyTitle">Content Language (choose first)</span>
                     </h4>
                     <p class="text-xs text-orange-800 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2 mb-2" data-i18n="learningPath.contentLanguageEarlyHint">Select the content language before analyzing skill gaps and generating your learning path. This language is used for all generated content.</p>
                     <p class="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-3" data-i18n="learningPath.contentLanguageRegenHint">To change the language after generation, re-run the analysis and regenerate your learning path.</p>
-                    <div class="grid grid-cols-2 gap-2 max-w-md">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl">
                         <button type="button" data-learning-path-lang="zh" onclick="selectLearningPathLanguage('zh')"
                             class="px-2 py-2 border border-red-300 rounded-lg text-xs font-medium text-red-800 hover:bg-red-50">
                             <i class="fas fa-comments mr-1"></i><span class="interview-lang-label">Simplified Chinese</span>
                         </button>
+                        <button type="button" data-learning-path-lang="zh-TW" onclick="selectLearningPathLanguage('zh-TW')"
+                            class="px-2 py-2 border border-rose-300 rounded-lg text-xs font-medium text-rose-800 hover:bg-rose-50">
+                            <i class="fas fa-comments mr-1"></i><span class="interview-lang-label">Traditional Chinese</span>
+                        </button>
                         <button type="button" data-learning-path-lang="en" onclick="selectLearningPathLanguage('en')"
                             class="px-2 py-2 border border-blue-300 rounded-lg text-xs font-medium text-blue-800 hover:bg-blue-50">
                             <i class="fas fa-globe mr-1"></i><span class="interview-lang-label">English</span>
+                        </button>
+                        <button type="button" data-learning-path-lang="pt" onclick="selectLearningPathLanguage('pt')"
+                            class="px-2 py-2 border border-emerald-300 rounded-lg text-xs font-medium text-emerald-800 hover:bg-emerald-50">
+                            <i class="fas fa-globe mr-1"></i><span class="interview-lang-label">Portuguese</span>
                         </button>
                     </div>
                     <p id="learning-path-language-status" class="text-xs text-gray-500 mt-2"></p>

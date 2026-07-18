@@ -2,37 +2,34 @@
     'use strict';
 
     var LANG_KEY = 'gba_ui_lang';
-    /** UI languages: English + Simplified Chinese only. */
-    var SUPPORTED = ['en', 'zh-CN'];
+    /** UI is English-only; other locales were removed from the product. */
+    var SUPPORTED = ['en'];
     var LABELS = {
-        en: 'English',
-        'zh-CN': '简体中文'
+        en: 'English'
     };
 
     /** Language names shown in the switcher */
     var LANG_NAMES_FB = {
-        en: 'English',
-        'zh-CN': 'Simplified Chinese'
+        en: 'English'
     };
 
     /** UI locale → resume/API language code */
     var UI_TO_API = {
-        en: 'en',
-        'zh-CN': 'zh'
+        en: 'en'
     };
 
     var API_TO_UI = {
-        en: 'en',
-        zh: 'zh-CN',
-        'zh-cn': 'zh-CN'
+        en: 'en'
     };
 
     var RESUME_LANG_LABELS = {
-        zh: { en: 'Simplified Chinese', 'zh-CN': '简体中文' },
-        en: { en: 'English', 'zh-CN': '英文' }
+        zh: { en: 'Simplified Chinese' },
+        'zh-TW': { en: 'Traditional Chinese' },
+        en: { en: 'English' },
+        pt: { en: 'Portuguese (Macau)' }
     };
 
-    var RESUME_LANG_CODES = ['zh', 'en'];
+    var RESUME_LANG_CODES = ['zh', 'zh-TW', 'en', 'pt'];
     /** Legacy flat data-i18n keys → dotted locale keys (home page / shared footer) */
     var LEGACY_I18N_KEYS = {
         'nav-features': 'home.features',
@@ -143,26 +140,12 @@
         '请先保存简历后再投递。': 'Please save a resume before applying.'
     };
 
-    function normalizeUiLang(code) {
-        if (!code) return 'en';
-        var raw = String(code).trim();
-        if (LABELS[raw]) return raw;
-        var lower = raw.toLowerCase().replace('_', '-');
-        if (lower === 'zh' || lower === 'zh-cn' || lower === 'zh-hans') return 'zh-CN';
-        // Legacy locales removed from product → map to closest supported language
-        if (lower === 'zh-tw' || lower === 'zh-hant' || lower === 'zh-hk') return 'zh-CN';
-        if (lower === 'pt' || lower === 'pt-pt' || lower === 'pt-mo' || lower === 'yue') return 'en';
-        return 'en';
-    }
-
     function getLang() {
         try {
             var saved = localStorage.getItem(LANG_KEY);
-            var normalized = normalizeUiLang(saved);
-            if (saved && saved !== normalized) {
-                localStorage.setItem(LANG_KEY, normalized);
+            if (saved && saved !== 'en') {
+                localStorage.setItem(LANG_KEY, 'en');
             }
-            if (LABELS[normalized]) return normalized;
         } catch (e) {}
         return 'en';
     }
@@ -578,8 +561,7 @@
     }
 
     function setLang(lang) {
-        lang = normalizeUiLang(lang);
-        if (!LABELS[lang]) return Promise.resolve();
+        lang = 'en';
         try {
             localStorage.setItem(LANG_KEY, lang);
         } catch (e) {}
@@ -615,133 +597,24 @@
     }
 
     function languageSwitcherInnerHtml() {
-        return (
-            '<button type="button" class="flex items-center gap-2 text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-50" aria-haspopup="listbox" aria-expanded="false">' +
-            '<i class="fas fa-globe" aria-hidden="true"></i><span id="current-language">English</span><span aria-hidden="true">▾</span></button>' +
-            '<div class="language-dropdown" role="listbox">' +
-            '<a href="#" role="option" data-lang="en" data-i18n-lang="en">English</a>' +
-            '<a href="#" role="option" data-lang="zh-CN" data-i18n-lang="zh-CN">Simplified Chinese</a>' +
-            '</div>'
-        );
+        return '';
     }
 
     function bindLanguageSwitcherToggles() {
-        document.querySelectorAll('.language-selector').forEach(function (sel) {
-            if (sel.dataset.langToggleBound) return;
-            sel.dataset.langToggleBound = '1';
-            var btn = sel.querySelector('button');
-            if (!btn) return;
-            btn.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                var willOpen = !sel.classList.contains('is-open');
-                document.querySelectorAll('.language-selector').forEach(function (other) {
-                    other.classList.remove('is-open');
-                    var otherBtn = other.querySelector('button');
-                    if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
-                });
-                if (willOpen) {
-                    sel.classList.add('is-open');
-                    btn.setAttribute('aria-expanded', 'true');
-                }
-            });
-        });
-        if (document.documentElement.dataset.gbaLangGlobalClick) return;
-        document.documentElement.dataset.gbaLangGlobalClick = '1';
-        document.addEventListener('click', function () {
-            document.querySelectorAll('.language-selector').forEach(function (sel) {
-                sel.classList.remove('is-open');
-                var btn = sel.querySelector('button');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-            });
-        });
-        document.addEventListener('keydown', function (event) {
-            if (event.key !== 'Escape') return;
-            document.querySelectorAll('.language-selector').forEach(function (sel) {
-                sel.classList.remove('is-open');
-                var btn = sel.querySelector('button');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-            });
-        });
+        /* UI language switcher disabled (English-only). */
     }
 
     function ensureLanguageSwitcher() {
-        // Remove leftover Traditional Chinese / Portuguese options from any page markup
-        document.querySelectorAll('[data-lang="zh-TW"], [data-lang="pt"], [data-i18n-lang="zh-TW"], [data-i18n-lang="pt"]').forEach(function (node) {
-            if (node.parentNode) node.parentNode.removeChild(node);
+        /* Hide legacy multi-language switcher UI. */
+        document.querySelectorAll('.language-selector, #gba-lang-switcher').forEach(function (el) {
+            el.style.display = 'none';
         });
-
-        if (document.getElementById('gba-lang-switcher') || document.getElementById('ui-lang')) {
-            return;
-        }
-        if (document.querySelector('.language-selector [data-lang]')) {
-            return;
-        }
-
-        injectLanguageSwitcherStyles();
-        var wrap = document.createElement('div');
-        wrap.id = 'gba-lang-switcher';
-
         var slot = document.getElementById('header-lang-slot');
-        if (slot) {
-            slot.style.display = '';
-            wrap.className = 'language-selector relative text-sm shrink-0';
-            if (slot.classList.contains('gba-lang-on-dark') || slot.dataset.langTheme === 'dark') {
-                wrap.classList.add('gba-lang-on-dark');
-            }
-            wrap.innerHTML = languageSwitcherInnerHtml();
-            slot.appendChild(wrap);
-            return;
-        }
-
-        var headerRow =
-            document.querySelector('header.flex.items-center.justify-between') ||
-            document.querySelector('header .flex.items-center.justify-between') ||
-            document.querySelector('header .flex.flex-wrap.items-center.justify-between') ||
-            document.querySelector('nav .flex.items-center.justify-between') ||
-            document.querySelector('nav .flex.flex-wrap.items-center.justify-between');
-
-        wrap.innerHTML = languageSwitcherInnerHtml();
-        if (headerRow) {
-            wrap.className = 'language-selector shrink-0';
-            headerRow.appendChild(wrap);
-            return;
-        }
-
-        wrap.className = 'language-selector gba-lang-floating';
-        document.body.appendChild(wrap);
+        if (slot) slot.style.display = 'none';
     }
 
     function bindLanguageControls() {
-        document.querySelectorAll('[data-lang]').forEach(function (node) {
-            if (node.dataset.i18nBound) return;
-            node.dataset.i18nBound = '1';
-            node.addEventListener('click', function (event) {
-                event.preventDefault();
-                setLang(node.getAttribute('data-lang'));
-                document.querySelectorAll('.language-selector').forEach(function (sel) {
-                    sel.classList.remove('is-open');
-                });
-                if (window.showToast) window.showToast(t('common.languageUpdated', 'Language updated.'));
-            });
-        });
-        var existingSelect = document.getElementById('ui-lang');
-        if (existingSelect && !existingSelect.dataset.i18nBound) {
-            existingSelect.dataset.i18nBound = '1';
-            // Keep only en / zh-CN options in any native <select>
-            Array.prototype.slice.call(existingSelect.options || []).forEach(function (opt) {
-                var v = normalizeUiLang(opt.value);
-                if (opt.value !== 'en' && opt.value !== 'zh-CN' && opt.value !== 'zh') {
-                    opt.remove();
-                } else if (opt.value === 'zh') {
-                    opt.value = 'zh-CN';
-                }
-            });
-            existingSelect.addEventListener('change', function () {
-                var v = existingSelect.value;
-                setLang(v === 'zh' ? 'zh-CN' : v);
-            });
-        }
+        /* UI language switching disabled (English-only). */
     }
 
     var initPromise = null;
@@ -750,10 +623,7 @@
         if (initPromise) return initPromise;
         initPromise = Promise.resolve().then(function () {
             snapshotI18nDefaults();
-            injectLanguageSwitcherStyles();
             ensureLanguageSwitcher();
-            bindLanguageSwitcherToggles();
-            bindLanguageControls();
             var lang = getLang();
             return loadLocale(lang).then(function () {
                 applyLanguage(lang);
@@ -764,27 +634,20 @@
     }
 
     function uiLangToApiLang(uiLang) {
-        return UI_TO_API[uiLang || getLang()] || 'en';
+        return 'en';
     }
 
     function apiLangToUiLang(apiLang) {
-        if (!apiLang) return getLang();
-        var key = String(apiLang).toLowerCase().replace('_', '-');
-        if (key === 'zh' || key === 'zh-cn' || key === 'zh-hans' || key === 'zh-tw' || key === 'zh-hant') {
-            return 'zh-CN';
-        }
-        if (key === 'pt' || key === 'pt-pt' || key === 'pt-mo') return 'en';
-        return API_TO_UI[key] || 'en';
+        return 'en';
     }
 
     function normalizeResumeLang(code) {
         var raw = String(code || 'zh').trim();
         var lower = raw.toLowerCase().replace('_', '-');
         if (lower === 'en' || lower === 'english') return 'en';
-        // Former Traditional Chinese / Portuguese resume targets collapse to zh / en
-        if (lower === 'zh-tw' || lower === 'zh-hant' || lower === 'zh_tw' || lower === 'zh-hk') return 'zh';
-        if (lower === 'pt' || lower === 'pt-pt' || lower === 'pt-mo') return 'en';
-        if (lower === 'zh' || lower === 'zh-cn' || lower === 'chinese' || lower === 'zh-hans') return 'zh';
+        if (lower === 'zh-tw' || lower === 'zh-hant' || lower === 'zh_tw') return 'zh-TW';
+        if (lower === 'pt' || lower === 'pt-pt' || lower === 'pt-mo') return 'pt';
+        if (lower === 'zh' || lower === 'zh-cn' || lower === 'chinese') return 'zh';
         return RESUME_LANG_CODES.indexOf(raw) !== -1 ? raw : 'zh';
     }
 
@@ -816,13 +679,9 @@
         normalizeResumeLang: normalizeResumeLang,
         resumeLangLabel: resumeLangLabel,
         RESUME_LANG_CODES: RESUME_LANG_CODES,
-        SUPPORTED: SUPPORTED,
         LABELS: LABELS,
         LANG_KEY: LANG_KEY
     };
-
-    // Global aliases used by resume / interview / learning-path scripts
-    window.normalizeResumeLang = normalizeResumeLang;
 
     window.GBASite = window.GBASite || {};
     window.GBASite.applyLanguage = applyLanguage;

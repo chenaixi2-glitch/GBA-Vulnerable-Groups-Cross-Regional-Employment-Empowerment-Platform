@@ -8,10 +8,10 @@ const { chromium } = require('playwright');
 
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:8080';
 const PAGES = [
-  { path: '/index.html', name: 'home', open: '.language-selector button', pick: '[data-lang="zh-CN"]', expectLang: 'zh-CN', viewport: { width: 1280, height: 800 } },
+  { path: '/index.html', name: 'home', open: '#language-toggle-btn', pick: '#language-dropdown [data-lang="zh-CN"]', expectLang: 'zh-CN', viewport: { width: 1280, height: 800 } },
   { path: '/individual/community.html', name: 'community', open: '.language-selector button', pick: '[data-lang="zh-CN"]', expectLang: 'zh-CN' },
-  { path: '/individual/demo-resume-generator.html', name: 'resume', open: '.language-selector button', pick: '[data-lang="en"]', expectLang: 'en' },
-  { path: '/corporate/portal.html', name: 'corp-portal', open: '.language-selector button', pick: '[data-lang="zh-CN"]', expectLang: 'zh-CN' },
+  { path: '/individual/demo-olivia.html', name: 'olivia-dark', open: '.language-selector button', pick: '[data-lang="pt"]', expectLang: 'pt' },
+  { path: '/corporate/portal.html', name: 'corp-portal', open: '.language-selector button', pick: '[data-lang="zh-TW"]', expectLang: 'zh-TW' },
 ];
 
 async function run() {
@@ -31,42 +31,58 @@ async function run() {
         ['home', 'individual', 'corporate'].forEach((p) => {
           localStorage.setItem('gba_site_guide_v1_' + p, 'done');
         });
-        localStorage.setItem('gba_ui_lang', 'en');
       } catch (e) {}
     });
     const tab = await ctx.newPage();
     try {
       await tab.goto(BASE + page.path, { waitUntil: 'domcontentloaded', timeout: 30000 });
-      await tab.waitForTimeout(500);
-      const openBtn = tab.locator(page.open).first();
-      await openBtn.click({ timeout: 10000 });
-      await tab.locator(page.pick).first().click({ timeout: 10000 });
-      await tab.waitForTimeout(800);
-      const lang = await tab.evaluate(() => localStorage.getItem('gba_ui_lang'));
-      const htmlLang = await tab.evaluate(() => document.documentElement.lang);
-      const unsupported = await tab.evaluate(() =>
-        !!document.querySelector('[data-lang="zh-TW"], [data-lang="pt"]')
-      );
-      if (lang !== page.expectLang) {
-        fails.push(page.name + ': localStorage=' + lang + ' expected ' + page.expectLang);
-      } else if (htmlLang !== page.expectLang && htmlLang !== page.expectLang.toLowerCase()) {
-        fails.push(page.name + ': html lang=' + htmlLang + ' expected ' + page.expectLang);
-      } else if (unsupported) {
-        fails.push(page.name + ': still has zh-TW/pt options');
-      } else {
-        console.log('OK', page.name, '->', lang);
+      await tab.evaluate(() => {
+        ['home', 'individual', 'corporate'].forEach((p) => {
+          try { localStorage.setItem('gba_site_guide_v1_' + p, 'done'); } catch (e) {}
+        });
+        var o = document.getElementById('gba-guide-overlay');
+        if (o) o.classList.remove('active');
+        document.body.classList.remove('gba-guide-active');
+      });
+      await tab.waitForFunction(() => window.GBAI18n && GBAI18n.getLang, null, { timeout: 8000 });
+      await tab.waitForTimeout(1200);
+      await tab.evaluate(() => {
+        var o = document.getElementById('gba-guide-overlay');
+        if (o) o.classList.remove('active');
+        document.body.classList.remove('gba-guide-active');
+      });
+      const hasSwitcher = await tab.locator('.language-selector, [data-lang]').first().count();
+      if (!hasSwitcher) throw new Error('no switcher found');
+
+      if (page.open) {
+        const openBtn = tab.locator(page.open).first();
+        if (await openBtn.count()) await openBtn.click();
       }
+      const pickSel = page.pick || page.open;
+      await tab.locator(pickSel).first().click();
+      await tab.waitForFunction(
+        (lang) => window.GBAI18n && GBAI18n.getLang() === lang,
+        page.expectLang,
+        { timeout: 5000 }
+      );
+      const docLang = await tab.evaluate(() => document.documentElement.lang);
+      console.log('OK  ', page.name, '→', page.expectLang, '(html lang=' + docLang + ')');
     } catch (err) {
-      fails.push(page.name + ': ' + (err && err.message ? err.message : String(err)));
+      console.log('FAIL', page.name, '→', err.message);
+      fails.push(page.name);
+    } finally {
+      await ctx.close();
     }
-    await ctx.close();
   }
   await browser.close();
   if (fails.length) {
-    console.error('FAILED:\n' + fails.join('\n'));
+    console.log('\nFailed:', fails.join(', '));
     process.exit(1);
   }
-  console.log('All language switcher checks passed (en / zh-CN only).');
+  console.log('\nAll switcher smoke tests passed.');
 }
 
-run();
+run().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

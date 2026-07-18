@@ -249,7 +249,8 @@
                                     <option value="executive" data-i18n="resume.executive">Executive</option>
                                 </select>
                             </div>
-                            <div id="interview-question-language-section" class="mt-4 pt-4 border-t border-gray-100">
+                            <!-- Omitted: interview question language picker (keep markup; output fixed to English) -->
+                            <div id="interview-question-language-section" class="hidden mt-4 pt-4 border-t border-gray-100" aria-hidden="true">
                                 <h4 class="font-semibold text-gray-900 mb-1 flex items-center gap-2 text-sm">
                                     <i class="fas fa-language text-purple-600"></i>
                                     <span data-i18n="interview.questionLanguageEarlyTitle">Question Language (choose first)</span>
@@ -261,9 +262,17 @@
                                         class="px-2 py-2 border border-red-300 rounded-lg text-xs font-medium text-red-800 hover:bg-red-50">
                                         <i class="fas fa-comments mr-1"></i><span class="interview-lang-label">Simplified Chinese</span>
                                     </button>
+                                    <button type="button" data-question-lang="zh-TW" data-interview-lang="zh-TW" onclick="selectQuestionLanguage('zh-TW')"
+                                        class="px-2 py-2 border border-rose-300 rounded-lg text-xs font-medium text-rose-800 hover:bg-rose-50">
+                                        <i class="fas fa-comments mr-1"></i><span class="interview-lang-label">Traditional Chinese</span>
+                                    </button>
                                     <button type="button" data-question-lang="en" data-interview-lang="en" onclick="selectQuestionLanguage('en')"
                                         class="px-2 py-2 border border-blue-300 rounded-lg text-xs font-medium text-blue-800 hover:bg-blue-50">
                                         <i class="fas fa-globe mr-1"></i><span class="interview-lang-label">English</span>
+                                    </button>
+                                    <button type="button" data-question-lang="pt" data-interview-lang="pt" onclick="selectQuestionLanguage('pt')"
+                                        class="px-2 py-2 border border-emerald-300 rounded-lg text-xs font-medium text-emerald-800 hover:bg-emerald-50">
+                                        <i class="fas fa-globe mr-1"></i><span class="interview-lang-label">Portuguese</span>
                                     </button>
                                 </div>
                                 <p id="interview-question-language-status" class="text-xs text-gray-500 mt-2"></p>
@@ -476,17 +485,26 @@
                     
                     <textarea id="answer-input" class="w-full border border-gray-300 rounded-lg p-4 text-sm answer-textarea focus:ring-2 focus:ring-purple-500 focus:border-transparent" data-i18n-placeholder="interview.answerPlaceholder" placeholder="Type your answer here. Use the STAR method (Situation, Task, Action, Result) for behavioral questions..."></textarea>
 
-                    <div class="mt-4 pt-4 border-t border-gray-100" data-interview-feedback-language-section>
+                    <!-- Omitted: question-bank feedback language picker (keep markup; output fixed to English) -->
+                    <div class="hidden mt-4 pt-4 border-t border-gray-100" aria-hidden="true" data-interview-feedback-language-section>
                         <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.feedbackLanguageLabel">Feedback Language</label>
                         <p class="text-xs text-gray-500 mb-2" data-i18n="interview.feedbackLanguageHint">AI feedback and debrief will use this language. Independent of page and question language.</p>
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <button type="button" data-feedback-lang="zh" data-interview-lang="zh" onclick="selectFeedbackLanguage('zh')"
                                 class="px-2 py-2 border border-red-300 rounded-lg text-xs font-medium text-red-800 hover:bg-red-50">
                                 <span class="interview-lang-label">Simplified Chinese</span>
                             </button>
+                            <button type="button" data-feedback-lang="zh-TW" data-interview-lang="zh-TW" onclick="selectFeedbackLanguage('zh-TW')"
+                                class="px-2 py-2 border border-rose-300 rounded-lg text-xs font-medium text-rose-800 hover:bg-rose-50">
+                                <span class="interview-lang-label">Traditional Chinese</span>
+                            </button>
                             <button type="button" data-feedback-lang="en" data-interview-lang="en" onclick="selectFeedbackLanguage('en')"
                                 class="px-2 py-2 border border-blue-300 rounded-lg text-xs font-medium text-blue-800 hover:bg-blue-50">
                                 <span class="interview-lang-label">English</span>
+                            </button>
+                            <button type="button" data-feedback-lang="pt" data-interview-lang="pt" onclick="selectFeedbackLanguage('pt')"
+                                class="px-2 py-2 border border-emerald-300 rounded-lg text-xs font-medium text-emerald-800 hover:bg-emerald-50">
+                                <span class="interview-lang-label">Portuguese</span>
                             </button>
                         </div>
                     </div>
@@ -590,17 +608,26 @@
                         </h3>
                         <textarea id="interactive-answer-input" class="w-full border border-gray-300 rounded-lg p-4 text-sm answer-textarea focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Type your answer... The interviewer may follow up based on your response."></textarea>
                         <p id="interactive-phase-hint" class="text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 mt-2"></p>
-                        <div class="mt-4 pt-4 border-t border-gray-100" data-interview-feedback-language-section>
+                        <!-- Omitted: interactive feedback language picker (keep markup; output fixed to English) -->
+                        <div class="hidden mt-4 pt-4 border-t border-gray-100" aria-hidden="true" data-interview-feedback-language-section>
                             <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="interview.feedbackLanguageLabel">Feedback Language</label>
                             <p class="text-xs text-gray-500 mb-2" data-i18n="interview.feedbackLanguageHint">Brief feedback and debrief will use this language.</p>
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <button type="button" data-feedback-lang="zh" data-interview-lang="zh" onclick="selectFeedbackLanguage('zh')"
                                     class="px-2 py-2 border border-red-300 rounded-lg text-xs font-medium text-red-800 hover:bg-red-50">
                                     <span class="interview-lang-label">Simplified Chinese</span>
                                 </button>
+                                <button type="button" data-feedback-lang="zh-TW" data-interview-lang="zh-TW" onclick="selectFeedbackLanguage('zh-TW')"
+                                    class="px-2 py-2 border border-rose-300 rounded-lg text-xs font-medium text-rose-800 hover:bg-rose-50">
+                                    <span class="interview-lang-label">Traditional Chinese</span>
+                                </button>
                                 <button type="button" data-feedback-lang="en" data-interview-lang="en" onclick="selectFeedbackLanguage('en')"
                                     class="px-2 py-2 border border-blue-300 rounded-lg text-xs font-medium text-blue-800 hover:bg-blue-50">
                                     <span class="interview-lang-label">English</span>
+                                </button>
+                                <button type="button" data-feedback-lang="pt" data-interview-lang="pt" onclick="selectFeedbackLanguage('pt')"
+                                    class="px-2 py-2 border border-emerald-300 rounded-lg text-xs font-medium text-emerald-800 hover:bg-emerald-50">
+                                    <span class="interview-lang-label">Portuguese</span>
                                 </button>
                             </div>
                         </div>
