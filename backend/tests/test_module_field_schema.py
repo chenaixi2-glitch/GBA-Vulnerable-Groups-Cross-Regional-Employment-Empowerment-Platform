@@ -165,3 +165,55 @@ def test_enrich_title_with_dates_skips_when_already_present():
     fields = {"start_date": "2023-01", "end_date": "2023-06"}
     assert enrich_title_with_dates("ACME (2023-01 – 2023-06)", fields) == "ACME (2023-01 – 2023-06)"
     assert enrich_title_with_dates("ACME", fields) == "ACME (2023-01 – 2023-06)"
+
+
+def test_parse_fact_splits_composite_display_title_after_polish():
+    """Full-resume optimize syncs plain content + composite title back into fields."""
+    fields = parse_fact_content(
+        "internship",
+        "Built REST APIs and reduced latency by 20%",
+        title="ACME Corp — Backend Intern (2023-01 – 2023-06)",
+    )
+    assert fields["company"] == "ACME Corp"
+    assert fields["role"] == "Backend Intern"
+    assert fields["start_date"] == "2023-01"
+    assert fields["end_date"] == "2023-06"
+    assert "Built REST APIs" in fields["responsibilities"]
+
+
+def test_apply_polish_does_not_stuff_composite_into_company():
+    from tools.module_field_schema import apply_polish_to_fields
+
+    original = {
+        "company": "ACME",
+        "role": "Intern",
+        "start_date": "2023-01",
+        "end_date": "2023-06",
+        "responsibilities": "Old text",
+    }
+    merged = apply_polish_to_fields(
+        "internship",
+        original,
+        title="ACME — Intern (2023-01 – 2023-06)",
+        content="Polished bullet about APIs",
+    )
+    assert merged["company"] == "ACME"
+    assert merged["role"] == "Intern"
+    assert merged["start_date"] == "2023-01"
+    assert merged["end_date"] == "2023-06"
+    assert merged["responsibilities"] == "Polished bullet about APIs"
+
+
+def test_normalize_unsquashes_polluted_company_field():
+    from tools.module_field_schema import normalize_experience_fields
+
+    fields = normalize_experience_fields("internship", {
+        "company": "VSystems — Web3 Product Development (2026-03 – 2025-05)",
+        "role": "",
+        "start_date": "",
+        "end_date": "",
+    })
+    assert fields["company"] == "VSystems"
+    assert fields["role"] == "Web3 Product Development"
+    assert fields["start_date"] == "2026-03"
+    assert fields["end_date"] == "2025-05"

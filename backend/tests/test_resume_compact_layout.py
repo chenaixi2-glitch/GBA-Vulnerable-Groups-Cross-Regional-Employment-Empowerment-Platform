@@ -77,8 +77,8 @@ class TestCompactSkillsAndAwards:
         assert "Python" in out.skills[0].content
         assert "Docker" in out.skills[0].content
 
-    def test_merges_many_singleton_skill_rows_into_one_line(self):
-        """LLM often emits one skill per SectionItem — Optimize must fold them."""
+    def test_merges_many_singleton_skill_rows_into_categorized_groups(self):
+        """LLM often emits one skill per SectionItem — Optimize must classify & fold."""
         names = [
             "English (Fluent)",
             "Mandarin (Native)",
@@ -101,15 +101,24 @@ class TestCompactSkillsAndAwards:
         ])
         out, changed = compact_skills_and_awards(content)
         assert changed is True
-        assert len(out.skills) == 1
-        line = out.skills[0].content
-        assert "\n" not in line
-        assert "HTML/CSS/JavaScript (Familiar)" in line
-        assert "English (Fluent)" in line
-        assert "Data Analysis" in line
-        assert line.count(", ") == len(names) - 1
+        assert 2 <= len(out.skills) <= 4
+        by_prefix = {s.content.split(":", 1)[0].strip(): s.content for s in out.skills}
+        assert "Languages" in by_prefix
+        assert "English (Fluent)" in by_prefix["Languages"]
+        assert "Mandarin (Native)" in by_prefix["Languages"]
+        assert "Programming" in by_prefix
+        assert "Python (Proficient)" in by_prefix["Programming"]
+        assert "HTML/CSS/JavaScript (Familiar)" in by_prefix["Programming"]
+        assert "Tools" in by_prefix
+        assert "Adobe Photoshop" in by_prefix["Tools"]
+        assert "Word/Excel/PowerPoint" in by_prefix["Tools"]
+        assert "Data & AI" in by_prefix
+        assert "LLMs" in by_prefix["Data & AI"]
+        assert "Data Analysis" in by_prefix["Data & AI"]
+        for item in out.skills:
+            assert "\n" not in item.content
 
-    def test_keeps_category_groups_and_only_merges_flat_rows(self):
+    def test_keeps_category_groups_and_classifies_flat_rows(self):
         content = _resume(skills=[
             SectionItem(id="s1", title="Languages", content="Python, TypeScript"),
             SectionItem(id="s2", title="", content="Docker"),
@@ -119,7 +128,9 @@ class TestCompactSkillsAndAwards:
         assert changed is True
         assert len(out.skills) == 2
         assert out.skills[0].content == "Languages: Python, TypeScript"
-        assert out.skills[1].content == "Docker, Kubernetes"
+        assert out.skills[1].content.startswith("Tools:")
+        assert "Docker" in out.skills[1].content
+        assert "Kubernetes" in out.skills[1].content
 
 
 class TestItemToInlineLine:

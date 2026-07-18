@@ -2,8 +2,8 @@
 
 Does NOT merge the Skills section with the Awards section.
 Within each section: put each item on one line when possible, and lightly trim wording.
-For Skills only: also fold many singleton skill rows into comma-separated line(s)
-so "one skill per item" lists stop wasting vertical space.
+For Skills only: fold many singleton skill rows into categorized comma-separated
+groups (Languages / Programming / Data & AI / Tools), capped at 4 groups.
 """
 
 from __future__ import annotations
@@ -34,6 +34,85 @@ _FILLER_PATTERNS = (
 
 # Intentional skill *group* lines keep a category prefix, e.g. "Languages: Python, SQL"
 _SKILL_GROUP_LINE_RE = re.compile(r"^[^:：\n]{1,48}[:：]\s*\S")
+
+_PROFICIENCY_SUFFIX_RE = re.compile(
+    r"\s*\((?:Fluent|Native|Proficient|Familiar|Intermediate|Basic|Advanced|"
+    r"流利|母語|母语|熟练|熟練|了解|精通|一般|熟悉)\)\s*$",
+    re.I,
+)
+
+# Category id → localized labels (A4 constraint: ≤4 groups after fold)
+_SKILL_CATEGORY_LABELS: dict[str, dict[str, str]] = {
+    "en": {
+        "languages": "Languages",
+        "programming": "Programming",
+        "data_ai": "Data & AI",
+        "tools": "Tools",
+        "other": "Other",
+    },
+    "zh": {
+        "languages": "语言",
+        "programming": "编程",
+        "data_ai": "数据与AI",
+        "tools": "工具",
+        "other": "其他",
+    },
+    "zh-TW": {
+        "languages": "語言",
+        "programming": "程式",
+        "data_ai": "數據與AI",
+        "tools": "工具",
+        "other": "其他",
+    },
+    "pt": {
+        "languages": "Idiomas",
+        "programming": "Programação",
+        "data_ai": "Dados e IA",
+        "tools": "Ferramentas",
+        "other": "Outros",
+    },
+}
+
+_SKILL_CATEGORY_ORDER = ("languages", "programming", "data_ai", "tools", "other")
+_MAX_SKILL_GROUPS = 4
+
+_SPOKEN_LANGUAGE_NAMES = frozenset({
+    "english", "mandarin", "cantonese", "chinese", "portuguese", "spanish",
+    "french", "german", "japanese", "korean", "italian", "russian", "arabic",
+    "hindi", "thai", "vietnamese", "indonesian", "malay", "dutch", "polish",
+    "putonghua", "普通话", "普通話", "粤语", "粵語", "英语", "英語", "中文",
+    "汉语", "漢語", "葡语", "葡語", "葡萄牙语", "葡萄牙語", "法语", "法語",
+    "德语", "德語", "日语", "日語", "韩语", "韓語", "西班牙语", "西班牙語",
+    "inglês", "ingles", "mandarim", "cantonês", "cantones", "chinês", "chines",
+    "português", "portugues", "espanhol", "francês", "frances", "alemão", "alemao",
+    "japonês", "japones", "coreano",
+})
+
+_DATA_AI_PATTERNS = tuple(re.compile(p, re.I) for p in (
+    r"\bllms?\b", r"\bopenai\b", r"\bchatgpt\b", r"\bgpt-?\d*\b",
+    r"machine\s*learning", r"\bdeep\s*learning\b", r"\bnlp\b",
+    r"data\s*(analysis|analytics|preprocessing|processing|mining|visualization)",
+    r"\bpandas\b", r"\bnumpy\b", r"\bpytorch\b", r"\btensorflow\b", r"\bsklearn\b",
+    r"数据分析", r"數據分析", r"数据预处理", r"數據預處理", r"机器学习", r"機器學習",
+    r"深度学习", r"深度學習", r"人工智能", r"\bai\b", r"análise\s*de\s*dados",
+))
+
+_PROGRAMMING_PATTERNS = tuple(re.compile(p, re.I) for p in (
+    r"\bpython\b", r"\bjava\b", r"\bjavascript\b", r"\btypescript\b", r"\bsql\b",
+    r"\bhtml\b", r"\bcss\b", r"\breact\b", r"\bvue\b", r"\bangular\b", r"\bnode\.?js\b",
+    r"\bgolang\b", r"\brust\b", r"\bc\+\+\b", r"\bc#\b", r"\bphp\b", r"\bruby\b",
+    r"\bswift\b", r"\bkotlin\b", r"\bscala\b", r"\bmatlab\b", r"\bfastapi\b",
+    r"\bdjango\b", r"\bflask\b", r"\bspring\b", r"\b\.net\b", r"\bgo\b",
+    r"编程", r"程式", r"前端", r"后端", r"後端",
+))
+
+_TOOLS_PATTERNS = tuple(re.compile(p, re.I) for p in (
+    r"\bword\b", r"\bexcel\b", r"\bpowerpoint\b", r"\boffice\b", r"\bphotoshop\b",
+    r"\billustrator\b", r"\bpremiere\b", r"\badobe\b", r"\bfigma\b", r"\bcanva\b",
+    r"\bdocker\b", r"\bkubernetes\b", r"\bk8s\b", r"\bgit\b", r"\blinux\b",
+    r"\baws\b", r"\bazure\b", r"\bgcp\b", r"\bjira\b", r"\bnotion\b", r"\btablo\b",
+    r"\bpower\s*bi\b", r"\bsketch\b", r"\bxd\b", r"办公", r"辦公",
+))
 
 
 def _now_iso() -> str:
@@ -108,6 +187,109 @@ def _is_skill_group_line(line: str) -> bool:
     return bool(_SKILL_GROUP_LINE_RE.match((line or "").strip()))
 
 
+def _skill_base_name(skill: str) -> str:
+    return _PROFICIENCY_SUFFIX_RE.sub("", (skill or "").strip()).strip().casefold()
+
+
+def _classify_skill(skill: str) -> str:
+    """Map one skill label to a category id (deterministic heuristics)."""
+    base = _skill_base_name(skill)
+    if not base:
+        return "other"
+    if base in _SPOKEN_LANGUAGE_NAMES:
+        return "languages"
+    # Multi-part office stacks like Word/Excel/PowerPoint
+    parts = [p.strip() for p in re.split(r"[/／]", base) if p.strip()]
+    if parts and all(p in _SPOKEN_LANGUAGE_NAMES for p in parts):
+        return "languages"
+    for pattern in _DATA_AI_PATTERNS:
+        if pattern.search(skill) or pattern.search(base):
+            return "data_ai"
+    for pattern in _PROGRAMMING_PATTERNS:
+        if pattern.search(skill) or pattern.search(base):
+            return "programming"
+    for pattern in _TOOLS_PATTERNS:
+        if pattern.search(skill) or pattern.search(base):
+            return "tools"
+    if parts:
+        for part in parts:
+            for pattern in _TOOLS_PATTERNS:
+                if pattern.search(part):
+                    return "tools"
+            for pattern in _PROGRAMMING_PATTERNS:
+                if pattern.search(part):
+                    return "programming"
+    return "other"
+
+
+def _category_label(category_id: str, language: str) -> str:
+    lang = normalize_language(language)
+    labels = _SKILL_CATEGORY_LABELS.get(lang) or _SKILL_CATEGORY_LABELS["en"]
+    return labels.get(category_id) or _SKILL_CATEGORY_LABELS["en"][category_id]
+
+
+def _fold_categories_to_max(
+    buckets: dict[str, list[str]],
+    *,
+    max_groups: int = _MAX_SKILL_GROUPS,
+) -> dict[str, list[str]]:
+    """Keep at most *max_groups* non-empty categories (A4: ≤4)."""
+    non_empty = [cid for cid in _SKILL_CATEGORY_ORDER if buckets.get(cid)]
+    if len(non_empty) <= max_groups:
+        return {cid: buckets[cid] for cid in non_empty}
+
+    # Prefer folding "other" into "tools", then merge smallest into previous
+    folded = {cid: list(buckets[cid]) for cid in non_empty}
+    while len(folded) > max_groups:
+        if "other" in folded and "tools" in folded:
+            folded["tools"].extend(folded.pop("other"))
+            continue
+        if "other" in folded and len(folded) > max_groups:
+            # Promote other → tools label bucket
+            folded.setdefault("tools", []).extend(folded.pop("other"))
+            continue
+        # Merge last category into the one before it
+        ordered = [cid for cid in _SKILL_CATEGORY_ORDER if cid in folded]
+        tail = ordered[-1]
+        prev = ordered[-2]
+        folded[prev].extend(folded.pop(tail))
+    return {cid: folded[cid] for cid in _SKILL_CATEGORY_ORDER if folded.get(cid)}
+
+
+def _group_flat_skills(
+    skill_lines: list[str],
+    *,
+    language: str,
+    template_item: "SectionItem",
+) -> list["SectionItem"]:
+    """Classify singleton skills into labeled one-line groups."""
+    buckets: dict[str, list[str]] = {cid: [] for cid in _SKILL_CATEGORY_ORDER}
+    for line in _dedupe_preserve(skill_lines):
+        buckets[_classify_skill(line)].append(line)
+
+    folded = _fold_categories_to_max(buckets)
+    now = _now_iso()
+    items: list["SectionItem"] = []
+    for index, category_id in enumerate(folded):
+        label = _category_label(category_id, language)
+        body = _join_tokens(folded[category_id], language)
+        content = f"{label}: {body}"
+        if index == 0:
+            items.append(template_item.model_copy(update={
+                "title": "",
+                "content": content,
+                "updated_at": now,
+            }))
+        else:
+            items.append(template_item.model_copy(update={
+                "id": f"{template_item.id}_{category_id}",
+                "title": "",
+                "content": content,
+                "updated_at": now,
+            }))
+    return items
+
+
 def _compact_section_items(
     items: list["SectionItem"],
     *,
@@ -144,10 +326,10 @@ def _merge_flat_skill_items(
     *,
     language: str,
 ) -> tuple[list["SectionItem"], bool]:
-    """Fold consecutive singleton skill rows into one comma-separated item.
+    """Fold singleton skill rows into categorized one-line groups.
 
     Keeps intentional group lines (e.g. ``Languages: Python, SQL``) as separate rows.
-    Does not re-split on ``/`` so names like ``HTML/CSS/JavaScript (Familiar)`` stay intact.
+    Classifies ungrouped skills into Languages / Programming / Data & AI / Tools (≤4).
     """
     if len(items) <= 1:
         return items, False
@@ -164,19 +346,14 @@ def _merge_flat_skill_items(
             out.append(flat_buf[0])
             flat_buf.clear()
             return
-        lines = _dedupe_preserve([
+        lines = [
             _item_display_line(item) for item in flat_buf if _item_display_line(item)
-        ])
+        ]
         if not lines:
             flat_buf.clear()
             return
-        merged = _join_tokens(lines, language)
-        first = flat_buf[0]
-        out.append(first.model_copy(update={
-            "title": "",
-            "content": merged,
-            "updated_at": _now_iso(),
-        }))
+        grouped = _group_flat_skills(lines, language=language, template_item=flat_buf[0])
+        out.extend(grouped)
         changed = True
         flat_buf.clear()
 
@@ -194,7 +371,7 @@ def _merge_flat_skill_items(
 def compact_skills_and_awards(resume_content: "ResumeContent") -> tuple["ResumeContent", bool]:
     """Within Skills and within Awards: one-line items + light wording trim.
 
-    Skills additionally merges many one-skill-per-row items into comma-separated line(s).
+    Skills additionally classifies many one-skill-per-row items into category groups.
     Skills and Awards remain two separate sections.
     """
     lang = normalize_language(getattr(resume_content.meta, "language", None) or "en")

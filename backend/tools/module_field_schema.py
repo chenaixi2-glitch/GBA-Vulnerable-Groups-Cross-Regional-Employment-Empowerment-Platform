@@ -40,6 +40,50 @@ def is_employment_type(module_type: str) -> bool:
     return module_type in _EMPLOYMENT_TYPES
 
 
+_DATE_SUFFIX_RE = re.compile(
+    r"\(((?:20\d{2}|19\d{2}|Present|至今|今)[^)]*)\)\s*$",
+    re.IGNORECASE,
+)
+
+
+def is_composite_display_title(title: str) -> bool:
+    """True for polished display titles like ``ACME — Intern (2023-01 – 2023-06)``."""
+    text = (title or "").strip()
+    if not text:
+        return False
+    if "—" in text or "–" in text:
+        return True
+    return bool(re.search(r"\((?:20\d{2}|19\d{2}|Present|至今|今)", text, re.IGNORECASE))
+
+
+def split_composite_display_title(title: str) -> dict[str, str] | None:
+    """Split a resume display title into company/role/start_date/end_date."""
+    raw = (title or "").strip()
+    if not raw or not is_composite_display_title(raw):
+        return None
+
+    result = {"company": "", "role": "", "start_date": "", "end_date": ""}
+    head = raw
+    date_match = _DATE_SUFFIX_RE.search(raw)
+    if date_match:
+        range_text = date_match.group(1).strip()
+        parts = [p.strip() for p in re.split(r"\s*[–—]\s*|\s+-\s+", range_text) if p.strip()]
+        if len(parts) >= 2:
+            result["start_date"] = parts[0]
+            result["end_date"] = " – ".join(parts[1:])
+        elif len(parts) == 1:
+            result["start_date"] = parts[0]
+        head = raw[: date_match.start()].strip()
+
+    dash_parts = [p.strip() for p in re.split(r"\s*[—–]\s*", head) if p.strip()]
+    if len(dash_parts) >= 2:
+        result["company"] = dash_parts[0]
+        result["role"] = " — ".join(dash_parts[1:])
+    else:
+        result["company"] = head
+    return result
+
+
 def _empty_fields(module_type: str) -> dict[str, Any]:
     order = MODULE_FIELD_ORDER.get(module_type, MODULE_FIELD_ORDER["custom"])
     empty: dict[str, Any] = {}
@@ -59,17 +103,39 @@ def normalize_experience_fields(module_type: str, fields: dict[str, Any]) -> dic
     if module_type not in ("work", "internship", "project"):
         return out
 
+    # Unsquash if company/title accidentally holds a composite display string.
+    if is_employment_type(module_type) and is_composite_display_title(str(out.get("company") or "")):
+        split = split_composite_display_title(str(out.get("company") or ""))
+        if split:
+            out["company"] = split["company"] or out.get("company")
+            if split["role"] and not str(out.get("role") or "").strip():
+                out["role"] = split["role"]
+            if split["start_date"] and not str(out.get("start_date") or "").strip():
+                out["start_date"] = split["start_date"]
+            if split["end_date"] and not str(out.get("end_date") or "").strip():
+                out["end_date"] = split["end_date"]
+    if module_type == "project" and is_composite_display_title(str(out.get("title") or "")):
+        split = split_composite_display_title(str(out.get("title") or ""))
+        if split:
+            out["title"] = split["company"] or out.get("title")
+            if split["role"] and not str(out.get("role") or "").strip():
+                out["role"] = split["role"]
+            if split["start_date"] and not str(out.get("start_date") or "").strip():
+                out["start_date"] = split["start_date"]
+            if split["end_date"] and not str(out.get("end_date") or "").strip():
+                out["end_date"] = split["end_date"]
+
     company = str(out.get("company") or "").strip()
     role = str(out.get("role") or "").strip()
     title = str(out.get("title") or out.get("name") or "").strip()
 
     if is_employment_type(module_type):
-        if not role and title and company and title != company:
+        if not role and title and company and title != company and not is_composite_display_title(title):
             out["role"] = title
-        elif not company and title and not role:
+        elif not company and title and not role and not is_composite_display_title(title):
             # Legacy: company-only extraction stored the employer in title.
             out["company"] = title
-        elif not company and title and role and title != role:
+        elif not company and title and role and title != role and not is_composite_display_title(title):
             out["company"] = title
     elif module_type == "project":
         if not title and company:
@@ -77,6 +143,43 @@ def normalize_experience_fields(module_type: str, fields: dict[str, Any]) -> dic
         # role stays as-is for projects (person's role on the project)
 
     return out
+
+
+def _apply_display_title_to_fields(
+    module_type: str,
+    fields: dict[str, Any],
+    display_title: str,
+    *,
+    overwrite: bool = False,
+) -> dict[str, Any]:
+    """Map a resume display title into structured fields without stuffing composites."""
+    merged = dict(fields or {})
+    title = (display_title or "").strip()
+    if not title:
+        return merged
+
+    target_key = "company" if is_employment_type(module_type) else ("title" if module_type == "project" else "")
+    if not target_key:
+        if not merged.get("title"):
+            merged["title"] = title
+        return merged
+
+    split = split_composite_display_title(title)
+    if not split:
+        if overwrite or not str(merged.get(target_key) or "").strip():
+            merged[target_key] = title
+        return merged
+
+    current = str(merged.get(target_key) or "").strip()
+    if split["company"] and (overwrite or not current or is_composite_display_title(current)):
+        merged[target_key] = split["company"]
+    if split["role"] and not str(merged.get("role") or "").strip():
+        merged["role"] = split["role"]
+    if split["start_date"] and not str(merged.get("start_date") or "").strip():
+        merged["start_date"] = split["start_date"]
+    if split["end_date"] and not str(merged.get("end_date") or "").strip():
+        merged["end_date"] = split["end_date"]
+    return merged
 
 
 def _coerce_field_value(key: str, value: Any) -> Any:
@@ -111,23 +214,30 @@ def parse_fact_content(module_type: str, content: str, *, title: str = "") -> di
         except (json.JSONDecodeError, TypeError):
             if module_type == "skill":
                 fields["skill"] = text
-            elif is_employment_type(module_type):
-                fields["company"] = parsed_title or text.split("\n", 1)[0]
-                fields["responsibilities"] = text.split("\n", 1)[1].strip() if "\n" in text else text
-            elif module_type == "project":
-                fields["title"] = parsed_title or text.split("\n", 1)[0]
+            elif is_employment_type(module_type) or module_type == "project":
+                display = parsed_title or text.split("\n", 1)[0]
+                fields = _apply_display_title_to_fields(
+                    module_type, fields, display, overwrite=True
+                )
                 fields["responsibilities"] = text.split("\n", 1)[1].strip() if "\n" in text else text
             else:
                 fields["content"] = text
     elif parsed_title:
         if module_type == "skill":
             fields["skill"] = parsed_title
-        elif is_employment_type(module_type):
-            fields["company"] = parsed_title
-        elif module_type == "project":
-            fields["title"] = parsed_title
+        elif is_employment_type(module_type) or module_type == "project":
+            fields = _apply_display_title_to_fields(
+                module_type, fields, parsed_title, overwrite=True
+            )
         else:
             fields["title"] = parsed_title
+
+    # Polished resume items pass a composite display title alongside plain-text content;
+    # fill any missing company/role/dates without overwriting structured JSON fields.
+    if parsed_title and (is_employment_type(module_type) or module_type == "project"):
+        fields = _apply_display_title_to_fields(
+            module_type, fields, parsed_title, overwrite=False
+        )
 
     return normalize_experience_fields(module_type, fields)
 
@@ -197,9 +307,9 @@ def derive_title_and_content(module_type: str, fields: dict[str, Any]) -> tuple[
         role = str(fields.get("role") or "").strip()
         # Fallback: job title may still only exist in title after older facts.
         title_field = str(fields.get("title") or "").strip()
-        if not role and title_field and title_field != company:
+        if not role and title_field and title_field != company and not is_composite_display_title(title_field):
             role = title_field
-        if not company and title_field and title_field != role:
+        if not company and title_field and title_field != role and not is_composite_display_title(title_field):
             company = title_field
         if company and role:
             head = f"{company} — {role}"
@@ -316,35 +426,16 @@ def apply_polish_to_fields(
     Display titles may include role/dates (e.g. "ACME — Intern (2023-01 – 2023-06)");
     do not overwrite structured company/title with that composite string.
     """
-    merged = dict(fields or {})
-    polished_title = (title or "").strip()
-    polished_content = (content or "").strip()
-    composite = bool(
-        polished_title
-        and ("—" in polished_title or "–" in polished_title or "(" in polished_title)
+    merged = _apply_display_title_to_fields(
+        module_type,
+        fields,
+        title,
+        overwrite=not is_composite_display_title(title),
     )
-    if is_employment_type(module_type):
-        if polished_title and not composite:
-            merged["company"] = polished_title
-        elif polished_title and not merged.get("company"):
-            # Fallback: take text before em-dash / parenthesis as company.
-            head = re.split(r"\s*[—–(]", polished_title, maxsplit=1)[0].strip()
-            if head:
-                merged["company"] = head
-        if polished_content:
+    polished_content = (content or "").strip()
+    if polished_content:
+        if is_employment_type(module_type) or module_type == "project":
             merged["responsibilities"] = polished_content
-    elif module_type == "project":
-        if polished_title and not composite:
-            merged["title"] = polished_title
-        elif polished_title and not merged.get("title"):
-            head = re.split(r"\s*[—–(]", polished_title, maxsplit=1)[0].strip()
-            if head:
-                merged["title"] = head
-        if polished_content:
-            merged["responsibilities"] = polished_content
-    else:
-        if polished_title:
-            merged["title"] = polished_title
-        if polished_content:
+        else:
             merged["content"] = polished_content
-    return merged
+    return normalize_experience_fields(module_type, merged)

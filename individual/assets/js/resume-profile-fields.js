@@ -161,8 +161,109 @@ const ResumeProfileFields = {
         return type === 'work' || type === 'internship';
     },
 
+    /**
+     * Display titles from resume polish look like "ACME — Intern (2023-01 – 2023-06)".
+     * Those must not be written into the company/title text box as a single string.
+     */
+    isCompositeDisplayTitle(title) {
+        const t = String(title || '').trim();
+        if (!t) return false;
+        if (/[—–]/.test(t)) return true;
+        return /\((?:20\d{2}|19\d{2}|Present|至今|今)/i.test(t);
+    },
+
+    splitCompositeDisplayTitle(title) {
+        const raw = String(title || '').trim();
+        if (!raw || !this.isCompositeDisplayTitle(raw)) return null;
+
+        const result = { company: '', role: '', start_date: '', end_date: '' };
+        let head = raw;
+
+        const dateMatch = raw.match(/\(((?:20\d{2}|19\d{2}|Present|至今|今)[^)]*)\)\s*$/i);
+        if (dateMatch) {
+            const range = dateMatch[1].trim();
+            const parts = range.split(/\s*[–—]\s*|\s+-\s+/).map((s) => s.trim()).filter(Boolean);
+            if (parts.length >= 2) {
+                result.start_date = parts[0];
+                result.end_date = parts.slice(1).join(' – ');
+            } else if (parts.length === 1) {
+                result.start_date = parts[0];
+            }
+            head = raw.slice(0, dateMatch.index).trim();
+        }
+
+        const dashParts = head.split(/\s*[—–]\s*/).map((s) => s.trim()).filter(Boolean);
+        if (dashParts.length >= 2) {
+            result.company = dashParts[0];
+            result.role = dashParts.slice(1).join(' — ');
+        } else {
+            result.company = head;
+        }
+        return result;
+    },
+
+    /**
+     * Apply a resume display title into structured editor fields without stuffing
+     * company/role/dates into the company box (full-resume sync / module polish).
+     */
+    applyDisplayTitleToFields(type, fields, displayTitle, { overwriteCompany = false } = {}) {
+        const merged = { ...(fields || {}) };
+        const title = String(displayTitle || '').trim();
+        if (!title) return merged;
+
+        const applySplit = (targetKey) => {
+            const split = this.splitCompositeDisplayTitle(title);
+            if (!split) {
+                if (overwriteCompany || !merged[targetKey]) merged[targetKey] = title;
+                return;
+            }
+            if (split.company && (overwriteCompany || !merged[targetKey]
+                || this.isCompositeDisplayTitle(merged[targetKey]))) {
+                merged[targetKey] = split.company;
+            }
+            if (this.isEmploymentType(type) || type === 'project') {
+                if (split.role && !merged.role) merged.role = split.role;
+                if (split.start_date && !merged.start_date) merged.start_date = split.start_date;
+                if (split.end_date && !merged.end_date) merged.end_date = split.end_date;
+            }
+        };
+
+        if (this.isEmploymentType(type)) {
+            applySplit('company');
+        } else if (type === 'project') {
+            applySplit('title');
+        } else if (!merged.title) {
+            merged.title = title;
+        }
+        return merged;
+    },
+
+    /** Final guard: if company/title still holds a composite display string, split it. */
+    unsquashCompositeFields(type, fields) {
+        const merged = { ...(fields || {}) };
+        if (this.isEmploymentType(type) && this.isCompositeDisplayTitle(merged.company)) {
+            const split = this.splitCompositeDisplayTitle(merged.company);
+            if (split) {
+                merged.company = split.company || merged.company;
+                if (split.role && !merged.role) merged.role = split.role;
+                if (split.start_date && !merged.start_date) merged.start_date = split.start_date;
+                if (split.end_date && !merged.end_date) merged.end_date = split.end_date;
+            }
+        }
+        if (type === 'project' && this.isCompositeDisplayTitle(merged.title)) {
+            const split = this.splitCompositeDisplayTitle(merged.title);
+            if (split) {
+                merged.title = split.company || merged.title;
+                if (split.role && !merged.role) merged.role = split.role;
+                if (split.start_date && !merged.start_date) merged.start_date = split.start_date;
+                if (split.end_date && !merged.end_date) merged.end_date = split.end_date;
+            }
+        }
+        return merged;
+    },
+
     parseFactContent(type, content, title = '') {
-        const fields = this.defaultFieldsForType(type);
+        let fields = this.defaultFieldsForType(type);
         const text = (content || '').trim();
         const parsedTitle = (title || '').trim();
 
@@ -182,10 +283,20 @@ const ResumeProfileFields = {
                 if (type === 'skill') {
                     fields.skill = text;
                 } else if (this.isEmploymentType(type)) {
-                    fields.company = parsedTitle || text.split('\n', 1)[0];
+                    fields = this.applyDisplayTitleToFields(
+                        type,
+                        fields,
+                        parsedTitle || text.split('\n', 1)[0],
+                        { overwriteCompany: true }
+                    );
                     fields.responsibilities = text.includes('\n') ? text.split('\n').slice(1).join('\n').trim() : text;
                 } else if (type === 'project') {
-                    fields.title = parsedTitle || text.split('\n', 1)[0];
+                    fields = this.applyDisplayTitleToFields(
+                        type,
+                        fields,
+                        parsedTitle || text.split('\n', 1)[0],
+                        { overwriteCompany: true }
+                    );
                     fields.responsibilities = text.includes('\n') ? text.split('\n').slice(1).join('\n').trim() : text;
                 } else {
                     fields.content = text;
@@ -193,23 +304,33 @@ const ResumeProfileFields = {
             }
         } else if (parsedTitle) {
             if (type === 'skill') fields.skill = parsedTitle;
-            else if (this.isEmploymentType(type)) fields.company = parsedTitle;
-            else if (type === 'project') fields.title = parsedTitle;
-            else fields.title = parsedTitle;
+            else if (this.isEmploymentType(type) || type === 'project') {
+                fields = this.applyDisplayTitleToFields(type, fields, parsedTitle, { overwriteCompany: true });
+            } else {
+                fields.title = parsedTitle;
+            }
         }
 
-        if (this.isEmploymentType(type) && !fields.company && fields.title && !fields.role) {
+        // When content was structured JSON, display title may still carry role/dates
+        // lost during polish sync — fill only missing structured fields.
+        if (parsedTitle && (this.isEmploymentType(type) || type === 'project')) {
+            fields = this.applyDisplayTitleToFields(type, fields, parsedTitle, { overwriteCompany: false });
+        }
+
+        if (this.isEmploymentType(type) && !fields.company && fields.title && !fields.role
+            && !this.isCompositeDisplayTitle(fields.title)) {
             fields.company = fields.title;
         }
         if (this.isEmploymentType(type) && fields.company && fields.title
-            && !fields.role && fields.title !== fields.company) {
+            && !fields.role && fields.title !== fields.company
+            && !this.isCompositeDisplayTitle(fields.title)) {
             // Profile LLM often puts job title in `title` and leaves `role` empty.
             fields.role = fields.title;
         }
         if (type === 'project' && !fields.title && fields.company) {
             fields.title = fields.company;
         }
-        return fields;
+        return this.unsquashCompositeFields(type, fields);
     },
 
     getEntryFields(type, entry) {
@@ -400,7 +521,7 @@ const ResumeProfileFields = {
                     merged[key] = result.fields[key];
                 }
             });
-            return merged;
+            return this.unsquashCompositeFields(type, merged);
         }
         if (type === 'education') {
             return {
@@ -410,18 +531,20 @@ const ResumeProfileFields = {
                 degree: result.degree ?? currentFields.degree,
             };
         }
-        const merged = { ...currentFields };
-        if (this.isEmploymentType(type)) {
-            if (result.title) merged.company = result.title;
-            if (result.content) merged.responsibilities = result.content;
-        } else if (type === 'project') {
-            if (result.title) merged.title = result.title;
+        let merged = { ...currentFields };
+        if (this.isEmploymentType(type) || type === 'project') {
+            if (result.title) {
+                merged = this.applyDisplayTitleToFields(type, merged, result.title, {
+                    // Only overwrite when the API did not send structured fields.
+                    overwriteCompany: !this.isCompositeDisplayTitle(result.title),
+                });
+            }
             if (result.content) merged.responsibilities = result.content;
         } else {
             if (result.title) merged.title = result.title;
             if (result.content) merged.content = result.content;
         }
-        return merged;
+        return this.unsquashCompositeFields(type, merged);
     },
 };
 
