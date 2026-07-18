@@ -44,20 +44,20 @@ async def ensure_session_access(session_id: str, user: dict[str, Any] | None) ->
 
     current = extract_user_id(user)
     if current is None:
-        raise HTTPException(status_code=401, detail="需要登录才能访问该会话")
+        raise HTTPException(status_code=401, detail="Login required to access this session")
     if current != owner:
-        raise HTTPException(status_code=403, detail="无权访问该会话")
+        raise HTTPException(status_code=403, detail="Access denied to this session")
 
 
 async def bind_session_owner(session_id: str, user: dict[str, Any]) -> int:
     """将会话绑定到当前登录用户（首次写入时生效）。"""
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     owner = await _get_session_owner(session_id)
     if owner is not None and owner != user_id:
-        raise HTTPException(status_code=403, detail="无权访问该会话")
+        raise HTTPException(status_code=403, detail="Access denied to this session")
 
     if owner is None:
         client = await get_redis_client()

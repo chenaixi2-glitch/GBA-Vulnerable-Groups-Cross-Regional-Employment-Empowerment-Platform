@@ -26,7 +26,7 @@ async def generate_jd_from_title_for_profile(
 ) -> JDTitleGenerationOutput:
     """根据岗位名称与候选人画像生成定向 JD，不写入缓存（需用户确认）。"""
     if state.candidate_profile is None:
-        raise ValueError("请先上传简历以提取候选人画像")
+        raise ValueError("Please upload a resume first to extract the candidate profile")
 
     employer_key = normalize_employer_type(employer_type or (state.meta.employer_type if state.meta else ""))
     employer_text = employer_type_label(employer_key) or "未指定"
@@ -53,12 +53,12 @@ async def generate_jd_from_title_for_profile(
         output_lang,
     )
     if not (parsed.jd_text or "").strip():
-        raise RuntimeError("岗位描述生成结果为空")
+        raise RuntimeError("Job description generation returned empty result")
 
     resolved_title = (parsed.title or job_title).strip()
     jd_text = ensure_title_in_jd_text(resolved_title, (parsed.jd_text or "").strip(), output_lang)
     if not jd_text:
-        raise RuntimeError("岗位描述生成结果为空")
+        raise RuntimeError("Job description generation returned empty result")
 
     return parsed.model_copy(update={
         "title": resolved_title or extract_title_from_jd(jd_text),

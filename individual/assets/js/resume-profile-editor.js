@@ -246,7 +246,15 @@ const ProfileEditor = {
     formatSavedAt(iso) {
         if (!iso) return '';
         try {
-            const d = new Date(iso);
+            const s = String(iso).trim();
+            let d;
+            if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)) {
+                d = new Date(s);
+            } else {
+                // Naive MySQL DATETIME from server is UTC
+                const normalized = s.includes('T') ? s : s.replace(' ', 'T');
+                d = new Date(normalized + 'Z');
+            }
             if (Number.isNaN(d.getTime())) return String(iso);
             return d.toLocaleString(undefined, {
                 year: 'numeric',

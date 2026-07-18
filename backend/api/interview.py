@@ -512,9 +512,11 @@ async def interactive_history(request: Request, limit: int = 20) -> dict[str, An
     db = MySQLStore(pool)
     records = await db.list_interactive_interviews_by_user(user_id, limit=min(limit, 50))
 
+    from api.datetime_utils import serialize_utc_datetime
+
     for row in records:
         if row.get("saved_at") is not None:
-            row["saved_at"] = str(row["saved_at"])
+            row["saved_at"] = serialize_utc_datetime(row["saved_at"])
 
     return {"records": records}
 
@@ -536,8 +538,10 @@ async def get_saved_interactive_interview(record_id: str, request: Request) -> d
     if record is None:
         raise HTTPException(status_code=404, detail="Record not found or access denied")
 
+    from api.datetime_utils import serialize_utc_datetime
+
     if record.get("saved_at") is not None:
-        record["saved_at"] = str(record["saved_at"])
+        record["saved_at"] = serialize_utc_datetime(record["saved_at"])
 
     return record
 
@@ -642,15 +646,20 @@ async def question_bank_history(request: Request, limit: int = 20) -> dict[str, 
     db = MySQLStore(pool)
     records = await db.list_question_bank_sessions_by_user(user_id, limit=min(limit, 50))
 
+    from api.datetime_utils import serialize_utc_datetime
+
     for row in records:
-        if row.get("saved_at") is not None:
-            row["saved_at"] = str(row["saved_at"])
+        raw_saved_at = row.get("saved_at")
         if not (row.get("record_name") or "").strip():
             try:
-                ts = datetime.strptime(str(row["saved_at"]), "%Y-%m-%d %H:%M:%S")
+                ts = raw_saved_at if isinstance(raw_saved_at, datetime) else datetime.strptime(
+                    str(raw_saved_at), "%Y-%m-%d %H:%M:%S"
+                )
                 row["record_name"] = _default_question_bank_record_name(ts)
-            except ValueError:
-                row["record_name"] = str(row.get("saved_at") or "")
+            except (TypeError, ValueError):
+                row["record_name"] = str(raw_saved_at or "")
+        if raw_saved_at is not None:
+            row["saved_at"] = serialize_utc_datetime(raw_saved_at)
 
     return {"records": records}
 
@@ -672,13 +681,18 @@ async def get_saved_question_bank(record_id: str, request: Request) -> dict[str,
     if record is None:
         raise HTTPException(status_code=404, detail="Record not found or access denied")
 
-    if record.get("saved_at") is not None:
-        record["saved_at"] = str(record["saved_at"])
+    from api.datetime_utils import serialize_utc_datetime
+
+    raw_saved_at = record.get("saved_at")
     if not (record.get("record_name") or "").strip():
         try:
-            ts = datetime.strptime(str(record["saved_at"]), "%Y-%m-%d %H:%M:%S")
+            ts = raw_saved_at if isinstance(raw_saved_at, datetime) else datetime.strptime(
+                str(raw_saved_at), "%Y-%m-%d %H:%M:%S"
+            )
             record["record_name"] = _default_question_bank_record_name(ts)
-        except ValueError:
-            record["record_name"] = str(record.get("saved_at") or "")
+        except (TypeError, ValueError):
+            record["record_name"] = str(raw_saved_at or "")
+    if raw_saved_at is not None:
+        record["saved_at"] = serialize_utc_datetime(raw_saved_at)
 
     return record

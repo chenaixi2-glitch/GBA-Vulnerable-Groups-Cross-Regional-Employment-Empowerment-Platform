@@ -71,11 +71,11 @@ class TestCompactSkillsAndAwards:
         ])
         out, changed = compact_skills_and_awards(content)
         assert changed is True
-        lower = out.skills[0].content.lower()
-        assert "proficient" not in lower
-        assert "familiar" not in lower
-        assert "Python" in out.skills[0].content
-        assert "Docker" in out.skills[0].content
+        joined = " | ".join(s.content for s in out.skills).lower()
+        assert "proficient" not in joined
+        assert "familiar" not in joined
+        assert "python" in joined
+        assert "docker" in joined
 
     def test_merges_many_singleton_skill_rows_into_categorized_groups(self):
         """LLM often emits one skill per SectionItem — Optimize must classify & fold."""
@@ -117,6 +117,50 @@ class TestCompactSkillsAndAwards:
         assert "Data Analysis" in by_prefix["Data & AI"]
         for item in out.skills:
             assert "\n" not in item.content
+
+    def test_coalesces_duplicate_category_labels_into_one_row(self):
+        """Already-labeled rows like Programming: X / Programming: Y must merge."""
+        content = _resume(skills=[
+            SectionItem(id="s1", title="", content="Languages: English (Fluent)"),
+            SectionItem(id="s2", title="", content="Mandarin (Native)"),
+            SectionItem(id="s3", title="", content="Programming: Python (Proficient)"),
+            SectionItem(id="s4", title="", content="Programming: SQL (Proficient)"),
+            SectionItem(
+                id="s5",
+                title="",
+                content="Programming: HTML/CSS/JavaScript (Familiar), Java (Familiar)",
+            ),
+            SectionItem(id="s6", title="", content="Data & AI: LLM APIs (Familiar)"),
+            SectionItem(id="s7", title="", content="Data & AI: Data Analysis (Proficient)"),
+            SectionItem(id="s8", title="", content="Data Preprocessing (Proficient)"),
+            SectionItem(id="s9", title="", content="Tools: Adobe Creative Suite (Familiar)"),
+            SectionItem(id="s10", title="", content="Other: Cross-functional Collaboration"),
+            SectionItem(id="s11", title="", content="Other: Problem-Solving, Adaptability"),
+        ])
+        out, changed = compact_skills_and_awards(content)
+        assert changed is True
+        labels = [s.content.split(":", 1)[0].strip() for s in out.skills]
+        assert len(labels) == len(set(labels))
+        assert labels.count("Programming") == 1
+        assert labels.count("Data & AI") <= 1
+        assert labels.count("Other") <= 1
+        assert labels.count("Languages") == 1
+        assert labels.count("Tools") == 1
+        by_prefix = {s.content.split(":", 1)[0].strip(): s.content for s in out.skills}
+        assert "English (Fluent)" in by_prefix["Languages"]
+        assert "Mandarin (Native)" in by_prefix["Languages"]
+        assert "Python (Proficient)" in by_prefix["Programming"]
+        assert "SQL (Proficient)" in by_prefix["Programming"]
+        assert "HTML/CSS/JavaScript (Familiar)" in by_prefix["Programming"]
+        # ≤4 groups: Data & AI may fold into Programming when Other is also present
+        blob = " ".join(by_prefix.values())
+        assert "LLM APIs (Familiar)" in blob
+        assert "Data Preprocessing (Proficient)" in blob
+        assert "Data Analysis (Proficient)" in blob
+        assert "Adobe Creative Suite (Familiar)" in by_prefix["Tools"]
+        assert "Cross-functional Collaboration" in blob
+        assert "Problem-Solving" in blob
+        assert "Adaptability" in blob
 
     def test_keeps_category_groups_and_classifies_flat_rows(self):
         content = _resume(skills=[

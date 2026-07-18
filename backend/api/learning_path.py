@@ -281,9 +281,11 @@ async def learning_path_history(request: Request, limit: int = 20) -> dict[str, 
     db = MySQLStore(pool)
     records = await db.list_learning_path_plans_by_user(user_id, limit=min(limit, 50))
 
+    from api.datetime_utils import serialize_utc_datetime
+
     for row in records:
         if row.get("saved_at") is not None:
-            row["saved_at"] = str(row["saved_at"])
+            row["saved_at"] = serialize_utc_datetime(row["saved_at"])
         if row.get("daily_hours") is not None:
             row["daily_hours"] = float(row["daily_hours"])
 
@@ -307,7 +309,9 @@ async def get_saved_learning_path(record_id: str, request: Request) -> dict[str,
     if record is None:
         raise HTTPException(status_code=404, detail="记录不存在或无权访问")
 
+    from api.datetime_utils import serialize_utc_datetime
+
     if record.get("saved_at") is not None:
-        record["saved_at"] = str(record["saved_at"])
+        record["saved_at"] = serialize_utc_datetime(record["saved_at"])
 
     return record

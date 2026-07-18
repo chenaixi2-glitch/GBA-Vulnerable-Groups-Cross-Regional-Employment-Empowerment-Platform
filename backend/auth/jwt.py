@@ -53,5 +53,5 @@ def get_required_user(request: Request) -> dict[str, Any]:
 
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="需要登录")
+        raise HTTPException(status_code=401, detail="Login required")
     return user

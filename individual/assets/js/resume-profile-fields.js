@@ -154,7 +154,31 @@ const ResumeProfileFields = {
             return [];
         }
         if (value == null) return '';
+        // Bullet lists from polish/LLM must stay multi-line in textareas.
+        if (Array.isArray(value)) {
+            return value.map((v) => String(v).trim()).filter(Boolean).join('\n');
+        }
         return typeof value === 'string' ? value : String(value);
+    },
+
+    /**
+     * Map plain resume body text into responsibilities / achievements.
+     * Matches deriveTitleContent which joins those two with blank lines.
+     */
+    assignPlainExperienceBody(fields, text) {
+        const body = String(text || '').trim();
+        if (!body) {
+            fields.responsibilities = '';
+            return fields;
+        }
+        const paras = body.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
+        if (paras.length >= 2) {
+            fields.responsibilities = paras[0];
+            fields.achievements = paras.slice(1).join('\n\n');
+        } else {
+            fields.responsibilities = body;
+        }
+        return fields;
     },
 
     isEmploymentType(type) {
@@ -162,14 +186,33 @@ const ResumeProfileFields = {
     },
 
     /**
-     * Display titles from resume polish look like "ACME — Intern (2023-01 – 2023-06)".
+     * Display titles from resume polish look like "ACME — Intern (Jul 2024 – Sep 2024)".
      * Those must not be written into the company/title text box as a single string.
      */
     isCompositeDisplayTitle(title) {
         const t = String(title || '').trim();
         if (!t) return false;
         if (/[—–]/.test(t)) return true;
-        return /\((?:20\d{2}|19\d{2}|Present|至今|今)/i.test(t);
+        const suffix = t.match(/\s*[（(]([^）)]+)[）)]\s*$/);
+        return Boolean(suffix && this.isDateLikeRange(suffix[1]));
+    },
+
+    isDateLikeRange(text) {
+        return /(?:20\d{2}|19\d{2}|Present|至今|今|Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?|\d{1,2}\s*月)/i
+            .test(String(text || ''));
+    },
+
+    parseDateRangeSuffix(text) {
+        const raw = String(text || '').trim();
+        const match = raw.match(/\s*[（(]([^）)]+)[）)]\s*$/);
+        if (!match || !this.isDateLikeRange(match[1])) return null;
+        const range = match[1].trim();
+        const parts = range.split(/\s*[–—]\s*|\s+-\s+/).map((s) => s.trim()).filter(Boolean);
+        return {
+            head: raw.slice(0, match.index).trim(),
+            start_date: parts[0] || '',
+            end_date: parts.length >= 2 ? parts.slice(1).join(' – ') : '',
+        };
     },
 
     splitCompositeDisplayTitle(title) {
@@ -178,18 +221,11 @@ const ResumeProfileFields = {
 
         const result = { company: '', role: '', start_date: '', end_date: '' };
         let head = raw;
-
-        const dateMatch = raw.match(/\(((?:20\d{2}|19\d{2}|Present|至今|今)[^)]*)\)\s*$/i);
-        if (dateMatch) {
-            const range = dateMatch[1].trim();
-            const parts = range.split(/\s*[–—]\s*|\s+-\s+/).map((s) => s.trim()).filter(Boolean);
-            if (parts.length >= 2) {
-                result.start_date = parts[0];
-                result.end_date = parts.slice(1).join(' – ');
-            } else if (parts.length === 1) {
-                result.start_date = parts[0];
-            }
-            head = raw.slice(0, dateMatch.index).trim();
+        const peeled = this.parseDateRangeSuffix(raw);
+        if (peeled) {
+            head = peeled.head;
+            result.start_date = peeled.start_date;
+            result.end_date = peeled.end_date;
         }
 
         const dashParts = head.split(/\s*[—–]\s*/).map((s) => s.trim()).filter(Boolean);
@@ -222,7 +258,9 @@ const ResumeProfileFields = {
                 merged[targetKey] = split.company;
             }
             if (this.isEmploymentType(type) || type === 'project') {
-                if (split.role && !merged.role) merged.role = split.role;
+                if (split.role && (!merged.role || this.parseDateRangeSuffix(merged.role))) {
+                    merged.role = split.role;
+                }
                 if (split.start_date && !merged.start_date) merged.start_date = split.start_date;
                 if (split.end_date && !merged.end_date) merged.end_date = split.end_date;
             }
@@ -238,14 +276,16 @@ const ResumeProfileFields = {
         return merged;
     },
 
-    /** Final guard: if company/title still holds a composite display string, split it. */
+    /** Final guard: if company/title/role still holds composite/date tails, peel them. */
     unsquashCompositeFields(type, fields) {
-        const merged = { ...(fields || {}) };
+        let merged = { ...(fields || {}) };
         if (this.isEmploymentType(type) && this.isCompositeDisplayTitle(merged.company)) {
             const split = this.splitCompositeDisplayTitle(merged.company);
             if (split) {
                 merged.company = split.company || merged.company;
-                if (split.role && !merged.role) merged.role = split.role;
+                if (split.role && (!merged.role || this.parseDateRangeSuffix(merged.role))) {
+                    merged.role = split.role;
+                }
                 if (split.start_date && !merged.start_date) merged.start_date = split.start_date;
                 if (split.end_date && !merged.end_date) merged.end_date = split.end_date;
             }
@@ -254,9 +294,19 @@ const ResumeProfileFields = {
             const split = this.splitCompositeDisplayTitle(merged.title);
             if (split) {
                 merged.title = split.company || merged.title;
-                if (split.role && !merged.role) merged.role = split.role;
+                if (split.role && (!merged.role || this.parseDateRangeSuffix(merged.role))) {
+                    merged.role = split.role;
+                }
                 if (split.start_date && !merged.start_date) merged.start_date = split.start_date;
                 if (split.end_date && !merged.end_date) merged.end_date = split.end_date;
+            }
+        }
+        if ((this.isEmploymentType(type) || type === 'project') && merged.role) {
+            const peeled = this.parseDateRangeSuffix(merged.role);
+            if (peeled) {
+                if (peeled.head) merged.role = peeled.head;
+                if (peeled.start_date && !merged.start_date) merged.start_date = peeled.start_date;
+                if (peeled.end_date && !merged.end_date) merged.end_date = peeled.end_date;
             }
         }
         return merged;
@@ -282,22 +332,29 @@ const ResumeProfileFields = {
             } catch (_) {
                 if (type === 'skill') {
                     fields.skill = text;
-                } else if (this.isEmploymentType(type)) {
-                    fields = this.applyDisplayTitleToFields(
-                        type,
-                        fields,
-                        parsedTitle || text.split('\n', 1)[0],
-                        { overwriteCompany: true }
-                    );
-                    fields.responsibilities = text.includes('\n') ? text.split('\n').slice(1).join('\n').trim() : text;
-                } else if (type === 'project') {
-                    fields = this.applyDisplayTitleToFields(
-                        type,
-                        fields,
-                        parsedTitle || text.split('\n', 1)[0],
-                        { overwriteCompany: true }
-                    );
-                    fields.responsibilities = text.includes('\n') ? text.split('\n').slice(1).join('\n').trim() : text;
+                } else if (this.isEmploymentType(type) || type === 'project') {
+                    // When a display title is already known (resume sync), keep the full
+                    // body — do not treat the first content line as a title and drop it.
+                    // Legacy plain facts without a title still use line 1 as the title.
+                    if (parsedTitle) {
+                        fields = this.applyDisplayTitleToFields(
+                            type,
+                            fields,
+                            parsedTitle,
+                            { overwriteCompany: true }
+                        );
+                        this.assignPlainExperienceBody(fields, text);
+                    } else {
+                        fields = this.applyDisplayTitleToFields(
+                            type,
+                            fields,
+                            text.split('\n', 1)[0],
+                            { overwriteCompany: true }
+                        );
+                        fields.responsibilities = text.includes('\n')
+                            ? text.split('\n').slice(1).join('\n').trim()
+                            : text;
+                    }
                 } else {
                     fields.content = text;
                 }

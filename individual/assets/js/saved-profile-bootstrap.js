@@ -25,6 +25,32 @@
             .replace(/"/g, '&quot;');
     }
 
+    /** Parse server UTC timestamps (naive MySQL DATETIME or ISO) into a Date. */
+    function parseServerUtcDate(value) {
+        if (!value) return null;
+        const s = String(value).trim();
+        if (!s) return null;
+        if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)) {
+            const d = new Date(s);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+        const normalized = s.includes('T') ? s : s.replace(' ', 'T');
+        const d = new Date(normalized + 'Z');
+        return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatSavedAtLocal(value) {
+        const d = parseServerUtcDate(value);
+        if (!d) return value ? String(value) : '';
+        return d.toLocaleString(undefined, {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }
+
     function getRecordIdFromUrl() {
         const params = new URLSearchParams(global.location?.search || '');
         return (params.get(PROFILE_PARAM) || '').trim();
@@ -173,9 +199,7 @@
             list.innerHTML = records.map((record) => {
                 const name = record.record_name || record.candidate_name
                     || spT('resume.savedRecordUntitled', 'My resume');
-                const savedAt = record.saved_at
-                    ? new Date(record.saved_at).toLocaleString()
-                    : '';
+                const savedAt = formatSavedAtLocal(record.saved_at);
                 const links = pageLinks(record.id, currentPage);
                 const loadBtn = onLoadInPlace
                     ? `<button type="button" data-sp-load="${escapeHtml(record.id)}"

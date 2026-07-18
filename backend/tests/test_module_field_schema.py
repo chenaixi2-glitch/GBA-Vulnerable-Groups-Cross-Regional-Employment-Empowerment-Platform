@@ -181,6 +181,29 @@ def test_parse_fact_splits_composite_display_title_after_polish():
     assert "Built REST APIs" in fields["responsibilities"]
 
 
+def test_parse_fact_keeps_all_body_lines_when_title_provided():
+    """Resume sync must not drop the first content line when title already exists."""
+    fields = parse_fact_content(
+        "work",
+        "- Handled 80+ daily tickets\n- Raised first-contact resolution by 18%",
+        title="Global Commerce — Support Specialist (2021-01 – Present)",
+    )
+    assert fields["company"] == "Global Commerce"
+    assert fields["role"] == "Support Specialist"
+    assert "Handled 80+ daily tickets" in fields["responsibilities"]
+    assert "Raised first-contact resolution by 18%" in fields["responsibilities"]
+
+
+def test_parse_fact_splits_responsibilities_and_achievements_when_title_provided():
+    fields = parse_fact_content(
+        "internship",
+        "Built REST APIs\n\nCut latency by 20%",
+        title="ACME — Intern (2023-01 – 2023-06)",
+    )
+    assert fields["responsibilities"] == "Built REST APIs"
+    assert fields["achievements"] == "Cut latency by 20%"
+
+
 def test_apply_polish_does_not_stuff_composite_into_company():
     from tools.module_field_schema import apply_polish_to_fields
 
@@ -217,3 +240,42 @@ def test_normalize_unsquashes_polluted_company_field():
     assert fields["role"] == "Web3 Product Development"
     assert fields["start_date"] == "2026-03"
     assert fields["end_date"] == "2025-05"
+
+
+def test_parse_fact_splits_month_name_dates_from_role():
+    """Profile dates like 'Jul 2024' produce titles our first regex missed."""
+    fields = parse_fact_content(
+        "internship",
+        "Analyzed cross-border order data",
+        title="China Telecom — Data Analyst Intern (Jul 2024 – Sep 2024)",
+    )
+    assert fields["company"] == "China Telecom"
+    assert fields["role"] == "Data Analyst Intern"
+    assert fields["start_date"] == "Jul 2024"
+    assert fields["end_date"] == "Sep 2024"
+
+
+def test_parse_fact_splits_fullwidth_date_parens():
+    fields = parse_fact_content(
+        "internship",
+        "Built APIs",
+        title="ACME Corp — Backend Intern（2023-01 – 2023-06）",
+    )
+    assert fields["company"] == "ACME Corp"
+    assert fields["role"] == "Backend Intern"
+    assert fields["start_date"] == "2023-01"
+    assert fields["end_date"] == "2023-06"
+
+
+def test_normalize_peels_dates_stuck_on_role():
+    from tools.module_field_schema import normalize_experience_fields
+
+    fields = normalize_experience_fields("internship", {
+        "company": "China Telecom",
+        "role": "Data Analyst Intern (Jul 2024 – Sep 2024)",
+        "start_date": "",
+        "end_date": "",
+    })
+    assert fields["role"] == "Data Analyst Intern"
+    assert fields["start_date"] == "Jul 2024"
+    assert fields["end_date"] == "Sep 2024"

@@ -40,20 +40,41 @@ def is_employment_type(module_type: str) -> bool:
     return module_type in _EMPLOYMENT_TYPES
 
 
-_DATE_SUFFIX_RE = re.compile(
-    r"\(((?:20\d{2}|19\d{2}|Present|至今|今)[^)]*)\)\s*$",
+_DATE_SUFFIX_RE = re.compile(r"\s*[（(]([^）)]+)[）)]\s*$")
+_DATE_LIKE_RE = re.compile(
+    r"(?:20\d{2}|19\d{2}|Present|至今|今|"
+    r"Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?|"
+    r"\d{1,2}\s*月)",
     re.IGNORECASE,
 )
 
 
 def is_composite_display_title(title: str) -> bool:
-    """True for polished display titles like ``ACME — Intern (2023-01 – 2023-06)``."""
+    """True for polished display titles like ``ACME — Intern (Jul 2024 – Sep 2024)``."""
     text = (title or "").strip()
     if not text:
         return False
     if "—" in text or "–" in text:
         return True
-    return bool(re.search(r"\((?:20\d{2}|19\d{2}|Present|至今|今)", text, re.IGNORECASE))
+    suffix = _DATE_SUFFIX_RE.search(text)
+    return bool(suffix and _DATE_LIKE_RE.search(suffix.group(1)))
+
+
+def _parse_date_range_suffix(text: str) -> tuple[str, str, str] | None:
+    """If ``text`` ends with a date-like parenthetical, return (head, start, end)."""
+    raw = (text or "").strip()
+    match = _DATE_SUFFIX_RE.search(raw)
+    if not match:
+        return None
+    range_text = match.group(1).strip()
+    if not _DATE_LIKE_RE.search(range_text):
+        return None
+    parts = [p.strip() for p in re.split(r"\s*[–—]\s*|\s+-\s+", range_text) if p.strip()]
+    start = parts[0] if parts else ""
+    end = " – ".join(parts[1:]) if len(parts) >= 2 else ""
+    head = raw[: match.start()].strip()
+    return head, start, end
 
 
 def split_composite_display_title(title: str) -> dict[str, str] | None:
@@ -64,16 +85,11 @@ def split_composite_display_title(title: str) -> dict[str, str] | None:
 
     result = {"company": "", "role": "", "start_date": "", "end_date": ""}
     head = raw
-    date_match = _DATE_SUFFIX_RE.search(raw)
-    if date_match:
-        range_text = date_match.group(1).strip()
-        parts = [p.strip() for p in re.split(r"\s*[–—]\s*|\s+-\s+", range_text) if p.strip()]
-        if len(parts) >= 2:
-            result["start_date"] = parts[0]
-            result["end_date"] = " – ".join(parts[1:])
-        elif len(parts) == 1:
-            result["start_date"] = parts[0]
-        head = raw[: date_match.start()].strip()
+    peeled = _parse_date_range_suffix(raw)
+    if peeled:
+        head, start, end = peeled
+        result["start_date"] = start
+        result["end_date"] = end
 
     dash_parts = [p.strip() for p in re.split(r"\s*[—–]\s*", head) if p.strip()]
     if len(dash_parts) >= 2:
@@ -90,6 +106,23 @@ def _empty_fields(module_type: str) -> dict[str, Any]:
     for key in order:
         empty[key] = [] if key == "tech_stack" else ""
     return empty
+
+
+def _peel_dates_from_role(fields: dict[str, Any]) -> dict[str, Any]:
+    """If role still carries a trailing date range, move it into start/end fields."""
+    out = dict(fields or {})
+    role = str(out.get("role") or "").strip()
+    peeled = _parse_date_range_suffix(role)
+    if not peeled:
+        return out
+    head, start, end = peeled
+    if head:
+        out["role"] = head
+    if start and not str(out.get("start_date") or "").strip():
+        out["start_date"] = start
+    if end and not str(out.get("end_date") or "").strip():
+        out["end_date"] = end
+    return out
 
 
 def normalize_experience_fields(module_type: str, fields: dict[str, Any]) -> dict[str, Any]:
@@ -124,6 +157,9 @@ def normalize_experience_fields(module_type: str, fields: dict[str, Any]) -> dic
                 out["start_date"] = split["start_date"]
             if split["end_date"] and not str(out.get("end_date") or "").strip():
                 out["end_date"] = split["end_date"]
+
+    # Role may still hold dates when only company was split from the display title.
+    out = _peel_dates_from_role(out)
 
     company = str(out.get("company") or "").strip()
     role = str(out.get("role") or "").strip()
@@ -173,7 +209,10 @@ def _apply_display_title_to_fields(
     current = str(merged.get(target_key) or "").strip()
     if split["company"] and (overwrite or not current or is_composite_display_title(current)):
         merged[target_key] = split["company"]
-    if split["role"] and not str(merged.get("role") or "").strip():
+    if split["role"] and (
+        not str(merged.get("role") or "").strip()
+        or _parse_date_range_suffix(str(merged.get("role") or ""))
+    ):
         merged["role"] = split["role"]
     if split["start_date"] and not str(merged.get("start_date") or "").strip():
         merged["start_date"] = split["start_date"]
@@ -191,7 +230,30 @@ def _coerce_field_value(key: str, value: Any) -> Any:
         return []
     if value is None:
         return ""
-    return str(value).strip() if not isinstance(value, (list, dict)) else value
+    # Bullet lists from polish/LLM must stay multi-line in editor textareas.
+    if isinstance(value, list):
+        return "\n".join(str(v).strip() for v in value if str(v).strip())
+    if isinstance(value, dict):
+        return value
+    return str(value).strip()
+
+
+def _assign_plain_experience_body(fields: dict[str, Any], text: str) -> dict[str, Any]:
+    """Map plain resume body into responsibilities / achievements.
+
+    Matches ``derive_title_and_content``, which joins those two with blank lines.
+    """
+    body = (text or "").strip()
+    if not body:
+        fields["responsibilities"] = ""
+        return fields
+    paras = [p.strip() for p in re.split(r"\n\s*\n+", body) if p.strip()]
+    if len(paras) >= 2:
+        fields["responsibilities"] = paras[0]
+        fields["achievements"] = "\n\n".join(paras[1:])
+    else:
+        fields["responsibilities"] = body
+    return fields
 
 
 def parse_fact_content(module_type: str, content: str, *, title: str = "") -> dict[str, Any]:
@@ -215,11 +277,21 @@ def parse_fact_content(module_type: str, content: str, *, title: str = "") -> di
             if module_type == "skill":
                 fields["skill"] = text
             elif is_employment_type(module_type) or module_type == "project":
-                display = parsed_title or text.split("\n", 1)[0]
-                fields = _apply_display_title_to_fields(
-                    module_type, fields, display, overwrite=True
-                )
-                fields["responsibilities"] = text.split("\n", 1)[1].strip() if "\n" in text else text
+                # When a display title is already known (resume sync), keep the full
+                # body — do not treat the first content line as a title and drop it.
+                # Legacy plain facts without a title still use line 1 as the title.
+                if parsed_title:
+                    fields = _apply_display_title_to_fields(
+                        module_type, fields, parsed_title, overwrite=True
+                    )
+                    fields = _assign_plain_experience_body(fields, text)
+                else:
+                    fields = _apply_display_title_to_fields(
+                        module_type, fields, text.split("\n", 1)[0], overwrite=True
+                    )
+                    fields["responsibilities"] = (
+                        text.split("\n", 1)[1].strip() if "\n" in text else text
+                    )
             else:
                 fields["content"] = text
     elif parsed_title:

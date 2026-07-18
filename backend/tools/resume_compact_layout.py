@@ -76,6 +76,25 @@ _SKILL_CATEGORY_LABELS: dict[str, dict[str, str]] = {
 _SKILL_CATEGORY_ORDER = ("languages", "programming", "data_ai", "tools", "other")
 _MAX_SKILL_GROUPS = 4
 
+# Normalized known category labels → category id (all locales)
+_LABEL_TO_CATEGORY: dict[str, str] = {}
+for _labels in _SKILL_CATEGORY_LABELS.values():
+    for _cid, _label in _labels.items():
+        _LABEL_TO_CATEGORY[_label.casefold()] = _cid
+_LABEL_TO_CATEGORY.update({
+    "data and ai": "data_ai",
+    "data/ai": "data_ai",
+    "ai & data": "data_ai",
+    "soft skills": "other",
+    "soft skill": "other",
+    "技术": "programming",
+    "技術": "programming",
+    "tech": "programming",
+    "technical": "programming",
+    "design": "tools",
+    "office": "tools",
+})
+
 _SPOKEN_LANGUAGE_NAMES = frozenset({
     "english", "mandarin", "cantonese", "chinese", "portuguese", "spanish",
     "french", "german", "japanese", "korean", "italian", "russian", "arabic",
@@ -123,11 +142,12 @@ def _split_tokens(text: str) -> list[str]:
     raw = (text or "").strip()
     if not raw:
         return []
-    # Do not split on "/" — keeps names like "HTML/CSS/JavaScript" intact.
-    parts = re.split(r"[\r\n]+|[,，、|；;]+|\s*[\-•●▪]\s*", raw)
+    # Do not split on "/" (HTML/CSS/…) or mid-word hyphens (Cross-functional).
+    parts = re.split(r"[\r\n]+|[,，、|；;]+|\s*[•●▪]\s+", raw)
     tokens: list[str] = []
     for part in parts:
-        cleaned = re.sub(r"\s{2,}", " ", part.strip(" -•●▪"))
+        cleaned = re.sub(r"\s{2,}", " ", part.strip())
+        cleaned = cleaned.lstrip("•●▪- ").strip()
         if cleaned:
             tokens.append(cleaned)
     return tokens
@@ -238,22 +258,100 @@ def _fold_categories_to_max(
     if len(non_empty) <= max_groups:
         return {cid: buckets[cid] for cid in non_empty}
 
-    # Prefer folding "other" into "tools", then merge smallest into previous
     folded = {cid: list(buckets[cid]) for cid in non_empty}
     while len(folded) > max_groups:
+        # Prefer merging Data&AI into Programming so soft-skill Other can stay
+        if "data_ai" in folded and "programming" in folded:
+            folded["programming"].extend(folded.pop("data_ai"))
+            continue
         if "other" in folded and "tools" in folded:
             folded["tools"].extend(folded.pop("other"))
             continue
-        if "other" in folded and len(folded) > max_groups:
-            # Promote other → tools label bucket
+        if "other" in folded:
             folded.setdefault("tools", []).extend(folded.pop("other"))
             continue
-        # Merge last category into the one before it
         ordered = [cid for cid in _SKILL_CATEGORY_ORDER if cid in folded]
         tail = ordered[-1]
         prev = ordered[-2]
         folded[prev].extend(folded.pop(tail))
     return {cid: folded[cid] for cid in _SKILL_CATEGORY_ORDER if folded.get(cid)}
+
+
+def _split_group_line(line: str) -> tuple[str | None, str]:
+    """Return (label, body) for 'Label: body', or (None, line) if not a group line."""
+    raw = (line or "").strip()
+    match = re.match(r"^([^:：\n]{1,48})[:：]\s*(.*)$", raw)
+    if not match:
+        return None, raw
+    label = match.group(1).strip()
+    body = match.group(2).strip()
+    if not label:
+        return None, raw
+    return label, body
+
+
+def _label_to_category(label: str) -> str | None:
+    key = (label or "").strip().casefold()
+    return _LABEL_TO_CATEGORY.get(key)
+
+
+def _skill_tokens_from_body(body: str) -> list[str]:
+    """Split a skill body into entries without breaking HTML/CSS/JavaScript."""
+    return _dedupe_preserve(_split_tokens(body))
+
+
+def _collect_skills_into_buckets(
+    items: list["SectionItem"],
+) -> dict[str, list[str]]:
+    """Parse all skill rows (flat or already labeled) into category buckets.
+
+    Same category label always lands in one bucket — fixes duplicate
+    ``Programming:`` / ``Data & AI:`` rows.
+    """
+    buckets: dict[str, list[str]] = {cid: [] for cid in _SKILL_CATEGORY_ORDER}
+    for item in items:
+        line = _item_display_line(item)
+        if not line:
+            continue
+        label, body = _split_group_line(line)
+        if label is not None:
+            cat = _label_to_category(label)
+            tokens = _skill_tokens_from_body(body) if body else []
+            if cat:
+                buckets[cat].extend(tokens)
+            else:
+                # Unknown label (e.g. Backend): classify each skill token
+                for token in tokens or [body or label]:
+                    if token:
+                        buckets[_classify_skill(token)].append(token)
+            continue
+        # Flat row — may still be a comma-separated list
+        for token in _skill_tokens_from_body(line) or [line]:
+            buckets[_classify_skill(token)].append(token)
+
+    for cid in buckets:
+        buckets[cid] = _dedupe_preserve(buckets[cid])
+    return buckets
+
+
+def _buckets_to_skill_items(
+    buckets: dict[str, list[str]],
+    *,
+    language: str,
+    template_item: "SectionItem",
+) -> list["SectionItem"]:
+    folded = _fold_categories_to_max(buckets)
+    now = _now_iso()
+    items: list["SectionItem"] = []
+    for index, category_id in enumerate(folded):
+        label = _category_label(category_id, language)
+        body = _join_tokens(folded[category_id], language)
+        content = f"{label}: {body}"
+        update = {"title": "", "content": content, "updated_at": now}
+        if index > 0:
+            update["id"] = f"{template_item.id}_{category_id}"
+        items.append(template_item.model_copy(update=update))
+    return items
 
 
 def _group_flat_skills(
@@ -266,28 +364,7 @@ def _group_flat_skills(
     buckets: dict[str, list[str]] = {cid: [] for cid in _SKILL_CATEGORY_ORDER}
     for line in _dedupe_preserve(skill_lines):
         buckets[_classify_skill(line)].append(line)
-
-    folded = _fold_categories_to_max(buckets)
-    now = _now_iso()
-    items: list["SectionItem"] = []
-    for index, category_id in enumerate(folded):
-        label = _category_label(category_id, language)
-        body = _join_tokens(folded[category_id], language)
-        content = f"{label}: {body}"
-        if index == 0:
-            items.append(template_item.model_copy(update={
-                "title": "",
-                "content": content,
-                "updated_at": now,
-            }))
-        else:
-            items.append(template_item.model_copy(update={
-                "id": f"{template_item.id}_{category_id}",
-                "title": "",
-                "content": content,
-                "updated_at": now,
-            }))
-    return items
+    return _buckets_to_skill_items(buckets, language=language, template_item=template_item)
 
 
 def _compact_section_items(
@@ -321,57 +398,34 @@ def _compact_section_items(
     return compacted, changed
 
 
-def _merge_flat_skill_items(
+def _coalesce_skill_items(
     items: list["SectionItem"],
     *,
     language: str,
 ) -> tuple[list["SectionItem"], bool]:
-    """Fold singleton skill rows into categorized one-line groups.
+    """Re-bucket every skill row so each category appears at most once.
 
-    Keeps intentional group lines (e.g. ``Languages: Python, SQL``) as separate rows.
-    Classifies ungrouped skills into Languages / Programming / Data & AI / Tools (≤4).
+    Handles both ungrouped singletons and already-labeled duplicates like
+    ``Programming: Python`` + ``Programming: SQL``.
     """
-    if len(items) <= 1:
+    if not items:
         return items, False
 
-    out: list["SectionItem"] = []
-    flat_buf: list["SectionItem"] = []
-    changed = False
-
-    def flush_flat() -> None:
-        nonlocal changed
-        if not flat_buf:
-            return
-        if len(flat_buf) == 1:
-            out.append(flat_buf[0])
-            flat_buf.clear()
-            return
-        lines = [
-            _item_display_line(item) for item in flat_buf if _item_display_line(item)
-        ]
-        if not lines:
-            flat_buf.clear()
-            return
-        grouped = _group_flat_skills(lines, language=language, template_item=flat_buf[0])
-        out.extend(grouped)
-        changed = True
-        flat_buf.clear()
-
-    for item in items:
-        line = _item_display_line(item)
-        if _is_skill_group_line(line):
-            flush_flat()
-            out.append(item)
-        else:
-            flat_buf.append(item)
-    flush_flat()
-    return out, changed
+    buckets = _collect_skills_into_buckets(items)
+    coalesced = _buckets_to_skill_items(
+        buckets, language=language, template_item=items[0],
+    )
+    before = [_item_display_line(item) for item in items]
+    after = [_item_display_line(item) for item in coalesced]
+    if before == after:
+        return items, False
+    return coalesced, True
 
 
 def compact_skills_and_awards(resume_content: "ResumeContent") -> tuple["ResumeContent", bool]:
     """Within Skills and within Awards: one-line items + light wording trim.
 
-    Skills additionally classifies many one-skill-per-row items into category groups.
+    Skills additionally classifies/coalesces rows into category groups (≤4).
     Skills and Awards remain two separate sections.
     """
     lang = normalize_language(getattr(resume_content.meta, "language", None) or "en")
@@ -380,7 +434,7 @@ def compact_skills_and_awards(resume_content: "ResumeContent") -> tuple["ResumeC
         generics=_GENERIC_SKILL_TITLES,
         language=lang,
     )
-    skills, skills_merged = _merge_flat_skill_items(skills, language=lang)
+    skills, skills_merged = _coalesce_skill_items(skills, language=lang)
     awards, awards_changed = _compact_section_items(
         list(resume_content.awards or []),
         generics=_GENERIC_AWARD_TITLES,

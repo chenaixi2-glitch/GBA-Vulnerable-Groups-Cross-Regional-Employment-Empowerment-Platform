@@ -36,10 +36,10 @@ async def get_resume_content(session_id: str, request: Request):
     store = RedisSessionStore(session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
     state = CopilotState.model_validate(saved)
     if state.resume_content_json is None:
-        raise HTTPException(status_code=404, detail="简历内容尚未生成")
+        raise HTTPException(status_code=404, detail="Resume content has not been generated yet")
     return {"resume_content_json": state.resume_content_json.model_dump()}
 
 
@@ -55,10 +55,10 @@ async def get_resume_html(session_id: str, request: Request):
     store = RedisSessionStore(session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
     state = CopilotState.model_validate(saved)
     if not state.resume_html.html:
-        raise HTTPException(status_code=404, detail="简历 HTML 尚未生成")
+        raise HTTPException(status_code=404, detail="Resume HTML has not been generated yet")
     return {"resume_html": state.resume_html.model_dump()}
 
 
@@ -93,11 +93,11 @@ async def optimize_resume_a4(req: OptimizeA4Request, request: Request, backgroun
     store = RedisSessionStore(req.session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     if state.resume_content_json is None:
-        raise HTTPException(status_code=400, detail="简历内容尚未生成，请先生成简历")
+        raise HTTPException(status_code=400, detail="Resume content has not been generated yet. Please generate a resume first")
 
     draft_store = RedisDraftStore(client, req.session_id, user.get("sub") if user else None)
     draft = await draft_store.load_draft()
@@ -113,7 +113,7 @@ async def optimize_resume_a4(req: OptimizeA4Request, request: Request, backgroun
         raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as exc:
         logger.error("A4 optimize failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"A4 优化失败: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"A4 optimization failed: {exc}") from exc
 
     data = state.model_dump()
     data.update(updates)
@@ -126,10 +126,10 @@ async def optimize_resume_a4(req: OptimizeA4Request, request: Request, backgroun
         background_tasks.add_task(_persist_to_mysql_safe, final, user.get("sub"))
 
     if not final.resume_html or not final.resume_html.html:
-        raise HTTPException(status_code=500, detail="A4 优化结果为空，请重试")
+        raise HTTPException(status_code=500, detail="A4 optimization returned empty result. Please retry")
 
     return {
-        "reply_message": updates.get("reply_message") or "简历已优化为 A4 单页",
+        "reply_message": updates.get("reply_message") or "Resume optimized to a single A4 page",
         "triggered_agents": updates.get("triggered_agents") or ["a4_optimize"],
         "resume_html": final.resume_html.model_dump(),
         "resume_content_json": final.resume_content_json.model_dump() if final.resume_content_json else None,
@@ -158,11 +158,11 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
     store = RedisSessionStore(req.session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     if state.resume_content_json is None:
-        raise HTTPException(status_code=400, detail="简历内容尚未生成，请先生成简历")
+        raise HTTPException(status_code=400, detail="Resume content has not been generated yet. Please generate a resume first")
 
     from api.draft_utils import (
         apply_draft_sections_to_resume_state,
@@ -201,7 +201,7 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
         raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as exc:
         logger.error("Ensure render failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"预览渲染失败: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"Preview render failed: {exc}") from exc
 
     data = state.model_dump()
     data.update(updates)
@@ -214,7 +214,7 @@ async def ensure_resume_render(req: EnsureRenderRequest, request: Request, backg
         background_tasks.add_task(_persist_to_mysql_safe, final, user.get("sub"))
 
     if not final.resume_html or not final.resume_html.html:
-        raise HTTPException(status_code=500, detail="预览渲染结果为空，请重试")
+        raise HTTPException(status_code=500, detail="Preview render returned empty result. Please retry")
 
     return {
         "rendered": True,
@@ -235,10 +235,10 @@ async def preview_resume_html(session_id: str, request: Request):
     store = RedisSessionStore(session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
     state = CopilotState.model_validate(saved)
     if not state.resume_html.html:
-        raise HTTPException(status_code=404, detail="简历 HTML 尚未生成")
+        raise HTTPException(status_code=404, detail="Resume HTML has not been generated yet")
     return Response(content=state.resume_html.html, media_type="text/html")
 
 
@@ -255,10 +255,10 @@ async def preview_resume_markdown(session_id: str, request: Request):
     store = RedisSessionStore(session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
     state = CopilotState.model_validate(saved)
     if state.resume_content_json is None:
-        raise HTTPException(status_code=404, detail="简历内容尚未生成")
+        raise HTTPException(status_code=404, detail="Resume content has not been generated yet")
     return {"markdown": _export_resume_markdown(state)}
 
 
@@ -386,7 +386,7 @@ async def get_resume_draft(request: Request, session_id: str = ""):
             }
 
     if not resolved_session_id:
-        raise HTTPException(status_code=404, detail="未找到可恢复的简历草稿")
+        raise HTTPException(status_code=404, detail="No recoverable resume draft found")
 
     await ensure_session_access(resolved_session_id, user)
 
@@ -398,11 +398,11 @@ async def get_resume_draft(request: Request, session_id: str = ""):
     store = RedisSessionStore(resolved_session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     if state.candidate_profile is None:
-        raise HTTPException(status_code=404, detail="尚未解析简历，请先上传")
+        raise HTTPException(status_code=404, detail="Resume has not been parsed yet. Please upload first")
 
     draft = profile_to_draft(state.candidate_profile)
     await draft_store.save_draft(draft, logged_in=user is not None)
@@ -448,11 +448,11 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
 
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录后再保存到网站")
+        raise HTTPException(status_code=401, detail="Please sign in before saving to the site")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     await bind_session_owner(req.session_id, user)
     await ensure_session_access(req.session_id, user)
@@ -461,7 +461,7 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
     store = RedisSessionStore(req.session_id, client)
     saved = await store.load_state()
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     draft_store = RedisDraftStore(client, req.session_id, user_id)
 
@@ -477,11 +477,11 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
 
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     if state.candidate_profile is None:
-        raise HTTPException(status_code=400, detail="没有可保存的简历资料，请先上传并解析简历")
+        raise HTTPException(status_code=400, detail="No resume profile to save. Please upload and parse a resume first")
 
     if req.draft is not None:
         draft = req.draft.model_dump()
@@ -504,7 +504,7 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
     if req.record_id.strip():
         existing = await db.get_profile_record_for_user(row_id, user_id)
         if not existing:
-            raise HTTPException(status_code=404, detail="记录不存在或无权覆盖")
+            raise HTTPException(status_code=404, detail="Record not found or you do not have permission to overwrite it")
         if not req.record_name.strip() or record_name == "Resume profile":
             record_name = existing.get("record_name") or record_name
 
@@ -544,7 +544,7 @@ async def save_profile_to_account(req: SaveProfileRequest, request: Request):
         )
     except Exception as exc:
         logger.error("Profile record save failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"保存失败: {exc}")
+        raise HTTPException(status_code=500, detail=f"Save failed: {exc}")
 
     updated_at = draft.get("updated_at") or datetime.now(timezone.utc).isoformat()
     return {
@@ -566,11 +566,11 @@ async def profile_save_history(request: Request, limit: int = 20) -> dict:
 
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录")
+        raise HTTPException(status_code=401, detail="Please sign in")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     pool = await get_mysql_pool()
     await ensure_saved_profile_records_table(pool)
@@ -579,11 +579,13 @@ async def profile_save_history(request: Request, limit: int = 20) -> dict:
         records = await db.list_profile_records_by_user(user_id, limit=min(limit, 50))
     except Exception as exc:
         logger.error("Profile save history failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail="无法读取已保存记录，请稍后重试") from exc
+        raise HTTPException(status_code=500, detail="Unable to read saved records. Please try again later") from exc
+
+    from api.datetime_utils import serialize_utc_datetime
 
     for row in records:
         if row.get("saved_at") is not None:
-            row["saved_at"] = str(row["saved_at"])
+            row["saved_at"] = serialize_utc_datetime(row["saved_at"])
 
     return {"records": records}
 
@@ -595,20 +597,22 @@ async def get_saved_profile_record(record_id: str, request: Request) -> dict:
 
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录")
+        raise HTTPException(status_code=401, detail="Please sign in")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     pool = await get_mysql_pool()
     db = MySQLStore(pool)
     record = await db.get_profile_record_for_user(record_id, user_id)
     if not record:
-        raise HTTPException(status_code=404, detail="记录不存在或无权访问")
+        raise HTTPException(status_code=404, detail="Record not found or access denied")
+
+    from api.datetime_utils import serialize_utc_datetime
 
     if record.get("saved_at") is not None:
-        record["saved_at"] = str(record["saved_at"])
+        record["saved_at"] = serialize_utc_datetime(record["saved_at"])
 
     return record
 
@@ -627,11 +631,11 @@ async def restore_saved_profile_record(record_id: str, req: RestoreSavedProfileR
 
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录")
+        raise HTTPException(status_code=401, detail="Please sign in")
 
     user_id = extract_user_id(user)
     if user_id is None:
-        raise HTTPException(status_code=401, detail="无效的用户身份")
+        raise HTTPException(status_code=401, detail="Invalid user identity")
 
     await bind_session_owner(req.session_id, user)
     await ensure_session_access(req.session_id, user)
@@ -640,12 +644,12 @@ async def restore_saved_profile_record(record_id: str, req: RestoreSavedProfileR
     db = MySQLStore(pool)
     record = await db.get_profile_record_for_user(record_id, user_id)
     if not record:
-        raise HTTPException(status_code=404, detail="记录不存在或无权访问")
+        raise HTTPException(status_code=404, detail="Record not found or access denied")
 
     data = record.get("data") or {}
     draft = data.get("draft")
     if not draft:
-        raise HTTPException(status_code=400, detail="记录数据不完整")
+        raise HTTPException(status_code=400, detail="Record data is incomplete")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
@@ -718,7 +722,7 @@ async def save_resume_to_account(req: SaveResumeRequest, request: Request, backg
 
     user = get_optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="请先登录后再保存到网站")
+        raise HTTPException(status_code=401, detail="Please sign in before saving to the site")
 
     await bind_session_owner(req.session_id, user)
 
@@ -732,11 +736,11 @@ async def save_resume_to_account(req: SaveResumeRequest, request: Request, backg
 
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     if state.candidate_profile is None and state.resume_content_json is None:
-        raise HTTPException(status_code=400, detail="没有可保存的简历内容")
+        raise HTTPException(status_code=400, detail="No resume content to save")
 
     user_id = user.get("sub")
     background_tasks.add_task(_persist_to_mysql_safe, state, user_id)
@@ -767,12 +771,12 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
     store = RedisSessionStore(req.session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
 
     if not req.industry.strip() or not req.experience_level.strip():
-        raise HTTPException(status_code=422, detail="请选择行业与经验等级")
+        raise HTTPException(status_code=422, detail="Please select industry and experience level")
 
     from tools.resume_layout import employer_type_label, normalize_employer_type, normalize_language, jd_output_language_instruction
 
@@ -837,7 +841,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
         raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as e:
         logger.error("JD generation failed: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"岗位描述生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate job description: {e}")
 
     jd_text = ensure_title_in_jd_text(
         (parsed.title or "").strip(),
@@ -845,7 +849,7 @@ async def generate_jd(req: GenerateJdRequest, request: Request):
         output_lang,
     )
     if not jd_text:
-        raise HTTPException(status_code=500, detail="岗位描述生成结果为空")
+        raise HTTPException(status_code=500, detail="Job description generation returned empty result")
 
     title = (parsed.title or "").strip() or extract_title_from_jd(jd_text)
     await save_jd_cache(
@@ -891,17 +895,17 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
 
     job_title = req.job_title.strip()
     if not job_title:
-        raise HTTPException(status_code=422, detail="请提供岗位名称")
+        raise HTTPException(status_code=422, detail="Please provide a job title")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     if state.candidate_profile is None:
-        raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
+        raise HTTPException(status_code=400, detail="Please upload a resume first to extract the candidate profile")
 
     employer_type = normalize_employer_type(req.employer_type or state.meta.employer_type)
     output_lang = normalize_language(req.language)
@@ -921,11 +925,11 @@ async def generate_jd_from_title(req: GenerateJdFromTitleRequest, request: Reque
         raise HTTPException(status_code=400, detail=str(exc))
     except RuntimeError as exc:
         logger.error("JD from title failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"岗位描述生成失败: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate job description: {exc}")
 
     jd_text = (parsed.jd_text or "").strip()
     if not jd_text:
-        raise HTTPException(status_code=500, detail="岗位描述生成结果为空")
+        raise HTTPException(status_code=500, detail="Job description generation returned empty result")
     resolved_title = (parsed.title or job_title).strip()
     state.meta = state.meta.model_copy(update={
         "target_jd_text": jd_text,
@@ -962,7 +966,7 @@ async def set_target_job_context(req: TargetJobContextRequest, request: Request)
     store = RedisSessionStore(req.session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     employer_type = normalize_employer_type(req.employer_type) if req.employer_type.strip() else state.meta.employer_type
@@ -1018,13 +1022,13 @@ async def set_employer_type(req: SetEmployerTypeRequest, request: Request):
 
     employer_type = normalize_employer_type(req.employer_type)
     if employer_type not in VALID_EMPLOYER_TYPES:
-        raise HTTPException(status_code=422, detail="employer_type 无效，请选择有效的单位性质")
+        raise HTTPException(status_code=422, detail="Invalid employer_type. Please select a valid employer type")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     state.meta = state.meta.model_copy(update={"employer_type": employer_type})
@@ -1058,7 +1062,7 @@ async def get_language_checklist(session_id: str, language: str = "en", employer
     store = RedisSessionStore(session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     lang = normalize_language(language)
@@ -1090,7 +1094,7 @@ async def set_resume_language(req: SetResumeLanguageRequest, request: Request):
 
     target = normalize_language(req.target_language)
     if target not in VALID_RESUME_LANGUAGES:
-        raise HTTPException(status_code=422, detail="target_language 必须为 zh、zh-TW、en 或 pt")
+        raise HTTPException(status_code=422, detail="target_language must be zh, zh-TW, en, or pt")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
@@ -1181,7 +1185,7 @@ async def _load_or_bootstrap_state(
         if not saved:
             raise HTTPException(
                 status_code=404,
-                detail="会话不存在，请先上传并解析简历，或保存编辑内容后再试",
+                detail="Session not found. Please upload and parse a resume, or save your edits and try again",
             )
 
     state = CopilotState.model_validate(saved)
@@ -1212,11 +1216,11 @@ def _require_generatable_profile(state: CopilotState) -> None:
     from api.draft_utils import profile_has_substance
 
     if state.candidate_profile is None:
-        raise HTTPException(status_code=400, detail="请先上传简历或在右侧编辑器填写资料后再生成")
+        raise HTTPException(status_code=400, detail="Please upload a resume or fill in the profile editor before generating")
     if not profile_has_substance(state.candidate_profile):
         raise HTTPException(
             status_code=400,
-            detail="资料内容不足：请填写姓名，并至少补充一段教育或工作/项目经历后再生成",
+            detail="Profile is incomplete: please provide a name and at least one education or work/project experience entry before generating",
         )
 
 
@@ -1294,12 +1298,12 @@ async def generate_resume_stream(req: GenerateStreamRequest, request: Request, b
     store = RedisSessionStore(req.session_id, client)
     state = await _load_or_bootstrap_state(store, req.session_id, client, user)
     if state.candidate_profile is None:
-        raise HTTPException(status_code=400, detail="请先上传简历以提取候选人画像")
+        raise HTTPException(status_code=400, detail="Please upload a resume first to extract the candidate profile")
 
     state = await _apply_target_context_to_state(state, req)
     target = normalize_language(req.language or state.render_config.language)
     if target not in VALID_RESUME_LANGUAGES:
-        raise HTTPException(status_code=422, detail="language 必须为 zh、zh-TW、en 或 pt")
+        raise HTTPException(status_code=422, detail="language must be zh, zh-TW, en, or pt")
     state.render_config = state.render_config.model_copy(update={"language": target})
     use_incremental = bool(req.incremental) and state.resume_content_json is not None
     if req.clear_generated_resume and not use_incremental:
@@ -1374,7 +1378,7 @@ async def generate_resume_stream(req: GenerateStreamRequest, request: Request, b
             await queue.put({"type": "error", "detail": session_busy_detail(exc)})
         except Exception as exc:
             logger.error("Resume stream generation failed: %s", exc, exc_info=True)
-            await queue.put({"type": "error", "detail": f"简历生成失败: {exc}"})
+            await queue.put({"type": "error", "detail": f"Failed to generate resume: {exc}"})
         finally:
             await queue.put(None)
 
@@ -1410,13 +1414,13 @@ async def restore_resume_snapshot(req: RestoreResumeSnapshotRequest, request: Re
     await ensure_session_access(req.session_id, user)
 
     if not req.resume_html and not req.resume_content_json:
-        raise HTTPException(status_code=422, detail="快照至少需包含 resume_html 或 resume_content_json")
+        raise HTTPException(status_code=422, detail="Snapshot must include at least resume_html or resume_content_json")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
 
@@ -1464,7 +1468,7 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
 
     target = normalize_language(req.language)
     if target not in VALID_RESUME_LANGUAGES:
-        raise HTTPException(status_code=422, detail="language 必须为 zh、zh-TW、en 或 pt")
+        raise HTTPException(status_code=422, detail="language must be zh, zh-TW, en, or pt")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
@@ -1485,10 +1489,10 @@ async def generate_resume_from_profile(req: GenerateFromProfileRequest, request:
         raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as e:
         logger.error("Profile resume generation failed: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate resume: {e}")
 
     if final.resume_content_json is None:
-        raise HTTPException(status_code=500, detail="简历生成结果为空，请重试")
+        raise HTTPException(status_code=500, detail="Resume generation returned empty result. Please retry")
 
     persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
     await _asave_state(store, persist_data)
@@ -1524,13 +1528,13 @@ async def translate_resume_module(req: ModuleActionRequest, request: Request, ba
 
     target = normalize_language(req.target_language or "")
     if target not in VALID_RESUME_LANGUAGES:
-        raise HTTPException(status_code=422, detail="target_language 必须为 zh、zh-TW、en 或 pt")
+        raise HTTPException(status_code=422, detail="target_language must be zh, zh-TW, en, or pt")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
     state = await _load_or_bootstrap_state(store, req.session_id, client, user)
     if state.resume_content_json is None:
-        raise HTTPException(status_code=400, detail="请先生成或翻译简历后再翻译单条模块")
+        raise HTTPException(status_code=400, detail="Please generate or translate the resume before translating a single module")
 
     try:
         async with llm_queue_slot(req.session_id, LlmTask.RESUME_MODULE_TRANSLATE):
@@ -1552,7 +1556,7 @@ async def translate_resume_module(req: ModuleActionRequest, request: Request, ba
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
         logger.error("Module translate failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"模块翻译失败: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"Module translation failed: {exc}") from exc
 
     resume_content = apply_translated_module_to_resume(
         state.resume_content_json,
@@ -1595,13 +1599,13 @@ async def polish_resume_module(req: ModuleActionRequest, request: Request, backg
         await bind_session_owner(req.session_id, user)
 
     if req.module_type not in ("work", "internship", "project"):
-        raise HTTPException(status_code=422, detail="仅工作经历、实习经历与项目经历支持单条润色")
+        raise HTTPException(status_code=422, detail="Only work experience, internship, and project entries support single-item polish")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
     state = await _load_or_bootstrap_state(store, req.session_id, client, user)
     if state.resume_content_json is None:
-        raise HTTPException(status_code=400, detail="请先生成简历后再润色单条模块")
+        raise HTTPException(status_code=400, detail="Please generate a resume before polishing a single module")
 
     try:
         async with llm_queue_slot(req.session_id, LlmTask.RESUME_MODULE_POLISH):
@@ -1619,7 +1623,7 @@ async def polish_resume_module(req: ModuleActionRequest, request: Request, backg
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
         logger.error("Module polish failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"模块润色失败: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"Module polish failed: {exc}") from exc
 
     resume_content = apply_translated_module_to_resume(
         state.resume_content_json,
@@ -1661,7 +1665,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
 
     target = normalize_language(req.target_language)
     if target not in VALID_RESUME_LANGUAGES:
-        raise HTTPException(status_code=422, detail="target_language 必须为 zh、zh-TW、en 或 pt")
+        raise HTTPException(status_code=422, detail="target_language must be zh, zh-TW, en, or pt")
 
     client = await get_redis_client()
     store = RedisSessionStore(req.session_id, client)
@@ -1682,7 +1686,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
             raise HTTPException(status_code=409, detail=session_busy_detail(exc))
         except Exception as e:
             logger.error("Profile resume generation (via translate) failed: %s", e, exc_info=True)
-            raise HTTPException(status_code=500, detail=f"简历生成失败: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to generate resume: {e}")
     else:
         from tools.resume_page_policy import page_limit_label, resolve_page_limit
 
@@ -1705,7 +1709,7 @@ async def translate_resume(req: TranslateResumeRequest, request: Request, backgr
             raise HTTPException(status_code=409, detail=session_busy_detail(exc))
         except Exception as e:
             logger.error("Resume translation failed: %s", e, exc_info=True)
-            raise HTTPException(status_code=500, detail=f"简历转换失败: {e}")
+            raise HTTPException(status_code=500, detail=f"Resume conversion failed: {e}")
 
         final = CopilotState.model_validate(result)
 
@@ -1756,7 +1760,7 @@ async def render_resume(req: RenderRequest, request: Request, background_tasks: 
     store = RedisSessionStore(req.session_id, client)
     saved = await _aload_state(store)
     if not saved:
-        raise HTTPException(status_code=404, detail="会话不存在")
+        raise HTTPException(status_code=404, detail="Session not found")
 
     state = CopilotState.model_validate(saved)
     state.user_message = req.render_instruction
@@ -1771,7 +1775,7 @@ async def render_resume(req: RenderRequest, request: Request, background_tasks: 
         raise HTTPException(status_code=409, detail=session_busy_detail(exc))
     except Exception as e:
         logger.error("Render failed: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"渲染失败: {e}")
+        raise HTTPException(status_code=500, detail=f"Render failed: {e}")
 
     final = CopilotState.model_validate(result)
 

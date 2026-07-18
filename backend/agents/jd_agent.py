@@ -126,7 +126,7 @@ async def _generate_jd_from_title(state: CopilotState, job_title: str) -> tuple[
     title = (parsed.title or job_title).strip()
     jd_text = (parsed.jd_text or "").strip()
     if not jd_text:
-        raise RuntimeError("岗位描述生成结果为空")
+        raise RuntimeError("Job description generation returned empty result")
     return title, jd_text
 
 
@@ -195,7 +195,7 @@ async def jd_node_async(state: CopilotState) -> dict[str, Any]:
                     node="jd_agent",
                     status="failed",
                     input_summary=input_summary,
-                    output_summary="岗位描述生成失败：模型输出格式异常，请重试。",
+                    output_summary="Failed to generate job description: model output format was invalid. Please retry.",
                     error=str(exc),
                 ),
             }
@@ -211,7 +211,7 @@ async def jd_node_async(state: CopilotState) -> dict[str, Any]:
                 node="jd_agent",
                 status="failed",
                 input_summary=input_summary,
-                output_summary="岗位解析失败：模型输出格式异常，请重试。",
+                output_summary="Failed to parse job description: model output format was invalid. Please retry.",
                 error=str(exc),
             ),
         }

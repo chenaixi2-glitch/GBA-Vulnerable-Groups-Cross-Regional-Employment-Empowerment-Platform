@@ -191,15 +191,22 @@ function buildAiTaskRetryBannerMessage(state) {
 
 function apiMsg(message) {
     if (message == null) return '';
-    if (typeof window !== 'undefined' && window.GBAI18n && window.GBAI18n.tApiCode) {
-        const code = String(message).trim();
-        const translated = window.GBAI18n.tApiCode(code, 'apiMessages.' + code, '');
-        if (translated && translated !== code) return translated;
+    const text = String(message);
+    const code = text.trim();
+    // Only treat short UPPER_SNAKE tokens as machine codes (e.g. SESSION_BUSY).
+    // Free-form API details must not go through tApiCode — empty fallback made
+    // missing keys render as "apiMessages.<raw message>".
+    if (/^[A-Z][A-Z0-9_]*$/.test(code)
+        && typeof window !== 'undefined'
+        && window.GBAI18n
+        && window.GBAI18n.tApiCode) {
+        const translated = window.GBAI18n.tApiCode(code, 'apiMessages.' + code, code);
+        if (translated) return translated;
     }
     if (typeof window !== 'undefined' && window.GBAI18n && window.GBAI18n.tApiMessage) {
-        return window.GBAI18n.tApiMessage(String(message));
+        return window.GBAI18n.tApiMessage(text);
     }
-    return String(message);
+    return text;
 }
 
 /** Canonical mock fixtures live in test-data/ (loaded via browser-bundle.js). */
@@ -1858,14 +1865,14 @@ class APIClient {
     _isBoundSessionAccessError(error) {
         if (!this._isSessionAccessError(error)) return false;
         const detail = String((error.response && error.response.data && error.response.data.detail) || '');
-        return detail.includes('访问该会话') || detail.includes('无权访问');
+        return /访问该会话|无权访问|access this session|access denied|do not have permission/i.test(detail);
     }
 
     _isAuthLoginRequiredError(error) {
         if (!error || !error.response || error.response.status !== 401) return false;
         const detail = String((error.response.data && error.response.data.detail) || '');
-        if (detail.includes('访问该会话') || detail.includes('无权访问')) return false;
-        return detail.includes('请先登录') || detail.includes('无效的用户');
+        if (/访问该会话|无权访问|access this session|access denied|do not have permission/i.test(detail)) return false;
+        return /请先登录|无效的用户|Please sign in|Invalid user/i.test(detail);
     }
 
     async _resumeCallWithSessionRetry(requestFn, options = {}) {
@@ -3737,7 +3744,7 @@ class APIClient {
                 case 404: {
                     const data = error.response.data || {};
                     const rawDetail = typeof data.detail === 'string' ? data.detail : '';
-                    if (/会话不存在/.test(rawDetail)) {
+                    if (/会话不存在|Session not found/i.test(rawDetail)) {
                         const err = new Error(apiT(
                             'errors.sessionLost',
                             'Session expired or was reset (e.g. server restart without Redis). Please re-upload or regenerate the resume, then export again.'
@@ -3745,7 +3752,7 @@ class APIClient {
                         err.code = 'SESSION_LOST';
                         return err;
                     }
-                    if (/简历 HTML 尚未生成/.test(rawDetail)) {
+                    if (/简历 HTML 尚未生成|Resume HTML has not been generated/i.test(rawDetail)) {
                         return new Error(apiT(
                             'errors.resumeHtmlNotReady',
                             'Resume preview HTML is not ready yet. Wait for generation to finish, then try export again.'
