@@ -141,7 +141,44 @@ function initializeResumeGenerator() {
     setupUploadOverwriteModal();
     setupResumeChat();
     updateUploadContinueButton();
+    // Wait for backend probe before listing saved profiles — otherwise a concurrent
+    // health check can mark the backend "unavailable" and skip Load buttons until parse.
+    void (async () => {
+        try {
+            if (typeof apiClient !== 'undefined') {
+                await apiClient.ensureBackendAvailable({ silent: true });
+            }
+        } catch (_) {
+            /* still attempt list; bootstrap handles errors */
+        }
+        await bootstrapSavedProfileForResume();
+    })();
     restoreDraftOnLoad();
+}
+
+/**
+ * Render the left-panel saved-profile list with Load buttons (interview/learning-path pattern).
+ */
+async function bootstrapSavedProfileForResume() {
+    if (typeof SavedProfileBootstrap === 'undefined') {
+        if (typeof ProfileEditor !== 'undefined' && typeof ProfileEditor.loadSavedRecords === 'function') {
+            await ProfileEditor.loadSavedRecords();
+        }
+        return;
+    }
+
+    await SavedProfileBootstrap.renderSavedRecordsPanel({
+        sectionId: 'profile-saved-records-section',
+        listId: 'profile-saved-records-list',
+        emptyId: 'profile-saved-records-empty',
+        currentPage: 'resume',
+        onLoadInPlace: (recordId) => {
+            if (typeof ProfileEditor !== 'undefined' && typeof ProfileEditor.restoreSavedRecord === 'function') {
+                return ProfileEditor.restoreSavedRecord(recordId);
+            }
+            return undefined;
+        },
+    });
 }
 
 function hasUploadInput() {
@@ -369,7 +406,9 @@ async function saveCurrentProfileAsNewRecord() {
         Utils.showToast(uiT('resume.toast.savedAsNewRecord', 'Saved as a new record: {name}', {
             name: result.record_name || recordName,
         }));
-        if (typeof ProfileEditor.loadSavedRecords === 'function') {
+        if (typeof bootstrapSavedProfileForResume === 'function') {
+            await bootstrapSavedProfileForResume();
+        } else if (typeof ProfileEditor.loadSavedRecords === 'function') {
             await ProfileEditor.loadSavedRecords();
         }
         return true;
@@ -2386,6 +2425,7 @@ if (typeof window !== 'undefined') {
     window.handleFile = handleFile;
     window.clearFile = clearFile;
     window.uploadResume = uploadResume;
+    window.bootstrapSavedProfileForResume = bootstrapSavedProfileForResume;
 }
 
 async function exportResume(format = 'pdf') {

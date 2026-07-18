@@ -138,7 +138,11 @@ const ProfileEditor = {
         this.bindEvents();
         this.updatePhotoVisibility(typeof currentResumeLanguage !== 'undefined' ? currentResumeLanguage : 'zh');
         this.updateSaveUi();
-        if (typeof apiClient !== 'undefined' && apiClient.isLoggedIn()) {
+        // Left-panel list with Load buttons is owned by bootstrapSavedProfileForResume()
+        // (resume-generator.js). Avoid a second render that drops the Load button markup.
+        if (typeof bootstrapSavedProfileForResume !== 'function'
+            && typeof apiClient !== 'undefined'
+            && apiClient.isLoggedIn()) {
             this.loadSavedRecords();
         }
     },
@@ -228,7 +232,11 @@ const ProfileEditor = {
             if (typeof apiClient !== 'undefined' && apiClient.invalidateBackendProbe) {
                 apiClient.invalidateBackendProbe();
             }
-            this.loadSavedRecords();
+            if (typeof bootstrapSavedProfileForResume === 'function') {
+                bootstrapSavedProfileForResume();
+            } else {
+                this.loadSavedRecords();
+            }
         });
         document.getElementById('btn-save-profile')?.addEventListener('click', () => {
             this.saveToAccount();
@@ -765,6 +773,8 @@ const ProfileEditor = {
             saveBtn.classList.toggle('opacity-50', !loggedIn);
             saveBtn.classList.toggle('cursor-not-allowed', !loggedIn);
         }
+        // Left-panel list is owned by bootstrapSavedProfileForResume (before parse).
+        // Only hide when logged out — never gate it on profile-editor visibility.
         if (!loggedIn) {
             const section = document.getElementById('profile-saved-records-section');
             if (section) section.classList.add('hidden');
@@ -811,7 +821,11 @@ const ProfileEditor = {
             }));
             Utils.hideLoading();
             Utils.showToast(profileUiText('resume.toast.profileSaved', 'Profile saved to your account'));
-            await this.loadSavedRecords();
+            if (typeof bootstrapSavedProfileForResume === 'function') {
+                await bootstrapSavedProfileForResume();
+            } else {
+                await this.loadSavedRecords();
+            }
             if (typeof onProfileDraftSaved === 'function') {
                 onProfileDraftSaved();
             }
@@ -1524,8 +1538,10 @@ const ProfileEditor = {
         this.render({ preserveDraft: true });
         this.show(false);
         this.updateSaveUi();
-        if (typeof apiClient !== 'undefined' && apiClient.isLoggedIn()) {
-            this.loadSavedRecords();
+        if (typeof bootstrapSavedProfileForResume === 'function') {
+            await bootstrapSavedProfileForResume();
+        } else if (typeof apiClient !== 'undefined' && apiClient.isLoggedIn()) {
+            await this.loadSavedRecords();
         }
         document.getElementById('profile-restored-hint')?.classList.add('hidden');
 

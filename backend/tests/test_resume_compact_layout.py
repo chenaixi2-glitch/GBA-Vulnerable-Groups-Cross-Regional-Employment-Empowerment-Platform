@@ -77,6 +77,50 @@ class TestCompactSkillsAndAwards:
         assert "Python" in out.skills[0].content
         assert "Docker" in out.skills[0].content
 
+    def test_merges_many_singleton_skill_rows_into_one_line(self):
+        """LLM often emits one skill per SectionItem — Optimize must fold them."""
+        names = [
+            "English (Fluent)",
+            "Mandarin (Native)",
+            "Python (Proficient)",
+            "SQL (Proficient)",
+            "HTML/CSS/JavaScript (Familiar)",
+            "Java (Familiar)",
+            "Word/Excel/PowerPoint",
+            "Adobe Photoshop",
+            "Adobe Illustrator",
+            "Adobe Premiere",
+            "LLMs",
+            "OpenAI",
+            "Data Preprocessing",
+            "Data Analysis",
+        ]
+        content = _resume(skills=[
+            SectionItem(id=f"s{i}", title="", content=name)
+            for i, name in enumerate(names, start=1)
+        ])
+        out, changed = compact_skills_and_awards(content)
+        assert changed is True
+        assert len(out.skills) == 1
+        line = out.skills[0].content
+        assert "\n" not in line
+        assert "HTML/CSS/JavaScript (Familiar)" in line
+        assert "English (Fluent)" in line
+        assert "Data Analysis" in line
+        assert line.count(", ") == len(names) - 1
+
+    def test_keeps_category_groups_and_only_merges_flat_rows(self):
+        content = _resume(skills=[
+            SectionItem(id="s1", title="Languages", content="Python, TypeScript"),
+            SectionItem(id="s2", title="", content="Docker"),
+            SectionItem(id="s3", title="", content="Kubernetes"),
+        ])
+        out, changed = compact_skills_and_awards(content)
+        assert changed is True
+        assert len(out.skills) == 2
+        assert out.skills[0].content == "Languages: Python, TypeScript"
+        assert out.skills[1].content == "Docker, Kubernetes"
+
 
 class TestItemToInlineLine:
     def test_joins_title_and_content(self):

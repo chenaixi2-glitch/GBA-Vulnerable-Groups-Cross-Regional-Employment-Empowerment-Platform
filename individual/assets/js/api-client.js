@@ -1545,6 +1545,7 @@ class APIClient {
         this.useMockMode = false;
         this.backendChecked = false;
         this.backendAvailable = false;
+        this._backendProbePromise = null;
         this.lastBackendError = null;
         localStorage.removeItem(API_CONFIG.MOCK_MODE_KEY);
 
@@ -1644,15 +1645,22 @@ class APIClient {
 
     async ensureBackendAvailable(options = {}) {
         const { silent = false } = options;
-        if (!this.backendChecked) {
-            this.backendChecked = true;
-            this.backendAvailable = await this._probeBackendHealth();
-            if (this.backendAvailable) {
-                this.useMockMode = false;
-                localStorage.removeItem(API_CONFIG.MOCK_MODE_KEY);
-                this.lastBackendError = null;
-                this._syncBackendStatusBanner(null);
-            } else {
+        if (this.backendAvailable) {
+            return true;
+        }
+
+        if (!this._backendProbePromise) {
+            this._backendProbePromise = (async () => {
+                this.backendChecked = true;
+                this.backendAvailable = await this._probeBackendHealth();
+                if (this.backendAvailable) {
+                    this.useMockMode = false;
+                    localStorage.removeItem(API_CONFIG.MOCK_MODE_KEY);
+                    this.lastBackendError = null;
+                    this._syncBackendStatusBanner(null);
+                    return true;
+                }
+
                 this.useMockMode = false;
                 localStorage.removeItem(API_CONFIG.MOCK_MODE_KEY);
                 const healthUrl = this._healthUrls()[0] || this._healthUrl();
@@ -1663,8 +1671,23 @@ class APIClient {
                 );
                 this._syncBackendStatusBanner({ message: this.lastBackendError });
                 console.warn('[API] Backend unavailable:', healthUrl);
-            }
+                // Allow a later caller / reconnect to probe again.
+                this._backendProbePromise = null;
+                throw new Error(this.lastBackendError);
+            })();
         }
+
+        try {
+            await this._backendProbePromise;
+        } catch (error) {
+            if (!silent && typeof Utils !== 'undefined') {
+                Utils.showToast(this.lastBackendError || error.message);
+            }
+            throw error instanceof Error
+                ? error
+                : new Error(this.lastBackendError || apiT('errors.backendUnavailable', 'Backend is unavailable.'));
+        }
+
         if (!this.backendAvailable) {
             if (!silent && typeof Utils !== 'undefined') {
                 Utils.showToast(this.lastBackendError);
@@ -1680,6 +1703,7 @@ class APIClient {
     invalidateBackendProbe() {
         this.backendChecked = false;
         this.backendAvailable = false;
+        this._backendProbePromise = null;
     }
 
     async reconnectBackend(options = {}) {
