@@ -47,6 +47,13 @@
     }
   },
   "apiMessages": {
-    "SESSION_BUSY": "Another AI task is already running for this session. Please wait for it to finish, then try again."
+    "SESSION_BUSY": "Another AI task is already running for this session. Please wait for it to finish, then try again.",
+    "用户名已被注册": "This email or username is already registered. Try signing in instead.",
+    "邮箱已被注册": "This email is already registered. Try signing in instead.",
+    "用户名或邮箱已被注册": "This email or username is already registered. Try signing in instead.",
+    "账号或密码错误": "Incorrect email or password.",
+    "账号已被禁用": "This account has been disabled.",
+    "注册成功": "Account created successfully.",
+    "登录成功": "Signed in successfully."
   }
 }
