@@ -122,6 +122,14 @@ async def optimize_resume_a4(req: OptimizeA4Request, request: Request, backgroun
     persist_data = final.model_dump(exclude=_PERSIST_EXCLUDE)
     await _asave_state(store, persist_data)
 
+    # Keep Redis draft skills/awards aligned with compacted resume so the next
+    # ensure-render / PDF export does not re-apply the pre-optimize draft.
+    from api.draft_utils import sync_optimized_sections_into_draft
+
+    optimized_draft = sync_optimized_sections_into_draft(draft, final.resume_content_json)
+    if optimized_draft:
+        await draft_store.save_draft(optimized_draft, logged_in=user is not None)
+
     if user:
         background_tasks.add_task(_persist_to_mysql_safe, final, user.get("sub"))
 

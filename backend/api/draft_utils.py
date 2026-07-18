@@ -400,6 +400,65 @@ def apply_profile_extras_to_resume_state(state: CopilotState) -> tuple[CopilotSt
     return CopilotState.model_validate(data), photo_changed
 
 
+def _section_item_to_draft_module(item: SectionItem, mod_type: str) -> dict[str, Any]:
+    """Map a resume SectionItem into an editor draft module (skill/award-safe)."""
+    title = (item.title or "").strip()
+    content = (item.content or "").strip()
+    # A4 compact stores one-liners in content with empty title; editor skill
+    # fields expect the display line in ``skill`` / title.
+    if mod_type == "skill" and content and not title:
+        fields = {"skill": content, "level": "", "context": ""}
+        return {
+            "id": item.id or f"mod_{uuid.uuid4().hex[:8]}",
+            "type": "skill",
+            "title": content,
+            "content": "",
+            "fields": fields,
+            "is_custom": False,
+        }
+    fields = parse_fact_content(mod_type, content, title=title)
+    derived_title, derived_content = derive_title_and_content(mod_type, fields)
+    return {
+        "id": item.id or f"mod_{uuid.uuid4().hex[:8]}",
+        "type": mod_type,
+        "title": derived_title or title,
+        "content": derived_content if derived_content or mod_type == "skill" else content,
+        "fields": fields,
+        "is_custom": False,
+    }
+
+
+def sync_optimized_sections_into_draft(
+    draft: dict[str, Any] | None,
+    resume: Any | None,
+) -> dict[str, Any] | None:
+    """Replace draft skill/award modules with post-A4-optimize resume sections.
+
+    Prevents stale pre-optimize drafts from undoing skills compaction on the
+    next ensure-render / PDF export.
+    """
+    if not draft or resume is None:
+        return draft
+
+    keep_types = {"work", "internship", "project", "paper", "custom"}
+    kept = [
+        mod for mod in (draft.get("modules") or [])
+        if isinstance(mod, dict) and str(mod.get("type") or "") in keep_types
+    ]
+    skill_mods = [
+        _section_item_to_draft_module(item, "skill")
+        for item in (getattr(resume, "skills", None) or [])
+    ]
+    award_mods = [
+        _section_item_to_draft_module(item, "award")
+        for item in (getattr(resume, "awards", None) or [])
+    ]
+    updated = dict(draft)
+    updated["modules"] = [*kept, *skill_mods, *award_mods]
+    updated["updated_at"] = datetime.now(timezone.utc).isoformat()
+    return updated
+
+
 async def sync_draft_to_session(store, session_id: str, draft: dict[str, Any]) -> None:
     """Merge draft into Redis session state candidate_profile and resume content."""
     from api.chat import _aload_state, _asave_state

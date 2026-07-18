@@ -202,3 +202,49 @@ def test_editing_internship_updates_content_dates_and_clears_html():
     item = updated.resume_content_json.internships[0]
     assert item.title == "ACME Corp — Backend Intern (2024-01 – 2024-08)"
     assert "Shipped v2 APIs" in item.content
+
+
+def test_sync_optimized_sections_keeps_compacted_skill_groups():
+    """A4-compacted category lines must survive draft round-trip (PDF ensure-render)."""
+    from api.draft_utils import sync_optimized_sections_into_draft
+
+    draft = {
+        "profile_basic": {"name": "Alex"},
+        "education": [],
+        "modules": [
+            {"id": "s1", "type": "skill", "title": "Python", "content": "", "fields": {"skill": "Python"}},
+            {"id": "s2", "type": "skill", "title": "SQL", "content": "", "fields": {"skill": "SQL"}},
+            {
+                "id": "w1",
+                "type": "work",
+                "title": "ACME",
+                "content": "Built APIs",
+                "fields": {"company": "ACME", "role": "Dev"},
+            },
+        ],
+    }
+    resume = ResumeContent(
+        meta=ResumeContentMeta(language="en"),
+        profile=ResumeProfile(name="Alex"),
+        skills=[
+            SectionItem(id="s1", title="", content="Programming: Python, SQL"),
+            SectionItem(id="s1_tools", title="", content="Tools: Docker"),
+        ],
+    )
+
+    updated = sync_optimized_sections_into_draft(draft, resume)
+    skills = [m for m in updated["modules"] if m["type"] == "skill"]
+    assert len(skills) == 2
+    assert skills[0]["fields"]["skill"] == "Programming: Python, SQL"
+    assert any(m["type"] == "work" for m in updated["modules"])
+
+    state = CopilotState(
+        session_id="sess_opt",
+        resume_content_json=resume,
+        resume_html=ResumeHtml(html="<html>optimized</html>"),
+    )
+    final, _changed = apply_draft_sections_to_resume_state(state, updated)
+    assert len(final.resume_content_json.skills) == 2
+    line = final.resume_content_json.skills[0].title or final.resume_content_json.skills[0].content
+    assert "Programming: Python, SQL" == line
+    assert len(final.resume_content_json.skills) < 3  # not split back into Python / SQL rows

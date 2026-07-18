@@ -594,12 +594,26 @@ const ProfileEditor = {
         return { profile_basic: basic, education, modules: this.normalizeModules(modules) };
     },
 
+    /**
+     * A4 optimize coalesces skills into category lines like "Programming: Python, SQL".
+     * Do not split those back into one-skill-per-row — that undoes Optimize when PDF
+     * re-applies the editor draft over resume_content_json.
+     */
+    isSkillCategoryGroupLine(text) {
+        return /^[^:：\n]{1,48}[:：]\s*\S/.test(String(text || '').trim());
+    },
+
     normalizeModules(modules) {
         const result = [];
         modules.forEach((mod) => {
             const fields = ResumeProfileFields.getEntryFields(mod.type, mod);
-            if (mod.type === 'skill' && fields.skill && String(fields.skill).includes(',') && !String(fields.skill).includes('\n')) {
-                String(fields.skill).split(',').map((s) => s.trim()).filter(Boolean).forEach((skill, idx) => {
+            const skillText = String(fields.skill || '').trim();
+            const canSplitFlatSkills = mod.type === 'skill'
+                && skillText.includes(',')
+                && !skillText.includes('\n')
+                && !this.isSkillCategoryGroupLine(skillText);
+            if (canSplitFlatSkills) {
+                skillText.split(',').map((s) => s.trim()).filter(Boolean).forEach((skill, idx) => {
                     const splitFields = { ...fields, skill };
                     const derived = ResumeProfileFields.deriveTitleContent('skill', splitFields);
                     result.push({
@@ -613,12 +627,23 @@ const ProfileEditor = {
                 });
             } else {
                 const derived = ResumeProfileFields.deriveTitleContent(mod.type, fields);
-                result.push({
-                    ...mod,
-                    title: mod.title || derived.title,
-                    content: mod.content || derived.content,
-                    fields,
-                });
+                // Skills: prefer derived title/content so A4 one-liners stay title-only
+                // (avoid title+content both holding the same line → duplicated in HTML).
+                if (mod.type === 'skill') {
+                    result.push({
+                        ...mod,
+                        title: derived.title,
+                        content: derived.content,
+                        fields,
+                    });
+                } else {
+                    result.push({
+                        ...mod,
+                        title: mod.title || derived.title,
+                        content: mod.content || derived.content,
+                        fields,
+                    });
+                }
             }
         });
         return result;

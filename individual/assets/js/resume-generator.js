@@ -2300,6 +2300,11 @@ async function optimizeResume() {
                 { deferPreview: false, polishingFactIds: [], silent: true }
             );
             optimizedHtml = response.resume_html?.html || optimizedHtml;
+            // Flush optimized skills/awards into Redis draft immediately so PDF
+            // ensure-render cannot re-apply a stale pre-optimize draft.
+            if (typeof ProfileEditor !== 'undefined' && typeof ProfileEditor.persistDraft === 'function') {
+                await ProfileEditor.persistDraft();
+            }
         } else if (response.resume_html && response.resume_html.html) {
             displayResume(response.resume_html.html);
             optimizedHtml = response.resume_html.html;
