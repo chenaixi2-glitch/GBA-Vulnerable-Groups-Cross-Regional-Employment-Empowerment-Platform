@@ -90,9 +90,15 @@ def test_apply_resume_target_language_accepts_chinese():
 def test_resolve_output_language_falls_back_to_render_config():
     state = CopilotState(
         session_id="sess_test",
-        render_config=RenderConfig(language="pt"),
+        render_config=RenderConfig(language="zh"),
     )
-    assert resolve_output_language(state) == "pt"
+    assert resolve_output_language(state) == "zh"
+
+
+def test_normalize_language_collapses_legacy_locales():
+    assert normalize_language("zh-TW") == "zh"
+    assert normalize_language("pt") == "en"
+    assert normalize_language("zh-CN") == "zh"
 
 
 def test_output_language_instruction_english():
@@ -103,11 +109,11 @@ def test_output_language_instruction_english():
 def test_prompt_language_kwargs():
     state = CopilotState(
         session_id="sess_test",
-        render_config=RenderConfig(language="zh-TW"),
+        render_config=RenderConfig(language="zh"),
     )
     kwargs = prompt_language_kwargs(state)
-    assert kwargs["output_language"] == "zh-TW"
-    assert "繁體" in kwargs["output_language_instruction"]
+    assert kwargs["output_language"] == "zh"
+    assert "简体中文" in kwargs["output_language_instruction"]
 
 
 def test_apply_chat_output_language_persists_ui_meta_language():
@@ -146,13 +152,13 @@ def test_gap_prompt_language_kwargs_includes_mandatory_block():
 def test_apply_interview_question_language_does_not_change_page_or_feedback():
     state = CopilotState(
         session_id="sess_test",
-        meta=Meta(ui_output_language="zh", interview_feedback_language="pt"),
+        meta=Meta(ui_output_language="zh", interview_feedback_language="zh"),
     )
     apply_interview_question_language(state, "en")
     assert state.chat_question_output_language == "en"
     assert state.meta.interview_question_language == "en"
     assert state.meta.ui_output_language == "zh"
-    assert state.meta.interview_feedback_language == "pt"
+    assert state.meta.interview_feedback_language == "zh"
 
 
 def test_apply_interview_feedback_language_does_not_change_page_or_question():
@@ -160,9 +166,9 @@ def test_apply_interview_feedback_language_does_not_change_page_or_question():
         session_id="sess_test",
         meta=Meta(ui_output_language="zh", interview_question_language="en"),
     )
-    apply_interview_feedback_language(state, "pt")
-    assert state.chat_feedback_output_language == "pt"
-    assert state.meta.interview_feedback_language == "pt"
+    apply_interview_feedback_language(state, "zh")
+    assert state.chat_feedback_output_language == "zh"
+    assert state.meta.interview_feedback_language == "zh"
     assert state.meta.ui_output_language == "zh"
     assert state.meta.interview_question_language == "en"
 
@@ -171,17 +177,17 @@ def test_interview_languages_are_independent():
     state = CopilotState(
         session_id="sess_test",
         chat_question_output_language="en",
-        chat_feedback_output_language="pt",
+        chat_feedback_output_language="zh",
     )
     q_kwargs = interview_question_prompt_language_kwargs(state)
     f_kwargs = interview_feedback_prompt_language_kwargs(state)
     turn_kwargs = interview_turn_prompt_language_kwargs(state)
     assert q_kwargs["output_language"] == "en"
-    assert f_kwargs["output_language"] == "pt"
+    assert f_kwargs["output_language"] == "zh"
     assert turn_kwargs["question_output_language"] == "en"
-    assert turn_kwargs["feedback_output_language"] == "pt"
+    assert turn_kwargs["feedback_output_language"] == "zh"
     assert "English" in turn_kwargs["question_output_language_instruction"]
-    assert "português" in turn_kwargs["feedback_output_language_instruction"]
+    assert "简体中文" in turn_kwargs["feedback_output_language_instruction"]
 
 
 def test_resolve_interview_question_language_does_not_use_page_language():
@@ -212,11 +218,11 @@ def test_page_prompt_language_kwargs_follows_page_locale():
     state = CopilotState(
         session_id="sess_test",
         render_config=RenderConfig(language="en"),
-        chat_output_language="zh-TW",
+        chat_output_language="zh",
     )
     kwargs = page_prompt_language_kwargs(state)
-    assert kwargs["output_language"] == "zh-TW"
-    assert "繁體" in kwargs["output_language_instruction"]
+    assert kwargs["output_language"] == "zh"
+    assert "简体中文" in kwargs["output_language_instruction"]
 
 
 def test_prompt_language_kwargs_prefers_chat_locale():

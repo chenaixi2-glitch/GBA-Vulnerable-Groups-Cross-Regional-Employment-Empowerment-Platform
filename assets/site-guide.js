@@ -74,7 +74,7 @@
             },
             {
                 title: 'Language & accessibility',
-                body: 'Switch between English, Chinese, and Portuguese.'
+                body: 'Switch between English and Simplified Chinese.'
             }
         ],
         individual: [

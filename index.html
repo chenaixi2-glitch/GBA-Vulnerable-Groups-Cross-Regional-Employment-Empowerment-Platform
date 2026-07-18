@@ -135,8 +135,16 @@
             width: 100%;
             height: 150px;
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,202.7C672,203,768,181,864,181.3C960,181,1056,203,1152,202.7C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-            background-size: cover;
+            background-size: 100% 100%;
             background-repeat: no-repeat;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .hero-stats {
+            position: relative;
+            z-index: 10;
+            margin-bottom: 2rem;
         }
         
         .feature-card {
@@ -284,9 +292,23 @@
         /* Responsive Design */
         @media (max-width: 768px) {
             .hero-section {
-                min-height: 100vh;
+                min-height: auto;
                 padding-top: 8rem;
-                padding-bottom: 3rem;
+                padding-bottom: 8rem;
+            }
+
+            .hero-wave {
+                height: 72px;
+            }
+
+            .hero-stats {
+                gap: 0.75rem;
+                margin-bottom: 3.5rem;
+            }
+
+            .hero-stats > div {
+                width: min(100%, 20rem);
+                background-color: rgba(255, 255, 255, 0.28);
             }
             
             .feature-grid {
@@ -429,6 +451,7 @@
                 </a>
 
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div id="header-lang-slot" class="shrink-0"></div>
                     <a href="individual/donation-legal.html" class="inline-flex items-center text-amber-700 hover:text-amber-800 font-medium text-sm transition-colors"><i class="fas fa-hand-holding-heart mr-1"></i><span data-i18n="portal.navDonation">Donation box</span></a>
 
                     <div id="nav-auth-guest" class="flex flex-wrap items-center gap-2">
@@ -535,7 +558,7 @@
                 </a>
             </div>
 
-            <div class="mt-12 flex flex-wrap justify-center gap-4">
+            <div class="hero-stats mt-12 flex flex-wrap justify-center gap-4">
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center">
                     <i class="fas fa-users text-2xl text-white mr-3"></i>
                     <div class="text-left">
@@ -668,8 +691,8 @@
                     <div class="ai-feature-icon">
                         <i class="fas fa-language"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureI18nTitle">Multi-Language Support</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="home.featureI18nDesc">Full support for Simplified Chinese, Traditional Chinese, English, and Portuguese to serve the diverse GBA population.</p>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="home.featureI18nTitle">Bilingual support</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="home.featureI18nDesc">Full support for Simplified Chinese and English to serve Greater Bay Area users.</p>
                 </div>
                 
                 <div class="feature-card bg-gradient-to-br from-blue-50 to-green-50 p-6">
@@ -1173,7 +1196,7 @@
                         <i class="fas fa-chevron-down text-gray-500 transition-transform"></i>
                     </button>
                     <div class="faq-answer bg-white px-4 pb-4 rounded-b-lg shadow-sm hidden">
-                        <p class="text-gray-600" data-i18n="home.faqA8">The platform supports Simplified Chinese, Traditional Chinese, English, and Portuguese — reflecting the linguistic diversity of the Greater Bay Area. Switch languages anytime from the language selector in the top navigation.</p>
+                        <p class="text-gray-600" data-i18n="home.faqA8">The platform supports Simplified Chinese and English. Switch languages anytime from the language selector in the top navigation.</p>
                     </div>
                 </div>
                 

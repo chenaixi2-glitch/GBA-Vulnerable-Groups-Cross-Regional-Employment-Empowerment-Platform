@@ -10,9 +10,11 @@ const LEARNING_PATH_RESOURCES_UI_ENABLED = false;
 let learningPathData = null;
 let timelineEditMode = false;
 let learningPathSetup = null;
-/** Content language picker omitted — AI output fixed to English. */
-let learningPathLanguage = 'en';
-let learningPathLanguageUserSelected = true;
+/** Content language: Simplified Chinese or English (follows UI by default). */
+let learningPathLanguage = (typeof window !== 'undefined' && window.GBAI18n && GBAI18n.uiLangToApiLang)
+    ? GBAI18n.uiLangToApiLang(GBAI18n.getLang())
+    : 'en';
+let learningPathLanguageUserSelected = false;
 
 function uiT(key, fallback, vars) {
     if (window.GBAI18n && window.GBAI18n.t) return window.GBAI18n.t(key, fallback, vars);

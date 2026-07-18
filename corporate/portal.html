@@ -511,6 +511,7 @@
                     <span class="text-lg font-bold text-gray-800" data-i18n="home.brandName">GBA Platform</span>
                 </a>
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div id="header-lang-slot" class="shrink-0"></div>
                     <div id="portal-auth-guest" class="flex items-center space-x-2">
                         <a href="auth.html" class="text-sm text-gray-600 hover:text-green-600 font-medium" data-i18n="portal.login">Log in</a>
                         <a href="auth.html?tab=register" class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium" data-i18n="portal.signup">Sign up</a>
@@ -2145,7 +2146,7 @@
             const el = document.getElementById('dashboard-date');
             if (!el) return;
             function dashboardLocale() {
-                const map = { en: 'en-GB', 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', pt: 'pt' };
+                const map = { en: 'en-GB', 'zh-CN': 'zh-CN' };
                 try {
                     if (window.GBAI18n && GBAI18n.getLang) return map[GBAI18n.getLang()] || 'en-GB';
                     const stored = localStorage.getItem('gba_ui_lang');
