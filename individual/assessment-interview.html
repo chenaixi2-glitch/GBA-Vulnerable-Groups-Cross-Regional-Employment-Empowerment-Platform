@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Assessment Interview - GBA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen" data-page="individual">
+    <header class="bg-white border-b px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
+        <a href="portal.html" class="text-blue-700 font-semibold">Individual Portal</a>
+        <div class="flex items-center gap-3">
+            <a href="my-applications.html" class="text-teal-700 hover:underline">My applications</a>
+            <a href="demo-interview.html" class="text-slate-500 hover:underline">Mock interview practice</a>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700 mb-1">Employer assessment</p>
+            <h1 class="text-2xl font-bold text-slate-900">AI Assessment Interview</h1>
+            <p class="text-sm text-slate-500 mt-1">No live coaching feedback during the interview. Follow-up questions may still appear. Only the final score is shared with the employer.</p>
+        </div>
+
+        <div id="invite-banner" class="bg-white rounded-2xl border p-5 hidden">
+            <p class="font-semibold text-slate-900" id="invite-job-title">—</p>
+            <p class="text-sm text-slate-500" id="invite-company">—</p>
+            <p class="text-xs text-slate-400 mt-2" id="invite-status"></p>
+        </div>
+
+        <div id="setup-panel" class="bg-white rounded-2xl border p-5 space-y-4">
+            <p class="text-sm text-slate-600">Uses your saved profile. Make sure you have uploaded a resume before starting.</p>
+            <button id="btn-start-assessment" type="button" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">
+                Start assessment interview
+            </button>
+            <p id="setup-error" class="text-sm text-red-600 hidden"></p>
+        </div>
+
+        <div id="interview-panel" class="bg-white rounded-2xl border p-5 hidden">
+            <div id="phase-hint" class="text-xs text-slate-500 mb-3"></div>
+            <div id="chat" class="space-y-3 max-h-[28rem] overflow-y-auto mb-4"></div>
+            <div id="input-section" class="space-y-2">
+                <textarea id="answer-input" rows="4" class="w-full border rounded-lg p-3 text-sm" placeholder="Type your answer…"></textarea>
+                <div class="flex gap-2">
+                    <button id="btn-submit" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Submit answer</button>
+                    <button id="btn-end" type="button" class="px-4 py-2 border border-slate-300 rounded-lg text-sm">End &amp; get score</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="score-panel" class="bg-white rounded-2xl border p-5 hidden">
+            <h2 class="text-lg font-bold text-slate-900 mb-2">Final score</h2>
+            <p class="text-4xl font-bold text-emerald-700" id="final-score">—</p>
+            <p class="text-sm text-slate-600 mt-3" id="final-summary"></p>
+            <div id="category-scores" class="mt-4 flex flex-wrap gap-2"></div>
+            <a href="my-applications.html" class="inline-block mt-5 text-sm text-teal-700 underline">Back to my applications</a>
+        </div>
+    </main>
+
+    <script src="../assets/js/auth-api.js"></script>
+    <script src="../assets/js/node-api-base.js"></script>
+    <script src="assets/js/platform-api.js"></script>
+    <script src="assets/js/api-client.js"></script>
+    <script src="assets/js/assessment-interview.js"></script>
+</body>
+</html>

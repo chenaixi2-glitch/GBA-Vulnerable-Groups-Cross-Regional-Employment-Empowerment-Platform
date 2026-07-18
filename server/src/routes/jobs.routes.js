@@ -7,6 +7,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { authenticate, requireRole } = require('../middleware/auth.middleware');
 const jobsController = require('../controllers/jobs.controller');
 const applicationsController = require('../controllers/applications.controller');
+const interviewInvitesController = require('../controllers/interviewInvites.controller');
 
 const router = express.Router();
 
@@ -52,6 +53,16 @@ const applicationStatusRules = [
   body('status').isIn(['pending', 'reviewing', 'accepted', 'rejected']),
 ];
 
+const batchInviteRules = [
+  body('application_ids').isArray({ min: 1 }),
+  body('application_ids.*').isInt({ min: 1 }),
+  body('program_version').optional().isIn(['quick', 'full', 'specialized']),
+];
+
+const inviteRules = [
+  body('program_version').optional().isIn(['quick', 'full', 'specialized']),
+];
+
 const optionalAuth = (req, res, next) => {
   const header = req.headers.authorization || '';
   if (header.startsWith('Bearer ')) {
@@ -64,9 +75,25 @@ router.get('/matched', authenticate, requireRole('individual', 'admin'), asyncHa
 router.get('/applications/me', authenticate, requireRole('individual', 'admin'), asyncHandler(applicationsController.listMyApplications));
 router.delete('/applications/:applicationId', authenticate, requireRole('individual', 'admin'), asyncHandler(applicationsController.withdraw));
 router.patch('/applications/:applicationId/status', authenticate, requireRole('corporate', 'admin'), applicationStatusRules, validate, asyncHandler(applicationsController.updateApplicationStatus));
+router.post(
+  '/applications/:applicationId/interview-invite',
+  authenticate,
+  requireRole('corporate', 'admin'),
+  inviteRules,
+  validate,
+  asyncHandler(interviewInvitesController.createInvite)
+);
 
 router.get('/', optionalAuth, listRules, validate, asyncHandler(jobsController.list));
 router.get('/:id/applications', authenticate, requireRole('corporate', 'admin'), asyncHandler(applicationsController.listApplicants));
+router.post(
+  '/:id/interview-invites',
+  authenticate,
+  requireRole('corporate', 'admin'),
+  batchInviteRules,
+  validate,
+  asyncHandler(interviewInvitesController.createBatchInvites)
+);
 router.post('/:id/external-interest', authenticate, requireRole('individual', 'admin'), asyncHandler(jobsController.trackExternalInterest));
 router.post('/:id/apply', authenticate, requireRole('individual', 'admin'), asyncHandler(applicationsController.apply));
 router.get('/:id', asyncHandler(jobsController.getOne));

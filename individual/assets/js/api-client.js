@@ -3331,6 +3331,67 @@ class APIClient {
     }
 
     /**
+     * Employer assessment interview APIs (separate from personal mock /interactive/*)
+     */
+    async startAssessmentInterview({ tone = 'professional', jobTitle = '', industry = '', maxRounds = 0, programVersion = 'quick', specializedFocus = '', inviteToken = '', questionSourceMode = 'ai_only', customQuestions = [], targetContext = null, questionLanguage = null } = {}) {
+        if (!this.sessionId) this.generateSessionId();
+        const ctx = targetContext || (typeof collectTargetJobContext === 'function' ? collectTargetJobContext() : null);
+        await this.syncTargetJobContext(ctx);
+        await this.ensureBackendAvailable();
+        const qLang = this.resolvePageLanguage(questionLanguage);
+        const response = await this.client.post('/interview/assessment/start', {
+            session_id: this.sessionId,
+            tone,
+            job_title: jobTitle,
+            industry: (ctx && ctx.industryLabel) || industry,
+            max_rounds: maxRounds,
+            program_version: programVersion,
+            specialized_focus: specializedFocus,
+            invite_token: inviteToken || '',
+            question_source_mode: questionSourceMode || 'ai_only',
+            custom_questions: Array.isArray(customQuestions) ? customQuestions : [],
+            question_language: qLang,
+        });
+        if (response.data.session_id) this.saveSessionId(response.data.session_id);
+        return response.data;
+    }
+
+    async submitAssessmentTurn(answer, questionLanguage = null, feedbackLanguage = null) {
+        if (!this.sessionId) throw new Error(apiT('errors.noActiveSession', 'No active session'));
+        await this.ensureBackendAvailable();
+        const response = await this.client.post('/interview/assessment/turn', {
+            session_id: this.sessionId,
+            answer,
+            question_language: this.resolvePageLanguage(questionLanguage),
+            feedback_language: this.resolvePageLanguage(feedbackLanguage),
+        });
+        return response.data;
+    }
+
+    async pollAssessmentSession(sinceSequence = 0, questionLanguage = null, feedbackLanguage = null) {
+        if (!this.sessionId) throw new Error(apiT('errors.noActiveSession', 'No active session'));
+        await this.ensureBackendAvailable();
+        const response = await this.client.post('/interview/assessment/poll', {
+            session_id: this.sessionId,
+            since_sequence: sinceSequence,
+            question_language: this.resolvePageLanguage(questionLanguage),
+            feedback_language: this.resolvePageLanguage(feedbackLanguage),
+        });
+        return response.data;
+    }
+
+    async endAssessmentInterview(generateDebrief = true, feedbackLanguage = null) {
+        if (!this.sessionId) throw new Error(apiT('errors.noActiveSession', 'No active session'));
+        await this.ensureBackendAvailable();
+        const response = await this.client.post('/interview/assessment/end', {
+            session_id: this.sessionId,
+            generate_debrief: generateDebrief,
+            feedback_language: this.resolvePageLanguage(feedbackLanguage),
+        });
+        return response.data;
+    }
+
+    /**
      * Save interactive mock interview result to user account (MySQL)
      */
     async saveInteractiveInterview(recordId = '') {

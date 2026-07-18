@@ -264,17 +264,33 @@
             if (st === 'rejected') lbl = cT('corporate.statusRejected', 'Rejected');
             return '<option value="' + st + '"' + (a.status === st ? ' selected' : '') + '>' + escapeHtml(lbl) + '</option>';
           }).join('');
+          const invite = a.interview_invite;
+          let inviteBtn = '';
+          let scoreHtml = '';
+          if (invite && invite.status === 'completed' && invite.overall_score != null) {
+            scoreHtml = '<span class="text-sm font-bold text-purple-700 ml-2" title="AI assessment">' +
+              escapeHtml(cT('corporate.aiScore', 'AI')) + ' ' + invite.overall_score + '</span>';
+            inviteBtn = '<button type="button" disabled class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500">' +
+              escapeHtml(cT('corporate.assessmentDone', 'Assessment done')) + '</button>';
+          } else if (invite && (invite.status === 'invited' || invite.status === 'in_progress')) {
+            inviteBtn = '<button type="button" disabled class="text-xs px-2 py-1 rounded bg-amber-50 text-amber-800 border border-amber-200">' +
+              escapeHtml(cT('corporate.assessmentPending', 'Interview invited')) + '</button>';
+          } else {
+            inviteBtn = '<button type="button" data-invite-ai="' + a.id + '" class="text-xs px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700">' +
+              escapeHtml(cT('corporate.inviteInterview', 'Invite interview')) + '</button>';
+          }
           return '<div class="border rounded-xl p-4 bg-gray-50" data-app-id="' + a.id + '">' +
             '<div class="flex justify-between items-start gap-3">' +
             '<div><p class="font-semibold text-gray-900">' + escapeHtml(a.applicant_name || cT('corporate.candidate', 'Candidate')) + vBadge + '</p>' +
             '<p class="text-sm text-gray-500">' + escapeHtml(a.applicant_email || '') + '</p>' +
             '<p class="text-xs text-gray-400 mt-1">' + escapeHtml(cT('corporate.groups', 'Groups:')) + ' ' + escapeHtml((a.applicant_group_types || []).join(', ') || '-') + '</p></div>' +
-            '<span class="text-lg font-bold text-green-700">' + (a.match_score || 0) + '</span></div>' +
+            '<div class="text-right"><span class="text-lg font-bold text-green-700">' + (a.match_score || 0) + '</span>' + scoreHtml + '</div></div>' +
             (reasons ? '<ul class="text-sm text-gray-600 mt-2 list-disc pl-5">' + reasons + '</ul>' : '') +
             (a.cover_message ? '<p class="text-sm text-gray-600 mt-2 italic">' + escapeHtml(a.cover_message) + '</p>' : '') +
-            '<div class="mt-3 flex items-center gap-2">' +
+            '<div class="mt-3 flex flex-wrap items-center gap-2">' +
             '<label class="text-xs text-gray-500">' + escapeHtml(cT('corporate.statusLabel', 'Status:')) + '</label>' +
             '<select data-app-status="' + a.id + '" class="text-sm border rounded-lg px-2 py-1">' + statusOpts + '</select>' +
+            inviteBtn +
             '</div></div>';
         }).join('') + '</div>';
         els.modalBody.querySelectorAll('[data-app-status]').forEach(function (sel) {
@@ -286,10 +302,98 @@
             }
           });
         });
+        els.modalBody.querySelectorAll('[data-invite-ai]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            openInviteModal(this.dataset.inviteAi, id);
+          });
+        });
       }
       els.modal.classList.remove('hidden');
     } catch (err) {
       alert(mapMsg(err.message) || cT('corporate.loadApplicantsFailed', 'Failed to load applicants'));
+    }
+  }
+
+  var inviteState = { applicationId: null, jobId: null, job: null };
+
+  function formatLabel(fmt) {
+    var map = {
+      ai_only: cT('corporate.formatAiOnly', 'AI question bank only'),
+      partial_custom: cT('corporate.formatPartial', 'Partial custom (AI + your questions)'),
+      full_custom: cT('corporate.formatFull', 'Full custom (your questions only)'),
+      human: cT('corporate.formatHuman', 'Live interview (third-party meeting)'),
+    };
+    return map[fmt] || fmt;
+  }
+
+  async function openInviteModal(applicationId, jobId) {
+    inviteState.applicationId = applicationId;
+    inviteState.jobId = jobId;
+    inviteState.job = null;
+    var summary = document.getElementById('ai-invite-job-summary');
+    var errEl = document.getElementById('ai-invite-error');
+    var confirmBtn = document.getElementById('ai-invite-confirm');
+    if (errEl) { errEl.classList.add('hidden'); errEl.textContent = ''; }
+    if (summary) summary.innerHTML = '<p class="text-gray-400 text-xs">Loading job interview setup…</p>';
+    if (confirmBtn) confirmBtn.disabled = true;
+    var modal = document.getElementById('ai-invite-modal');
+    if (modal) modal.classList.remove('hidden');
+    try {
+      var res = await CorporateAPI.JobsAPI.get(jobId);
+      var job = res.data.job;
+      inviteState.job = job;
+      var fmt = job.interview_format || 'ai_only';
+      var lines = [
+        '<p><strong>' + escapeHtml(cT('corporate.interviewFormat', 'Format:')) + '</strong> ' + escapeHtml(formatLabel(fmt)) + '</p>',
+      ];
+      if (fmt === 'partial_custom' || fmt === 'full_custom') {
+        var n = (job.interview_custom_questions || []).length;
+        lines.push('<p><strong>' + escapeHtml(cT('corporate.customQCount', 'Custom questions:')) + '</strong> ' + n + '</p>');
+        if (!n) throw new Error(cT('corporate.jobMissingCustomQs', 'Edit the job posting and add custom questions first.'));
+      }
+      if (fmt === 'human') {
+        if (!job.meeting_link) throw new Error(cT('corporate.jobMissingMeeting', 'Edit the job posting and add a meeting link first.'));
+        lines.push('<p><strong>' + escapeHtml(cT('corporate.meetingLink', 'Meeting:')) + '</strong> ' + escapeHtml(job.meeting_link) + '</p>');
+        if (job.meeting_instructions) {
+          lines.push('<p class="text-xs text-gray-500 whitespace-pre-wrap">' + escapeHtml(job.meeting_instructions) + '</p>');
+        }
+      }
+      lines.push('<p class="text-xs text-gray-400 mt-2">' + escapeHtml(cT('corporate.editJobHint', 'Change setup in Edit Job.')) +
+        ' <a class="text-emerald-700 underline" href="post-job.html?id=' + jobId + '">' + escapeHtml(cT('corporate.editJob', 'Edit job')) + '</a></p>');
+      if (summary) summary.innerHTML = lines.join('');
+      if (confirmBtn) confirmBtn.disabled = false;
+    } catch (err) {
+      if (summary) summary.innerHTML = '';
+      if (errEl) {
+        errEl.textContent = mapMsg(err.message) || String(err.message || err);
+        errEl.classList.remove('hidden');
+      }
+    }
+  }
+
+  function hideInviteModal() {
+    var modal = document.getElementById('ai-invite-modal');
+    if (modal) modal.classList.add('hidden');
+    inviteState.applicationId = null;
+    inviteState.job = null;
+  }
+
+  async function confirmInvite() {
+    if (!inviteState.applicationId) return;
+    var confirmBtn = document.getElementById('ai-invite-confirm');
+    if (confirmBtn) confirmBtn.disabled = true;
+    try {
+      var jobId = inviteState.jobId;
+      await CorporateAPI.JobsAPI.inviteInterview(inviteState.applicationId, {});
+      hideInviteModal();
+      if (window.CorporateInterviewBoard && CorporateInterviewBoard.reload) {
+        CorporateInterviewBoard.reload();
+      }
+      if (jobId) await showApplicantsModal(jobId);
+    } catch (err) {
+      alert(mapMsg(err.message) || cT('corporate.inviteFailed', 'Failed to send interview invitation'));
+    } finally {
+      if (confirmBtn) confirmBtn.disabled = false;
     }
   }
 
@@ -356,6 +460,19 @@
     els.modal.addEventListener('click', (e) => {
       if (e.target === els.modal) hideModal();
     });
+
+    var inviteClose = document.getElementById('ai-invite-close');
+    var inviteCancel = document.getElementById('ai-invite-cancel');
+    var inviteConfirm = document.getElementById('ai-invite-confirm');
+    var inviteModal = document.getElementById('ai-invite-modal');
+    if (inviteClose) inviteClose.addEventListener('click', hideInviteModal);
+    if (inviteCancel) inviteCancel.addEventListener('click', hideInviteModal);
+    if (inviteConfirm) inviteConfirm.addEventListener('click', confirmInvite);
+    if (inviteModal) {
+      inviteModal.addEventListener('click', function (e) {
+        if (e.target === inviteModal) hideInviteModal();
+      });
+    }
   }
 
   function debounce(fn, wait) {

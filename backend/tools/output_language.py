@@ -256,6 +256,31 @@ _INTERVIEW_OPENING: dict[str, str] = {
     ),
 }
 
+_INTERVIEW_OPENING_ASSESSMENT: dict[str, str] = {
+    "zh": (
+        "你好，欢迎参加本次企业评估面试。我们将按预设题库依次提问，共 {count} 道核心题；"
+        "面试过程中不会给出实时点评，但可能根据你的回答追加追问。结束后会生成最终得分。"
+        "请放松，我们开始第一题。"
+    ),
+    "zh-TW": (
+        "你好，歡迎參加本次企業評估面試。我們將按預設題庫依次提問，共 {count} 道核心題；"
+        "面試過程中不會給出即時點評，但可能根據你的回答追加追問。結束後會生成最終得分。"
+        "請放鬆，我們開始第一題。"
+    ),
+    "en": (
+        "Hello, welcome to this employer assessment interview. We will go through {count} core questions "
+        "from a preset bank. You will not receive live coaching feedback during the interview, but we may "
+        "ask follow-ups based on your answers. A final score will be generated at the end. "
+        "Let us begin with the first question."
+    ),
+    "pt": (
+        "Olá, bem-vindo(a) a esta entrevista de avaliação do empregador. Vamos percorrer {count} perguntas "
+        "principais do banco pré-definido. Não haverá feedback em tempo real durante a entrevista, mas "
+        "podemos fazer perguntas de seguimento. No final será gerada uma pontuação. "
+        "Vamos começar pela primeira pergunta."
+    ),
+}
+
 _INTERVIEW_CLOSING_NORMAL: dict[str, str] = {
     "zh": (
         "今天关于岗位、你的过往经历我们沟通得比较全面，你这边还有什么想了解公司、团队或者岗位的问题吗？"
@@ -338,9 +363,19 @@ def _pick_lang_text(table: dict[str, str], language: str | None) -> str:
     return table.get(code) or table.get("en", "")
 
 
-def interview_opening_message(state: CopilotState, question_count: int) -> str:
+def interview_opening_message(
+    state: CopilotState,
+    question_count: int,
+    *,
+    interview_mode: str = "practice",
+) -> str:
     lang = resolve_interview_question_language(state)
-    template = _pick_lang_text(_INTERVIEW_OPENING, lang)
+    table = (
+        _INTERVIEW_OPENING_ASSESSMENT
+        if (interview_mode or "").strip().lower() == "assessment"
+        else _INTERVIEW_OPENING
+    )
+    template = _pick_lang_text(table, lang)
     return template.format(count=question_count)
 
 

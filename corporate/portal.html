@@ -700,6 +700,31 @@
                 </div>
             </div>
 
+            <!-- AI Assessment Interview Board (scoped to current corporate user) -->
+            <div id="interview-board" class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800" data-i18n="corpPortal.aiInterviewBoard">AI Assessment Interview Board</h3>
+                        <p id="interview-board-scope" class="text-xs text-gray-500 mt-1">Your invitations only</p>
+                    </div>
+                    <button type="button" id="interview-board-refresh" class="text-xs px-3 py-1.5 border rounded-lg text-gray-600 hover:bg-gray-50" data-i18n="corpPortal.refresh">Refresh</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <h4 class="text-xs font-semibold uppercase tracking-wide text-amber-700 mb-2" data-i18n="corpPortal.boardInvited">Invited</h4>
+                        <div id="board-col-invited" class="space-y-2 min-h-[4rem] bg-amber-50/50 rounded-lg p-2"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-2" data-i18n="corpPortal.boardInProgress">In progress</h4>
+                        <div id="board-col-progress" class="space-y-2 min-h-[4rem] bg-blue-50/50 rounded-lg p-2"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold uppercase tracking-wide text-purple-700 mb-2" data-i18n="corpPortal.boardCompleted">Completed</h4>
+                        <div id="board-col-done" class="space-y-2 min-h-[4rem] bg-purple-50/50 rounded-lg p-2"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Main chart + right column -->
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
                 <!-- Trend chart (2/3) -->
@@ -960,6 +985,23 @@
                 <button id="job-detail-close" type="button" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" data-i18n-title="corpPortal.closeModal" aria-label="Close">&times;</button>
             </div>
             <div id="job-detail-body" class="text-sm text-gray-700 space-y-2"></div>
+        </div>
+    </div>
+
+    <!-- Interview Invite Modal (uses job-level interview setup) -->
+    <div id="ai-invite-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-bold text-gray-900" data-i18n="corpPortal.aiInviteTitle">Send interview invitation</h3>
+                <button id="ai-invite-close" type="button" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <p class="text-sm text-gray-500 mb-3" data-i18n="corpPortal.aiInviteDescJob">Uses this job&apos;s interview setup from the job posting (not per-candidate).</p>
+            <div id="ai-invite-job-summary" class="rounded-lg border bg-gray-50 p-3 text-sm text-gray-700 mb-4 space-y-1"></div>
+            <p id="ai-invite-error" class="text-sm text-red-600 hidden mb-3"></p>
+            <div class="flex justify-end gap-2">
+                <button type="button" id="ai-invite-cancel" class="px-4 py-2 text-sm border rounded-lg text-gray-600 hover:bg-gray-50" data-i18n="corpPortal.cancel">Cancel</button>
+                <button type="button" id="ai-invite-confirm" class="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700" data-i18n="corpPortal.sendInvite">Send invitation</button>
+            </div>
         </div>
     </div>
     
@@ -2175,6 +2217,7 @@
     <script src="../assets/js/portal-auth.js"></script>
     <script src="../assets/js/platform-access.js"></script>
     <script src="assets/js/my-jobs.js"></script>
+    <script src="assets/js/interview-board.js"></script>
     <script src="assets/js/dashboard-stats.js"></script>
     <script>
         function corpT(key, fallback) {

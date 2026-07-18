@@ -17,6 +17,13 @@ from agents.interactive_interview_agent import (
     session_to_response,
     start_interactive_interview,
 )
+from agents.assessment_interview_agent import (
+    assessment_session_to_response,
+    generate_assessment_debrief,
+    process_assessment_pending_feedback,
+    start_assessment_interview,
+    submit_assessment_answer,
+)
 from agents.interview_agent import custom_interview_answers_async, parse_custom_questions
 from api.chat import _aload_state, _asave_state
 from api.interview_messages import (
@@ -122,6 +129,22 @@ class InteractiveStartRequest(BaseModel):
     specialized_focus: str = ""  # technical | final_negotiation | resume_deep_dive
     question_language: str = ""
     language: str = ""  # backward-compatible alias for question_language
+
+
+class AssessmentStartRequest(BaseModel):
+    """企业评估面试启动（与个人模拟面 InteractiveStartRequest 分离）。"""
+    session_id: str = ""
+    tone: str = "professional"
+    job_title: str = ""
+    industry: str = ""
+    max_rounds: int = 0
+    program_version: str = "quick"
+    specialized_focus: str = ""
+    invite_token: str = ""
+    question_source_mode: str = "ai_only"  # ai_only | partial_custom | full_custom
+    custom_questions: list[str] = Field(default_factory=list)
+    question_language: str = ""
+    language: str = ""
 
 
 class InteractiveTurnRequest(BaseModel):
@@ -299,6 +322,191 @@ async def interactive_start(req: InteractiveStartRequest, request: Request) -> I
     )
 
 
+def _reject_if_assessment(session) -> None:
+    """个人模拟面 API 拒绝评估会话，避免两条链路互相串。"""
+    if getattr(session, "interview_mode", "practice") == "assessment":
+        raise HTTPException(
+            status_code=400,
+            detail="This session is an employer assessment interview. Use /api/interview/assessment/* instead.",
+        )
+
+
+@router.post("/assessment/start", response_model=InteractiveResponse)
+async def assessment_start(req: AssessmentStartRequest, request: Request) -> InteractiveResponse:
+    """开启企业评估面试（独立于个人模拟面 /interactive/start）。"""
+    session_id = req.session_id or f"sess_{uuid.uuid4().hex[:16]}"
+    user = get_optional_user(request)
+    await ensure_session_access(session_id, user)
+    if user:
+        await bind_session_owner(session_id, user)
+
+    state = await _load_state(session_id)
+    state.session_id = session_id
+    apply_interview_question_language(state, req.question_language or req.language)
+
+    if state.interactive_interview.status == "active":
+        raise HTTPException(status_code=400, detail=INTERVIEW_ERR_ALREADY_ACTIVE)
+
+    try:
+        async with llm_queue_slot(session_id, LlmTask.INTERVIEW_START):
+            max_rounds = req.max_rounds if req.max_rounds > 0 else None
+            session = await start_assessment_interview(
+                state,
+                tone=req.tone,
+                job_title=req.job_title,
+                industry=req.industry,
+                max_rounds=max_rounds,
+                program_version=req.program_version,
+                specialized_focus=req.specialized_focus,
+                question_source_mode=req.question_source_mode,
+                custom_questions=req.custom_questions,
+            )
+    except SessionBusyError as exc:
+        raise HTTPException(status_code=409, detail=session_busy_detail(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Assessment interview start failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to start assessment interview: {exc}")
+
+    state.interactive_interview = session
+    await _save_state(session_id, state)
+
+    return InteractiveResponse(
+        session_id=session_id,
+        interactive_interview=assessment_session_to_response(session),
+        message=INTERVIEW_STARTED,
+    )
+
+
+@router.post("/assessment/turn", response_model=InteractiveResponse)
+async def assessment_turn(req: InteractiveTurnRequest, request: Request) -> InteractiveResponse:
+    """评估面试提交回答（无实时点评展示，仍异步生成追问）。"""
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+
+    state = await _load_state(req.session_id)
+    apply_interview_languages(
+        state,
+        req.question_language or req.language,
+        req.feedback_language,
+    )
+    if state.interactive_interview.status != "active":
+        raise HTTPException(status_code=400, detail=INTERVIEW_ERR_NOT_ACTIVE)
+    if state.interactive_interview.interview_mode != "assessment":
+        raise HTTPException(status_code=400, detail="Not an assessment interview session.")
+
+    try:
+        session = await submit_assessment_answer(state, req.answer)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Assessment interview turn failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to process answer: {exc}")
+
+    state.interactive_interview = session
+    await _save_state(req.session_id, state)
+
+    ended = session.status == "completed"
+    waiting = session.phase == "follow_up_wait"
+    if ended:
+        message = INTERVIEW_TURN_ENDED
+    elif waiting:
+        message = INTERVIEW_TURN_WAITING
+    elif session.current_question_id:
+        message = INTERVIEW_TURN_NEXT
+    else:
+        message = INTERVIEW_TURN_RECORDED
+
+    return InteractiveResponse(
+        session_id=req.session_id,
+        interactive_interview=assessment_session_to_response(session),
+        message=message,
+    )
+
+
+@router.post("/assessment/poll", response_model=InteractiveResponse)
+async def assessment_poll(req: InteractivePollRequest, request: Request) -> InteractiveResponse:
+    """评估面试轮询（追问进度；不返回实时点评文案）。"""
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+
+    state = await _load_state(req.session_id)
+    apply_interview_languages(
+        state,
+        req.question_language or req.language,
+        req.feedback_language,
+    )
+    session = state.interactive_interview
+    if session.interview_mode != "assessment":
+        raise HTTPException(status_code=400, detail="Not an assessment interview session.")
+    if session.status not in ("active", "completed") and not session.pending_feedbacks:
+        raise HTTPException(status_code=400, detail=INTERVIEW_ERR_NO_POLL_SESSION)
+
+    try:
+        await process_assessment_pending_feedback(state)
+    except SessionBusyError:
+        pass
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Assessment poll feedback failed: %s", exc, exc_info=True)
+
+    session = state.interactive_interview
+    await _save_state(req.session_id, state)
+
+    response_data = assessment_session_to_response(session, since_sequence=req.since_sequence)
+    updates = response_data.get("poll_updates") or {}
+
+    if session.status == "completed":
+        message = INTERVIEW_POLL_ENDED
+    elif updates.get("waiting_for_follow_ups"):
+        message = INTERVIEW_POLL_WAITING_FU
+    elif updates.get("pending_feedback_count", 0) > 0:
+        message = INTERVIEW_POLL_FEEDBACK
+    else:
+        message = INTERVIEW_POLL_SYNCED
+
+    return InteractiveResponse(
+        session_id=req.session_id,
+        interactive_interview=response_data,
+        message=message,
+    )
+
+
+@router.post("/assessment/end", response_model=InteractiveResponse)
+async def assessment_end(req: InteractiveEndRequest, request: Request) -> InteractiveResponse:
+    """结束评估面试并生成最终得分（企业端可见总分）。"""
+    user = get_optional_user(request)
+    await ensure_session_access(req.session_id, user)
+
+    state = await _load_state(req.session_id)
+    apply_interview_feedback_language(state, req.feedback_language or req.language)
+    session = state.interactive_interview
+    if session.interview_mode != "assessment":
+        raise HTTPException(status_code=400, detail="Not an assessment interview session.")
+
+    try:
+        if req.generate_debrief:
+            session = await generate_assessment_debrief(state)
+        else:
+            if session.status == "active":
+                session.status = "completed"
+        state.interactive_interview = session
+        await _save_state(req.session_id, state)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Assessment interview end failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to end assessment interview: {exc}")
+
+    return InteractiveResponse(
+        session_id=req.session_id,
+        interactive_interview=assessment_session_to_response(session),
+        message=INTERVIEW_DEBRIEF_READY if session.debrief else INTERVIEW_TURN_ENDED,
+    )
+
+
 @router.post("/interactive/turn", response_model=InteractiveResponse)
 async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> InteractiveResponse:
     """提交回答：立即返回下一题，点评与追问在后台异步生成（通过 poll 获取）。"""
@@ -311,6 +519,7 @@ async def interactive_turn(req: InteractiveTurnRequest, request: Request) -> Int
         req.question_language or req.language,
         req.feedback_language,
     )
+    _reject_if_assessment(state.interactive_interview)
     if state.interactive_interview.status != "active":
         raise HTTPException(status_code=400, detail=INTERVIEW_ERR_NOT_ACTIVE)
 
@@ -356,6 +565,7 @@ async def interactive_poll(req: InteractivePollRequest, request: Request) -> Int
         req.feedback_language,
     )
     session = state.interactive_interview
+    _reject_if_assessment(session)
     if session.status not in ("active", "completed") and not session.pending_feedbacks:
         raise HTTPException(status_code=400, detail=INTERVIEW_ERR_NO_POLL_SESSION)
 
@@ -398,6 +608,7 @@ async def interactive_end(req: InteractiveEndRequest, request: Request) -> Inter
     state = await _load_state(req.session_id)
     apply_interview_feedback_language(state, req.feedback_language or req.language)
     session = state.interactive_interview
+    _reject_if_assessment(session)
 
     if not session.turns:
         raise HTTPException(status_code=400, detail=INTERVIEW_ERR_NO_TURNS)

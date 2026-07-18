@@ -629,6 +629,59 @@
                         </div>
                     </div>
 
+                    <div class="form-card">
+                        <div class="section-title">
+                            <span class="icon"><i class="fas fa-video"></i></span>
+                            <span data-i18n="postJob.interviewSetup">Interview setup (per job)</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4" data-i18n="postJob.interviewSetupHint">Applies to all candidates invited for this role. Choose AI assessment or a live third-party meeting.</p>
+                        <div class="space-y-3 mb-4">
+                            <label class="flex items-start gap-2 p-3 border rounded-xl cursor-pointer hover:bg-emerald-50/40">
+                                <input type="radio" name="interview-format" value="ai_only" class="mt-1" checked>
+                                <span>
+                                    <span class="text-sm font-medium text-gray-900" data-i18n="postJob.formatAiOnly">AI question bank only</span>
+                                    <span class="block text-xs text-gray-500 mt-0.5" data-i18n="postJob.formatAiOnlyHint">Platform generates questions + follow-ups; final score only for employer</span>
+                                </span>
+                            </label>
+                            <label class="flex items-start gap-2 p-3 border rounded-xl cursor-pointer hover:bg-emerald-50/40">
+                                <input type="radio" name="interview-format" value="partial_custom" class="mt-1">
+                                <span>
+                                    <span class="text-sm font-medium text-gray-900" data-i18n="postJob.formatPartial">Partial custom</span>
+                                    <span class="block text-xs text-gray-500 mt-0.5" data-i18n="postJob.formatPartialHint">AI bank + your questions (deduped) + follow-ups</span>
+                                </span>
+                            </label>
+                            <label class="flex items-start gap-2 p-3 border rounded-xl cursor-pointer hover:bg-emerald-50/40">
+                                <input type="radio" name="interview-format" value="full_custom" class="mt-1">
+                                <span>
+                                    <span class="text-sm font-medium text-gray-900" data-i18n="postJob.formatFull">Full custom</span>
+                                    <span class="block text-xs text-gray-500 mt-0.5" data-i18n="postJob.formatFullHint">Only your questions (no AI bank, no follow-ups)</span>
+                                </span>
+                            </label>
+                            <label class="flex items-start gap-2 p-3 border rounded-xl cursor-pointer hover:bg-emerald-50/40">
+                                <input type="radio" name="interview-format" value="human" class="mt-1">
+                                <span>
+                                    <span class="text-sm font-medium text-gray-900" data-i18n="postJob.formatHuman">Live interview (third-party meeting)</span>
+                                    <span class="block text-xs text-gray-500 mt-0.5" data-i18n="postJob.formatHumanHint">Share Zoom/Teams/Tencent Meeting link — not hosted on this platform</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div id="interview-custom-wrap" class="hidden mb-4">
+                            <label class="form-label" data-i18n="postJob.customQuestions">Your interview questions (one per line)</label>
+                            <textarea id="interview-custom-questions" class="form-input" rows="5" placeholder="1. Tell us about a cross-border project&#10;2. How do you collaborate across the GBA?"></textarea>
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="postJob.customQuestionsHint">One question per line. Press Enter only to start the next question — a long question must stay on a single line (the box will wrap visually). Blank lines are ignored. Max 30 questions.</p>
+                        </div>
+                        <div id="interview-human-wrap" class="hidden space-y-4">
+                            <div>
+                                <label class="form-label"><span data-i18n="postJob.meetingLink">Meeting link</span> <span class="required">*</span></label>
+                                <input type="url" id="meeting-link" class="form-input" placeholder="https://zoom.us/j/... or https://meeting.tencent.com/...">
+                            </div>
+                            <div>
+                                <label class="form-label" data-i18n="postJob.meetingInstructions">Join instructions</label>
+                                <textarea id="meeting-instructions" class="form-input" rows="4" placeholder="Interview time, meeting ID/password, what to prepare, contact person…"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Review Summary -->
                     <div class="form-card" id="review-summary">
                         <div class="section-title">
@@ -825,6 +878,24 @@
                 .filter(Boolean);
         }
 
+        function getInterviewFormat() {
+            var el = document.querySelector('input[name="interview-format"]:checked');
+            return (el && el.value) || 'ai_only';
+        }
+
+        function syncInterviewFormatPanels() {
+            var format = getInterviewFormat();
+            var customWrap = document.getElementById('interview-custom-wrap');
+            var humanWrap = document.getElementById('interview-human-wrap');
+            if (customWrap) customWrap.classList.toggle('hidden', format !== 'partial_custom' && format !== 'full_custom');
+            if (humanWrap) humanWrap.classList.toggle('hidden', format !== 'human');
+        }
+
+        document.querySelectorAll('input[name="interview-format"]').forEach(function (radio) {
+            radio.addEventListener('change', syncInterviewFormatPanels);
+        });
+        syncInterviewFormatPanels();
+
         function buildJobPayload() {
             const salMin = document.getElementById('salary-min').value;
             const salMax = document.getElementById('salary-max').value;
@@ -836,6 +907,10 @@
             const additional = document.getElementById('additional-req').value.trim();
             let description = summary + '\n\n' + corpT('postJob.keyResponsibilitiesHeader', 'Key Responsibilities:') + '\n' + resp;
             if (additional) description += '\n\n' + corpT('postJob.additionalReqHeader', 'Additional Requirements:') + '\n' + additional;
+
+            const format = getInterviewFormat();
+            const customQs = (document.getElementById('interview-custom-questions').value || '')
+                .split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
 
             return {
                 title: document.getElementById('job-title').value.trim(),
@@ -850,6 +925,10 @@
                 target_criteria: collectTargetCriteria(),
                 skills: getTagsFromWrap('skills-wrap'),
                 post_date: new Date().toISOString().slice(0, 10),
+                interview_format: format,
+                interview_custom_questions: customQs,
+                meeting_link: document.getElementById('meeting-link').value.trim(),
+                meeting_instructions: document.getElementById('meeting-instructions').value.trim(),
             };
         }
 
@@ -982,6 +1061,14 @@
                     });
                 }
                 updateTargetPreview();
+                var fmt = job.interview_format || 'ai_only';
+                var fmtRadio = document.querySelector('input[name="interview-format"][value="' + fmt + '"]');
+                if (fmtRadio) fmtRadio.checked = true;
+                var qs = job.interview_custom_questions || [];
+                document.getElementById('interview-custom-questions').value = Array.isArray(qs) ? qs.join('\n') : '';
+                document.getElementById('meeting-link').value = job.meeting_link || '';
+                document.getElementById('meeting-instructions').value = job.meeting_instructions || '';
+                syncInterviewFormatPanels();
                 const btn = document.getElementById('btn-submit');
                 if (btn) btn.innerHTML = '<i class="fas fa-save"></i> ' + corpT('postJob.saveChanges', 'Save Changes');
                 applyPostJobHeadings();

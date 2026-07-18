@@ -69,6 +69,11 @@ CREATE TABLE IF NOT EXISTS job_postings (
     target_group_types  JSON          DEFAULT NULL COMMENT '推导的弱势群体类型标签',
     target_criteria     JSON          DEFAULT NULL COMMENT '岗位目标硬性条件(年龄/性别/残疾/空窗)',
     vulnerable_group_friendly TINYINT NOT NULL DEFAULT 0 COMMENT '弱势群体友好标签',
+    interview_format    ENUM('ai_only','partial_custom','full_custom','human') NOT NULL DEFAULT 'ai_only'
+                        COMMENT '岗位面试方式',
+    interview_custom_questions JSON DEFAULT NULL COMMENT '岗位自拟面试题',
+    meeting_link        VARCHAR(500)  DEFAULT NULL COMMENT '人工面第三方会议链接',
+    meeting_instructions TEXT         DEFAULT NULL COMMENT '入会说明',
     skills              JSON          DEFAULT NULL COMMENT '岗位所需技能',
     raw_data            JSON          DEFAULT NULL COMMENT '爬虫原始JSON',
     is_active_on_source TINYINT       NOT NULL DEFAULT 1 COMMENT '外部源站是否仍在招',
@@ -230,6 +235,39 @@ CREATE TABLE IF NOT EXISTS legal_aid_responses (
     UNIQUE KEY uk_legal_aid_response (request_id, helper_user_id),
     KEY idx_legal_aid_response_request (request_id),
     KEY idx_legal_aid_response_helper (helper_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 企业指派 AI 评估面试邀请（看板按 invited_by_user_id 隔离）
+CREATE TABLE IF NOT EXISTS interview_invites (
+    id                  BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    application_id      BIGINT UNSIGNED NOT NULL COMMENT '关联投递',
+    job_id              BIGINT UNSIGNED NOT NULL,
+    candidate_user_id   BIGINT UNSIGNED NOT NULL,
+    invited_by_user_id  BIGINT UNSIGNED NOT NULL COMMENT '发起邀请的企业用户（看板隔离键）',
+    company_org_id      BIGINT UNSIGNED DEFAULT NULL,
+    invite_token        VARCHAR(64)     NOT NULL,
+    status              ENUM('invited','in_progress','completed','cancelled') NOT NULL DEFAULT 'invited',
+    program_version     VARCHAR(32)     NOT NULL DEFAULT 'quick',
+    question_mode       ENUM('ai_only','partial_custom','full_custom','human') NOT NULL DEFAULT 'ai_only'
+                        COMMENT 'ai_only=仅AI题库; partial_custom=AI+企业题+追问; full_custom=仅企业题; human=人工会议',
+    custom_questions    JSON            DEFAULT NULL COMMENT '企业自拟题目列表（邀约时从岗位快照）',
+    meeting_link        VARCHAR(500)    DEFAULT NULL COMMENT '人工面会议链接快照',
+    meeting_instructions TEXT           DEFAULT NULL COMMENT '入会说明快照',
+    overall_score       TINYINT UNSIGNED DEFAULT NULL COMMENT '0-100 最终得分',
+    category_scores     JSON            DEFAULT NULL,
+    debrief_summary     TEXT            DEFAULT NULL,
+    ai_session_id       VARCHAR(80)     DEFAULT NULL,
+    ai_record_id        VARCHAR(80)     DEFAULT NULL,
+    started_at          DATETIME        DEFAULT NULL,
+    completed_at        DATETIME        DEFAULT NULL,
+    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_interview_invite_token (invite_token),
+    KEY idx_interview_invite_app (application_id),
+    KEY idx_interview_invite_job (job_id),
+    KEY idx_interview_invite_candidate (candidate_user_id),
+    KEY idx_interview_invite_inviter (invited_by_user_id, status),
+    KEY idx_interview_invite_org (company_org_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 演示用企业自建岗位（与 My Jobs 截图一致；canonical copy: test-data/seed/demo-jobs.sql）

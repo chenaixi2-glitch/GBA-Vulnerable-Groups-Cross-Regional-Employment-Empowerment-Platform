@@ -129,9 +129,33 @@ function validateSalaryRange(body) {
   return { salary, salary_min: salaryMin, salary_max: salaryMax };
 }
 
+function validateInterviewConfig(body) {
+  const format = body.interview_format || 'ai_only';
+  if (!['ai_only', 'partial_custom', 'full_custom', 'human'].includes(format)) {
+    throw ApiError.badRequest('Invalid interview_format');
+  }
+  const questions = Array.isArray(body.interview_custom_questions)
+    ? body.interview_custom_questions.map((q) => String(q || '').trim()).filter(Boolean).slice(0, 30)
+    : [];
+  if ((format === 'partial_custom' || format === 'full_custom') && !questions.length) {
+    throw ApiError.badRequest('Please provide custom interview questions for this interview format.');
+  }
+  const meetingLink = (body.meeting_link || '').trim();
+  if (format === 'human' && !meetingLink) {
+    throw ApiError.badRequest('Please provide a third-party meeting link for live interviews.');
+  }
+  return {
+    interview_format: format,
+    interview_custom_questions: (format === 'partial_custom' || format === 'full_custom') ? questions : [],
+    meeting_link: format === 'human' ? meetingLink : null,
+    meeting_instructions: format === 'human' ? (body.meeting_instructions || null) : null,
+  };
+}
+
 async function create(req, res) {
   const built = validateTargetCriteriaInput(req.body.target_criteria);
   const { salary } = validateSalaryRange(req.body);
+  const interview = validateInterviewConfig(req.body);
 
   let companyName = req.body.company_name;
   if (!companyName && req.user?.id) {
@@ -141,6 +165,7 @@ async function create(req, res) {
 
   const job = await JobModel.createJob({
     ...req.body,
+    ...interview,
     salary,
     target_criteria: built.target_criteria,
     target_group_types: built.target_group_types,
@@ -174,6 +199,18 @@ async function update(req, res) {
     body.target_criteria = built.target_criteria;
     body.target_group_types = built.target_group_types;
     body.vulnerable_group_friendly = built.vulnerable_group_friendly;
+  }
+  if (body.interview_format != null || body.interview_custom_questions != null || body.meeting_link != null) {
+    Object.assign(body, validateInterviewConfig({
+      interview_format: body.interview_format || existing.interview_format,
+      interview_custom_questions: body.interview_custom_questions != null
+        ? body.interview_custom_questions
+        : existing.interview_custom_questions,
+      meeting_link: body.meeting_link != null ? body.meeting_link : existing.meeting_link,
+      meeting_instructions: body.meeting_instructions != null
+        ? body.meeting_instructions
+        : existing.meeting_instructions,
+    }));
   }
 
   const job = await JobModel.updateJob(req.params.id, body);

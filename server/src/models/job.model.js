@@ -36,6 +36,16 @@ function mapRow(row) {
     target_group_types: row.target_group_types,
     target_criteria: row.target_criteria,
     vulnerable_group_friendly: Boolean(row.vulnerable_group_friendly),
+    interview_format: row.interview_format || 'ai_only',
+    interview_custom_questions: (() => {
+      const v = row.interview_custom_questions;
+      if (!v) return [];
+      if (Array.isArray(v)) return v;
+      if (typeof v === 'object') return v;
+      try { return JSON.parse(v); } catch { return []; }
+    })(),
+    meeting_link: row.meeting_link || null,
+    meeting_instructions: row.meeting_instructions || null,
     skills: row.skills,
     is_active_on_source: row.is_active_on_source,
     created_at: row.created_at,
@@ -164,8 +174,10 @@ async function createJob(data) {
       (source, title, department, company_name, location, post_date,
        applications_count, matches_count, status, description, salary,
        education, work_experience, disability_type, target_group_types,
-       target_criteria, vulnerable_group_friendly, skills, company_user_id, company_org_id)
-     VALUES ('internal', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       target_criteria, vulnerable_group_friendly,
+       interview_format, interview_custom_questions, meeting_link, meeting_instructions,
+       skills, company_user_id, company_org_id)
+     VALUES ('internal', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       payload.title,
       payload.department || null,
@@ -183,6 +195,10 @@ async function createJob(data) {
       serializeJsonField(payload.target_group_types),
       serializeJsonField(payload.target_criteria),
       payload.vulnerable_group_friendly ? 1 : 0,
+      payload.interview_format || 'ai_only',
+      serializeJsonField(payload.interview_custom_questions || []),
+      payload.meeting_link || null,
+      payload.meeting_instructions || null,
       serializeJsonField(payload.skills),
       payload.company_user_id || null,
       payload.company_org_id || null,
@@ -199,12 +215,13 @@ async function updateJob(id, data) {
     'title', 'department', 'company_name', 'location', 'post_date',
     'description', 'salary', 'education', 'work_experience', 'disability_type',
     'target_group_types', 'target_criteria', 'vulnerable_group_friendly', 'skills',
+    'interview_format', 'interview_custom_questions', 'meeting_link', 'meeting_instructions',
   ];
 
   allowed.forEach((key) => {
     if (payload[key] !== undefined) {
       fields.push(`${key} = ?`);
-      const val = ['target_group_types', 'target_criteria', 'skills'].includes(key)
+      const val = ['target_group_types', 'target_criteria', 'skills', 'interview_custom_questions'].includes(key)
         ? serializeJsonField(payload[key])
         : key === 'vulnerable_group_friendly'
           ? (payload[key] ? 1 : 0)
@@ -247,8 +264,10 @@ async function cloneJob(id) {
       (source, title, department, company_name, location, post_date,
        applications_count, matches_count, status, description, salary,
        education, work_experience, disability_type, target_group_types,
-       target_criteria, vulnerable_group_friendly, skills, company_user_id, company_org_id)
-     VALUES ('internal', ?, ?, ?, ?, CURDATE(), 0, 0, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       target_criteria, vulnerable_group_friendly,
+       interview_format, interview_custom_questions, meeting_link, meeting_instructions,
+       skills, company_user_id, company_org_id)
+     VALUES ('internal', ?, ?, ?, ?, CURDATE(), 0, 0, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       `${job.title} (Copy)`,
       job.department ?? null,
@@ -262,6 +281,10 @@ async function cloneJob(id) {
       serializeJsonField(job.target_group_types),
       serializeJsonField(job.target_criteria),
       job.vulnerable_group_friendly ? 1 : 0,
+      job.interview_format || 'ai_only',
+      serializeJsonField(job.interview_custom_questions || []),
+      job.meeting_link || null,
+      job.meeting_instructions || null,
       serializeJsonField(job.skills),
       job.company_user_id ?? null,
       job.company_org_id ?? null,

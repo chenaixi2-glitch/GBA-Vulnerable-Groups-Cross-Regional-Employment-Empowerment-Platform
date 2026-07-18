@@ -313,6 +313,11 @@ class InteractiveInterviewSession(BaseModel):
     """多轮对话式模拟面试会话状态。"""
     status: str = "idle"  # idle | active | completed
     tone: str = "professional"  # professional | friendly | pressure
+    # practice：练习模拟（实时点评+追问）；assessment：企业评估（保留追问，不展示实时点评）
+    interview_mode: str = "practice"  # practice | assessment
+    # 评估题库来源：ai_only | partial_custom（AI+企业去重+追问）| full_custom（仅企业题，无追问）
+    question_source_mode: str = "ai_only"
+    allow_follow_ups: bool = True
     job_title: str = ""
     industry: str = ""
     program_version: str = "quick"  # quick | full | specialized

@@ -4,6 +4,7 @@ const JobModel = require('../models/job.model');
 const ApplicationModel = require('../models/application.model');
 const ResumeModel = require('../models/resume.model');
 const UserModel = require('../models/user.model');
+const InterviewInviteModel = require('../models/interviewInvite.model');
 const { scoreJobResume } = require('../services/match.service');
 const { userMatchesJobCriteria, sortApplicantsForCorporate } = require('../constants/groupTypes');
 const ApiError = require('../utils/ApiError');
@@ -115,10 +116,17 @@ async function listApplicants(req, res) {
     await ApplicationModel.listByJob(jobId),
     job
   );
+  const inviteMap = await InterviewInviteModel.findLatestByApplicationIds(
+    applications.map((a) => a.id)
+  );
+  const withInvites = applications.map((a) => ({
+    ...a,
+    interview_invite: inviteMap[a.id] || null,
+  }));
   res.json({
     success: true,
     data: {
-      applications,
+      applications: withInvites,
       vulnerable_group_friendly: job.vulnerable_group_friendly,
       sort_note: job.vulnerable_group_friendly
         ? 'Vulnerable-group friendly job: identified vulnerable applicants are listed first'
@@ -129,7 +137,14 @@ async function listApplicants(req, res) {
 
 async function listMyApplications(req, res) {
   const applications = await ApplicationModel.listByUser(req.user.id);
-  res.json({ success: true, data: { applications } });
+  const inviteMap = await InterviewInviteModel.findLatestByApplicationIds(
+    applications.map((a) => a.id)
+  );
+  const withInvites = applications.map((a) => ({
+    ...a,
+    interview_invite: inviteMap[a.id] || null,
+  }));
+  res.json({ success: true, data: { applications: withInvites } });
 }
 
 async function updateApplicationStatus(req, res) {

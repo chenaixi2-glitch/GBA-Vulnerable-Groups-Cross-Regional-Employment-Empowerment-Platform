@@ -79,6 +79,27 @@
     },
   };
 
+  const InterviewInvitesAPI = {
+    listMine() {
+      return request('/interview-invites/me');
+    },
+    getByToken(token) {
+      return request(`/interview-invites/token/${encodeURIComponent(token)}`);
+    },
+    start(token, body) {
+      return request(`/interview-invites/token/${encodeURIComponent(token)}/start`, {
+        method: 'POST',
+        body: JSON.stringify(body || {}),
+      });
+    },
+    complete(token, body) {
+      return request(`/interview-invites/token/${encodeURIComponent(token)}/complete`, {
+        method: 'POST',
+        body: JSON.stringify(body || {}),
+      });
+    },
+  };
+
   const CompanyAPI = {
     listFriendly() {
       return request('/company/friendly');
@@ -98,6 +119,7 @@
     JobsAPI,
     ResumesAPI,
     StatsAPI,
+    InterviewInvitesAPI,
     AuthAPI: global.AuthAPI,
     CompanyAPI,
     DonationsAPI: {

@@ -16,6 +16,9 @@ const MIGRATIONS = [
   'migrate_v8_company_orgs.sql',
   'migrate_v8_password_reset.sql',
   'migrate_v9_legal_aid_responses.sql',
+  'migrate_v10_interview_invites.sql',
+  'migrate_v11_interview_custom_questions.sql',
+  'migrate_v12_job_interview_format.sql',
 ];
 
 async function main() {

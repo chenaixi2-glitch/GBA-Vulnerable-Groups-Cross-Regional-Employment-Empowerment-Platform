@@ -85,6 +85,28 @@
         body: JSON.stringify({ status }),
       });
     },
+    inviteInterview(applicationId, body) {
+      return request(`/jobs/applications/${applicationId}/interview-invite`, {
+        method: 'POST',
+        body: JSON.stringify(body || {}),
+      });
+    },
+    batchInviteInterview(jobId, applicationIds, programVersion) {
+      return request(`/jobs/${jobId}/interview-invites`, {
+        method: 'POST',
+        body: JSON.stringify({
+          application_ids: applicationIds,
+          program_version: programVersion || 'quick',
+        }),
+      });
+    },
+  };
+
+  const InterviewInvitesAPI = {
+    board(status) {
+      const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+      return request(`/interview-invites/board${qs}`);
+    },
   };
 
   const StatsAPI = {
@@ -119,6 +141,7 @@
 
   global.CorporateAPI = {
     JobsAPI,
+    InterviewInvitesAPI,
     CompanyAPI,
     ResumesAPI,
     StatsAPI,

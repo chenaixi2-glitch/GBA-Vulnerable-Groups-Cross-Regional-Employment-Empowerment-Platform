@@ -264,6 +264,11 @@ def _try_enter_follow_up_phase(state: CopilotState, session: InteractiveIntervie
     if not _all_feedbacks_done(session):
         return False
 
+    if not session.allow_follow_ups:
+        closing = interview_closing_normal(state)
+        _complete_session(session, closing, session.end_reason or interview_end_reason_default(state))
+        return True
+
     if session.end_reason or any(f.should_end for f in session.pending_feedbacks if f.status == "completed"):
         for fb in session.pending_feedbacks:
             if fb.should_end and fb.closing_message:
@@ -336,7 +341,7 @@ async def start_interactive_interview(
     program_version: str = "quick",
     specialized_focus: str = "",
 ) -> InteractiveInterviewSession:
-    """预生成面试题库并展示第一题。"""
+    """预生成面试题库并展示第一题。（个人端模拟面试专用，始终为 practice）"""
     if not _prerequisites_ok(state):
         raise ValueError("INTERVIEW_ERR_NO_PREREQUISITES")
 
@@ -372,6 +377,7 @@ async def start_interactive_interview(
     session = InteractiveInterviewSession(
         status="active",
         tone=tone,
+        interview_mode="practice",
         job_title=title,
         industry=industry,
         program_version=program.version,
@@ -559,6 +565,8 @@ async def process_next_pending_feedback(state: CopilotState) -> bool:
         ))
 
     for i, fq in enumerate(parsed.follow_up_questions):
+        if not session.allow_follow_ups:
+            break
         fq_text = (fq or "").strip()
         if not fq_text:
             continue

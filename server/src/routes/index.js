@@ -8,6 +8,7 @@ const resumesRoutes = require('./resumes.routes');
 const donationsRoutes = require('./donations.routes');
 const legalAidRoutes = require('./legalAid.routes');
 const statsRoutes = require('./stats.routes');
+const interviewInvitesRoutes = require('./interviewInvites.routes');
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use('/resumes', resumesRoutes);
 router.use('/donations', donationsRoutes);
 router.use('/legal-aid', legalAidRoutes);
 router.use('/stats', statsRoutes);
+router.use('/interview-invites', interviewInvitesRoutes);
 
 module.exports = router;

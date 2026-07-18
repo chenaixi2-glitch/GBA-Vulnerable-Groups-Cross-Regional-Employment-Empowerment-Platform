@@ -180,11 +180,31 @@
                 }
                 list.innerHTML = apps.map(function (a) {
                     var canWithdraw = a.status === 'pending' && a.job_status === 'active';
+                    var inv = a.interview_invite;
+                    var inviteHtml = '';
+                    if (inv && inv.question_mode === 'human' && inv.meeting_link) {
+                        inviteHtml =
+                            '<div class="mt-2 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3 text-left">' +
+                            '<p class="text-xs font-semibold text-emerald-800 mb-1">' + appsT('applications.liveInterview', 'Live interview invitation') + '</p>' +
+                            (inv.meeting_instructions
+                              ? '<p class="text-xs text-slate-600 whitespace-pre-wrap mb-2">' + escape(inv.meeting_instructions) + '</p>'
+                              : '') +
+                            '<a href="' + escape(inv.meeting_link) + '" target="_blank" rel="noopener" class="inline-flex text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg">' +
+                            appsT('applications.joinMeeting', 'Join meeting') + '</a></div>';
+                    } else if (inv && (inv.status === 'invited' || inv.status === 'in_progress') && inv.question_mode !== 'human') {
+                        inviteHtml = '<a href="assessment-interview.html?invite=' + encodeURIComponent(inv.invite_token) +
+                            '" class="text-xs font-semibold text-emerald-700 hover:underline">' +
+                            appsT('applications.startAssessment', 'Start AI assessment interview') + '</a>';
+                    } else if (inv && inv.status === 'completed' && inv.overall_score != null) {
+                        inviteHtml = '<span class="text-xs text-slate-500">' +
+                            appsT('applications.assessmentScore', 'AI interview score') + ': <strong>' + inv.overall_score + '</strong></span>';
+                    }
                     return '<div class="p-5 flex flex-wrap justify-between gap-3 items-start">' +
                         '<div class="flex-1 min-w-0">' +
                         '<p class="font-semibold text-slate-900">' + escape(a.job_title) + '</p>' +
                         '<p class="text-sm text-slate-500">' + escape(a.company_name || '') + ' · ' + sourceLabel(a.job_source) + '</p>' +
                         '<p class="text-xs text-slate-400 mt-1">' + appsT('applications.appliedAt', 'Applied') + ' ' + new Date(a.created_at).toLocaleString() + '</p>' +
+                        (inviteHtml ? '<div class="mt-2">' + inviteHtml + '</div>' : '') +
                         '</div>' +
                         '<div class="text-right flex flex-col items-end gap-2">' +
                         '<span class="text-lg font-bold text-teal-700">' + (a.match_score || 0) + ' ' + appsT('jobs.scoreUnit', 'pts') + '</span>' +
