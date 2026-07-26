@@ -137,7 +137,19 @@
         '用户不存在': 'User not found.',
         '请先完善个人资料（年龄、性别、收入等）': 'Please complete your profile (age, gender, income, etc.) first.',
         'Please save a resume before applying.': 'Please save a resume before applying.',
-        '请先保存简历后再投递。': 'Please save a resume before applying.'
+        '请先保存简历后再投递。': 'Please save a resume before applying.',
+        '用户名已被注册': 'This email or username is already registered. Try signing in instead.',
+        '邮箱已被注册': 'This email is already registered. Try signing in instead.',
+        '用户名或邮箱已被注册': 'This email or username is already registered. Try signing in instead.',
+        '账号或密码错误': 'Incorrect email or password.',
+        '账号已被禁用': 'This account has been disabled.',
+        '用户不存在': 'User not found.',
+        '注册成功': 'Account created successfully.',
+        '登录成功': 'Signed in successfully.',
+        '请填写有效年龄（16-100）': 'Please enter a valid age (16–100).',
+        '请选择性别': 'Please select a gender.',
+        '请填写当前月收入': 'Please enter your monthly income.',
+        '请求参数校验失败': 'Invalid form data. Please check your entries and try again.'
     };
 
     function getLang() {
