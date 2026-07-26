@@ -862,6 +862,10 @@ const ProfileEditor = {
             if (typeof onProfileDraftSaved === 'function') {
                 onProfileDraftSaved();
             }
+            if (typeof PlatformAPI !== 'undefined' && PlatformAPI.redirectIfReturnTo
+                && PlatformAPI.redirectIfReturnTo()) {
+                return result;
+            }
             return result;
         } catch (error) {
             Utils.hideLoading();

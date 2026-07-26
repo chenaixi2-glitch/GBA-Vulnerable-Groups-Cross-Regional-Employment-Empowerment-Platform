@@ -335,6 +335,14 @@
                 boot();
             }
         });
+
+        // Refresh resume gate when returning from resume page (incl. bfcache back).
+        window.addEventListener('pageshow', function (ev) {
+            if (ev.persisted) loadResumeStatus();
+        });
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') loadResumeStatus();
+        });
     </script>
 </body>
 </html>

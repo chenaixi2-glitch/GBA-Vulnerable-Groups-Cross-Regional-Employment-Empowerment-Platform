@@ -2178,6 +2178,35 @@ class APIClient {
     /**
      * Save resume to user account (MySQL) after explicit confirmation
      */
+    /**
+     * Bridge AI-saved profile/resume into Node user_resumes (apply + job matching).
+     */
+    async syncSavedProfileToPlatform(preferredDraft) {
+        if (typeof PlatformAPI === 'undefined' || typeof PlatformAPI.syncResumeFromAiProfile !== 'function') {
+            return null;
+        }
+        let source = preferredDraft || null;
+        if (!source && typeof ProfileEditor !== 'undefined' && typeof ProfileEditor.collectDraftFromForm === 'function') {
+            try {
+                source = ProfileEditor.collectDraftFromForm();
+            } catch (_) { /* ignore */ }
+        }
+        if (!source) {
+            try {
+                const draftResult = await this.getResumeDraft();
+                source = draftResult && draftResult.draft;
+            } catch (_) { /* ignore */ }
+        }
+        if (!source) {
+            try {
+                const content = await this.getResumeContent();
+                source = content && content.resume_content_json;
+            } catch (_) { /* ignore */ }
+        }
+        if (!source) return null;
+        return PlatformAPI.syncResumeFromAiProfile(source);
+    }
+
     async saveResumeToAccount() {
         try {
             if (!this.sessionId) {
@@ -2189,12 +2218,15 @@ class APIClient {
 
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
-                return this.mockService.saveResumeToAccount(this.sessionId);
+                const mockResult = this.mockService.saveResumeToAccount(this.sessionId);
+                await this.syncSavedProfileToPlatform();
+                return mockResult;
             }
 
             const response = await this.client.post('/resume/save', {
                 session_id: this.sessionId,
             });
+            await this.syncSavedProfileToPlatform();
             return response.data;
         } catch (error) {
             console.error('Save resume error:', error);
@@ -2222,7 +2254,9 @@ class APIClient {
             await this.ensureBackendAvailable();
             if (this.useMockMode) {
                 await this.mockService.saveResumeDraft(this.sessionId, payload, true);
-                return this.mockService.saveProfileToAccount(this.sessionId, payload, recordName);
+                const mockResult = this.mockService.saveProfileToAccount(this.sessionId, payload, recordName);
+                await this.syncSavedProfileToPlatform(payload);
+                return mockResult;
             }
 
             const response = await this.client.post('/resume/profile/save', {
@@ -2231,6 +2265,7 @@ class APIClient {
                 record_name: String(recordName || '').trim(),
                 record_id: String(recordId || '').trim(),
             });
+            await this.syncSavedProfileToPlatform(payload);
             return response.data;
         } catch (error) {
             console.error('Save profile error:', error);

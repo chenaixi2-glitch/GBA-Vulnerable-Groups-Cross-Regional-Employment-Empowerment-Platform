@@ -338,6 +338,9 @@ function setupExportModal() {
             return;
         }
         await runPendingExport();
+        if (typeof PlatformAPI !== 'undefined' && PlatformAPI.redirectIfReturnTo) {
+            PlatformAPI.redirectIfReturnTo({ delayMs: 900 });
+        }
     });
 
     document.getElementById('btn-save-as-new-and-export')?.addEventListener('click', async () => {
@@ -345,6 +348,9 @@ function setupExportModal() {
         const saved = await saveCurrentProfileAsNewRecord();
         if (!saved) return;
         await runPendingExport();
+        if (typeof PlatformAPI !== 'undefined' && PlatformAPI.redirectIfReturnTo) {
+            PlatformAPI.redirectIfReturnTo({ delayMs: 900 });
+        }
     });
 
     document.getElementById('btn-export-only')?.addEventListener('click', async () => {
