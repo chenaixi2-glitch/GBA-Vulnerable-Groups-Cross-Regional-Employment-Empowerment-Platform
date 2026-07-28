@@ -8,7 +8,7 @@ const ApiError = require('../utils/ApiError');
 
 function assertJobOwner(job, user) {
   if (user.role === 'admin') return;
-  if (job.company_user_id !== user.id) {
+  if (Number(job.company_user_id) !== Number(user.id)) {
     throw ApiError.forbidden('You do not have permission for this job.');
   }
 }
@@ -187,11 +187,11 @@ async function getByToken(req, res) {
   const invite = await InterviewInviteModel.findByToken(req.params.token);
   if (!invite) throw ApiError.notFound('Interview invitation not found.');
   if (req.user.role === 'individual' || req.user.role === 'admin') {
-    if (invite.candidate_user_id !== req.user.id && req.user.role !== 'admin') {
+    if (Number(invite.candidate_user_id) !== Number(req.user.id) && req.user.role !== 'admin') {
       throw ApiError.forbidden('This interview invitation is not for your account.');
     }
   } else if (req.user.role === 'corporate') {
-    if (invite.invited_by_user_id !== req.user.id) {
+    if (Number(invite.invited_by_user_id) !== Number(req.user.id)) {
       throw ApiError.forbidden('You can only view invitations you sent.');
     }
   }
@@ -201,7 +201,7 @@ async function getByToken(req, res) {
 async function startInvite(req, res) {
   const invite = await InterviewInviteModel.findByToken(req.params.token);
   if (!invite) throw ApiError.notFound('Interview invitation not found.');
-  if (invite.candidate_user_id !== req.user.id && req.user.role !== 'admin') {
+  if (Number(invite.candidate_user_id) !== Number(req.user.id) && req.user.role !== 'admin') {
     throw ApiError.forbidden('This interview invitation is not for your account.');
   }
   if (invite.status === 'cancelled') {
@@ -221,7 +221,7 @@ async function startInvite(req, res) {
 async function completeInvite(req, res) {
   const invite = await InterviewInviteModel.findByToken(req.params.token);
   if (!invite) throw ApiError.notFound('Interview invitation not found.');
-  if (invite.candidate_user_id !== req.user.id && req.user.role !== 'admin') {
+  if (Number(invite.candidate_user_id) !== Number(req.user.id) && req.user.role !== 'admin') {
     throw ApiError.forbidden('This interview invitation is not for your account.');
   }
   if (invite.status === 'cancelled') {

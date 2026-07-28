@@ -45,9 +45,20 @@
     el.innerHTML = items.map(card).join('');
   }
 
+  function showLoginPrompt() {
+    var empty = cT('corporate.boardLoginRequired', 'Sign in to view your interview invitations.');
+    renderColumn(document.getElementById('board-col-invited'), [], empty);
+    renderColumn(document.getElementById('board-col-progress'), [], empty);
+    renderColumn(document.getElementById('board-col-done'), [], empty);
+  }
+
   async function reload() {
     var root = document.getElementById('interview-board');
     if (!root || !window.CorporateAPI || !CorporateAPI.InterviewInvitesAPI) return;
+    if (!CorporateAPI.getToken || !CorporateAPI.getToken()) {
+      showLoginPrompt();
+      return;
+    }
     try {
       var res = await CorporateAPI.InterviewInvitesAPI.board('all');
       var cols = (res.data && res.data.columns) || {};
@@ -75,6 +86,10 @@
       }
     } catch (err) {
       console.warn('Interview board load failed', err.message);
+      var failText = cT('corporate.boardLoadFailed', 'Could not load interview board. Is the API server running?');
+      renderColumn(document.getElementById('board-col-invited'), [], failText);
+      renderColumn(document.getElementById('board-col-progress'), [], '');
+      renderColumn(document.getElementById('board-col-done'), [], '');
     }
   }
 

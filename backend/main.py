@@ -112,6 +112,13 @@ if __name__ == "__main__":
         logger.critical("Startup aborted because dependency check failed: %s", exc, exc_info=True)
         sys.exit(1)
 
+    # Pre-flight runs on a temporary loop; uvicorn creates its own — drop stale singletons.
+    from storage.mysql_client import reset_mysql_pool
+    from storage.redis_client import reset_redis_client
+
+    reset_mysql_pool()
+    reset_redis_client()
+
     logger.info("Starting AI Career Copilot server on %s:%s", cfg["host"], cfg["port"])
     is_debug = cfg.get("debug", False)
     workers = cfg.get("workers", 2)

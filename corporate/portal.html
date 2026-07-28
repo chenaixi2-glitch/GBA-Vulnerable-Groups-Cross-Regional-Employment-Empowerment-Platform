@@ -1009,14 +1009,15 @@
     
     <!-- Modal Boxes -->
     <!-- Talent Matching Modal -->
-    <div id="talent-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold" data-i18n="corpPortal.talentModalTitle">Talent Matching</h3>
-                <button onclick="closeModal('talent-modal')" class="text-gray-500 hover:text-gray-700">
+    <div id="talent-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col shadow-xl" role="dialog" aria-modal="true" aria-labelledby="talent-modal-title">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 shrink-0 bg-white rounded-t-lg">
+                <h3 id="talent-modal-title" class="text-2xl font-bold" data-i18n="corpPortal.talentModalTitle">Talent Matching</h3>
+                <button type="button" onclick="closeModal('talent-modal')" class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-i18n-title="corpPortal.closeModal" aria-label="Close">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
+            <div class="overflow-y-auto flex-1 px-6 py-4">
             <div class="mb-6">
                 <p class="text-gray-600 mb-4" data-i18n="corpPortal.talentModalDesc">Find qualified candidates that match your job requirements.</p>
                 
@@ -1148,6 +1149,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </div>
@@ -1326,14 +1328,15 @@
     </div>
     
     <!-- Interview Tools Modal -->
-    <div id="interview-tools-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold" data-i18n="corpPortal.interviewModalTitle">HR Interview Tools</h3>
-                <button onclick="closeModal('interview-tools-modal')" class="text-gray-500 hover:text-gray-700">
+    <div id="interview-tools-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col shadow-xl" role="dialog" aria-modal="true" aria-labelledby="interview-tools-modal-title">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 shrink-0 bg-white rounded-t-lg">
+                <h3 id="interview-tools-modal-title" class="text-2xl font-bold" data-i18n="corpPortal.interviewModalTitle">HR Interview Tools</h3>
+                <button type="button" onclick="closeModal('interview-tools-modal')" class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-i18n-title="corpPortal.closeModal" aria-label="Close">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
+            <div class="overflow-y-auto flex-1 px-6 py-4">
             <div class="mb-6">
                 <p class="text-gray-600 mb-4" data-i18n="corpPortal.interviewModalDesc">Generate interview questions and manage the interview process.</p>
                 
@@ -1462,6 +1465,7 @@
                         </button>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </div>
@@ -1696,20 +1700,38 @@
                     openModal(modalId);
                 });
             });
+
+            document.querySelectorAll('[id$="-modal"]').forEach(function (modal) {
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) closeModal(modal.id);
+                });
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'Escape') return;
+                document.querySelectorAll('[id$="-modal"]').forEach(function (modal) {
+                    if (!modal.classList.contains('hidden')) closeModal(modal.id);
+                });
+            });
         }
         
         // Modal functions
         function openModal(modalId) {
             const modal = document.getElementById(modalId);
+            if (!modal) return;
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         }
         
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
+            if (!modal) return;
             modal.classList.add('hidden');
             document.body.style.overflow = 'auto';
         }
+
+        window.openModal = openModal;
+        window.closeModal = closeModal;
         
         // Initialize smooth scrolling
         function initSmoothScroll() {

@@ -6,8 +6,11 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from log import get_logger
 from storage.mysql_client import MySQLStore, get_mysql_pool
 from storage.redis_client import RedisSessionStore, get_redis_client
+
+logger = get_logger("auth")
 
 
 def extract_user_id(user: dict[str, Any] | None) -> int | None:
@@ -28,9 +31,14 @@ async def _get_session_owner(session_id: str) -> int | None:
     if owner is not None:
         return owner
 
-    pool = await get_mysql_pool()
-    db = MySQLStore(pool)
-    mysql_owner = await db.get_session_user_id(session_id)
+    try:
+        pool = await get_mysql_pool()
+        db = MySQLStore(pool)
+        mysql_owner = await db.get_session_user_id(session_id)
+    except Exception as exc:
+        # MySQL 不可用时仅依赖 Redis 归属；匿名新会话仍可继续走 /api/chat
+        logger.warning("Session owner MySQL lookup failed for %s: %s", session_id, exc)
+        return None
     if mysql_owner is not None:
         await store.set_owner(mysql_owner)
     return mysql_owner

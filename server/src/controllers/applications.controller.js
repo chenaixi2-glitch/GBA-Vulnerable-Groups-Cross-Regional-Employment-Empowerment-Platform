@@ -11,7 +11,7 @@ const ApiError = require('../utils/ApiError');
 
 function assertJobOwner(job, user) {
   if (user.role === 'admin') return;
-  if (job.company_user_id !== user.id) {
+  if (Number(job.company_user_id) !== Number(user.id)) {
     throw ApiError.forbidden('You do not have permission to view applicants for this job.');
   }
 }

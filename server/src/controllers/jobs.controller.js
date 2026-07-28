@@ -16,7 +16,7 @@ function assertInternalJobOwner(existing, user) {
   if (existing.company_user_id == null) {
     throw ApiError.forbidden('无权操作该岗位');
   }
-  if (existing.company_user_id !== user.id) {
+  if (Number(existing.company_user_id) !== Number(user.id)) {
     throw ApiError.forbidden('无权操作该岗位');
   }
 }
