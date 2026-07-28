@@ -87,11 +87,13 @@ async def _asave_state(store: RedisSessionStore, state: dict[str, Any]) -> None:
 
 def _reset_profile_working_state(state: CopilotState) -> CopilotState:
     """Clear profile and downstream resume artifacts so a new upload fully replaces Redis content."""
-    from workflow.state import ResumeHtml
+    from workflow.state import RenderConfig, ResumeHtml
 
     state.candidate_profile = None
     state.resume_content_json = None
     state.resume_html = ResumeHtml()
+    # Drop prior language/layout so a new upload cannot inherit zh (or any) render_config.
+    state.render_config = RenderConfig()
     state.gaps = []
     state.questions_to_ask = []
     state.experiences_to_remove = []

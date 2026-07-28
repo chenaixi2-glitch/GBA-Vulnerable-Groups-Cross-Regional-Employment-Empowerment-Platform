@@ -1547,7 +1547,14 @@ class APIClient {
             },
         });
 
-        this.sessionId = this.loadSessionId();
+        // Same idea as auth: only persist identity while logged in.
+        // Guests get a fresh in-memory AI session each page load (no stale Redis reuse).
+        this.sessionId = '';
+        if (this.getAuthToken()) {
+            this.sessionId = this.loadSessionId();
+        } else {
+            localStorage.removeItem('gba_session_id');
+        }
         this.mockService = new MockAPIService();
         this.useMockMode = false;
         this.backendChecked = false;
@@ -1803,22 +1810,32 @@ class APIClient {
     }
 
     /**
-     * Load session ID from localStorage
+     * Load persisted AI session ID (logged-in users only).
      */
     loadSessionId() {
         return localStorage.getItem('gba_session_id') || '';
     }
 
     /**
-     * Save session ID to localStorage
+     * Remember AI session ID.
+     * Logged-in: persist to localStorage (like auth token).
+     * Guest: memory only for this page visit (like no auth session when logged out).
      */
     saveSessionId(sessionId) {
-        this.sessionId = sessionId;
-        localStorage.setItem('gba_session_id', sessionId);
+        this.sessionId = sessionId || '';
+        if (!this.sessionId) {
+            localStorage.removeItem('gba_session_id');
+            return;
+        }
+        if (this.getAuthToken()) {
+            localStorage.setItem('gba_session_id', this.sessionId);
+        } else {
+            localStorage.removeItem('gba_session_id');
+        }
     }
 
     /**
-     * Clear session data
+     * Clear AI session data (browser + memory).
      */
     clearSession() {
         this.sessionId = '';
@@ -1826,7 +1843,7 @@ class APIClient {
     }
 
     /**
-     * Generate a new session ID
+     * Generate a new AI session ID.
      */
     generateSessionId() {
         const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

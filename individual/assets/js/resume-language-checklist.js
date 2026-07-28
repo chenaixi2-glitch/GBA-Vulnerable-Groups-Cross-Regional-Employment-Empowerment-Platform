@@ -788,7 +788,7 @@ async function applyResumeLanguageSelection(language) {
 }
 
 function defaultResumeLanguageFromUi() {
-    if (!window.GBAI18n) return 'zh';
+    if (!window.GBAI18n) return 'en';
     return GBAI18n.uiLangToApiLang(GBAI18n.getLang());
 }
 

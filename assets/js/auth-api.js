@@ -288,6 +288,13 @@
 
   function logout() {
     clearSession();
+    // Drop AI Copilot session with auth — same "no persisted guest identity" rule.
+    try {
+      localStorage.removeItem('gba_session_id');
+      if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.clearSession === 'function') {
+        window.apiClient.clearSession();
+      }
+    } catch (e) { /* ignore */ }
     return { success: true };
   }
 
