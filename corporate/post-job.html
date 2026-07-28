@@ -1095,7 +1095,7 @@
                 const job = res.data.job;
                 if (isEditMode) {
                     showToast(corpT('corporate.jobUpdated', 'Job updated'), 'success');
-                    setTimeout(function () { window.location.href = 'my-jobs.html'; }, 800);
+                    setTimeout(function () { window.location.href = 'portal.html#jobs'; }, 800);
                     return;
                 }
                 document.getElementById('success-job-id').textContent = 'GBA-' + job.id;

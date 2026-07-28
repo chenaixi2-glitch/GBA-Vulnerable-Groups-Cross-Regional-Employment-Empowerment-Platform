@@ -16,6 +16,12 @@ logger = get_logger("storage")
 _pool: aiomysql.Pool | None = None
 
 
+def reset_mysql_pool() -> None:
+    """Drop the singleton pool (e.g. after a pre-flight check on a temporary event loop)."""
+    global _pool
+    _pool = None
+
+
 async def get_mysql_pool() -> aiomysql.Pool:
     """获取 MySQL 异步连接池（单例）。"""
     global _pool

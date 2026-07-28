@@ -171,6 +171,19 @@
     state.loading = true;
     els.tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>' + escapeHtml(cT('corporate.loadingJobs', 'Loading jobs...')) + '</td></tr>';
 
+    if (typeof CorporateAPI === 'undefined' || !CorporateAPI.getToken || !CorporateAPI.getToken()) {
+      els.tbody.innerHTML =
+        '<tr><td colspan="6" class="px-6 py-10 text-center">' +
+        '<p class="text-gray-500 mb-3">' + escapeHtml(cT('corporate.jobsLoginRequired', 'Sign in with a corporate account to manage your job postings.')) + '</p>' +
+        '<a href="auth.html?next=portal.html%23jobs" class="inline-flex px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">' +
+        escapeHtml(cT('corporate.signInCorporate', 'Sign in (Corporate)')) + '</a>' +
+        '</td></tr>';
+      els.summary.textContent = cT('corporate.jobsGuestSummary', 'Sign in to view your jobs');
+      els.pagination.innerHTML = '';
+      state.loading = false;
+      return;
+    }
+
     try {
       const res = await CorporateAPI.JobsAPI.list({
         page: state.page,

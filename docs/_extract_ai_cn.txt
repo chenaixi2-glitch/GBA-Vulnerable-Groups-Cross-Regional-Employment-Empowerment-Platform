@@ -1,0 +1,298 @@
+[0|Normal] 5. System Design & Technical Implementation
+[1|Normal] 5.1 引言
+[2|Normal] 粤港澳大湾区“9+2”城市群的跨境人力资源流动，是区域协同发展的关键动能。然而，弱势群体（残障人士、银发劳动者、低收入青年等）在跨区域求职过程中仍面临信息鸿沟、标签歧视与技能表达不足等结构性障碍。目前平台核心架构、基础AI赋能框架与无障碍交互体系已初步建成，并进入功能完善与试点运营阶段。本章将具体阐述系统的技术方案与落地情况，解释网站功能模块如何组织与协同运行，数据库与API如何支撑技能优先和盲筛匹配等问题。
+[3|Normal] 
+[4|Normal] 5.2 设计目标与业务闭环
+[5|Normal] 5.2.1 设计目标
+[6|Normal] 
+[7|Normal] 5.2.2 设计原则
+[8|Normal] （1）业务态与AI态分离
+[9|Normal] 用户账号、岗位、投递、捐款、法律援助等存入Node管理的gba_website库；AI会话、简历草稿、面试问答等存入Python管理的ai_career库。简历匹配所需结构化快照通过PUT/api/resumes/me从AI侧同步至业务库，使匹配引擎不直接依赖AI库，降低耦合。
+[10|Normal] （2）统一身份、分服务校验
+[11|Normal] Node签发JWT，Python后端复用同一JWT_SECRET验签（backend/auth/jwt.py）,避免双端登录体系不一致。
+[12|Normal] （3）弱势群体优先可达
+[13|Normal] 注册时根据年龄、残障类型、职业空窗、收入等字段，由inferGroupTypes()自动推断group_types（见server/src/constants/groupTypes.js）。弱势群体个人用户不用捐款并解锁高级功能；企业用户基础招聘免费，面试套件等高级功能需要捐款解锁（access.service.js）。
+[14|Normal] （4）前端轻量化适配无障碍浏览
+[15|Normal] 采用多页静态站点（HTML/CSS/原生JavaScript），未引入React/Vue构建链，有利于逐页优化键盘导航与屏幕阅读器兼容性。
+[16|Normal] （5）外部岗位合规聚合
+[17|Normal] 爬虫仅抓取广东省残疾人就业服务网（jyfw.org.cn）公开API，保留source_url与external_id，不伪造投递闭环。
+[18|Normal] 
+[19|Normal] 5.2.3 中期到末期的演进
+[20|Normal] 
+[21|Normal] 5.3 总体技术架构
+[22|Normal] 5.3.1 三栈架构
+[23|Normal] 平台采用“静态多页前端 + Node.js业务API + Python AI服务”的三栈架构。生产环境由Nginx按路径前缀分流；数据层使用MySQL（双库）与Redis；向量检索使用本地ChromaDB。
+[24|Normal] 
+[25|Normal] 图1 GBA-VEEP三栈总体架构
+[26|Normal] 
+[27|Normal] 5.3.2 请求分流（Nginx网关）
+[28|Normal] Docker前端容器中的Nginx承担轻量API网关职责，配置见docker/frontend/nginx.conf.
+[29|Normal] 本地开发时，前端通过assets/js/node-api-base.js将业务请求直连localhost:3000，AI请求指向localhost:8000，便于分服务调试。
+[30|Normal] 
+[31|Normal] 5.3.3 双库边界
+[32|Normal] AI负责生成与测评，Node负责权限、持久化与可审计的业务状态。
+[33|Normal] 
+[34|Normal] 5.4 技术选型
+[35|Normal] 平台采用三栈而非单体的原因，第一是招聘业务规则（匹配权重、捐款解锁、组织权限）与LLM Agent生命周期差异大，分栈可独立扩缩容与排错；第二是小组内平台开发与AI算法可并行推进；第三是AI推理超时或队列拥堵时，岗位浏览、投递、捐款等业务接口仍可独立可用。
+[36|Normal] Server/src/按经典MVC分层组织，岗位匹配的典型调用链为：路由→jobs.controller→job.model.listMatchedForUser()→逐条调用→userMatchesJobCriteria()与scoreJobResume()→写入曝光表→返回带分数列表。该链路全部在Node进程内同步完成，课程项目规模下响应时间可接受；若未来用户量上升，可将评分改为异步任务，或引入向量召回 + 规则精排的两阶段架构，而无需推翻现有三栈。
+[37|Normal] 双端页面不各自维护一套登录/捐款逻辑，而是将共用能力沉淀在assets/。小组约定页面改动进individual/或corporate/，业务规则进server/，Agent进backend/，岗位补给进crawler/，部署进docker/。该约定降低合并冲突，也使本章架构描述与仓库目录一一对应。
+[38|Normal] 
+[39|Normal] 5.5 部署与运行环境
+[40|Normal] 在本地开发中，采用静态页托管（static-server.js,默认**8080**），server/启动Express（**3000**），backend/启动Uvicorn（**8000**）,可连接MySQL与Redis。
+[41|Normal] 与此同时，docker-compose.yml编排两个容器。Mysql（阿里云RDS）、Redis、Node API通过环境变量与host.docker.internal接入，数据库不强行打包进Compose，便于本地开发与云上演示切换。
+[42|Normal] 敏感配置通过.env/注入，包括MYSQL_*、JWT_SECRET、SILICONFLOW_API_KEY、DASHSCOPE_API_KEY、REDIS_HOST等。
+[43|Normal] 
+[44|Normal] 5.6 数据库与核心数据模型设计
+[45|Normal] 5.6.1 业务库 `gba_website` 核心表
+[46|Normal] 依据 server/sql/init.sql 及后续迁移（v2 匹配 → v12 面试格式），核心表如下。
+[47|Normal] 表 5-1　业务库核心实体
+[48|Normal] | 表名 | 用途 | 关键字段 / 设计要点 |
+[49|Normal] |------|------|---------------------|
+[50|Normal] | `users` | 账号与画像 | `role`∈{individual,corporate,admin}；`age/gender/disability_type/career_gap_years/current_income`；`group_types`（JSON，系统推断） |
+[51|Normal] | `company_orgs` / `company_org_members` | 多 HR 组织 | `invite_code`；成员角色 owner/recruiter/viewer |
+[52|Normal] | `company_profiles` | 企业资料 | 包容性说明、弱势群体友好标签 |
+[53|Normal] | `job_postings` | 内部岗 + 外部爬虫岗 | `source`；`target_criteria`；`vulnerable_group_friendly`；`interview_format`；`skills` |
+[54|Normal] | `user_resumes` | 匹配用简历快照 | `content_json`、`skills_text`、`version` |
+[55|Normal] | `job_applications` | 投递 | `match_score`、`match_reasons`、`resume_snapshot`、状态机 |
+[56|Normal] | `job_match_impressions` | 匹配曝光去重 | (job_id, user_id) 唯一 |
+[57|Normal] | `job_external_interests` | 外部岗跳转意向 | 记录外链意向 |
+[58|Normal] | `donations` | 捐款箱 | `purpose=legal_service` |
+[59|Normal] | `legal_aid_requests` / `legal_aid_responses` | 法律援助 | 申请—接单—平台协助；附件 JSON（限量 base64） |
+[60|Normal] | `interview_invites` | 企业面试邀约 | `invite_token`；看板按 `invited_by_user_id` 隔离；得分回写 |
+[61|Normal] 5.6.2 弱势群体类型推断模型
+[62|Normal] 系统不依赖用户自我勾选标签作为唯一依据，而在注册/更新画像时由 inferGroupTypes() 自动推断（可多项并存）：
+[63|Normal] | 类型键 | 含义 | 推断规则（阈值） |
+[64|Normal] |--------|------|------------------|
+[65|Normal] | `disability` | 残障人士 | `disability_type` 存在且不为 `none` |
+[66|Normal] | `elderly_45plus` | 45+ 劳动者 | 年龄 ≥ 45 |
+[67|Normal] | `career_returner` | 职业返岗女性 | 性别为女且职业空窗 ≥ 1 年 |
+[68|Normal] | `youth` | 低收入青年 | 年龄 ≤ 30 且月收入 ≤ 8000 元 |
+[69|Normal] 该设计把 Proposal 中的“目标人群分层服务”落到可计算规则，并直接驱动：免捐访问、友好岗筛选、企业端应聘者排序。
+[70|Normal] 5.6.3 AI 库 `ai_career_copilot`（概要）
+[71|Normal] AI 库保存会话级对象：sessions、jobs（JD JSON）、candidate_profiles、resume_contents、render_configs、interview_qas、interactive_interview_sessions、learning_path_plans、jd_cache、conversation_events 等。其生命周期与 LLM 交互绑定，适合频繁读写与版本迭代；业务侧只消费同步后的简历快照与面试得分结果。
+[72|Normal] 5.7 身份认证、角色与访问控制
+[73|Normal] 5.7.1 注册登录与 JWT 流程
+[74|Normal] 1. 用户在 individual/auth.html 或 corporate/auth.html 注册/登录；  
+[75|Normal] 2. Node POST /api/auth/register|login 校验后签发 JWT（载荷含 sub/username/role）；  
+[76|Normal] 3. 前端 assets/js/auth-api.js 将令牌存入 localStorage；  
+[77|Normal] 4. 后续请求携带 Authorization: Bearer <token>；  
+[78|Normal] 5. Node 中间件 authenticate / requireRole 校验；Python backend/auth/jwt.py 用同一 JWT_SECRET 验签并做会话归属控制。
+[79|Normal] 企业注册支持：新建组织，或通过 org_invite_code 加入已有组织，实现多 HR 协作。
+[80|Normal] 5.7.2 捐款解锁与差异化权限
+[81|Normal] access.service.js 的 getPlatformAccess() 实现平台级访问策略：
+[82|Normal] | 用户类型 | `has_access` | `has_premium_access` | 说明 |
+[83|Normal] |----------|--------------|----------------------|------|
+[84|Normal] | admin | 是 | 是 | 始终全开 |
+[85|Normal] | 弱势群体个人（`group_types` 非空） | 是 | 是 | **免捐**使用核心与高级能力 |
+[86|Normal] | 非弱势群体个人 | 需至少捐款一次 | 同左 | 捐款用途标记为法律服务 |
+[87|Normal] | 企业用户 | 是（基础招聘） | 需捐款 | 面试套件、部分 HR 高级工具需 premium |
+[88|Normal] 前端通过 platform-access.js 与 data-require-access / data-require-premium-access 属性控制入口可见性，形成“公益捐赠—法律服务资金池—功能解锁”的可持续机制，与 Proposal 中社会价值叙事衔接。
+[89|Normal] 5.7.3 资源级权限
+[90|Normal] - 企业内部岗位：创建/更新/关闭需校验所有者或组织成员（assertInternalJobOwner 等）；  
+[91|Normal] - 面试看板：按 invited_by_user_id 隔离，避免同组织 HR 越权查看他人邀约明细；  
+[92|Normal] - 法律援助：申请人、接单人、平台协助角色分流；附件限制最多 3 个、单文件 ≤200KB。
+[93|Normal] 安全加固还包括：helmet、登录限流、密码 bcrypt、输入校验（express-validator）等。
+[94|Normal] 5.8 核心业务模块详细设计
+[95|Normal] 5.8.1 岗位管理与外部岗位聚合
+[96|Normal] 内部岗位：企业发布时写入 job_postings（source=internal），可配置：
+[97|Normal] - 基础信息：标题、地点、薪资、学历、经验、技能 JSON；  
+[98|Normal] - 目标硬性条件 target_criteria：年龄区间、性别、残障开放策略、职业空窗策略、是否优先弱势群体；  
+[99|Normal] - 面试方式 interview_format：ai_only / partial_custom / full_custom / human（会议链接）；  
+[100|Normal] - 系统由条件推导 target_group_types 与 vulnerable_group_friendly 标签。
+[101|Normal] 外部岗位：crawler/ 对接广东省残疾人就业服务网公开 API（热门岗、单位列表、单位下岗位），经 upsert_external_job 写入同表（source=external），并维护 is_active_on_source。调度器默认约 30 分钟一轮，使平台岗位池同时包含企业自建岗与残联友好岗，强化“弱势群体友好雇主”供给。
+[102|Normal] 对外部友好岗，匹配硬性筛选可放宽（userMatchesJobCriteria 对 external + friendly 直接放行），避免因画像字段不全挡住真实友好机会；用户跳转外链时记录 job_external_interests。
+[103|Normal] 5.8.2 “技能优先”岗位匹配引擎（Node 确定性规则）
+[104|Normal] Proposal 中的 Skills-First Matching Engine 在业务层落地为可解释的评分服务 match.service.js（非黑盒向量匹配，便于答辩说明与审计）。
+[105|Normal] （1）硬性筛选  
+[106|Normal] userMatchesJobCriteria() 校验年龄/性别/残障/空窗是否满足岗位 target_criteria；不满足则不进入推荐列表。
+[107|Normal] （2）软性评分（0–100）  
+[108|Normal] scoreJobResume() 加权：
+[109|Normal] | 维度 | 上限分 | 逻辑摘要 |
+[110|Normal] |------|--------|----------|
+[111|Normal] | 技能重叠 | 50 | 岗位技能与简历技能/事实/摘要模糊包含匹配 |
+[112|Normal] | 学历 | 15 | 学历层级对照（博士→高中等） |
+[113|Normal] | 经验 | 20 | 实习/项目/工作事实条数与岗位经验描述对照 |
+[114|Normal] | 描述关键词 | 15 | 职位描述关键词命中简历文本 |
+[115|Normal] 同时返回 match_reasons，用于前端解释“为何推荐”，体现可解释 AI/规则系统。
+[116|Normal] （3）曝光与排序  
+[117|Normal] 个人端按分数排序展示；job_match_impressions 去重累计岗位 matches_count。企业端在友好岗场景下，sortApplicantsForCorporate() 先按是否弱势群体、再按匹配分排序，落实“弱势群体优先可见”。
+[118|Normal] 说明：语义级隐藏技能挖掘、雷达图可视化、完整盲筛隐藏姓名等增强能力，与 LangGraph Agent / 前端演示页协同，细节归第 6 章；本章 prioritizes 业务规则层的可复现实现。
+[119|Normal] 5.8.3 投递、状态机与简历快照
+[120|Normal] 求职者对内部岗发起 POST /api/jobs/:id/apply 时，系统写入 job_applications，固化当时的 resume_snapshot、match_score 与 match_reasons，保证企业后续审阅不受简历后续修改干扰。状态枚举：pending → reviewing → accepted/rejected。求职者可查看“我的投递”并在规则允许下撤回。
+[121|Normal] 5.8.4 面试邀约与双模式面试
+[122|Normal] 企业可对投递发送面试邀请，生成 interview_invites 记录与 invite_token：
+[123|Normal] | 模式 | 含义 | 求职者侧表现 |
+[124|Normal] |------|------|--------------|
+[125|Normal] | `ai_only` | 仅 AI 题库评估 | 进入评估面试页，系统出题评分 |
+[126|Normal] | `partial_custom` | AI 题 + 企业题 + 追问 | 混合题集 |
+[127|Normal] | `full_custom` | 仅企业自拟题 | 按岗位快照题目作答 |
+[128|Normal] | `human` | 人工会议 | 展示会议链接与入会说明 |
+[129|Normal] 评估面试强调“正式测评”属性（过程无实时辅导），完成后回写 overall_score、category_scores、debrief_summary 等，供面试看板展示。个人端另有练习型模拟面试，用于备考而非企业正式评分。
+[130|Normal] 5.8.5 捐款箱与法律援助闭环
+[131|Normal] 捐款记录写入 donations，用途默认 legal_service，形成平台法律援助资金叙事。法律援助模块支持：
+[132|Normal] 1. 申请人提交类别、标题、详情与附件；  
+[133|Normal] 2. 律师/志愿者接单（legal_aid_responses 唯一约束防重复）；  
+[134|Normal] 3. 申请人或管理员触发平台协助；  
+[135|Normal] 4. 状态流转至解决/完成/取消。
+[136|Normal] 该模块将“技术平台”延伸为“社会服务协同入口”，呼应 Proposal 的社会价值与合规关怀，而非仅停留在岗位列表。
+[137|Normal] 5.8.6 企业统计看板
+[138|Normal] /api/stats/corporate* 为企业门户提供招聘漏斗、多元性与团队相关统计数据，前端 Chart.js 可视化，支撑 HR 进行包容性招聘自我监测——对应需求文档中 Diversity & Inclusion metrics 的轻量实现。
+[139|Normal] 5.9 AI 能力集成架构（概括）
+[140|Normal] 本节仅描述系统集成边界，算法与 Agent 编排细节见第 6 章（队友负责）。
+[141|Normal] 5.9.1 集成方式
+[142|Normal] 个人/企业前端在需要智能能力时调用 Python FastAPI：
+[143|Normal] | 能力域 | 典型前缀 | 平台侧消费方式 |
+[144|Normal] |--------|----------|----------------|
+[145|Normal] | 对话编排 | `/api/chat` | 门户助手入口 |
+[146|Normal] | 简历流水线 | `/api/resume/*`、`/api/export*` | 生成/润色/翻译/渲染/PDF·DOCX |
+[147|Normal] | 面试 | `/api/interview/*` | 模拟练习与评估面试 |
+[148|Normal] | 学习路径 | `/api/learning-path/*` | 缺口诊断与时间线 |
+[149|Normal] | 工具协议 | `/mcp/*` | 岗位查询、文档解析等工具暴露 |
+[150|Normal] 编排层采用 LangGraph + Plan-and-Execute：Planner 识别意图并生成执行计划，再调度 JD/画像/缺口/内容/渲染/面试/学习路径等专业 Agent；检索增强依赖 ChromaDB 与 Embedding（DashScope 或本地 PyTorch 可切换）。
+[151|Normal] 5.9.2 与业务栈的衔接点
+[152|Normal] 1. 身份：共享 JWT；  
+[153|Normal] 2. 简历结果回流：AI 产出结构化内容后同步 Node user_resumes，驱动匹配；  
+[154|Normal] 3. 面试结果回流：评估面试分数与纪要写回 interview_invites；  
+[155|Normal] 4. 岗位语境：AI 可通过工具/客户端读取岗位与 JD，保证简历与面试贴合目标职位。
+[156|Normal] 该“智能产过程、业务沉淀事实”的分工，是本章与第 6 章的清晰分界。
+[157|Normal] 5.10 关键 API 设计摘要
+[158|Normal] 5.10.1 Node 业务 API（节选）
+[159|Normal] | 分组 | 方法与路径 | 说明 |
+[160|Normal] |------|------------|------|
+[161|Normal] | Auth | `POST /api/auth/register|login`，`GET /me`，`PATCH /profile` | 注册登录与画像 |
+[162|Normal] | Jobs | `GET /jobs`，`GET /jobs/matched`，`POST /jobs`，`POST /jobs/:id/apply`… | 岗位与投递全链路 |
+[163|Normal] | Company | `GET/PUT /company/profile`，`GET /company/friendly|team` | 企业资料与友好雇主 |
+[164|Normal] | Resumes | `GET|PUT /resumes/me` | 匹配用简历快照 |
+[165|Normal] | Donations | `POST /donations`，`GET .../access|stats` | 捐款与访问状态 |
+[166|Normal] | Legal Aid | `POST/GET /legal-aid/requests*`，`accept`，`platform-assist` | 法律援助 |
+[167|Normal] | Interview Invites | `GET /interview-invites/board|me|token/:token`，`start|complete` | 邀约生命周期 |
+[168|Normal] | Stats | `GET /stats/home|corporate|individual` | 看板数据 |
+[169|Normal] 5.10.2 接口风格与一致性
+[170|Normal] - 统一 JSON 响应；错误信息面向前端可展示；  
+[171|Normal] - 写操作需认证；角色不符返回 403；  
+[172|Normal] - 匹配类接口返回分数与 reasons，便于 UI 解释；  
+[173|Normal] - AI 长耗时接口在 Nginx 侧配置更长 proxy_read_timeout，避免简历生成中断。
+[174|Normal] 5.11 安全、隐私与合规实现要点
+[175|Normal] 对照 Proposal“分层隐私 / 最小必要”原则，终期工程采取务实合规措施：
+[176|Normal] 1. 传输与会话：HTTPS（部署环境）、JWT 短期会话、密码哈希存储；  
+[177|Normal] 2. 权限最小化：角色 + 资源所有者校验 + 面试看板隔离；  
+[178|Normal] 3. 敏感附件控制：法律援助附件体积与数量限制，避免大文件入库失控；  
+[179|Normal] 4. 密钥外置：API Key / DB 密码不进仓库；  
+[180|Normal] 5. 双库隔离：AI 过程日志与业务主数据分离，降低越权面；  
+[181|Normal] 6. 可审计字段：投递状态更新人、捐款记录、法律援助接单轨迹均落库。
+[182|Normal] 完整跨境“数据金库 + 自动标准合同 + 月度 PIA”属于监管对接型能力，当前以架构预留与流程设计为主，未在本章宣称已全量自动化上线。
+[183|Normal] 5.12 质量保障与可维护性
+[184|Normal] 为支撑终期结项演示与持续迭代，仓库具备：
+[185|Normal] - 接口与单元测试：backend/tests/（pytest）、Node 侧脚本与匹配测试数据；  
+[186|Normal] - E2E / Selenium：关键生产路径冒烟；  
+[187|Normal] - 离线评测目录 evaluation-results/：Planner、RAG、链路一致性等（服务第 6 章论证）；  
+[188|Normal] - 文档体系：docs/GBA_项目完整技术介绍.md、server/README.md、backend/DEPLOYMENT.md、docs/MY_JOBS_SETUP.md 等，保证交接与复现。
+[189|Normal] 工程结构按 individual / corporate / server / backend / crawler / docker 清晰分治，符合小组并行开发与答辩讲解路径。
+[190|Normal] 5.13 典型用户旅程（实现级）
+[191|Normal] 5.13.1 弱势群体求职者
+[192|Normal] 1. 注册并填写年龄、残障、空窗、收入等 → 系统写入 group_types 并免捐解锁；  
+[193|Normal] 2. 使用 AI 简历生成并同步到 user_resumes；  
+[194|Normal] 3. 在岗位库查看匹配分与原因，投递内部岗或跳转外部友好岗；  
+[195|Normal] 4. 进行模拟面试与学习路径补齐缺口；  
+[196|Normal] 5. 收到企业评估面试邀约并完成测评；  
+[197|Normal] 6. 如遇劳动权益问题，通过法律援助模块求助。
+[198|Normal] 5.13.2 包容性雇主
+[199|Normal] 1. 注册企业组织并完善包容性资料；  
+[200|Normal] 2. 发布带 target_criteria 与面试方式的岗位；  
+[201|Normal] 3. 在应聘列表中优先审阅弱势群体高匹配候选人；  
+[202|Normal] 4. 发送 AI/混合/人工面试邀约，并在看板跟踪；  
+[203|Normal] 5. 可选捐款解锁高级面试套件，并参与法律援助响应。
+[204|Normal] 两条旅程共同构成平台“供给—匹配—评估—保障”的技术主线。
+[205|Normal] 5.14 关键实现细节补充：模块协作时序与工程决策
+[206|Normal] 5.14.1 匹配—投递—邀约协作时序
+[207|Normal] 主链路的时序概括如下：
+[208|Normal] 1. 求职者完成 AI 简历后，前端调用 PUT /api/resumes/me，把结构化 content_json 与 skills_text 写入业务库；  
+[209|Normal] 2. 求职者打开岗位匹配页，前端请求 GET /api/jobs/matched；Node 读取用户画像与简历，先执行硬性筛选，再对候选岗位逐条 scoreJobResume，返回带分数与 reasons 的列表，并写入曝光表；  
+[210|Normal] 3. 用户投递后生成 job_applications 快照；企业在 My Jobs 中查看申请人，系统按弱势群体优先规则排序；  
+[211|Normal] 4. 企业发起面试邀请，写入 interview_invites 并生成 token；求职者打开评估面试页，携带 token 调用 Python 面试接口；  
+[212|Normal] 5. 面试完成后，Python/前端将得分与纪要回写 Node 的 complete 接口，企业看板刷新状态。
+[213|Normal] 该时序体现“AI 负责生成与测评，Node 负责事实沉淀与权限”，是本项目区别于纯聊天机器人 Demo 的关键工程特征。
+[214|Normal] 5.14.2 前端状态与会话管理
+[215|Normal] 个人端门户支持管理 AI Session（创建、切换、延续上下文），避免用户在简历、面试、学习路径之间反复上传材料。认证态由 auth-api.js 统一读取；页面级访问控制在渲染前查询 /api/donations/access（或等价 access 接口），对未解锁模块给出捐款引导，对弱势群体则静默放行。企业端则在 portal 内以锚点模块组织 Jobs、Interview Board 与统计图，减少页面跳转成本，适合 HR 日常操作演示。
+[216|Normal] 5.14.3 岗位目标条件的产品意义
+[217|Normal] target_criteria 并非简单筛选器，而是把“包容性招聘意图”结构化：企业可以声明欢迎残障、欢迎空窗返岗、面向 45+ 或青年岗位等。系统据此推导 vulnerable_group_friendly 标签，并在友好雇主列表中曝光。与传统招聘网站“默认隐藏残障信息、却用学历年龄隐性排除”不同，本平台把包容条件显式化、可计算化，从而服务 Proposal 中 Blind Screening 与 Inclusive Flex-Hub 的精神——先保证机会可见，再在评估环节强调技能与表现。
+[218|Normal] 5.14.4 爬虫工程约束与伦理边界
+[219|Normal] 外部岗位爬虫仅访问残联网站公开 API，写入时保留 source_url 与 external_id，并在源站下架后标记 is_active_on_source。平台对外部岗的处理以“跳转意向记录 + 信息聚合”为主，不伪造投递闭环，避免越权代理报名。该设计在扩展岗位供给的同时，明确数据来源与责任边界，符合学术项目对数据使用克制、可追溯的要求。
+[220|Normal] 5.14.5 性能与并发方面的务实策略
+[221|Normal] 课程项目规模下，匹配评分在 Node 进程内同步计算即可满足演示与中小规模试点；AI 侧通过 Redis 队列与超时配置缓解 LLM 并发抖动；Nginx 对 AI 路径设置更长读写超时，避免简历渲染被网关切断。若未来用户量上升，可将匹配计算改为异步任务，或引入向量检索作为召回层、规则评分作为精排层——现行架构已预留分服务扩展空间，无需推倒重来。
+[222|Normal] 5.16.6 界面信息架构与交互一致性
+[223|Normal] 双端门户均遵循“一次只做一件事”的信息架构：首页负责角色分流，portal 负责模块导航，具体业务页负责单一任务（发岗、投递、面试、捐款等）。共享组件保证交互一致性——例如捐款箱与法律援助在个人端与企业端复用同一套脚本，避免两套规则造成权限漏洞。按钮级权限通过 data-require-access 声明，后端仍做强制校验，形成“前端引导 + 后端兜底”的双层控制。对残障与老年用户，页面尽量保持清晰层级、充足点击区域与可预测导航，呼应中期报告的无障碍目标；企业侧另提供无障碍工作场所审计页，把包容性从“求职者工具”延伸到“雇主自检”。
+[224|Normal] 5.16.7 错误处理、空状态与可演示性设计
+[225|Normal] 结项演示要求系统在缺数据时仍可读。匹配页在无简历时给出降低分上限与补全提示；无岗位时展示空状态而非空白报错；面试 token 失效时返回明确信息；捐款未完成时引导至捐款页而非静默失败。Node 与 Python 分别提供健康检查，前端 Axios 封装统一处理 401（跳转登录）与 403（权限不足）。这些细节虽不构成“新功能”，却决定评审现场是否流畅，属于系统设计不可省略的一环。
+[226|Normal] 5.16.8 从需求文档到代码的追溯示例
+[227|Normal] 以“企业发布包容性岗位并完成一次 AI 评估面试”为例，需求可追溯为：需求文档 Corporate HR Interview Tools → post-job.html 配置 interview_format → POST /api/jobs 持久化 → 应聘后 POST .../interview-invite → 求职者 assessment-interview.html → Python /api/interview → POST .../complete 回写分数 → 企业 Interview Board 展示。这条追溯链说明本章所写模块并非孤立页面堆叠，而是可端到端验证的业务切片，符合工程化交付标准。
+[228|Normal] 5.17 本章小结
+[229|Normal] 本章从工程实现角度系统阐述了 GBA-VEEP 的系统设计与技术实现。平台以三栈架构稳定支撑双端业务与 AI 赋能：Node.js 负责认证、岗位、可解释匹配、投递、捐款法律援助与面试邀约等业务事实；Python FastAPI + LangGraph 负责简历、面试与学习路径等智能过程；静态多页前端保证可达性与演示效率。数据层通过 gba_website 与 ai_career_copilot 双库划清边界，JWT 统一身份，捐款模型与 group_types 推断落实弱势群体优先。岗位侧结合企业自建与残联外部爬虫，匹配侧以硬性条件 + 技能优先评分实现 Proposal 的能力本位理念，并与 AI 结果回流形成闭环。
+[230|Normal] 进一步地，本章补充了匹配—投递—邀约时序、前端会话与访问控制、目标条件的产品语义、爬虫伦理边界、性能扩展路径，以及与中期三大模块的对应关系，使“设计—实现—验证”链条完整可复核。
+[231|Normal] 相较于 Detailed Proposal 的完整愿景与中期报告的基础架构目标，终期系统已经形成可部署、可演示、可解释的完整网站功能集合；AI 算法细节、评测指标与 Agent 技术实现将在下一章展开。整体而言，本章证明：小组不仅完成了概念设计，更将“跨境弱势群体就业赋能”转化为一套结构清晰、模块完备、安全可控的软件系统，具备结项提交与后续可持续迭代的技术基础。对于报告读者，可将本章视为“打开仓库的导览图”：先看双端页面理解功能，再看 Node 与数据库理解规则，最后看 Python 接口理解智能增强——三条路径汇合，即是 GBA-VEEP 的终期技术全貌。
+[232|Normal] 
+[233|Normal] 
+[234|Normal] 
+[235|Normal] 11.1 项目局限
+[236|Normal] GBA-VEEP已交付个人端与企业端双入口，并打通“注册-简历-匹配-投递-面试-法律援助”的链路。求职者可完成画像填写、AI简历同步、查看带推荐理由的岗位并投递；企业端可发布需求岗位，优先审阅弱势群体应聘者，发起面试邀约并在看板跟踪结果。作为还在试点宣发阶段的平台，仍存在以下不足与局限：
+[237|Normal] 第一，运营数据不充分。平台目前以演示和小范围试用为主，用户规模、留存、投递转化及入职情况尚未形成稳定统计，尚不足以支撑大规模的推广与评估。技能优先匹配、弱势群体免捐等核心能力已上线，但政策导航、微证书等功能未接入实时政策或证书签发服务，平台功能还需进一步补充完善。
+[238|Normal] 第二，岗位供给结构尚不均衡。岗位池由企业自建与广东省残疾人就业服务网岗位构成，外部友好岗缓解了供给压力，但包容性雇主数量有限，行业与地域覆盖较集中。对于跨境资质互认、社保转移等需求，网站只能信息引导，无法替代线下政务办理。
+[239|Normal] 第三，数字鸿沟与触达渠道不足。银发、残障等部分用户对纯线上操作不熟悉，网站虽采用轻量结构、免捐降低门槛，但缺少常态化线下辅导与社区推广，影响实际使用率。
+[240|Normal] 第四，商业资源有待验证。“公益捐款-法律服务-功能解锁”已在产品中落地，但捐款意愿、企业端转化及法律志愿者供给能否长期维持尚无充分数据。学生团队课余推动推广与雇主拓展，人力有限；与主流招聘平台相比品牌与岗位量级处于弱势，课程结束后若无专职运营与后续资金，活跃度可能回落。
+[241|Normal] 
+[242|Normal] 11.2 未来可持续发展
+[243|Normal] GBA-VEEP旨在坚持“能力本位、弱势优先、一站式赋能”的定位下，从以下方向持续推进。
+[244|Normal] 用户与服务方面，与残疾人联合会、社区、高校就业部门合作定向招募，引入数字导师志愿协助，以就业案例与包容性雇主实践形成口碑，建立注册至入职的关键指标，用数据驱动优化平台流程。
+[245|Normal] 商业与生态方面，在不改变弱势群体免捐的前提下，将包容认证、无障碍审计、高级面试套件等打包为面向HR的增值服务；拓展包容性雇主与灵活用工合作；让政策与激励工具保持更新，提高企业端实用价值。
+[246|Normal] 产品与合规方面，完善多国语言与无障碍细节，在双库架构上加强敏感数据保护，匹配规则与AI简历、面试模块协同优化，更好识别多元transferable skills。
+[247|Normal] 资源与组织方面，争取社创、孵化及科创类资助，完成软件著作权登记，探索由课程项目向社会企业或公益科技团队过渡。
+[248|Normal] 通过“试点-反馈-迭代-拓展”的渐进路径，GBA-VEEP有望成长为具有持续社会价值与商业潜力的大湾区包容性就业服务平台。
+[249|Normal] 
+[250|Normal] 12 个人贡献声明
+[251|Normal] 本人在Team中担任Development Specialist，自项目启动以来负责网站的整体建设与迭代，主要贡献如下。
+[252|Normal] 双端门户与共享组件：本人主导搭建个人端与企业端多页网站，完成首页角色分流、门户导航，以及登录、捐款、法律援助、多语言等共享组件封装，使双端交互一致、减少重复开发。中期完成的基础架构，在末期落实为覆盖匹配、投递、面试、法律等全部业务场景的可访问页面。
+[253|Normal] 核心业务后端：本人负责Node业务服务及关键模块，包括注册登录与JWT认证、画像与弱势群体类型推断、企业组织与多HR协作、岗位发布/匹配/投递、捐款与访问权限、法律援助全流程、面试邀约与看板回写等，配合数据库多轮结构升级，构成网站稳定运行的业务底座。
+[254|Normal] 岗位供给与AI嵌入：本人开发残联公开岗位爬虫及定时调度，将外部友好岗位与企业自建岗位一并纳入分配池，并完成Node与Python AI服务的接口衔接，包括统一验签、简历同步至业务库、评估面试得分回写，使AI简历、模拟/评估面试、学习路径嵌入网站主流程而非孤立存在。
+[255|Normal] 部署与联调保障：本人完成Docker与Nginx配置，支持本地分服务调试与容器化演示。同时参与技能匹配评分、免捐策略、企业端应聘者优先排序等规则验证，并根据多轮联调与答辩反馈修正页面流程、接口细节及空状态提示，保障终期现场演示稳定可用。
+[256|Normal] 综上，本人贡献集中于网站从可演示原型到功能完整的就业赋能平台的工程实现，涵盖前端双端、业务后端、爬虫、部署与AI联调。
+[257|Normal] 
+[258|Normal] 
+---TABLES---
+TABLE 0:
+设计目标 | 代码落点
+技能优先、能力匹配 | Node侧match.service.js四维评分+硬性条件筛选
+降低标签歧视、扩大友好岗位供给 | group_types推断、友好岗位排序、外部岗位爬虫
+一站式就业闭环 | 注册画像→简历→匹配投递→面试→学习→法律援助
+双端差异化服务 | individual/求职者门户与corporate/企业门户
+可部署、可演示 | Docker Compose + Nginx分流 + 健康检查
+TABLE 1:
+中期模块 | 末期结果对应 | 代表性交付
+Platform Core Architecture and Infrastructure | 三栈、双库、Docker/Nginx、JWT、13次DB迁移 | init.sql、docker-compose.yml、nginx.conf
+Basic AI Empowerment Framework | FastAPI接口族、简历/面试/学习路径集成/结果回流 | backend/main.py、双库简历同步
+Inclusive Accessibility Interaction System | 轻量MPA、企业audit页、弱势群体推断与免捐款策略 | groupTypes.js、access.service.js、audit.html
+TABLE 2:
+组件 | 目录 | 端口 | 职责
+静态前端 | individual/、corporate/、assets/ | 8080（本地）/80（Docker） | 双端UI、i18n
+Node业务API | server/ | 3000 | 认证、岗位、匹配、投递、捐款、法律援助、面试邀约、统计
+Python AI 后端 | backend/ | 8000 | 简历流水线、模拟/评估面试、学习路径、Chat、MCP
+岗位爬虫 | crawler/ | 定时任务30min | 同步残联公开岗位至job_postings
+TABLE 3:
+路径前缀 | 转发目标 | 说明
+/api/auth、/api/jobs、/api/company、/api/resumes、/api/donations、/api/legal-aid、/api/stats | Node:3000 | 业务与认证
+其余/api/ | Python:8000 | AI能力（简历、面试、学习路径等）
+/mcp/ | Python:8000 | MCP SSE长连接（关闭缓冲）
+/health | Python:8000 | 健康检查
+/individual/、/corporate/ | 静态文件 | 回退至各端portal.html
+TABLE 4:
+数据库 | 归属 | 存储内容
+gba_website | Node | 用户、组织、岗位、投递、捐款、法律援助、面试邀约等
+ai_career_copilot | Python | 会话、JD缓存、简历内容、面试问答、学习路径计划等
+TABLE 5:
+层级 | 选用技术 | 选型理由
+前端 | HTML5/CSS3/原生JS；Tailwind CDN；Axios；Chart.js | 多页静态、依赖少、利于无障碍与快速迭代
+业务后端 | Node.js≥18、Express 4、mysql2、JWT、bcryptjs、helmet | 适合JWT认证与CRUD业务；与前端JSON交互自然
+AI后端 | Python、FastAPI、LangGraph、Pydantic、ChromaDB | Agent编排与结构化输出在Python生态更成熟
+文档处理 | pdfplumber、PyMuPDF、python-docx、WeasyPrint | 支撑简历解析与PDF/DOCX导出
+数据 | MySQL 8 / MariaDB 10、Redis | 业务持久化 + 会话与LLM并发控制
+爬虫 | Requests、PyMySQL、APScheduler | 定时拉取残联公开岗位
+部署 | Docker Compose、Nginx | 前后端容器化；Node可宿主机常驻对接云RDS

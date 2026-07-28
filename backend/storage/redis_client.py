@@ -36,6 +36,14 @@ def is_using_fakeredis() -> bool:
     return _using_fakeredis
 
 
+def reset_redis_client() -> None:
+    """Drop the singleton client (e.g. after a pre-flight check on a temporary event loop)."""
+    global _redis_client, _redis_lock, _using_fakeredis
+    _redis_client = None
+    _redis_lock = None
+    _using_fakeredis = False
+
+
 async def get_redis_client() -> aioredis.Redis:
     """获取 Redis 异步连接（单例）；本地无 Redis 时回退 fakeredis。
 

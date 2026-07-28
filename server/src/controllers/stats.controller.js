@@ -44,7 +44,7 @@ async function corporateTeam(req, res) {
       org_name: team?.org_name,
       invite_code: team?.invite_code,
       my_role: team?.my_role,
-      current_user_id: req.user.id,
+      current_user_id: Number(req.user.id),
       ...stats,
     },
   });
