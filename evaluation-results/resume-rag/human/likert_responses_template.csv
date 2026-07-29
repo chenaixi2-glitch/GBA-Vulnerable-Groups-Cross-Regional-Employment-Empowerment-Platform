@@ -1,9 +1,0 @@
-rater_id,case_id,resume_label,job_fit,credibility,professionalism,highlights,overall_recommend,hallucination_risk,completed_at
-R01,alex_chen_cross_border_cs,A,5,4,5,5,5,none,2026-07-01
-R01,alex_chen_cross_border_cs,B,2,3,3,2,2,none,2026-07-01
-R01,aixi_ai_application_dev,A,2,4,3,2,2,mild,2026-07-01
-R01,aixi_ai_application_dev,B,5,4,4,5,5,none,2026-07-01
-R02,alex_chen_cross_border_cs,A,5,5,4,4,5,none,2026-07-01
-R02,alex_chen_cross_border_cs,B,3,3,3,2,3,none,2026-07-01
-R02,aixi_ai_application_dev,A,3,4,3,2,3,mild,2026-07-01
-R02,aixi_ai_application_dev,B,4,4,4,4,4,none,2026-07-01

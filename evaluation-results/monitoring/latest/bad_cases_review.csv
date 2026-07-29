@@ -1,5 +1,0 @@
-case_id,session_id,intent,execution_plan,reason,severity,reply_preview,failed_nodes,trace_summary,review_status,reviewer_notes,root_cause,fix_priority
-sess_failed_01_failed_node,sess_failed_01,gap_analysis,gap_agent,failed_agent_node,high,,gap_agent,planner[success] → gap_agent[failed],pending,,,
-sess_failed_01_empty_reply,sess_failed_01,gap_analysis,gap_agent,empty_assistant_reply,medium,,,planner[success] → gap_agent[failed],pending,,,
-sess_route_01_routing_mismatch,sess_route_01,gap_analysis,gap_agent,"routing_mismatch: expected ['learning_path_agent'], got ['gap_agent']",medium,,,planner[success] → gap_agent[success],pending,,,
-sess_eval_01_low_eval_score,sess_eval_01,evaluate_answer,answer_evaluation_agent,low_answer_score: 45 < 60,low,Your answer needs improvement.,,answer_evaluation_agent[success],pending,,,
