@@ -18,7 +18,8 @@ Redis **不在 RDS 上**，需安装在**阿里云轻量应用服务器**本机�
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  阿里云轻量服务器  120.77.249.179                        │
+│  阿里云轻量服务器  gba-vulnerable-groups-cross-regional-employment-empowerment.com │
+│  （公网 IP 120.77.249.179）                                                        │
 │  ├── 静态前端 (static-server / Nginx)     :8080         │
 │  ├── Node 认证 API (server/)              :3000         │
 │  ├── Python AI 后端 (backend/)            :8000         │

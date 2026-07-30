@@ -91,7 +91,8 @@ npm install --production
 
 # 编辑 .env.production：填入 RDS 密码，JWT_SECRET 换成强随机串
 #   openssl rand -hex 32
-# CORS_ORIGIN 默认为 http://120.77.249.179，有域名时改成域名
+# CORS_ORIGIN 示例：域名 + 公网 IP 备用（逗号分隔）
+# https://gba-vulnerable-groups-cross-regional-employment-empowerment.com,http://120.77.249.179
 
 # 初始化数据库（在 RDS 上建表）
 npm run db:init -- 

@@ -1,5 +1,5 @@
 """
-Selenium E2E — 线上环境（默认 http://120.77.249.179）
+Selenium E2E — 线上环境（默认 https://gba-vulnerable-groups-cross-regional-employment-empowerment.com）
 
 从真实网址首页进入，点击按钮跳转，再测试各功能页面。
 逻辑参考 test_user_platform_selenium.py、test_job_matching_selenium.py、test_aixi_selenium_e2e.py。
@@ -10,7 +10,7 @@ Usage:
   pytest tests/selenium/test_production_selenium.py -v -s
 
 Env:
-  PRODUCTION_BASE       线上站点根 URL（默认 http://120.77.249.179）
+  PRODUCTION_BASE       线上站点根 URL（默认 https://gba-vulnerable-groups-cross-regional-employment-empowerment.com）
   PRODUCTION_PYTHON_API Python LLM API（默认 {PRODUCTION_BASE}/api，经 nginx 同域代理）
   SKIP_LLM=1            跳过 LLM 调用，仅 UI 冒烟
   HEADLESS=0            显示浏览器

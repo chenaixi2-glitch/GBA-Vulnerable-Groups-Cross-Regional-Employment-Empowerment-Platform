@@ -138,4 +138,7 @@ def pytest_configure(config):
     if "test_production_selenium" in args:
         os.environ.setdefault("RUN_PRODUCTION_E2E", "1")
         os.environ.setdefault("SKIP_AUTO_START", "1")
-        os.environ.setdefault("PRODUCTION_BASE", "http://120.77.249.179")
+        os.environ.setdefault(
+            "PRODUCTION_BASE",
+            "https://gba-vulnerable-groups-cross-regional-employment-empowerment.com",
+        )

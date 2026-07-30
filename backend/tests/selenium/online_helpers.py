@@ -1,4 +1,4 @@
-"""Helpers for Selenium E2E against deployed production (e.g. http://120.77.249.179)."""
+"""Helpers for Selenium E2E against deployed production (e.g. https://gba-vulnerable-groups-cross-regional-employment-empowerment.com)."""
 
 from __future__ import annotations
 
@@ -21,7 +21,10 @@ from tests.selenium.helpers import (
 )
 
 # Default production URL from deployment
-PRODUCTION_BASE = os.getenv("PRODUCTION_BASE", "http://120.77.249.179").rstrip("/")
+PRODUCTION_BASE = os.getenv(
+    "PRODUCTION_BASE",
+    "https://gba-vulnerable-groups-cross-regional-employment-empowerment.com",
+).rstrip("/")
 IS_PRODUCTION_E2E = os.getenv("RUN_PRODUCTION_E2E", "1") != "0"
 
 # Python LLM API 经 nginx 同域代理 /api（浏览器访问真实网址即可，无需额外端口）
